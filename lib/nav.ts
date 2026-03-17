@@ -6,7 +6,7 @@ import {
   Zap, Bell,
   Settings,
   Home, Inbox, PlusCircle, FileText, CheckSquare, ArrowLeftRight,
-  Wrench, Users, CreditCard,
+  Wrench, Users, CreditCard, Calendar,
   LucideIcon,
 } from 'lucide-react'
 
@@ -148,10 +148,12 @@ export const MAIN_APP_STAFF_NAV: NavSection[] = [
   {
     label: '',
     items: [
-      { label: 'Home',      href: '/app/dashboard',  icon: Home },
-      { label: 'Intake',    href: '/app/new-intake',  icon: ClipboardList },
-      { label: 'My Jobs',   href: '/app/jobs',        icon: CheckSquare },
-      { label: 'SOPs',      href: '/app/sops',        icon: FileText },
+      { label: 'Home',          href: '/app/dashboard',         icon: Home },
+      { label: 'My Tasks',      href: '/app/my-tasks',          icon: CheckSquare },
+      { label: 'My Schedule',   href: '/app/team',              icon: Calendar },
+      { label: 'SOPs',          href: '/app/operations',        icon: FileText },
+      { label: 'Intake',        href: '/app/new-intake',        icon: ClipboardList },
+      { label: 'Guest Queue',   href: '/app/my-guest-services', icon: Headphones },
     ],
   },
 ]

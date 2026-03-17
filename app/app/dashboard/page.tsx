@@ -1,8 +1,10 @@
 'use client'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Building2, Users, Ticket, Package, AlertTriangle, CheckSquare, Clock, Star, CalendarCheck, ChevronRight, Bell } from 'lucide-react'
 import Link from 'next/link'
 import { useRole } from '@/context/RoleContext'
+import type { UserProfile } from '@/context/RoleContext'
 import StatCard from '@/components/shared/StatCard'
 import StatusBadge from '@/components/shared/StatusBadge'
 import { PROPERTIES } from '@/lib/data/properties'
@@ -47,12 +49,42 @@ function SectionHeader({ title, href, linkLabel = 'View all' }: { title: string;
   )
 }
 
+interface ClockInRecord {
+  staffId: string
+  shiftId: string
+  propertyId: string
+  date: string
+  clockInTime: string
+  status: string
+  clockOutTime?: string
+}
+
 export default function AppDashboard() {
   const { accent, role, user } = useRole()
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
+  const [clockIn, setClockIn] = useState<ClockInRecord | null>(null)
+
+  useEffect(() => {
+    const stored = localStorage.getItem('nestops_user')
+    if (stored) {
+      try { setCurrentUser(JSON.parse(stored)) } catch {}
+    }
+  }, [])
+
+  useEffect(() => {
+    const stored = localStorage.getItem('nestops_clockin')
+    if (stored) {
+      try {
+        const ci = JSON.parse(stored)
+        const today = new Date().toISOString().split('T')[0]
+        if (ci.date === today) setClockIn(ci)
+      } catch {}
+    }
+  }, [])
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
-  const displayName = user?.name?.split(' ')[0] ?? (role === 'operator' ? 'Peter' : 'there')
+  const displayName = user?.name?.split(' ')[0] ?? currentUser?.name?.split(' ')[0] ?? (role === 'operator' ? 'Peter' : 'there')
 
   const openRequests = REQUESTS.filter(r => r.status === 'open').length
   const lowStock = STOCK_ITEMS.filter(i => i.status === 'low' || i.status === 'critical' || i.status === 'out')
@@ -86,6 +118,42 @@ export default function AppDashboard() {
             : `Here are your assignments for today.`}
         </p>
       </div>
+
+      {/* Clock status bar — staff only */}
+      {(currentUser?.role === 'staff' || role === 'staff') && (
+        <div style={{
+          padding: '12px 16px', borderRadius: 10, marginBottom: 20,
+          ...(clockIn?.status === 'in_progress'
+            ? { background: '#10b98112', borderLeft: '3px solid #10b981', border: '1px solid #10b98130' }
+            : { background: '#d9770612', borderLeft: '3px solid #d97706', border: '1px solid #d9770630' })
+        }}>
+          {clockIn?.status === 'in_progress' ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} />
+                <span style={{ fontSize: 13, color: '#10b981', fontWeight: 500 }}>
+                  On shift · {PROPERTIES.find(p => p.id === clockIn.propertyId)?.name ?? 'Property'} · Started {new Date(clockIn.clockInTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  const updated = { ...clockIn, status: 'completed', clockOutTime: new Date().toISOString() }
+                  localStorage.setItem('nestops_clockin', JSON.stringify(updated))
+                  setClockIn(updated)
+                }}
+                style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #10b98140', background: 'transparent', color: '#10b981', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+              >
+                Clock Out
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 13, color: '#d97706' }}>⏰ No active shift · Start your shift when ready</span>
+              <Link href="/staff/start" style={{ fontSize: 12, color: '#d97706', fontWeight: 600, textDecoration: 'none' }}>▶ Start Shift</Link>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Row 1 stat cards — operator only */}
       {role === 'operator' && (

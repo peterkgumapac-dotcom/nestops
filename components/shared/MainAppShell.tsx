@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { Menu, Bell } from 'lucide-react'
 import MainAppSidebar from './MainAppSidebar'
+import ClockStatus from './ClockStatus'
 import { useRole } from '@/context/RoleContext'
 
 export default function MainAppShell({ children }: { children: React.ReactNode }) {
@@ -32,6 +33,8 @@ export default function MainAppShell({ children }: { children: React.ReactNode }
 
           {/* Desktop spacer */}
           <div className="hidden md:block" />
+
+          <ClockStatus />
 
           {/* Notification bell */}
           <button

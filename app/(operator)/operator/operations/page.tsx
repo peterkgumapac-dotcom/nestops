@@ -17,6 +17,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
+import TaskSheet from '@/components/shared/TaskSheet'
 import { useRole } from '@/context/RoleContext'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
@@ -296,6 +297,7 @@ function OperationsContent() {
   const [sopSearch, setSopSearch] = useState('')
   const [selectedSop, setSelectedSop] = useState<SopRow | null>(null)
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null)
+  const [selectedTask, setSelectedTask] = useState<KanbanTask | null>(null)
   const [taskDialog, setTaskDialog] = useState(false)
   const [newSopSheet, setNewSopSheet] = useState(false)
   const [meetingSheet, setMeetingSheet] = useState(false)
@@ -360,7 +362,7 @@ function OperationsContent() {
           <div key={g.label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
             <div style={{ padding: '10px 16px', background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{g.label} · {g.tasks.length}</div>
             {g.tasks.map((t, i) => (
-              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderBottom: i < g.tasks.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+              <div key={t.id} onClick={() => setSelectedTask(t)} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderBottom: i < g.tasks.length - 1 ? '1px solid var(--border-subtle)' : 'none', cursor: 'pointer' }}>
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: accent, flexShrink: 0 }} />
                 <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{t.title}</span>
                 <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t.type}</span>
@@ -388,7 +390,7 @@ function OperationsContent() {
         </thead>
         <tbody>
           {tasks.map((t, i) => (
-            <tr key={t.id} style={{ borderBottom: i < tasks.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+            <tr key={t.id} onClick={() => setSelectedTask(t)} style={{ borderBottom: i < tasks.length - 1 ? '1px solid var(--border-subtle)' : 'none', cursor: 'pointer' }}>
               <td style={{ padding: '11px 14px', fontWeight: 500, color: 'var(--text-primary)' }}>{t.title}</td>
               <td style={{ padding: '11px 14px', color: 'var(--text-muted)' }}>{t.type}</td>
               <td style={{ padding: '11px 14px' }}><StatusBadge status={t.columnId === 'todo' ? 'open' : t.columnId === 'inprogress' ? 'in_progress' : 'done'} /></td>
@@ -700,6 +702,25 @@ function OperationsContent() {
           </SheetFooter>
         </SheetContent>
       </Sheet>
+
+      {/* ── Task Detail Sheet ── */}
+      <TaskSheet
+        task={selectedTask ? {
+          id: selectedTask.id,
+          title: selectedTask.title,
+          type: selectedTask.type,
+          priority: selectedTask.priority,
+          assignee: selectedTask.assignee,
+          due: selectedTask.due,
+          columnId: selectedTask.columnId,
+        } : null}
+        open={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+        onMarkComplete={(id) => {
+          setTasks(prev => prev.map(t => t.id === id ? { ...t, columnId: 'done' } : t))
+          setSelectedTask(null)
+        }}
+      />
     </motion.div>
   )
 }

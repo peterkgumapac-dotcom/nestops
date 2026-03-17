@@ -39,7 +39,14 @@ export default function LoginPage() {
       avatarColor: user.avatarBg,
     }
     setUser(profile)
-    router.push(user.href)
+
+    if (user.role === 'staff') {
+      router.push('/staff/start')
+    } else if (user.role === 'owner') {
+      router.push('/owner')
+    } else {
+      router.push('/app/dashboard')
+    }
   }
 
   return (
