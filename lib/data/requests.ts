@@ -1,0 +1,104 @@
+export type RequestType = 'maintenance' | 'purchase' | 'inquiry'
+export type RequestStatus = 'open' | 'pending' | 'resolved'
+export type RequestPriority = 'low' | 'medium' | 'high' | 'urgent'
+
+export interface RequestComment {
+  id: string
+  author: string
+  role: 'operator' | 'owner' | 'staff'
+  message: string
+  timestamp: string
+}
+
+export interface Request {
+  id: string
+  title: string
+  type: RequestType
+  status: RequestStatus
+  priority: RequestPriority
+  propertyId: string
+  ownerId: string
+  date: string
+  description: string
+  amount?: number
+  currency?: string
+  comments: RequestComment[]
+  assignedTo?: string
+}
+
+export const REQUESTS: Request[] = [
+  {
+    id: 'r1',
+    title: 'Dishwasher not draining',
+    type: 'maintenance',
+    status: 'open',
+    priority: 'high',
+    propertyId: 'p1',
+    ownerId: 'o1',
+    date: '2026-03-14',
+    description: 'Guests reported the dishwasher is not draining properly. Standing water remains after cycle completes.',
+    comments: [
+      { id: 'c1', author: 'Sarah Johnson', role: 'owner', message: 'Guest called about this this morning. Needs urgent fix before next checkin Saturday.', timestamp: '2026-03-14T09:00:00Z' },
+      { id: 'c2', author: 'Operations Team', role: 'operator', message: 'Dispatching plumber. Will confirm appointment shortly.', timestamp: '2026-03-14T10:30:00Z' },
+    ],
+  },
+  {
+    id: 'r2',
+    title: 'Replace guest towel set',
+    type: 'purchase',
+    status: 'pending',
+    priority: 'low',
+    propertyId: 'p2',
+    ownerId: 'o1',
+    date: '2026-03-12',
+    description: 'Current towel set is worn. Request to purchase 2 new sets (bath + hand + face cloths) for Harbor Studio.',
+    amount: 890,
+    currency: 'NOK',
+    comments: [
+      { id: 'c3', author: 'Operations Team', role: 'operator', message: 'Reviewing purchase request. Will approve once we confirm budget.', timestamp: '2026-03-12T14:00:00Z' },
+    ],
+  },
+  {
+    id: 'r3',
+    title: 'WiFi router upgrade inquiry',
+    type: 'inquiry',
+    status: 'resolved',
+    priority: 'medium',
+    propertyId: 'p3',
+    ownerId: 'o2',
+    date: '2026-03-08',
+    description: 'Owner asked about upgrading the WiFi router to improve connection speed for remote workers.',
+    comments: [
+      { id: 'c4', author: 'Michael Chen', role: 'owner', message: 'We have had 3 complaints about slow WiFi this month.', timestamp: '2026-03-08T11:00:00Z' },
+      { id: 'c5', author: 'Operations Team', role: 'operator', message: 'We recommend upgrading to mesh system. Cost approx 2,400 NOK. Shall we proceed?', timestamp: '2026-03-09T09:00:00Z' },
+      { id: 'c6', author: 'Michael Chen', role: 'owner', message: 'Yes please proceed.', timestamp: '2026-03-09T12:00:00Z' },
+      { id: 'c7', author: 'Operations Team', role: 'operator', message: 'Upgrade completed. New mesh system installed and tested.', timestamp: '2026-03-11T16:00:00Z' },
+    ],
+  },
+  {
+    id: 'r4',
+    title: 'Heating system making noise',
+    type: 'maintenance',
+    status: 'open',
+    priority: 'urgent',
+    propertyId: 'p4',
+    ownerId: 'o3',
+    date: '2026-03-15',
+    description: 'Current guests report loud banging noise from heating radiators at night. Temperature also inconsistent.',
+    comments: [],
+  },
+  {
+    id: 'r5',
+    title: 'Purchase coffee machine',
+    type: 'purchase',
+    status: 'open',
+    priority: 'low',
+    propertyId: 'p1',
+    ownerId: 'o1',
+    date: '2026-03-13',
+    description: 'Current coffee machine is broken. Request to replace with Nespresso Vertuo Next.',
+    amount: 1290,
+    currency: 'NOK',
+    comments: [],
+  },
+]
