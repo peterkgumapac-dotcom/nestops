@@ -1,0 +1,1 @@
+export { default } from '@/app/(operator)/operator/guest-services/analytics/page'

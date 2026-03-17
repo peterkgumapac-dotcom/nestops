@@ -4,16 +4,22 @@ import { usePathname } from 'next/navigation'
 import { LayoutDashboard, AlertCircle, DollarSign, BarChart2 } from 'lucide-react'
 import { useRole } from '@/context/RoleContext'
 
-const NAV_ITEMS = [
-  { label: 'Overview',  href: '/operator/guest-services',           icon: LayoutDashboard },
-  { label: 'Issues',    href: '/operator/guest-services/issues',    icon: AlertCircle },
-  { label: 'Refunds',   href: '/operator/guest-services/refunds',   icon: DollarSign },
-  { label: 'Analytics', href: '/operator/guest-services/analytics', icon: BarChart2 },
-]
+const SUBROUTES = ['', '/issues', '/refunds', '/analytics']
+const ICONS = [LayoutDashboard, AlertCircle, DollarSign, BarChart2]
+const LABELS = ['Overview', 'Issues', 'Refunds', 'Analytics']
 
 export default function GuestServicesNav() {
   const pathname = usePathname()
   const { accent } = useRole()
+
+  // Detect base prefix: /operator/guest-services or /app/guest-services
+  const base = pathname.startsWith('/app/') ? '/app/guest-services' : '/operator/guest-services'
+
+  const NAV_ITEMS = SUBROUTES.map((sub, i) => ({
+    label: LABELS[i],
+    href: base + sub,
+    icon: ICONS[i],
+  }))
 
   return (
     <div
