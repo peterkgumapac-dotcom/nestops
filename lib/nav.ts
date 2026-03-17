@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Building2, CalendarCheck, ShieldCheck,
   ClipboardList, Ticket, Package, HardDrive,
   UserCheck, HardHat,
-  BookOpen,
+  BookOpen, Headphones,
   Zap, Bell,
   Settings,
   Home, Inbox, PlusCircle, FileText, CheckSquare, ArrowLeftRight,
@@ -40,10 +40,11 @@ export const OPERATOR_NAV: NavSection[] = [
   {
     label: 'Operations',
     items: [
-      { label: 'Tasks & SOPs', href: '/operator/operations', icon: ClipboardList },
-      { label: 'Requests',     href: '/operator/tickets',    icon: Ticket,    badge: 5 },
-      { label: 'Inventory',    href: '/operator/inventory',  icon: Package },
-      { label: 'Fixed Assets', href: '/operator/assets',     icon: HardDrive },
+      { label: 'Tasks & SOPs',   href: '/operator/operations',     icon: ClipboardList },
+      { label: 'Guest Services', href: '/operator/guest-services', icon: Headphones },
+      { label: 'Requests',       href: '/operator/tickets',        icon: Ticket,    badge: 5 },
+      { label: 'Inventory',      href: '/operator/inventory',      icon: Package },
+      { label: 'Fixed Assets',   href: '/operator/assets',         icon: HardDrive },
     ],
   },
   {
@@ -108,10 +109,11 @@ export const MAIN_APP_OPERATOR_NAV: NavSection[] = [
   {
     label: 'Operations',
     items: [
-      { label: 'Tasks & SOPs', href: '/app/operations', icon: ClipboardList },
-      { label: 'Requests',     href: '/app/tickets',    icon: Ticket,    badge: 5 },
-      { label: 'Inventory',    href: '/app/inventory',  icon: Package },
-      { label: 'Fixed Assets', href: '/app/assets',     icon: HardDrive },
+      { label: 'Tasks & SOPs',   href: '/app/operations',     icon: ClipboardList },
+      { label: 'Guest Services', href: '/app/guest-services', icon: Headphones },
+      { label: 'Requests',       href: '/app/tickets',        icon: Ticket,    badge: 5 },
+      { label: 'Inventory',      href: '/app/inventory',      icon: Package },
+      { label: 'Fixed Assets',   href: '/app/assets',         icon: HardDrive },
     ],
   },
   {

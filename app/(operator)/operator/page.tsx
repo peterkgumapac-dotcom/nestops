@@ -1,5 +1,6 @@
 'use client'
-import { Building2, Users, Ticket, Package, AlertTriangle } from 'lucide-react'
+import Link from 'next/link'
+import { Building2, Users, Ticket, Package, AlertTriangle, Headphones, ChevronRight } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
 import StatCard from '@/components/shared/StatCard'
 import StatusBadge from '@/components/shared/StatusBadge'
@@ -9,6 +10,7 @@ import { REQUESTS } from '@/lib/data/requests'
 import { OWNERS } from '@/lib/data/owners'
 import { PROPERTIES } from '@/lib/data/properties'
 import { STOCK_ITEMS } from '@/lib/data/inventory'
+import { GUEST_ISSUES, getActiveIssues, getTotalRefunds, getRedFlagProperties, fmtNok } from '@/lib/data/guestServices'
 import { useRole } from '@/context/RoleContext'
 
 const recentRequests = REQUESTS.slice(0, 5).map(r => ({
@@ -32,7 +34,10 @@ export default function OperatorDashboard() {
     { key: 'priority', label: 'Priority', render: r => <StatusBadge status={r.priority} /> },
   ]
 
-  const lowStock = STOCK_ITEMS.filter(i => i.status === 'low' || i.status === 'critical' || i.status === 'out')
+  const lowStock   = STOCK_ITEMS.filter(i => i.status === 'low' || i.status === 'critical' || i.status === 'out')
+  const activeIssues = getActiveIssues(GUEST_ISSUES)
+  const totalRefunds = getTotalRefunds(GUEST_ISSUES)
+  const redFlags     = getRedFlagProperties(GUEST_ISSUES)
 
   return (
     <div>
@@ -44,6 +49,7 @@ export default function OperatorDashboard() {
         <StatCard label="Active Owners" value={OWNERS.filter(o => o.status === 'active').length} icon={Users} subtitle="Currently managing" />
         <StatCard label="Open Requests" value={REQUESTS.filter(r => r.status === 'open').length} icon={Ticket} subtitle="Awaiting action" />
         <StatCard label="Low Stock Items" value={lowStock.length} icon={Package} subtitle="Needs restocking" />
+        <StatCard label="Active Issues" value={activeIssues.length} icon={Headphones} subtitle="Guest issues open" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24 }}>
@@ -90,6 +96,41 @@ export default function OperatorDashboard() {
                 <StatusBadge status={item.status} />
               </div>
             ))}
+          </div>
+
+          {/* Guest Services widget */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Headphones size={14} style={{ color: accent }} />
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Guest Issues</h3>
+              </div>
+              <Link href="/operator/guest-services" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: accent, textDecoration: 'none' }}>
+                View <ChevronRight size={12} />
+              </Link>
+            </div>
+
+            {redFlags.length > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: '#ef444412', border: '1px solid #ef444430', borderRadius: 7, marginBottom: 10 }}>
+                <AlertTriangle size={13} color="#ef4444" />
+                <span style={{ fontSize: 12, color: '#ef4444', fontWeight: 600 }}>
+                  {redFlags.length} {redFlags.length === 1 ? 'property' : 'properties'} flagged
+                </span>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                { label: 'Active issues', value: activeIssues.length, color: activeIssues.length > 3 ? '#ef4444' : 'var(--text-primary)' },
+                { label: 'Total refunded', value: fmtNok(totalRefunds), color: 'var(--text-primary)' },
+                { label: 'Flagged properties', value: redFlags.length, color: redFlags.length > 0 ? '#ef4444' : '#10b981' },
+              ].map(({ label, value, color }) => (
+                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-subtle)' }}>{label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color }}>{value}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
