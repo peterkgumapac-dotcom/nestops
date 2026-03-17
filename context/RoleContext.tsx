@@ -83,6 +83,17 @@ export function RoleProvider({ children }: { children: ReactNode }) {
 
 export function useRole() {
   const ctx = useContext(RoleContext)
-  if (!ctx) throw new Error('useRole must be used within RoleProvider')
+  if (!ctx) {
+    return {
+      role: 'operator' as Role,
+      setRole: () => {},
+      user: null,
+      setUser: () => {},
+      accent: '#7c3aed',
+      accentVar: 'var(--accent-operator)',
+      portalLabel: 'Operator Portal',
+      meshClass: 'mesh-operator',
+    }
+  }
   return ctx
 }

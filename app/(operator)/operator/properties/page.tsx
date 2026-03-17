@@ -32,7 +32,9 @@ export default function PropertiesPage() {
         {PROPERTIES.map(prop => {
           const owner = OWNERS.find(o => o.id === prop.ownerId)
           return (
-            <div key={prop.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}
+            <div key={prop.id}
+              onClick={() => router.push(`/operator/properties/${prop.id}`)}
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', transition: 'transform 0.2s', cursor: 'pointer' }}
               onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
               onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
             >
