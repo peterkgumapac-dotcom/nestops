@@ -5,6 +5,37 @@ export type ShiftType = 'cleaning' | 'maintenance' | 'inspection' | 'intake' | '
 export type ShiftStatus = 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show'
 export type DayOfWeek = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun'
 
+export type PTEStatus =
+  | 'not_required'
+  | 'auto_granted'
+  | 'pending'
+  | 'granted'
+  | 'denied'
+  | 'expired'
+
+export interface PermissionToEnter {
+  id: string
+  taskId: string
+  propertyId: string
+  propertyName: string
+  requestedBy: string
+  requestedAt: string
+  staffMember: string
+  guestName?: string
+  status: PTEStatus
+  grantedAt?: string
+  grantedBy?: string
+  validFrom?: string
+  validUntil?: string
+  notes?: string
+}
+
+export interface TaskPTE {
+  pteRequired: boolean
+  pteStatus: PTEStatus
+  pte?: PermissionToEnter
+}
+
 export interface Shift {
   id: string
   staffId: string
@@ -17,6 +48,9 @@ export interface Shift {
   status: ShiftStatus
   notes?: string
   jobIds: string[]
+  pteRequired?: boolean
+  pteStatus?: PTEStatus
+  pte?: PermissionToEnter
 }
 
 export interface StaffAvailability {

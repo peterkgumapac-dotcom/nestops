@@ -795,3 +795,57 @@ export function getCategoryBreakdown(issues: GuestIssue[]): Record<IssueCategory
   }
   return counts
 }
+
+export interface OvernightReport {
+  date: string
+  generatedAt: string
+  issues: {
+    id: string
+    time: string
+    property: string
+    title: string
+    severity: IssueSeverity
+    assignedTo?: string
+    status: 'unassigned' | 'assigned' | 'resolved'
+  }[]
+  lateCheckouts: {
+    property: string
+    guestName: string
+    requestedTime: string
+    approved: boolean
+  }[]
+  noises: {
+    property: string
+    time: string
+    description: string
+  }[]
+}
+
+export const OVERNIGHT_REPORTS: OvernightReport[] = [
+  {
+    date: '2026-03-18',
+    generatedAt: '06:00',
+    issues: [
+      {
+        id: 'on-1',
+        time: '23:41',
+        property: 'Harbor Studio',
+        title: 'Hot water not working',
+        severity: 'high',
+        assignedTo: 'Bjorn Larsen',
+        status: 'assigned',
+      },
+      {
+        id: 'on-2',
+        time: '01:15',
+        property: 'Downtown Loft',
+        title: 'Noise complaint from neighbor',
+        severity: 'medium',
+        assignedTo: undefined,
+        status: 'unassigned',
+      },
+    ],
+    lateCheckouts: [],
+    noises: [],
+  },
+]
