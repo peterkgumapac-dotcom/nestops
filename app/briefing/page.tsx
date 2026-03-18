@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
@@ -199,8 +199,7 @@ export default function BriefingPage() {
   void WeatherWidget
 
   // Clock-in from briefing → save to localStorage then go to dashboard
-  const handleClockInAndGo = useCallback(() => {
-    if (!currentUser) return
+  const handleClockInAndGo = () => {
     localStorage.setItem('nestops_clockin', JSON.stringify({
       staffId: currentUser.id,
       shiftId: firstShift?.id ?? 'unknown',
@@ -210,7 +209,7 @@ export default function BriefingPage() {
       status: 'in_progress',
     }))
     router.push('/app/dashboard')
-  }, [currentUser, firstShift, today, router])
+  }
 
   // Role-aware CTA buttons for personalized screen
   const primaryBtnBase: React.CSSProperties = {
