@@ -38,8 +38,8 @@ export default function LoginPage() {
       avatarInitials: user.initials,
       avatarColor: user.avatarBg,
     }
+    localStorage.setItem('nestops_user', JSON.stringify(profile))
     setUser(profile)
-
     router.push('/briefing')
   }
 
