@@ -11,7 +11,7 @@ import { PROPERTIES } from '@/lib/data/properties'
 import { JOBS } from '@/lib/data/staff'
 import CountdownTimer from '@/components/shared/CountdownTimer'
 import WeatherWidget from '@/components/shared/WeatherWidget'
-import { getPTEBadge } from '@/lib/utils/pteUtils'
+import { getPTEBadge, sortJobsByAccessibility } from '@/lib/utils/pteUtils'
 
 const USER_TO_STAFF: Record<string, string> = {
   'u3': 's1',
@@ -182,8 +182,10 @@ export default function BriefingPage() {
   const openIssues = activeIssues.filter(i => i.severity === 'medium' || i.severity === 'low')
   const unassignedOvernightCount = todayReport?.issues.filter(i => i.status === 'unassigned').length ?? 0
 
-  // Maintenance jobs
-  const myJobs = staffId ? JOBS.filter(j => j.staffId === staffId) : []
+  // Maintenance jobs — sorted by accessibility (vacant/auto-granted first)
+  const rawMyJobs = staffId ? JOBS.filter(j => j.staffId === staffId) : []
+  const myJobs = sortJobsByAccessibility(rawMyJobs)
+  const firstAutoGrantedJob = myJobs.find(j => j.pteStatus === 'auto_granted')
 
   // Guest services data
   const pendingPTEJobs = JOBS.filter(j => j.pteStatus === 'pending')
@@ -482,20 +484,36 @@ export default function BriefingPage() {
                   myJobs.map(job => {
                     const pteBadge = getPTEBadge(job.pteStatus ?? 'not_required')
                     const priorityEmoji = job.priority === 'urgent' ? '🔴' : job.priority === 'high' ? '🟡' : '⚪'
+                    const isAutoGranted = job.pteStatus === 'auto_granted'
+                    const isPending = job.pteStatus === 'pending'
+                    const showGoHereFirst = isAutoGranted
+                    const showHint = isPending && firstAutoGrantedJob !== undefined && firstAutoGrantedJob.id !== job.id
                     return (
-                      <div key={job.id} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '16px', marginBottom: 10 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                          <span style={{ fontSize: 14 }}>{priorityEmoji}</span>
-                          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>
-                            {job.priority.toUpperCase()}
-                          </span>
-                        </div>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 4 }}>{job.title}</div>
-                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>{job.propertyName}</div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: pteBadge.color + '20', color: pteBadge.color }}>
-                            {pteBadge.icon} {pteBadge.label}
-                          </span>
+                      <div key={job.id} style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${isAutoGranted ? 'rgba(22,163,74,0.4)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 16, overflow: 'hidden', marginBottom: 10 }}>
+                        {showGoHereFirst && (
+                          <div style={{ background: '#16a34a', padding: '6px 16px', fontSize: 11, fontWeight: 700, color: '#fff', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                            🟢 Vacant — Go Now
+                          </div>
+                        )}
+                        <div style={{ padding: '14px 16px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                            <span style={{ fontSize: 14 }}>{priorityEmoji}</span>
+                            <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>
+                              {job.priority.toUpperCase()}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 4 }}>{job.title}</div>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>{job.propertyName}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: pteBadge.color + '20', color: pteBadge.color }}>
+                              {pteBadge.icon} {pteBadge.label}
+                            </span>
+                          </div>
+                          {showHint && (
+                            <div style={{ marginTop: 8, fontSize: 12, color: '#fbbf24' }}>
+                              💡 Do the {firstAutoGrantedJob!.propertyName} job first while waiting
+                            </div>
+                          )}
                         </div>
                       </div>
                     )

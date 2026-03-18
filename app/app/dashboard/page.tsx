@@ -1,120 +1,23 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Building2, Users, Ticket, Package, AlertTriangle, CheckSquare, Clock, Star, CalendarCheck, ChevronRight, Bell } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { useRole } from '@/context/RoleContext'
 import type { UserProfile } from '@/context/RoleContext'
-import StatCard from '@/components/shared/StatCard'
-import StatusBadge from '@/components/shared/StatusBadge'
 import CountdownTimer from '@/components/shared/CountdownTimer'
+import { OVERNIGHT_REPORTS } from '@/lib/data/guestServices'
 import { PROPERTIES } from '@/lib/data/properties'
-import { OWNERS } from '@/lib/data/owners'
-import { REQUESTS } from '@/lib/data/requests'
-import { STOCK_ITEMS } from '@/lib/data/inventory'
-import { SHIFTS } from '@/lib/data/staffScheduling'
-import type { Shift } from '@/lib/data/staffScheduling'
-import { STAFF_MEMBERS } from '@/lib/data/staff'
-import { GUEST_ISSUES, OVERNIGHT_REPORTS, getActiveIssues } from '@/lib/data/guestServices'
+import { PROPERTY_WEATHER } from '@/lib/data/weather'
 import { JOBS } from '@/lib/data/staff'
-import { getPTEBadge } from '@/lib/utils/pteUtils'
-import { getLateStatus } from '@/lib/utils/lateDetection'
+import { sortJobsByAccessibility } from '@/lib/utils/pteUtils'
 
-const TODAY = new Date().toISOString().split('T')[0]
-
-const TODAY_CLEANINGS = [
-  { id: 'c1', property: 'Sunset Villa',    type: 'Checkout clean',  time: '10:00', staff: 'Maria S.',   status: 'scheduled' as const },
-  { id: 'c2', property: 'Harbor Studio',   type: 'Mid-stay clean',  time: '13:00', staff: 'Maria S.',   status: 'in_progress' as const },
-  { id: 'c3', property: 'Downtown Loft',   type: 'Checkout clean',  time: '15:00', staff: 'Bjorn L.',   status: 'scheduled' as const },
-]
-
-const TODAY_TASKS = [
-  { id: 't1', title: 'Replace towels — Sunset Villa',    priority: 'medium' as const, assignee: 'Maria S.',   due: 'Today 11:00' },
-  { id: 't2', title: 'Fix leaking faucet — Harbor Studio', priority: 'high' as const,  assignee: 'Bjorn L.',  due: 'Today 14:00' },
-  { id: 't3', title: 'Restock minibar — Downtown Loft',  priority: 'low'  as const,  assignee: 'Fatima N.', due: 'Today 16:00' },
-]
-
-const OVERDUE = [
-  { id: 'o1', title: 'Annual fire safety check — Ocean View', daysOverdue: 3, assignee: 'Bjorn L.' },
-  { id: 'o2', title: 'Deep clean after guest complaint',      daysOverdue: 1, assignee: 'Maria S.' },
-]
-
-const PENDING_APPROVALS = [
-  { id: 'a1', title: 'Emergency plumbing repair',   property: 'Harbor Studio', amount: 4800, owner: 'Sarah J.' },
-  { id: 'a2', title: 'Replace dishwasher',          property: 'Sunset Villa',  amount: 9200, owner: 'Sarah J.' },
-  { id: 'a3', title: 'New outdoor furniture set',   property: 'Ocean View Apt', amount: 6400, owner: 'Michael C.' },
-]
-
-const OPERATOR_TASKS = [
-  { id: 'ot1', title: 'Create SOP: Guest Check-in v2', done: false },
-  { id: 'ot2', title: 'Review compliance — Mountain Cabin', done: false },
-  { id: 'ot3', title: 'Approve purchase: Linen set — NOK 3,200', done: false },
-]
-
-const MEETINGS = [
-  { id: 'm1', time: '10:00', title: 'Weekly Ops Standup', attendees: 3 },
-  { id: 'm2', time: '14:00', title: 'Owner Onboarding — Kim Portfolio', attendees: 2 },
-]
-
-const PRIORITY_COLORS: Record<string, string> = {
-  high: '#f87171', medium: '#fb923c', low: '#34d399', urgent: '#f43f5e',
-}
+// ─── Seed data ────────────────────────────────────────────────────────────────
 
 const USER_TO_STAFF: Record<string, string> = {
-  'u3': 's1',
-  'u4': 's3',
-  'u5': 's2',
-}
-
-const SHIFT_TASKS: Record<string, string[]> = {
-  cleaning: [
-    'Strip and replace all bed linens',
-    'Clean and disinfect all bathrooms',
-    'Vacuum and mop all floors',
-    'Wipe kitchen surfaces and appliances',
-    'Restock toiletries and consumables',
-    'Check and report any damage',
-  ],
-  maintenance: [
-    'Diagnose and document the issue',
-    'Take photos of problem area',
-    'Complete repair',
-    'Test fix is working',
-    'Update notes and notify operator',
-  ],
-  inspection: [
-    'Check all rooms against checklist',
-    'Test all appliances',
-    'Check smoke and CO detectors',
-    'Document any issues with photos',
-    'Submit inspection report',
-  ],
-  intake: [
-    'Complete property walkthrough',
-    'Document current condition',
-    'Test all locks and access codes',
-    'Complete onboarding checklist',
-    'Submit intake report',
-  ],
-  standby: ['Monitor messages', 'Be available for emergency callouts'],
-}
-
-// Simulated team clock status for operator view
-const TEAM_CLOCK_STATUS = [
-  { id: 's1', name: 'Maria S.',  initials: 'MS', clockedIn: true,  clockInTime: '09:05', shiftStart: '09:00' },
-  { id: 's3', name: 'Bjorn L.', initials: 'BL', clockedIn: false, clockInTime: '',      shiftStart: '09:00' },
-  { id: 's2', name: 'Fatima N.',initials: 'FN', clockedIn: true,  clockInTime: '08:55', shiftStart: '09:00' },
-  { id: 's4', name: 'Johan L.', initials: 'JL', clockedIn: false, clockInTime: '',      shiftStart: '14:00' },
-]
-
-function SectionHeader({ title, href, linkLabel = 'View all' }: { title: string; href?: string; linkLabel?: string }) {
-  const { accent } = useRole()
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-      <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>{title}</h2>
-      {href && <Link href={href} style={{ fontSize: 13, color: accent, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 2 }}>{linkLabel} <ChevronRight size={13} /></Link>}
-    </div>
-  )
+  'u3': 's1', // Maria → cleaning
+  'u4': 's3', // Bjorn → maintenance
+  'u5': 's2', // Fatima → guest services
 }
 
 interface ClockInRecord {
@@ -122,24 +25,197 @@ interface ClockInRecord {
   shiftId: string
   propertyId: string
   date: string
-  clockInTime: string
-  status: string
+  clockInTime: string   // "09:05 AM"
+  clockInTimestamp: number
+  status: 'in_progress' | 'completed'
   clockOutTime?: string
 }
 
+// Simulated team clock status for operator view
+const TEAM_CLOCK_STATUS = [
+  { id: 'ms', name: 'Maria S.',  initials: 'MS', avatarBg: '#d97706', role: 'Cleaning',      property: 'Ocean View Apt', clockedIn: true,  clockInTime: '09:05 AM', shiftStart: '09:00', late: false },
+  { id: 'bl', name: 'Bjorn L.', initials: 'BL', avatarBg: '#0ea5e9', role: 'Maintenance',   property: 'Sunset Villa',   clockedIn: false, clockInTime: '',          shiftStart: '09:00', late: true  },
+  { id: 'fn', name: 'Fatima N.',initials: 'FN', avatarBg: '#ec4899', role: 'Guest Services', property: 'Remote',         clockedIn: true,  clockInTime: '08:55 AM', shiftStart: '09:00', late: false },
+  { id: 'jl', name: 'Johan L.', initials: 'JL', avatarBg: '#6b7280', role: 'Cleaning',      property: 'Harbor Studio',  clockedIn: false, clockInTime: '',          shiftStart: '14:00', late: false },
+]
+
+const CLEANING_SHIFTS = [
+  {
+    id: 'cs1',
+    propertyId: 'p3',
+    propertyName: 'Ocean View Apt',
+    city: 'Stavanger',
+    startTime: '09:00',
+    endTime: '12:00',
+    type: 'Turnover Clean',
+    tasks: [
+      'Strip and replace all bed linens',
+      'Clean and disinfect all bathrooms',
+      'Vacuum and mop all floors',
+      'Wipe kitchen surfaces and appliances',
+      'Restock toiletries and consumables',
+    ],
+    accessType: 'Keypad',
+    code: '4821',
+    nextCheckin: '17:00',
+    pteStatus: 'not_required' as const,
+  },
+  {
+    id: 'cs2',
+    propertyId: 'p2',
+    propertyName: 'Harbor Studio',
+    city: 'Bergen',
+    startTime: '13:00',
+    endTime: '15:00',
+    type: 'Checkout Clean',
+    tasks: [
+      'Strip and replace all bed linens',
+      'Clean bathroom thoroughly',
+      'Vacuum all floors',
+    ],
+    accessType: 'Key box',
+    code: '9274',
+    nextCheckin: '17:00',
+    pteStatus: 'not_required' as const,
+  },
+]
+
+const OTHER_TASKS_CLEANING = [
+  { id: 'ot1', label: 'Deliver linen set — Harbor Studio · Before 13:00' },
+  { id: 'ot2', label: 'Restock toiletry kits — Ocean View · After clean' },
+]
+
+const TODAY_CHECKINS = [
+  {
+    time: '15:00',
+    propertyName: 'Sunset Villa',
+    guest: 'Lars Eriksen',
+    nights: 5,
+    cleaner: 'Maria S.',
+    readiness: 'ok' as const,
+    readinessNote: '',
+  },
+  {
+    time: '17:00',
+    propertyName: 'Ocean View Apt',
+    guest: 'Sophie Kristiansen',
+    nights: 2,
+    cleaner: 'Maria S.',
+    readiness: 'risk' as const,
+    readinessNote: 'Cleaning finishes at 17:00 (tight)',
+  },
+]
+
+const OPERATOR_TASKS = [
+  { id: 'op1', label: 'Create SOP: Guest Check-in v2' },
+  { id: 'op2', label: 'Review compliance — Mountain Cabin' },
+  { id: 'op3', label: 'Approve purchase: Linen set — NOK 3,200' },
+]
+
+const MEETINGS = [
+  { id: 'm1', time: '10:00', title: 'Weekly Ops Standup', attendees: 3 },
+  { id: 'm2', time: '14:00', title: 'Owner Onboarding — Kim Portfolio', attendees: 2 },
+]
+
+const GS_PENDING_PTE = [
+  { id: 'pte1', property: 'Downtown Loft', staff: 'Bjorn Larsen', guest: 'Henrik Solberg', task: 'Fix toilet' },
+]
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function convertTo24h(timeStr: string): string {
+  const [time, period] = timeStr.split(' ')
+  const [hStr, mStr] = time.split(':')
+  let h = parseInt(hStr, 10)
+  const m = mStr ?? '00'
+  if (period === 'PM' && h !== 12) h += 12
+  if (period === 'AM' && h === 12) h = 0
+  return `${String(h).padStart(2, '0')}:${m}:00`
+}
+
+function shiftMinsFromNow(startTime: string): number {
+  const today = new Date().toISOString().split('T')[0]
+  const ms = new Date(`${today}T${startTime}:00`).getTime()
+  return (ms - Date.now()) / 60000
+}
+
+function elapsedFromTimestamp(ts: number): string {
+  const ms = Date.now() - ts
+  if (ms < 0) return '0m'
+  const h = Math.floor(ms / 3600000)
+  const m = Math.floor((ms % 3600000) / 60000)
+  return h > 0 ? `${h}h ${m}m` : `${m}m`
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+const C = {
+  bg:      '#0a0f1a',
+  card:    '#111827',
+  border:  '#1f2937',
+  text:    '#f9fafb',
+  muted:   '#6b7280',
+  green:   '#16a34a',
+  amber:   '#d97706',
+  red:     '#dc2626',
+  blue:    '#3b82f6',
+}
+
+function SectionLabel({ label }: { label: string }) {
+  return (
+    <div style={{
+      fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: '0.08em',
+      textTransform: 'uppercase', marginBottom: 10,
+    }}>{label}</div>
+  )
+}
+
+function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{
+      background: C.card, border: `1px solid ${C.border}`,
+      borderRadius: 10, padding: '14px 16px', marginBottom: 12,
+      ...style,
+    }}>
+      {children}
+    </div>
+  )
+}
+
+function ActionBtn({ label, onClick }: { label: string; onClick?: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: '5px 10px', borderRadius: 6,
+        background: 'transparent', border: `1px solid ${C.border}`,
+        color: C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+      }}
+    >
+      {label}
+    </button>
+  )
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export default function AppDashboard() {
-  const { accent, role, user } = useRole()
+  const { role, user } = useRole()
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
   const [clockIn, setClockIn] = useState<ClockInRecord | null>(null)
+  const [elapsed, setElapsed] = useState('')
+  const [taskChecks, setTaskChecks] = useState<Record<string, boolean>>({})
   const [showCodes, setShowCodes] = useState<Record<string, boolean>>({})
   const [grantedPTE, setGrantedPTE] = useState<Record<string, boolean>>({})
-  const [elapsed, setElapsed] = useState('')
-  const [todayStaffShift, setTodayStaffShift] = useState<Shift | null>(null)
+  const [expandPTEPanel, setExpandPTEPanel] = useState<string | null>(null)
+  const [toast, setToast] = useState('')
+
+  const today = new Date().toISOString().split('T')[0]
 
   useEffect(() => {
     const stored = localStorage.getItem('nestops_user')
     if (stored) {
-      try { setCurrentUser(JSON.parse(stored)) } catch {}
+      try { setCurrentUser(JSON.parse(stored)) } catch { /* ignore */ }
     }
   }, [])
 
@@ -147,40 +223,16 @@ export default function AppDashboard() {
     const stored = localStorage.getItem('nestops_clockin')
     if (stored) {
       try {
-        const ci = JSON.parse(stored)
-        const today = new Date().toISOString().split('T')[0]
+        const ci = JSON.parse(stored) as ClockInRecord
         if (ci.date === today) setClockIn(ci)
-      } catch {}
+      } catch { /* ignore */ }
     }
-  }, [])
+  }, [today])
 
-  // Find today's shift for staff
+  // Elapsed time poll
   useEffect(() => {
-    if (!currentUser) return
-    const staffId = USER_TO_STAFF[currentUser.id]
-    if (!staffId) return
-    const today = new Date().toISOString().split('T')[0]
-    const shift = SHIFTS.find(s => s.staffId === staffId && s.date === today) ?? null
-    setTodayStaffShift(shift)
-  }, [currentUser])
-
-  // Elapsed time for clocked-in staff — poll every 60s
-  useEffect(() => {
-    if (!clockIn?.clockInTime || clockIn.status !== 'in_progress') return
-    const calc = () => {
-      // clockInTime is stored as locale time string like "09:05 AM"
-      // Parse it relative to today
-      const today = new Date().toISOString().split('T')[0]
-      const parsed = new Date(`${today}T${convertTo24h(clockIn.clockInTime)}`)
-      const ms = Date.now() - parsed.getTime()
-      if (ms < 0) {
-        setElapsed('0m')
-        return
-      }
-      const h = Math.floor(ms / 3600000)
-      const m = Math.floor((ms % 3600000) / 60000)
-      setElapsed(h > 0 ? `${h}h ${m}m` : `${m}m`)
-    }
+    if (!clockIn?.clockInTimestamp || clockIn.status !== 'in_progress') return
+    const calc = () => setElapsed(elapsedFromTimestamp(clockIn.clockInTimestamp))
     calc()
     const interval = setInterval(calc, 60000)
     return () => clearInterval(interval)
@@ -188,45 +240,36 @@ export default function AppDashboard() {
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
-  const displayName = user?.name?.split(' ')[0] ?? currentUser?.name?.split(' ')[0] ?? (role === 'operator' ? 'Peter' : 'there')
+  const displayName = currentUser?.name?.split(' ')[0] ?? user?.name?.split(' ')[0] ?? 'there'
 
-  const openRequests = REQUESTS.filter(r => r.status === 'open').length
-  const lowStock = STOCK_ITEMS.filter(i => i.status === 'low' || i.status === 'critical' || i.status === 'out')
-  const activeProperties = PROPERTIES.filter(p => p.status === 'live').length
-
-  // Today's overnight report
-  const todayReport = OVERNIGHT_REPORTS.find(r => r.date === TODAY)
-
-  // Staff-specific data
-  const staffId = currentUser ? USER_TO_STAFF[currentUser.id] : null
-  const myShiftsToday = staffId ? SHIFTS.filter(s => s.staffId === staffId && s.date === TODAY) : []
-  const myJobs = staffId ? JOBS.filter(j => j.staffId === staffId) : []
-  const activeIssues = getActiveIssues(GUEST_ISSUES)
-  const pendingPTEJobs = JOBS.filter(j => j.pteStatus === 'pending')
-
-  const toggleCode = (id: string) => setShowCodes(prev => ({ ...prev, [id]: !prev[id] }))
-  const grantPTE = (jobId: string) => setGrantedPTE(prev => ({ ...prev, [jobId]: true }))
-
-  const canShowCodeForShift = (shift: { startTime: string }) => {
-    const [h, m] = shift.startTime.split(':').map(Number)
-    const shiftStart = new Date()
-    shiftStart.setHours(h, m, 0, 0)
-    const minsUntil = (shiftStart.getTime() - Date.now()) / 60000
-    return minsUntil <= 30
-  }
-
-  const isStaff = currentUser?.role === 'staff' || role === 'staff'
+  const effectiveRole = currentUser?.role ?? role
   const effectiveSubRole = currentUser?.subRole ?? user?.subRole ?? ''
+  const isStaff = effectiveRole === 'staff'
+  const isOperator = effectiveRole === 'operator'
+  const isCleaning = effectiveSubRole.includes('Cleaning')
+  const isMaintenance = effectiveSubRole.includes('Maintenance')
+  const isGuestServices = effectiveSubRole.includes('Guest')
+  const isOwner = effectiveRole === 'owner'
 
-  // Clock-in handlers
+  // Maintenance jobs for Bjorn
+  const allMaintenanceJobs = JOBS.filter(j => j.type === 'maintenance')
+  const sortedMaintenanceJobs = sortJobsByAccessibility(allMaintenanceJobs)
+  const hasPendingPTE = sortedMaintenanceJobs.some(j => j.pteStatus === 'pending')
+  const firstAutoGranted = sortedMaintenanceJobs.find(j => j.pteStatus === 'auto_granted')
+
+  // Overnight
+  const todayReport = OVERNIGHT_REPORTS.find(r => r.date === today) ?? OVERNIGHT_REPORTS[0]
+
   const handleClockIn = () => {
-    if (!currentUser || !todayStaffShift) return
+    if (!currentUser) return
+    const now = new Date()
     const record: ClockInRecord = {
       staffId: USER_TO_STAFF[currentUser.id] ?? currentUser.id,
-      shiftId: todayStaffShift.id,
-      propertyId: todayStaffShift.propertyId,
-      date: new Date().toISOString().split('T')[0],
-      clockInTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      shiftId: CLEANING_SHIFTS[0]?.id ?? 'sh-default',
+      propertyId: CLEANING_SHIFTS[0]?.propertyId ?? 'p1',
+      date: today,
+      clockInTime: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      clockInTimestamp: now.getTime(),
       status: 'in_progress',
     }
     localStorage.setItem('nestops_clockin', JSON.stringify(record))
@@ -244,645 +287,794 @@ export default function AppDashboard() {
     setClockIn(updated)
   }
 
-  // Late status for current staff shift
-  const lateStatus = todayStaffShift && clockIn?.status !== 'in_progress' && clockIn?.status !== 'completed'
-    ? getLateStatus({ status: todayStaffShift.status, date: todayStaffShift.date, startTime: todayStaffShift.startTime })
-    : null
+  const toggleCode = (id: string) => setShowCodes(prev => ({ ...prev, [id]: !prev[id] }))
+  const toggleTask = (id: string) => setTaskChecks(prev => ({ ...prev, [id]: !prev[id] }))
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
-  const shiftMinsUntil = todayStaffShift
-    ? (() => {
-        const todayStr = new Date().toISOString().split('T')[0]
-        const shiftMs = new Date(`${todayStr}T${todayStaffShift.startTime}:00`).getTime()
-        return (shiftMs - Date.now()) / 60000
-      })()
-    : null
+  // Shift time helpers for cleaning
+  const firstShiftMins = shiftMinsFromNow(CLEANING_SHIFTS[0]?.startTime ?? '09:00')
+  const secondShiftMins = shiftMinsFromNow(CLEANING_SHIFTS[1]?.startTime ?? '13:00')
+  const canShowFirstCode = firstShiftMins <= 30
+  const canShowSecondCode = secondShiftMins <= 30
+
+  // Clock bar status
+  const primaryShiftStart = CLEANING_SHIFTS[0]?.startTime ?? '09:00'
+  const minsUntilShift = shiftMinsFromNow(primaryShiftStart)
+  const isLate = minsUntilShift < -15 && clockIn?.status !== 'in_progress' && clockIn?.status !== 'completed'
+  const isUpcoming = minsUntilShift > 0 && !clockIn
+  const isClockedIn = clockIn?.status === 'in_progress'
+  const isComplete = clockIn?.status === 'completed'
+  const propertyName = PROPERTIES.find(p => p.id === CLEANING_SHIFTS[0]?.propertyId)?.name ?? 'Property'
+
+  // used for unused import suppression
+  void convertTo24h
 
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+      style={{ maxWidth: 720, margin: '0 auto' }}
+    >
+      {/* Toast */}
+      {toast && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            position: 'fixed', top: 16, right: 16, zIndex: 100,
+            background: C.green, color: '#fff',
+            padding: '10px 16px', borderRadius: 8,
+            fontSize: 13, fontWeight: 600, boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+          }}
+        >
+          {toast}
+        </motion.div>
+      )}
 
-      {/* Alert bar */}
-      <motion.div
-        initial={{ opacity: 0, y: -6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 10, padding: '10px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}
-      >
-        <Bell size={14} style={{ color: '#f87171', flexShrink: 0 }} />
-        <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>
-          <strong>2 overdue tasks</strong> and <strong>3 pending owner approvals</strong> need your attention today.
-        </span>
-        <Link href="/app/operations" style={{ marginLeft: 'auto', fontSize: 12, color: accent, textDecoration: 'none', whiteSpace: 'nowrap' }}>Review →</Link>
-      </motion.div>
-
-      {/* Greeting */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
-          {greeting}, {displayName} 👋
+      {/* Header greeting */}
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 2 }}>
+          {greeting}, {displayName}
         </h1>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-          {role === 'operator'
-            ? `Here's what's happening across your ${PROPERTIES.length} properties today.`
-            : `Here are your assignments for today.`}
+        <p style={{ fontSize: 13, color: C.muted }}>
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
       </div>
 
-      {/* Clock status bar — staff only */}
-      {isStaff && (() => {
-        // Clocked in and active
-        if (clockIn?.status === 'in_progress') {
-          return (
-            <div style={{ padding: '12px 16px', borderRadius: 10, marginBottom: 20, background: '#10b98112', border: '1px solid #10b98130' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} />
-                  <span style={{ fontSize: 13, color: '#10b981', fontWeight: 500 }}>
-                    On shift · {PROPERTIES.find(p => p.id === clockIn.propertyId)?.name ?? 'Property'} · {elapsed && `${elapsed} elapsed`}
-                  </span>
+      {/* ── CLOCK STATUS BAR (staff only) ────────────────────────────────────── */}
+      {isStaff && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          style={{
+            borderRadius: 10, padding: '12px 16px', marginBottom: 20,
+            ...(isComplete
+              ? { background: 'transparent', borderLeft: `4px solid #374151`, border: `1px solid ${C.border}` }
+              : isClockedIn
+                ? { background: 'rgba(22,163,74,0.08)', borderLeft: `4px solid ${C.green}` }
+                : isLate
+                  ? { background: 'rgba(220,38,38,0.08)', borderLeft: `4px solid ${C.red}` }
+                  : { background: 'rgba(217,119,6,0.08)', borderLeft: `4px solid ${C.amber}` }),
+          }}
+        >
+          {isComplete ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: C.muted }}>✓ SHIFT COMPLETE</span>
+              <span style={{ fontSize: 13, color: C.muted }}>·</span>
+              <span style={{ fontSize: 13, color: C.muted }}>Clocked out {clockIn?.clockOutTime}</span>
+            </div>
+          ) : isClockedIn ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                  <span style={{ fontSize: 8, color: C.green }}>●</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: C.green }}>ON SHIFT</span>
+                  <span style={{ fontSize: 13, color: C.text }}>{propertyName}</span>
+                  <span style={{ fontSize: 13, color: C.muted }}>{elapsed} elapsed</span>
                 </div>
-                <button
-                  onClick={handleClockOut}
-                  style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #10b98140', background: 'transparent', color: '#10b981', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
-                >
-                  Clock Out
-                </button>
+                <div style={{ fontSize: 12, color: C.muted }}>Started {clockIn?.clockInTime}</div>
               </div>
+              <button
+                onClick={handleClockOut}
+                style={{
+                  padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 700,
+                  background: '#374151', border: 'none', color: C.text, cursor: 'pointer',
+                }}
+              >Clock Out</button>
             </div>
-          )
-        }
-
-        // Clocked out (completed)
-        if (clockIn?.status === 'completed') {
-          return (
-            <div style={{ padding: '12px 16px', borderRadius: 10, marginBottom: 20, background: 'rgba(107,114,128,0.1)', border: '1px solid rgba(107,114,128,0.25)' }}>
-              <span style={{ fontSize: 13, color: '#6b7280' }}>✓ Shift complete · {elapsed || clockIn.clockOutTime}</span>
-            </div>
-          )
-        }
-
-        // Late — pulsing red bar
-        if (todayStaffShift && lateStatus?.isLate) {
-          return (
-            <motion.div
-              animate={{ opacity: [1, 0.7, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              style={{ padding: '12px 16px', borderRadius: 10, marginBottom: 20, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 13, color: '#f87171', fontWeight: 600 }}>🔴 You are {lateStatus.minutesLate}m late — shift started at {todayStaffShift.startTime}</span>
-                <button
-                  onClick={handleClockIn}
-                  style={{ fontSize: 12, color: '#f87171', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
-                >
-                  ▶ Clock In
-                </button>
-              </div>
-            </motion.div>
-          )
-        }
-
-        // Upcoming shift — amber bar
-        if (todayStaffShift && shiftMinsUntil !== null && shiftMinsUntil > 0) {
-          const minsUntil = Math.round(shiftMinsUntil)
-          return (
-            <div style={{ padding: '12px 16px', borderRadius: 10, marginBottom: 20, background: '#d9770612', border: '1px solid #d9770630' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 13, color: '#d97706' }}>⏰ Shift starts in {minsUntil}m · {todayStaffShift.startTime}</span>
-                <button
-                  onClick={handleClockIn}
-                  style={{ fontSize: 12, color: '#d97706', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
-                >
-                  ▶ Clock In
-                </button>
-              </div>
-            </div>
-          )
-        }
-
-        // No shift or shift time passed with no clock-in
-        if (todayStaffShift) {
-          return (
-            <div style={{ padding: '12px 16px', borderRadius: 10, marginBottom: 20, background: '#d9770612', border: '1px solid #d9770630' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 13, color: '#d97706' }}>⏰ Ready for your shift · {todayStaffShift.startTime}</span>
-                <button
-                  onClick={handleClockIn}
-                  style={{ fontSize: 12, color: '#d97706', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
-                >
-                  ▶ Clock In
-                </button>
-              </div>
-            </div>
-          )
-        }
-
-        return null
-      })()}
-
-      {/* ═══ OPERATOR DASHBOARD ═══ */}
-      {role === 'operator' && (
-        <>
-          {/* Overnight report */}
-          {todayReport && todayReport.issues.length > 0 && (
-            <div style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.25)', borderRadius: 10, padding: '14px 16px', marginBottom: 20 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 10 }}>
-                🌙 {todayReport.issues.length} issue{todayReport.issues.length !== 1 ? 's' : ''} reported overnight
-              </div>
-              {todayReport.issues.map(issue => (
-                <div key={issue.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: issue.severity === 'high' ? '#f8717120' : '#fb923c20', color: issue.severity === 'high' ? '#f87171' : '#fb923c' }}>
-                    {issue.severity.toUpperCase()}
-                  </span>
-                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', minWidth: 40 }}>{issue.time}</span>
-                  <span style={{ fontSize: 13, color: 'var(--text-primary)', flex: 1 }}>{issue.title}</span>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{issue.property}</span>
-                  <span style={{ fontSize: 11, color: issue.assignedTo ? 'var(--text-muted)' : '#f87171', fontWeight: issue.assignedTo ? 400 : 600 }}>
-                    {issue.assignedTo ?? '⚠️ Unassigned'}
-                  </span>
+          ) : isLate ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                  <motion.span
+                    animate={{ opacity: [1, 0.4, 1] }}
+                    transition={{ duration: 1.2, repeat: Infinity }}
+                    style={{ fontSize: 13, color: C.red }}
+                  >⚠</motion.span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: C.red }}>LATE</span>
+                  <span style={{ fontSize: 13, color: C.text }}>{propertyName}</span>
+                  <span style={{ fontSize: 13, color: C.red }}>{Math.abs(Math.round(minsUntilShift))} min overdue</span>
                 </div>
-              ))}
-            </div>
-          )}
-
-          {/* Stat cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 16 }}>
-            <StatCard label="Active Properties" value={activeProperties} icon={Building2} subtitle={`of ${PROPERTIES.length} total`} />
-            <StatCard label="Active Owners" value={OWNERS.filter(o => o.status === 'active').length} icon={Users} subtitle="Currently managing" />
-            <StatCard label="Open Requests" value={openRequests} icon={Ticket} subtitle="Awaiting action" />
-            <StatCard label="Low Stock" value={lowStock.length} icon={Package} subtitle="Needs restocking" />
-          </div>
-
-          {/* First check-in countdown */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '20px 24px', marginBottom: 20 }}>
-            <CountdownTimer
-              targetTime={`${TODAY}T15:00:00`}
-              label="First check-in in"
-              context="15:00 today · First guest arrival"
-            />
-          </div>
-
-          {/* Team status */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 20 }}>
-            <SectionHeader title="Team Status 👥" href="/app/team" />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {TEAM_CLOCK_STATUS.map(member => {
-                const todayShift = SHIFTS.find(s => s.staffId === member.id && s.date === TODAY) ?? null
-                const lateInfo = todayShift && !member.clockedIn
-                  ? getLateStatus({ status: todayShift.status, date: todayShift.date, startTime: todayShift.startTime })
-                  : null
-                return (
-                  <div key={member.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: member.clockedIn ? '#10b981' : '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                      {member.initials}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{member.name}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                        {member.clockedIn
-                          ? `Clocked in at ${member.clockInTime}`
-                          : `Shift: ${member.shiftStart}`}
-                      </div>
-                    </div>
-                    {member.clockedIn ? (
-                      <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: '#10b98120', color: '#10b981' }}>
-                        On Shift
-                      </span>
-                    ) : (
-                      <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: '#d9770620', color: '#d97706' }}>
-                        Not In
-                      </span>
-                    )}
-                    {lateInfo?.isLate && (
-                      <span style={{ fontSize: 10, fontWeight: 700, color: lateInfo.severity === 'very_late' ? '#f87171' : '#d97706' }}>
-                        {lateInfo.minutesLate}m late
-                      </span>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* My tasks + meetings grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
-              <SectionHeader title="My Tasks Today" />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {OPERATOR_TASKS.map(task => (
-                  <div key={task.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0' }}>
-                    <div style={{ width: 16, height: 16, borderRadius: 4, border: '2px solid var(--border)', flexShrink: 0 }} />
-                    <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>{task.title}</span>
-                  </div>
-                ))}
+                <div style={{ fontSize: 12, color: C.muted }}>Shift started {primaryShiftStart}</div>
               </div>
-            </div>
-
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
-              <SectionHeader title="My Meetings Today 📅" />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {MEETINGS.map(meeting => (
-                  <div key={meeting.id} style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--bg-surface)' }}>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{meeting.title}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{meeting.time} · {meeting.attendees} attendees</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Stat cards row 2 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 28 }}>
-        <StatCard label="Today's Cleanings" value={TODAY_CLEANINGS.length} icon={CalendarCheck} subtitle="Scheduled" animate={false} />
-        <StatCard label="Today's Tasks" value={TODAY_TASKS.length} icon={CheckSquare} subtitle="Assigned" animate={false} />
-        <StatCard label="Overdue" value={OVERDUE.length} icon={Clock} subtitle="Needs attention" animate={false} />
-        {role === 'operator' && <StatCard label="Pending Approvals" value={PENDING_APPROVALS.length} icon={Star} subtitle="From owners" animate={false} />}
-      </div>
-
-      {/* ═══ CLEANING STAFF DASHBOARD ═══ */}
-      {isStaff && effectiveSubRole.includes('Cleaning') && (
-        <>
-          <div style={{ marginBottom: 24 }}>
-            <SectionHeader title="Your Cleanings Today" />
-            {myShiftsToday.length === 0 ? (
-              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-                No cleanings scheduled today
-              </div>
-            ) : (
-              myShiftsToday.map(shift => {
-                const prop = PROPERTIES.find(p => p.id === shift.propertyId)
-                const tasks = SHIFT_TASKS[shift.type] ?? []
-                return (
-                  <div key={shift.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 12 }}>
-                    {prop?.imageUrl && (
-                      <img src={prop.imageUrl} alt={prop.name} style={{ width: '100%', height: 128, objectFit: 'cover', borderRadius: 8, marginBottom: 12 }} />
-                    )}
-                    <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>{prop?.name ?? shift.propertyId}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>{shift.startTime} – {shift.endTime}</div>
-
-                    {/* Task checklist */}
-                    {tasks.slice(0, 4).map((t, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '5px 0' }}>
-                        <div style={{ width: 16, height: 16, borderRadius: 4, border: '2px solid var(--border)', flexShrink: 0 }} />
-                        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t}</span>
-                      </div>
-                    ))}
-
-                    {/* Access code — only show within 30 min of shift start */}
-                    <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 8, background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Access Code</div>
-                      {canShowCodeForShift(shift) ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '0.15em', color: showCodes[shift.id] ? 'var(--text-primary)' : 'transparent', textShadow: showCodes[shift.id] ? 'none' : '0 0 8px rgba(255,255,255,0.5)', userSelect: showCodes[shift.id] ? 'text' : 'none' }}>
-                            {showCodes[shift.id] ? '4821' : '••••'}
-                          </span>
-                          <button
-                            onClick={() => toggleCode(shift.id)}
-                            style={{ fontSize: 12, color: accent, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 600 }}
-                          >
-                            {showCodes[shift.id] ? 'Hide' : 'Show Code 👁'}
-                          </button>
-                        </div>
-                      ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#d97706' }}>
-                          <span style={{ fontSize: 13 }}>🔒</span>
-                          <span style={{ fontSize: 12, fontWeight: 500 }}>Available 30 min before shift</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <button
-                      style={{ marginTop: 12, width: '100%', padding: '10px', borderRadius: 8, background: accent, color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}
-                    >
-                      ▶ Start This Clean
-                    </button>
-                  </div>
-                )
-              })
-            )}
-          </div>
-
-          {/* Other tasks */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 24 }}>
-            <SectionHeader title="Other Tasks Today" />
-            {TODAY_TASKS.slice(0, 2).map(t => (
-              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                <div style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.2)', flexShrink: 0 }} />
-                <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>{t.title}</span>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* ═══ MAINTENANCE STAFF DASHBOARD ═══ */}
-      {isStaff && effectiveSubRole.includes('Maintenance') && (
-        <div style={{ marginBottom: 24 }}>
-          <SectionHeader title="Your Jobs Today" />
-          {myJobs.length === 0 ? (
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-              No jobs assigned today
+              <button
+                onClick={handleClockIn}
+                style={{
+                  padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 700,
+                  background: C.red, border: 'none', color: '#fff', cursor: 'pointer',
+                }}
+              >▶ Clock In Now</button>
             </div>
           ) : (
-            myJobs.map(job => {
-              const jobPTEStatus = grantedPTE[job.id] ? 'granted' : (job.pteStatus ?? 'not_required')
-              const pteBadge = getPTEBadge(jobPTEStatus)
-              const canShowCode = jobPTEStatus === 'granted' || jobPTEStatus === 'auto_granted' || jobPTEStatus === 'not_required'
-              const priorityEmoji = job.priority === 'urgent' ? '🔴' : job.priority === 'high' ? '🟡' : '⚪'
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                  <span style={{ fontSize: 8, color: C.amber }}>○</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: C.amber }}>UPCOMING</span>
+                  <span style={{ fontSize: 13, color: C.text }}>{propertyName}</span>
+                  {isUpcoming && (
+                    <span style={{ fontSize: 13, color: C.muted }}>Starts in {Math.round(minsUntilShift)} min</span>
+                  )}
+                </div>
+                <div style={{ fontSize: 12, color: C.muted }}>Shift at {primaryShiftStart}</div>
+              </div>
+              <button
+                onClick={handleClockIn}
+                style={{
+                  padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 700,
+                  background: C.amber, border: 'none', color: '#fff', cursor: 'pointer',
+                }}
+              >▶ Clock In</button>
+            </div>
+          )}
+        </motion.div>
+      )}
 
-              // PTE display text
-              const pteDisplayText = (() => {
-                switch (jobPTEStatus) {
-                  case 'auto_granted': return '✓ Auto-granted (property empty)'
-                  case 'granted': return `✓ Granted — Enter after ${job.dueTime}`
-                  case 'pending': return '⏳ Pending — contacting guest'
-                  case 'not_required': return '✓ No PTE required'
-                  default: return pteBadge.label
-                }
-              })()
-
-              return (
-                <div key={job.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
-                    <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{priorityEmoji}</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{job.title}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{job.propertyName} · Due {job.dueTime}</div>
-                    </div>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20, background: PRIORITY_COLORS[job.priority] + '20', color: PRIORITY_COLORS[job.priority], flexShrink: 0 }}>
-                      {job.priority.toUpperCase()}
+      {/* ── CLEANING STAFF ────────────────────────────────────────────────────── */}
+      {isCleaning && (
+        <>
+          <SectionLabel label="Today's Schedule" />
+          {CLEANING_SHIFTS.map((shift, idx) => {
+            const isFirst = idx === 0
+            const canSeeCode = isFirst ? canShowFirstCode : canShowSecondCode
+            const weather = PROPERTY_WEATHER.find(w => w.propertyId === shift.propertyId)
+            const completedCount = shift.tasks.filter((_, ti) => taskChecks[`${shift.id}-${ti}`]).length
+            const property = PROPERTIES.find(p => p.id === shift.propertyId)
+            return (
+              <motion.div
+                key={shift.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, overflow: 'hidden', marginBottom: 12 }}
+              >
+                {/* Property photo */}
+                {property?.imageUrl && (
+                  <img
+                    src={property.imageUrl}
+                    alt={shift.propertyName}
+                    style={{ width: '100%', height: 112, objectFit: 'cover', display: 'block' }}
+                  />
+                )}
+                <div style={{ padding: '14px 16px' }}>
+                  {/* Header */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{shift.propertyName}</span>
+                    <span style={{
+                      fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 4,
+                      background: isFirst ? 'rgba(59,130,246,0.15)' : 'rgba(217,119,6,0.15)',
+                      color: isFirst ? C.blue : C.amber,
+                    }}>
+                      {isFirst ? 'NEXT UP 🔵' : 'LATER ⏰'}
                     </span>
                   </div>
-
-                  {/* PTE section */}
-                  <div style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--bg-surface)', border: '1px solid var(--border)', marginBottom: 10 }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 4 }}>Permission to Enter</div>
-                    <div style={{ fontSize: 12, color: canShowCode ? '#10b981' : '#d97706', fontWeight: 500 }}>
-                      {pteDisplayText}
-                    </div>
+                  <div style={{ fontSize: 13, color: C.muted, marginBottom: 8 }}>
+                    {shift.startTime} – {shift.endTime} · {shift.type}
                   </div>
 
-                  {/* Access code */}
-                  <div style={{ padding: '10px 14px', borderRadius: 8, background: 'var(--bg-surface)', border: '1px solid var(--border)', marginBottom: 10 }}>
-                    {canShowCode ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 2 }}>Access Code</div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '0.15em', color: showCodes[job.id] ? 'var(--text-primary)' : 'transparent', textShadow: showCodes[job.id] ? 'none' : '0 0 8px rgba(255,255,255,0.5)' }}>
-                              {showCodes[job.id] ? '4821' : '••••'}
-                            </span>
-                            <button
-                              onClick={() => toggleCode(job.id)}
-                              style={{ fontSize: 12, color: accent, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 600 }}
-                            >
-                              {showCodes[job.id] ? 'Hide' : 'Show Code 👁'}
-                            </button>
-                          </div>
-                        </div>
+                  {/* Weather */}
+                  {weather && (
+                    <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>
+                      {weather.icon} {weather.temperature}°C · {weather.location}
+                      {weather.note ? ` · ${weather.note}` : ''}
+                    </div>
+                  )}
+
+                  {/* Next checkin warning */}
+                  {(() => {
+                    const [ch, cm] = shift.nextCheckin.split(':').map(Number)
+                    const [sh, sm] = shift.endTime.split(':').map(Number)
+                    const gapMins = (ch * 60 + cm) - (sh * 60 + sm)
+                    return gapMins < 120 ? (
+                      <div style={{ fontSize: 12, color: C.amber, marginBottom: 8 }}>
+                        ⚠️ Tight: next check-in {shift.nextCheckin} ({Math.round(gapMins / 60)}h gap)
                       </div>
-                    ) : (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#d97706' }}>
-                        <span style={{ fontSize: 13 }}>🔒</span>
-                        <span style={{ fontSize: 12, fontWeight: 500 }}>Locked until PTE granted</span>
-                      </div>
+                    ) : null
+                  })()}
+
+                  {/* Access */}
+                  <div style={{ fontSize: 12, color: C.muted, marginBottom: 8 }}>
+                    Access: {shift.accessType}
+                    {canSeeCode && (
+                      <button
+                        onClick={() => toggleCode(shift.id)}
+                        style={{ marginLeft: 8, background: 'none', border: 'none', color: C.blue, fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0 }}
+                      >
+                        {showCodes[shift.id] ? `Code: ${shift.code}` : 'Show Code 👁'}
+                      </button>
                     )}
                   </div>
 
-                  {/* Action buttons */}
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button style={{ flex: 1, padding: '8px', borderRadius: 8, background: accent, color: '#fff', fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
-                      ▶ Start Job
-                    </button>
-                    <button style={{ flex: 1, padding: '8px', borderRadius: 8, background: 'transparent', color: 'var(--text-muted)', fontSize: 12, border: '1px solid var(--border)', cursor: 'pointer' }}>
-                      Get Directions
-                    </button>
+                  {/* Progress bar */}
+                  <div style={{ background: C.border, borderRadius: 4, height: 4, marginBottom: 8 }}>
+                    <div style={{
+                      background: C.green, height: 4, borderRadius: 4,
+                      width: `${shift.tasks.length > 0 ? (completedCount / shift.tasks.length) * 100 : 0}%`,
+                      transition: 'width 0.3s',
+                    }} />
                   </div>
-                </div>
-              )
-            })
-          )}
-        </div>
-      )}
-
-      {/* ═══ GUEST SERVICES DASHBOARD ═══ */}
-      {isStaff && effectiveSubRole.includes('Guest') && (
-        <>
-          {/* Active issues */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 20 }}>
-            <SectionHeader title="Active Issues" href="/app/guest-services" />
-            {activeIssues.slice(0, 3).map(issue => (
-              <div key={issue.id} style={{ padding: '10px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontSize: 14 }}>{issue.severity === 'critical' || issue.severity === 'high' ? '🔴' : '🟡'}</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: issue.severity === 'critical' ? '#dc262620' : issue.severity === 'high' ? '#f8717120' : '#fb923c20', color: issue.severity === 'critical' ? '#dc2626' : issue.severity === 'high' ? '#f87171' : '#fb923c' }}>
-                    {issue.severity.toUpperCase()}
-                  </span>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{issue.title}</span>
-                </div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>{issue.propertyName} · {issue.guestName}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
-                  Reported: {new Date(issue.reportedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                  {issue.checkOutDate && ` · Checkout: ${issue.checkOutDate}`}
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button style={{ padding: '4px 10px', borderRadius: 6, border: `1px solid ${accent}40`, background: 'transparent', color: accent, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>View Task</button>
-                  <button style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer' }}>Contact</button>
-                  <button style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer' }}>Update Guest</button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* PTE requests */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 20 }}>
-            <SectionHeader title="PTE Requests" />
-            {pendingPTEJobs.length === 0 ? (
-              <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>No pending PTE requests</p>
-            ) : (
-              pendingPTEJobs.map(job => (
-                <div key={job.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{job.title}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{job.propertyName}</div>
+                  <div style={{ fontSize: 11, color: C.muted, marginBottom: 10 }}>
+                    {completedCount} of {shift.tasks.length} tasks complete
                   </div>
-                  {grantedPTE[job.id] ? (
-                    <span style={{ fontSize: 11, fontWeight: 600, color: '#16a34a' }}>✓ Granted</span>
-                  ) : (
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button
-                        onClick={() => grantPTE(job.id)}
-                        style={{ padding: '5px 12px', borderRadius: 6, background: '#16a34a', color: '#fff', fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer' }}
-                      >
-                        Grant PTE
-                      </button>
-                      <button style={{ padding: '5px 10px', borderRadius: 6, background: 'transparent', color: 'var(--text-muted)', fontSize: 12, border: '1px solid var(--border)', cursor: 'pointer' }}>
-                        Deny
-                      </button>
+
+                  {/* Tasks */}
+                  {(isFirst ? shift.tasks : shift.tasks.slice(0, 0)).map((task, ti) => (
+                    <div
+                      key={ti}
+                      onClick={() => toggleTask(`${shift.id}-${ti}`)}
+                      style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '6px 0', cursor: 'pointer', borderBottom: ti < 2 ? `1px solid ${C.border}` : 'none' }}
+                    >
+                      <div style={{
+                        width: 16, height: 16, borderRadius: '50%', flexShrink: 0, marginTop: 1,
+                        border: `2px solid ${taskChecks[`${shift.id}-${ti}`] ? C.green : '#374151'}`,
+                        background: taskChecks[`${shift.id}-${ti}`] ? C.green : 'transparent',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        {taskChecks[`${shift.id}-${ti}`] && <span style={{ fontSize: 8, color: '#fff' }}>✓</span>}
+                      </div>
+                      <span style={{ fontSize: 13, color: taskChecks[`${shift.id}-${ti}`] ? C.muted : C.text, textDecoration: taskChecks[`${shift.id}-${ti}`] ? 'line-through' : 'none' }}>
+                        {task}
+                      </span>
+                    </div>
+                  ))}
+                  {!isFirst && (
+                    <div style={{ fontSize: 12, color: C.muted }}>
+                      {shift.tasks.length} tasks · <button style={{ background: 'none', border: 'none', color: C.blue, fontSize: 12, cursor: 'pointer', padding: 0 }}>View Tasks →</button>
                     </div>
                   )}
-                </div>
-              ))
-            )}
-          </div>
 
-          {/* Check-ins today */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 20 }}>
-            <SectionHeader title="Check-ins Today" />
-            {[
-              { time: '15:00', property: 'Sunset Villa', guest: 'Lars Eriksen', cleaner: 'Maria S.', cleanStatus: 'done' as const },
-              { time: '17:00', property: 'Ocean View Apt', guest: 'Sophie K.', cleaner: 'Maria S.', cleanStatus: 'tight' as const },
-            ].map((checkin, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', minWidth: 40 }}>{checkin.time}</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{checkin.property} · {checkin.guest}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                    Clean: {checkin.cleaner} {checkin.cleanStatus === 'done' ? '✓' : '⚠️ tight'}
-                  </div>
+                  {/* CTA */}
+                  <button style={{
+                    marginTop: 12, width: '100%', padding: '9px', borderRadius: 8,
+                    background: isFirst ? '#7c3aed' : '#1f2937',
+                    border: 'none', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                  }}>
+                    ▶ {isFirst ? 'Start This Clean' : 'View Schedule'}
+                  </button>
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: checkin.cleanStatus === 'done' ? '#10b98120' : '#d9770620', color: checkin.cleanStatus === 'done' ? '#10b981' : '#d97706' }}>
-                  {checkin.cleanStatus === 'done' ? 'Ready' : 'Watch'}
+              </motion.div>
+            )
+          })}
+
+          {/* Other tasks */}
+          <SectionLabel label="Other Tasks Today" />
+          <Card>
+            {OTHER_TASKS_CLEANING.map((task, i) => (
+              <div
+                key={task.id}
+                onClick={() => toggleTask(task.id)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', cursor: 'pointer',
+                  borderBottom: i < OTHER_TASKS_CLEANING.length - 1 ? `1px solid ${C.border}` : 'none',
+                }}
+              >
+                <div style={{
+                  width: 14, height: 14, borderRadius: '50%', flexShrink: 0,
+                  border: `2px solid ${taskChecks[task.id] ? C.green : '#374151'}`,
+                  background: taskChecks[task.id] ? C.green : 'transparent',
+                }} />
+                <span style={{ fontSize: 13, color: taskChecks[task.id] ? C.muted : C.text, textDecoration: taskChecks[task.id] ? 'line-through' : 'none' }}>
+                  {task.label}
                 </span>
               </div>
             ))}
-          </div>
+          </Card>
 
-          {/* My tasks */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 20 }}>
-            <SectionHeader title="My Tasks" />
-            {TODAY_TASKS.map(t => (
-              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                <div style={{ width: 16, height: 16, borderRadius: 4, border: '2px solid var(--border)', flexShrink: 0 }} />
-                <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>{t.title}</span>
-                <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-muted)' }}>{t.due}</span>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* ═══ SHARED SECTIONS (operator + all staff) ═══ */}
-      <div style={{ display: 'grid', gridTemplateColumns: role === 'operator' ? '1fr 1fr' : '1fr', gap: 24, marginBottom: 24 }}>
-        {/* Today's Cleanings */}
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
-          <SectionHeader title="Today's Cleanings" href="/app/cleaning" />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {TODAY_CLEANINGS.map(c => (
-              <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: c.status === 'in_progress' ? accent : '#94a3b8', flexShrink: 0 }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.property}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{c.type} · {c.staff}</div>
-                </div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{c.time}</div>
-                <StatusBadge status={c.status} />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Today's Tasks */}
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
-          <SectionHeader title="Today's Tasks" href="/app/operations" />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {TODAY_TASKS.map(t => (
-              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: PRIORITY_COLORS[t.priority] ?? '#94a3b8', flexShrink: 0 }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.title}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t.assignee}</div>
-                </div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{t.due}</div>
-                <StatusBadge status={t.priority} />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: role === 'operator' ? '1fr 1fr' : '1fr', gap: 24 }}>
-        {/* Overdue */}
-        <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 10, padding: 16 }}>
-          <SectionHeader title="Overdue" />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {OVERDUE.map(o => (
-              <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <AlertTriangle size={14} style={{ color: '#f87171', flexShrink: 0 }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{o.title}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{o.assignee}</div>
-                </div>
-                <span style={{ fontSize: 11, fontWeight: 600, color: '#f87171', whiteSpace: 'nowrap' }}>{o.daysOverdue}d overdue</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Pending Approvals — operator only */}
-        {role === 'operator' && (
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
-            <SectionHeader title="Pending Approvals" href="/app/tickets" />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {PENDING_APPROVALS.map(a => (
-                <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.title}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{a.property} · {a.owner}</div>
-                  </div>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{a.amount.toLocaleString()} NOK</span>
+          {/* This week */}
+          <SectionLabel label="This Week" />
+          <Card>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {[
+                { day: 'Mon', state: 'done' },
+                { day: 'Tue', state: 'done' },
+                { day: 'Wed', state: 'today' },
+                { day: 'Thu', state: 'upcoming' },
+                { day: 'Fri', state: 'upcoming' },
+              ].map(d => (
+                <div key={d.day} style={{
+                  flex: 1, textAlign: 'center', padding: '8px 4px', borderRadius: 8,
+                  background: d.state === 'today' ? 'rgba(124,58,237,0.15)' : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${d.state === 'today' ? 'rgba(124,58,237,0.35)' : C.border}`,
+                  cursor: 'pointer',
+                }}>
+                  <div style={{ fontSize: 10, color: C.muted, marginBottom: 4 }}>{d.day}</div>
+                  <div style={{ fontSize: 12 }}>{d.state === 'done' ? '✓' : d.state === 'today' ? '●' : '○'}</div>
                 </div>
               ))}
             </div>
-          </div>
-        )}
-      </div>
+          </Card>
+        </>
+      )}
 
-      {/* Recent Requests */}
-      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginTop: 24 }}>
-        <SectionHeader title="Recent Requests" href="/app/tickets" />
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                {['Title', 'Property', 'Owner', 'Date', 'Status', 'Priority'].map(h => (
-                  <th key={h} style={{ padding: '6px 12px', textAlign: 'left', fontSize: 11, fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {REQUESTS.slice(0, 5).map((r, i) => {
-                const prop = PROPERTIES.find(p => p.id === r.propertyId)
-                const owner = OWNERS.find(o => o.id === r.ownerId)
-                return (
-                  <tr key={r.id} style={{ borderBottom: i < 4 ? '1px solid var(--border-subtle)' : 'none' }}>
-                    <td style={{ padding: '10px 12px', fontWeight: 500, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{r.title}</td>
-                    <td style={{ padding: '10px 12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{prop?.name ?? r.propertyId}</td>
-                    <td style={{ padding: '10px 12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{owner?.name ?? r.ownerId}</td>
-                    <td style={{ padding: '10px 12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{r.date}</td>
-                    <td style={{ padding: '10px 12px' }}><StatusBadge status={r.status} /></td>
-                    <td style={{ padding: '10px 12px' }}><StatusBadge status={r.priority} /></td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* ── MAINTENANCE STAFF ─────────────────────────────────────────────────── */}
+      {isMaintenance && (
+        <>
+          <SectionLabel label="Today's Jobs" />
+          {sortedMaintenanceJobs.map((job, idx) => {
+            const canShowCode = job.pteStatus === 'granted' || job.pteStatus === 'auto_granted' || job.pteStatus === 'not_required'
+            const isPending = job.pteStatus === 'pending'
+            const isAutoGranted = job.pteStatus === 'auto_granted'
+            const showBanner = isAutoGranted && hasPendingPTE
+            const showHint = isPending && firstAutoGranted !== undefined
+            const priorityEmoji = job.priority === 'urgent' ? '🔴' : job.priority === 'high' ? '🟡' : '⚪'
+            return (
+              <motion.div
+                key={job.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                style={{
+                  background: C.card,
+                  border: `1px solid ${isAutoGranted ? 'rgba(22,163,74,0.4)' : C.border}`,
+                  borderRadius: 10, overflow: 'hidden', marginBottom: 12,
+                }}
+              >
+                {showBanner && (
+                  <div style={{
+                    background: C.green, padding: '7px 16px',
+                    fontSize: 11, fontWeight: 700, color: '#fff', letterSpacing: '0.08em', textTransform: 'uppercase',
+                  }}>
+                    🟢 GO HERE FIRST — PROPERTY VACANT
+                  </div>
+                )}
+                <div style={{ padding: '14px 16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                    <span>{priorityEmoji}</span>
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 4,
+                      background: job.priority === 'urgent' ? 'rgba(220,38,38,0.15)' : job.priority === 'high' ? 'rgba(217,119,6,0.15)' : 'rgba(107,114,128,0.15)',
+                      color: job.priority === 'urgent' ? C.red : job.priority === 'high' ? C.amber : C.muted,
+                      textTransform: 'uppercase',
+                    }}>{job.priority}</span>
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 4 }}>{job.title}</div>
+                  <div style={{ fontSize: 13, color: C.muted, marginBottom: 8 }}>{job.propertyName}</div>
 
+                  {isAutoGranted && (
+                    <div style={{ fontSize: 12, color: C.green, marginBottom: 8 }}>
+                      ✓ Property empty — access auto-granted · No guest · Enter any time
+                    </div>
+                  )}
+                  {isPending && (
+                    <div style={{ fontSize: 12, color: C.amber, marginBottom: 4 }}>
+                      PTE: ⏳ Pending · Fatima contacting guest
+                    </div>
+                  )}
+                  {showHint && (
+                    <div style={{ fontSize: 12, color: '#fbbf24', marginBottom: 8 }}>
+                      💡 Do the {firstAutoGranted!.propertyName} job first while waiting
+                    </div>
+                  )}
+
+                  {/* Access */}
+                  <div style={{ marginBottom: 10 }}>
+                    {canShowCode ? (
+                      <button
+                        onClick={() => toggleCode(job.id)}
+                        style={{
+                          padding: '5px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600,
+                          background: 'rgba(59,130,246,0.12)', border: `1px solid rgba(59,130,246,0.3)`,
+                          color: C.blue, cursor: 'pointer',
+                        }}
+                      >
+                        {showCodes[job.id] ? 'Code: 4821' : 'Show Code 👁'}
+                      </button>
+                    ) : (
+                      <span style={{
+                        display: 'inline-block', padding: '5px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600,
+                        background: 'rgba(220,38,38,0.1)', border: `1px solid rgba(220,38,38,0.25)`,
+                        color: C.red,
+                      }}>
+                        🔒 Locked — awaiting PTE
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {canShowCode && <ActionBtn label="▶ Start Job" />}
+                    <ActionBtn label="📍 Directions" />
+                    {isPending && <ActionBtn label="Contact Fatima" />}
+                    {isPending && <ActionBtn label="View PTE Status" />}
+                  </div>
+                </div>
+              </motion.div>
+            )
+          })}
+        </>
+      )}
+
+      {/* ── GUEST SERVICES ────────────────────────────────────────────────────── */}
+      {isGuestServices && (
+        <>
+          {/* Check-ins today */}
+          <SectionLabel label="Check-ins Today" />
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>CHECK-INS TODAY</span>
+              <span style={{ fontSize: 12, color: C.muted }}>{TODAY_CHECKINS.length} arrivals</span>
+            </div>
+            {TODAY_CHECKINS.map((ci, i) => (
+              <div key={i} style={{ paddingBottom: i < TODAY_CHECKINS.length - 1 ? 12 : 0, marginBottom: i < TODAY_CHECKINS.length - 1 ? 12 : 0, borderBottom: i < TODAY_CHECKINS.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{ci.time} · {ci.propertyName}</span>
+                  <span style={{
+                    fontSize: 11, fontWeight: 600, padding: '2px 7px', borderRadius: 4,
+                    background: ci.readiness === 'ok' ? 'rgba(22,163,74,0.15)' : 'rgba(217,119,6,0.15)',
+                    color: ci.readiness === 'ok' ? C.green : C.amber,
+                  }}>
+                    {ci.readiness === 'ok' ? '✓ Ready' : '⚠️ At risk'}
+                  </span>
+                </div>
+                <div style={{ fontSize: 12, color: C.muted, marginBottom: ci.readinessNote ? 4 : 8 }}>
+                  {ci.guest} · {ci.nights} nights · Cleaning: {ci.cleaner}
+                </div>
+                {ci.readinessNote && (
+                  <div style={{ fontSize: 12, color: C.amber, marginBottom: 8 }}>⚠️ {ci.readinessNote}</div>
+                )}
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {ci.readiness === 'ok' ? (
+                    <ActionBtn label="Send Welcome" />
+                  ) : (
+                    <>
+                      <ActionBtn label="Monitor" />
+                      <ActionBtn label={`Contact ${ci.cleaner.split(' ')[0]}`} />
+                    </>
+                  )}
+                  <ActionBtn label="View Property" />
+                </div>
+              </div>
+            ))}
+          </Card>
+
+          {/* Overnight issues */}
+          <SectionLabel label="Overnight Issues" />
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>🌙 OVERNIGHT</span>
+              <span style={{ fontSize: 12, color: C.muted }}>{todayReport?.issues.length ?? 0} reported</span>
+            </div>
+            {(todayReport?.issues ?? []).map((issue, i) => (
+              <div key={issue.id} style={{ paddingBottom: i < (todayReport?.issues.length ?? 0) - 1 ? 12 : 0, marginBottom: i < (todayReport?.issues.length ?? 0) - 1 ? 12 : 0, borderBottom: i < (todayReport?.issues.length ?? 0) - 1 ? `1px solid ${C.border}` : 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <span style={{ fontSize: 12, color: C.muted }}>{issue.time}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{issue.title}</span>
+                </div>
+                <div style={{ fontSize: 12, color: C.muted, marginBottom: 4 }}>{issue.property}</div>
+                <div style={{ fontSize: 12, marginBottom: 8 }}>
+                  {issue.assignedTo
+                    ? <span style={{ color: C.green }}>Assigned to {issue.assignedTo} ✓</span>
+                    : <span style={{ color: C.red, fontWeight: 700 }}>⚠️ UNASSIGNED</span>
+                  }
+                </div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {issue.assignedTo ? (
+                    <>
+                      <ActionBtn label="View Task" />
+                      <ActionBtn label={`Contact ${issue.assignedTo.split(' ')[0]}`} />
+                      <ActionBtn label="Update Guest" />
+                    </>
+                  ) : (
+                    <>
+                      <ActionBtn label="Assign Now" />
+                      <ActionBtn label="Log Update" />
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </Card>
+
+          {/* Active issues summary */}
+          <SectionLabel label="Active Issues" />
+          <Card>
+            <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+              <span style={{ fontSize: 13, color: C.red }}>🔴 2 urgent</span>
+              <span style={{ fontSize: 13, color: C.amber }}>🟡 1 open</span>
+              <span style={{ fontSize: 13, color: C.muted }}>⚪ 0 resolved today</span>
+            </div>
+            <div style={{ paddingTop: 8, borderTop: `1px solid ${C.border}` }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 2 }}>Gym access not available</div>
+              <div style={{ fontSize: 12, color: C.muted, marginBottom: 8 }}>Downtown Loft · Camilla D. · Yesterday</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <ActionBtn label="Create Task" />
+                <ActionBtn label="Log Update" />
+                <ActionBtn label="Close" />
+              </div>
+            </div>
+          </Card>
+
+          {/* PTE Requests */}
+          {GS_PENDING_PTE.length > 0 && (
+            <>
+              <SectionLabel label="PTE Requests" />
+              {GS_PENDING_PTE.map(pte => (
+                <Card key={pte.id}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: C.amber }}>⏳ PTE NEEDED</span>
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 2 }}>{pte.property} · {pte.staff} → {pte.task}</div>
+                  <div style={{ fontSize: 12, color: C.muted, marginBottom: 10 }}>Guest {pte.guest} in property</div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: expandPTEPanel === pte.id ? 12 : 0 }}>
+                    <ActionBtn label="Contact Guest" />
+                    <button
+                      onClick={() => setExpandPTEPanel(p => p === pte.id ? null : pte.id)}
+                      style={{
+                        padding: '5px 10px', borderRadius: 6, fontSize: 12, fontWeight: 700,
+                        background: C.green, border: 'none', color: '#fff', cursor: 'pointer',
+                      }}
+                    >Grant PTE</button>
+                    <ActionBtn label="Deny" />
+                    <ActionBtn label="Reschedule" />
+                  </div>
+                  {expandPTEPanel === pte.id && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      style={{ overflow: 'hidden', borderTop: `1px solid ${C.border}`, paddingTop: 12 }}
+                    >
+                      <div style={{ fontSize: 12, color: C.muted, marginBottom: 8 }}>
+                        <strong style={{ color: C.text }}>Property:</strong> {pte.property} &nbsp;
+                        <strong style={{ color: C.text }}>Staff:</strong> {pte.staff} &nbsp;
+                        <strong style={{ color: C.text }}>Guest:</strong> {pte.guest}
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                        <div style={{ flex: 1 }}>
+                          <label style={{ fontSize: 11, color: C.muted, display: 'block', marginBottom: 4 }}>VALID FROM</label>
+                          <input defaultValue="Now" style={{ width: '100%', padding: '6px 10px', background: '#1f2937', border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontSize: 13, boxSizing: 'border-box' }} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <label style={{ fontSize: 11, color: C.muted, display: 'block', marginBottom: 4 }}>VALID UNTIL</label>
+                          <input defaultValue="14:00 checkout" style={{ width: '100%', padding: '6px 10px', background: '#1f2937', border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontSize: 13, boxSizing: 'border-box' }} />
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          onClick={() => {
+                            setGrantedPTE(p => ({ ...p, [pte.id]: true }))
+                            setExpandPTEPanel(null)
+                            showToast('PTE granted — Bjorn notified')
+                          }}
+                          style={{
+                            padding: '7px 16px', borderRadius: 6, fontSize: 13, fontWeight: 700,
+                            background: C.green, border: 'none', color: '#fff', cursor: 'pointer',
+                          }}
+                        >✓ Confirm Grant</button>
+                        <ActionBtn label="Cancel" onClick={() => setExpandPTEPanel(null)} />
+                      </div>
+                    </motion.div>
+                  )}
+                  {grantedPTE[pte.id] && (
+                    <div style={{ marginTop: 6, fontSize: 12, color: C.green, fontWeight: 600 }}>✓ PTE granted</div>
+                  )}
+                </Card>
+              ))}
+            </>
+          )}
+
+          {/* My tasks */}
+          <SectionLabel label="My Tasks Today" />
+          <Card>
+            {OPERATOR_TASKS.map((task, i) => (
+              <div key={task.id} onClick={() => toggleTask(task.id)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', cursor: 'pointer', borderBottom: i < OPERATOR_TASKS.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                <div style={{ width: 14, height: 14, borderRadius: '50%', flexShrink: 0, border: `2px solid ${taskChecks[task.id] ? C.green : '#374151'}`, background: taskChecks[task.id] ? C.green : 'transparent' }} />
+                <span style={{ fontSize: 13, color: taskChecks[task.id] ? C.muted : C.text }}>{task.label}</span>
+              </div>
+            ))}
+          </Card>
+        </>
+      )}
+
+      {/* ── OPERATOR ──────────────────────────────────────────────────────────── */}
+      {isOperator && (
+        <>
+          {/* Team status */}
+          <SectionLabel label="Team Today" />
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>TEAM TODAY</span>
+              <span style={{ fontSize: 12, color: C.muted }}>{TEAM_CLOCK_STATUS.filter(m => m.clockedIn).length} on shift</span>
+            </div>
+            {TEAM_CLOCK_STATUS.map((member, i) => {
+              const now = new Date()
+              const [sh, sm] = member.shiftStart.split(':').map(Number)
+              const shiftMs = new Date(now.getFullYear(), now.getMonth(), now.getDate(), sh, sm).getTime()
+              const minsLate = !member.clockedIn ? Math.round((Date.now() - shiftMs) / 60000) : 0
+              const isActuallyLate = member.late && minsLate > 0
+              return (
+                <div key={member.id} style={{
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px',
+                  borderRadius: 8, marginBottom: i < TEAM_CLOCK_STATUS.length - 1 ? 6 : 0,
+                  background: isActuallyLate ? 'rgba(217,119,6,0.08)' : 'transparent',
+                }}>
+                  <div style={{ width: 34, height: 34, borderRadius: '50%', background: member.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                    {member.initials}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{member.name}</span>
+                      {member.clockedIn
+                        ? <span style={{ fontSize: 11, color: C.green }}>● Clocked in {member.clockInTime}</span>
+                        : isActuallyLate
+                          ? (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 1.2, repeat: Infinity }} style={{ fontSize: 11, color: C.amber }}>⚠️</motion.span>
+                              <span style={{ fontSize: 11, color: C.amber }}>{minsLate} min late</span>
+                            </span>
+                          )
+                          : <span style={{ fontSize: 11, color: C.muted }}>○ Shift starts {member.shiftStart}</span>
+                      }
+                    </div>
+                    <div style={{ fontSize: 11, color: C.muted }}>{member.role} · {member.property}</div>
+                  </div>
+                  {isActuallyLate && <ActionBtn label="Remind" />}
+                </div>
+              )
+            })}
+          </Card>
+
+          {/* Overnight incidents */}
+          <SectionLabel label="Last Night" />
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>🌙 LAST NIGHT</span>
+              <span style={{ fontSize: 12, color: C.muted }}>{todayReport?.issues.length ?? 0} incidents</span>
+            </div>
+            {(todayReport?.issues ?? []).map((issue, i) => (
+              <div key={issue.id} style={{ paddingBottom: i < (todayReport?.issues.length ?? 0) - 1 ? 10 : 0, marginBottom: i < (todayReport?.issues.length ?? 0) - 1 ? 10 : 0, borderBottom: i < (todayReport?.issues.length ?? 0) - 1 ? `1px solid ${C.border}` : 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 12, color: C.muted, flexShrink: 0 }}>{issue.time}</span>
+                  <span style={{ fontSize: 13, color: C.text }}>{issue.title} · {issue.property}</span>
+                  <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
+                    {issue.assignedTo
+                      ? <span style={{ fontSize: 11, color: C.green }}>Assigned ✓</span>
+                      : <ActionBtn label="Assign Now" />
+                    }
+                  </div>
+                </div>
+              </div>
+            ))}
+          </Card>
+
+          {/* Check-ins */}
+          <SectionLabel label="Today's Check-ins" />
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>CHECK-INS TODAY</span>
+              <span style={{ fontSize: 12, color: C.muted }}>{TODAY_CHECKINS.length} arrivals</span>
+            </div>
+            {TODAY_CHECKINS.map((ci, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: i < TODAY_CHECKINS.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                <div>
+                  <span style={{ fontSize: 13, color: C.text }}>{ci.time} · {ci.propertyName}</span>
+                  {ci.readinessNote && <div style={{ fontSize: 11, color: C.amber }}>{ci.readinessNote}</div>}
+                </div>
+                <span style={{
+                  fontSize: 11, fontWeight: 600, padding: '2px 7px', borderRadius: 4,
+                  background: ci.readiness === 'ok' ? 'rgba(22,163,74,0.15)' : 'rgba(217,119,6,0.15)',
+                  color: ci.readiness === 'ok' ? C.green : C.amber,
+                }}>
+                  {ci.readiness === 'ok' ? '✓ Ready' : '⚠️ At risk'}
+                </span>
+              </div>
+            ))}
+          </Card>
+
+          {/* Needs action */}
+          <SectionLabel label="Needs Action" />
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>NEEDS ACTION</span>
+              <span style={{ fontSize: 12, color: C.muted }}>2 items</span>
+            </div>
+            <div style={{ paddingBottom: 10, marginBottom: 10, borderBottom: `1px solid ${C.border}` }}>
+              <div style={{ fontSize: 13, color: C.text, marginBottom: 4 }}>⚠️ Noise complaint unassigned · Downtown Loft</div>
+              <ActionBtn label="Assign Now" />
+            </div>
+            <div>
+              <div style={{ fontSize: 13, color: C.text, marginBottom: 4 }}>⚠️ Bjorn L. 18 min late · not clocked in</div>
+              <ActionBtn label="Send Reminder" />
+            </div>
+          </Card>
+
+          {/* My tasks */}
+          <SectionLabel label="My Tasks Today" />
+          <Card>
+            {OPERATOR_TASKS.map((task, i) => (
+              <div key={task.id} onClick={() => toggleTask(task.id)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', cursor: 'pointer', borderBottom: i < OPERATOR_TASKS.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                <div style={{ width: 14, height: 14, borderRadius: '50%', flexShrink: 0, border: `2px solid ${taskChecks[task.id] ? C.green : '#374151'}`, background: taskChecks[task.id] ? C.green : 'transparent' }} />
+                <span style={{ fontSize: 13, color: taskChecks[task.id] ? C.muted : C.text }}>{task.label}</span>
+              </div>
+            ))}
+          </Card>
+
+          {/* Meetings */}
+          <SectionLabel label="My Meetings Today" />
+          <Card>
+            {MEETINGS.map((m, i) => (
+              <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: i < MEETINGS.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.muted, flexShrink: 0 }}>{m.time}</span>
+                <span style={{ fontSize: 13, color: C.text }}>{m.title}</span>
+                <span style={{ fontSize: 11, color: C.muted, marginLeft: 'auto' }}>{m.attendees} attendees</span>
+              </div>
+            ))}
+          </Card>
+
+          {/* Countdown */}
+          <SectionLabel label="First Check-in Countdown" />
+          <Card style={{ textAlign: 'center', padding: '20px 16px' }}>
+            <CountdownTimer
+              targetTime={`${today}T15:00:00`}
+              label="FIRST CHECK-IN"
+              context="Lars Eriksen · Sunset Villa · 15:00"
+            />
+          </Card>
+        </>
+      )}
+
+      {/* ── OWNER ─────────────────────────────────────────────────────────────── */}
+      {isOwner && (
+        <>
+          <SectionLabel label="Your Portfolio" />
+          <Card>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              {[
+                { label: 'Properties', value: '3', color: C.blue },
+                { label: 'Active Issues', value: '1', color: C.amber },
+                { label: 'Avg Rating', value: '4.8 ★', color: C.green },
+              ].map(s => (
+                <div key={s.label} style={{ flex: 1, minWidth: 80, textAlign: 'center' }}>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: s.color }}>{s.value}</div>
+                  <div style={{ fontSize: 11, color: C.muted }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </Card>
+          <SectionLabel label="Your Properties" />
+          {PROPERTIES.filter(p => p.status === 'live').map((prop, idx) => (
+            <motion.div
+              key={prop.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05 }}
+            >
+              <Card>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{prop.name}</div>
+                    <div style={{ fontSize: 12, color: C.muted }}>{prop.city} · {prop.beds}BR / {prop.baths}BA</div>
+                  </div>
+                  <Link href="/app/properties" style={{ fontSize: 12, color: C.blue, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 2 }}>
+                    View <ChevronRight size={12} />
+                  </Link>
+                </div>
+              </Card>
+            </motion.div>
+          ))}
+        </>
+      )}
     </motion.div>
   )
-}
-
-// Helper to convert locale time string like "09:05 AM" to "09:05"
-function convertTo24h(timeStr: string): string {
-  if (!timeStr) return '00:00'
-  // If already 24h format
-  if (!timeStr.includes('AM') && !timeStr.includes('PM')) return timeStr
-  const [timePart, period] = timeStr.split(' ')
-  const [h, m] = timePart.split(':').map(Number)
-  let hour = h
-  if (period === 'AM' && h === 12) hour = 0
-  if (period === 'PM' && h !== 12) hour = h + 12
-  return `${String(hour).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }

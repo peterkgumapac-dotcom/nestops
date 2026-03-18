@@ -1,4 +1,5 @@
 import type { PTEStatus } from '@/lib/data/staffScheduling'
+import type { Job } from '@/lib/data/staff'
 
 export function isPropertyOccupied(propertyId: string, date: string): boolean {
   // Stub — would check booking data in production
@@ -13,6 +14,19 @@ export function checkAndGrantPTE(task: { pteRequired: boolean; propertyId?: stri
   const occupied = isPropertyOccupied(task.propertyId, new Date().toISOString())
   if (!occupied) return 'auto_granted'
   return 'pending'
+}
+
+export function sortJobsByAccessibility(jobs: Job[]): Job[] {
+  const priorityOrder: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3 }
+  return [...jobs].sort((a, b) => {
+    const aPTE = a.pteStatus ?? 'not_required'
+    const bPTE = b.pteStatus ?? 'not_required'
+    if (aPTE === 'auto_granted' && bPTE !== 'auto_granted') return -1
+    if (bPTE === 'auto_granted' && aPTE !== 'auto_granted') return 1
+    if (aPTE === 'not_required' && bPTE === 'pending') return -1
+    if (bPTE === 'not_required' && aPTE === 'pending') return 1
+    return (priorityOrder[a.priority] ?? 99) - (priorityOrder[b.priority] ?? 99)
+  })
 }
 
 export function getPTEBadge(status: PTEStatus): { label: string; color: string; icon: string } {

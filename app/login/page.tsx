@@ -6,7 +6,7 @@ import { useRole } from '@/context/RoleContext'
 import type { Role, UserProfile } from '@/context/RoleContext'
 
 interface DemoUser {
-  id: string
+  userId: string
   initials: string
   name: string
   role: Role
@@ -16,26 +16,37 @@ interface DemoUser {
 }
 
 const DEMO_USERS: DemoUser[] = [
-  { id: 'u1', initials: 'PK', name: 'Peter K.',   role: 'operator' as Role, avatarBg: '#7c3aed', badgeLabel: 'Operator' },
-  { id: 'u3', initials: 'MS', name: 'Maria S.',   role: 'staff'    as Role, subRole: 'Cleaning Team',  avatarBg: '#d97706', badgeLabel: 'Cleaning' },
-  { id: 'u4', initials: 'BL', name: 'Bjorn L.',   role: 'staff'    as Role, subRole: 'Maintenance',    avatarBg: '#0ea5e9', badgeLabel: 'Maintenance' },
-  { id: 'u5', initials: 'FN', name: 'Fatima N.',  role: 'staff'    as Role, subRole: 'Guest Services', avatarBg: '#ec4899', badgeLabel: 'Guest Svc' },
-  { id: 'u2', initials: 'SJ', name: 'Sarah J.',   role: 'owner'    as Role, avatarBg: '#2563eb', badgeLabel: 'Owner' },
-  { id: 'u6', initials: 'MC', name: 'Michael C.', role: 'owner'    as Role, avatarBg: '#10b981', badgeLabel: 'Owner' },
+  { userId: 'pk', initials: 'PK', name: 'Peter K.',   role: 'operator' as Role, avatarBg: '#7c3aed', badgeLabel: 'Operator' },
+  { userId: 'ms', initials: 'MS', name: 'Maria S.',   role: 'staff'    as Role, subRole: 'Cleaning Team',  avatarBg: '#d97706', badgeLabel: 'Cleaning' },
+  { userId: 'bl', initials: 'BL', name: 'Bjorn L.',   role: 'staff'    as Role, subRole: 'Maintenance',    avatarBg: '#0ea5e9', badgeLabel: 'Maintenance' },
+  { userId: 'fn', initials: 'FN', name: 'Fatima N.',  role: 'staff'    as Role, subRole: 'Guest Services', avatarBg: '#ec4899', badgeLabel: 'Guest Svc' },
+  { userId: 'sj', initials: 'SJ', name: 'Sarah J.',   role: 'owner'    as Role, avatarBg: '#2563eb', badgeLabel: 'Owner' },
+  { userId: 'mc', initials: 'MC', name: 'Michael C.', role: 'owner'    as Role, avatarBg: '#10b981', badgeLabel: 'Owner' },
 ]
 
+const USER_ID_MAP: Record<string, string> = {
+  pk: 'u1', ms: 'u3', bl: 'u4', fn: 'u5', sj: 'u2', mc: 'u6',
+}
+
+const DEMO_USER_MAP: Record<string, DemoUser> = Object.fromEntries(
+  DEMO_USERS.map(u => [u.userId, u])
+)
+
 const CREDENTIALS = [
-  { email: 'peter@nestops.com',   password: 'demo123', userId: 'u1' },
-  { email: 'maria@nestops.com',   password: 'demo123', userId: 'u3' },
-  { email: 'bjorn@nestops.com',   password: 'demo123', userId: 'u4' },
-  { email: 'fatima@nestops.com',  password: 'demo123', userId: 'u5' },
-  { email: 'sarah@nestops.com',   password: 'demo123', userId: 'u2' },
-  { email: 'michael@nestops.com', password: 'demo123', userId: 'u6' },
+  { email: 'peter@nestops.com',   password: 'demo123', userId: 'pk' },
+  { email: 'maria@nestops.com',   password: 'demo123', userId: 'ms' },
+  { email: 'bjorn@nestops.com',   password: 'demo123', userId: 'bl' },
+  { email: 'fatima@nestops.com',  password: 'demo123', userId: 'fn' },
+  { email: 'sarah@nestops.com',   password: 'demo123', userId: 'sj' },
+  { email: 'michael@nestops.com', password: 'demo123', userId: 'mc' },
 ]
 
 export default function LoginPage() {
   const { setUser } = useRole()
   const router = useRouter()
+
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -46,7 +57,7 @@ export default function LoginPage() {
   const [shake, setShake] = useState(false)
 
   const buildProfile = (user: DemoUser): UserProfile => ({
-    id: user.id,
+    id: USER_ID_MAP[user.userId] ?? user.userId,
     name: user.name,
     role: user.role,
     subRole: user.subRole,
@@ -54,11 +65,14 @@ export default function LoginPage() {
     avatarColor: user.avatarBg,
   })
 
-  const handleDemoSelect = (user: DemoUser) => {
-    const profile = buildProfile(user)
+  const doLogin = (profile: UserProfile) => {
     localStorage.setItem('nestops_user', JSON.stringify(profile))
     setUser(profile)
     router.push('/app/dashboard')
+  }
+
+  const handleDemoSelect = (user: DemoUser) => {
+    doLogin(buildProfile(user))
   }
 
   const handleLogin = () => {
@@ -67,13 +81,10 @@ export default function LoginPage() {
       c => c.email.toLowerCase() === email.toLowerCase() && c.password === password
     )
     if (cred) {
-      setIsLoading(true)
-      const demoUser = DEMO_USERS.find(u => u.id === cred.userId)
+      const demoUser = DEMO_USER_MAP[cred.userId]
       if (demoUser) {
-        const profile = buildProfile(demoUser)
-        localStorage.setItem('nestops_user', JSON.stringify(profile))
-        setUser(profile)
-        router.push('/app/dashboard')
+        setIsLoading(true)
+        setTimeout(() => doLogin(buildProfile(demoUser)), 150)
       }
     } else {
       setError('Invalid email or password')
@@ -84,119 +95,117 @@ export default function LoginPage() {
 
   return (
     <div style={{
-      minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      background: `
-        radial-gradient(ellipse at 20% 50%, #1e3a5f 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 20%, #1a2e4a 0%, transparent 50%),
-        #0f1923
-      `,
-      position: 'relative', overflow: 'hidden', padding: '40px 20px',
+      minHeight: '100vh',
+      background: '#0a0f1a',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '40px 20px',
     }}>
-      {/* Animated orbs */}
-      {[
-        { top: '10%', left: '5%',  size: 400, color: 'rgba(124,58,237,0.15)', delay: 0 },
-        { top: '60%', left: '70%', size: 300, color: 'rgba(37,99,235,0.12)',  delay: 7 },
-        { top: '30%', left: '50%', size: 350, color: 'rgba(14,165,233,0.1)',  delay: 14 },
-      ].map((orb, i) => (
-        <motion.div
-          key={i}
-          style={{
-            position: 'absolute', borderRadius: '50%',
-            width: orb.size, height: orb.size,
-            background: orb.color, filter: 'blur(80px)', pointerEvents: 'none',
-            top: orb.top, left: orb.left,
-          }}
-          animate={{ x: [0, 30, -20, 0], y: [0, -25, 15, 0] }}
-          transition={{ duration: 20, delay: orb.delay, repeat: Infinity, ease: 'easeInOut' }}
-        />
-      ))}
-
-      {/* Glass card */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 12 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={shake
-          ? { opacity: 1, scale: 1, y: 0, x: [0, -8, 8, -8, 8, 0] }
-          : { opacity: 1, scale: 1, y: 0, x: 0 }
+          ? { opacity: 1, y: 0, x: [0, -8, 8, -8, 8, 0] }
+          : { opacity: 1, y: 0, x: 0 }
         }
-        transition={shake ? { duration: 0.4 } : { duration: 0.4 }}
+        transition={shake ? { duration: 0.4 } : { duration: 0.2 }}
         style={{
-          maxWidth: 440, width: '100%', position: 'relative', zIndex: 1,
-          background: 'rgba(255,255,255,0.05)',
-          backdropFilter: 'blur(20px)',
-          border: `1px solid ${error ? 'rgba(248,113,113,0.4)' : 'rgba(255,255,255,0.1)'}`,
-          borderRadius: 24, padding: '40px 36px',
+          width: '100%',
+          maxWidth: 420,
+          background: '#111827',
+          border: `1px solid ${error ? '#dc2626' : '#1f2937'}`,
+          borderRadius: 12,
+          padding: '32px 28px',
         }}
       >
         {/* Wordmark */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: 16 }}>N</div>
-          <span style={{ fontWeight: 800, color: '#fff', fontSize: 22, letterSpacing: '-0.02em' }}>NestOps</span>
-          <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 20, background: 'rgba(124,58,237,0.3)', color: '#c4b5fd', letterSpacing: '0.04em' }}>v1.0 Beta</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 8, background: '#7c3aed',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontWeight: 800, color: '#fff', fontSize: 14, flexShrink: 0,
+          }}>N</div>
+          <span style={{ fontWeight: 800, color: '#f9fafb', fontSize: 20, letterSpacing: '-0.02em' }}>NestOps</span>
+          <span style={{
+            fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
+            background: 'rgba(124,58,237,0.2)', color: '#a78bfa', letterSpacing: '0.04em', marginLeft: 4,
+          }}>v1.0 Beta</span>
         </div>
 
-        <h2 style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 4 }}>Welcome back</h2>
-        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 28 }}>Sign in to your account</p>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: '#f9fafb', marginBottom: 4 }}>{greeting}</h2>
+        <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 24 }}>Sign in to continue</p>
 
-        {/* Email input */}
-        <div style={{ marginBottom: 14 }}>
+        {/* Email */}
+        <div style={{ marginBottom: 12 }}>
+          <label style={{
+            display: 'block', fontSize: 11, fontWeight: 700, color: '#6b7280',
+            marginBottom: 6, letterSpacing: '0.06em', textTransform: 'uppercase',
+          }}>Email</label>
           <input
             type="email"
             autoComplete="email"
-            placeholder="Email address"
+            placeholder="peter@nestops.com"
             value={email}
             onChange={e => { setEmail(e.target.value); setError('') }}
+            onKeyDown={e => { if (e.key === 'Enter') handleLogin() }}
             style={{
-              width: '100%', padding: '12px 16px', borderRadius: 10,
-              background: 'rgba(255,255,255,0.07)',
-              border: `1px solid ${error ? 'rgba(248,113,113,0.6)' : 'rgba(255,255,255,0.12)'}`,
-              color: '#fff', fontSize: 14, outline: 'none', boxSizing: 'border-box',
+              width: '100%', padding: '10px 12px', borderRadius: 8,
+              background: '#1f2937',
+              border: `1px solid ${error ? '#dc2626' : '#374151'}`,
+              color: '#f9fafb', fontSize: 14, outline: 'none', boxSizing: 'border-box',
             }}
           />
         </div>
 
-        {/* Password input */}
-        <div style={{ marginBottom: 8, position: 'relative' }}>
+        {/* Password */}
+        <div style={{ marginBottom: error ? 6 : 20, position: 'relative' }}>
+          <label style={{
+            display: 'block', fontSize: 11, fontWeight: 700, color: '#6b7280',
+            marginBottom: 6, letterSpacing: '0.06em', textTransform: 'uppercase',
+          }}>Password</label>
           <input
             type={showPassword ? 'text' : 'password'}
             autoComplete="current-password"
-            placeholder="Password"
+            placeholder="••••••••"
             value={password}
             onChange={e => { setPassword(e.target.value); setError('') }}
             onKeyDown={e => { if (e.key === 'Enter') handleLogin() }}
             style={{
-              width: '100%', padding: '12px 48px 12px 16px', borderRadius: 10,
-              background: 'rgba(255,255,255,0.07)',
-              border: `1px solid ${error ? 'rgba(248,113,113,0.6)' : 'rgba(255,255,255,0.12)'}`,
-              color: '#fff', fontSize: 14, outline: 'none', boxSizing: 'border-box',
+              width: '100%', padding: '10px 40px 10px 12px', borderRadius: 8,
+              background: '#1f2937',
+              border: `1px solid ${error ? '#dc2626' : '#374151'}`,
+              color: '#f9fafb', fontSize: 14, outline: 'none', boxSizing: 'border-box',
             }}
           />
           <button
             onClick={() => setShowPassword(v => !v)}
             style={{
-              position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-              background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: 4,
+              position: 'absolute', right: 10, bottom: 9,
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: '#6b7280', fontSize: 16, padding: 2, lineHeight: 1,
             }}
           >
             {showPassword ? '🙈' : '👁'}
           </button>
         </div>
 
-        {/* Error message */}
+        {/* Error */}
         {error && (
-          <div style={{ fontSize: 12, color: '#f87171', marginBottom: 12, marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: '#dc2626', marginBottom: 14 }}>
             {error}
           </div>
         )}
 
-        {/* Sign In button */}
+        {/* Sign In */}
         <motion.button
           whileHover={{ opacity: 0.9 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleLogin}
           disabled={isLoading}
           style={{
-            width: '100%', padding: '14px', borderRadius: 10, marginTop: 8,
-            background: '#7c3aed', color: '#fff', fontSize: 15, fontWeight: 700,
+            width: '100%', padding: '11px', borderRadius: 8,
+            background: '#7c3aed', color: '#fff', fontSize: 14, fontWeight: 700,
             border: 'none', cursor: isLoading ? 'not-allowed' : 'pointer',
             opacity: isLoading ? 0.7 : 1,
           }}
@@ -205,13 +214,13 @@ export default function LoginPage() {
         </motion.button>
 
         {/* Divider */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0 16px' }}>
-          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', whiteSpace: 'nowrap' }}>Demo Access</span>
-          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '20px 0 16px' }}>
+          <div style={{ flex: 1, height: 1, background: '#1f2937' }} />
+          <span style={{ fontSize: 11, color: '#4b5563', whiteSpace: 'nowrap' }}>or</span>
+          <div style={{ flex: 1, height: 1, background: '#1f2937' }} />
         </div>
 
-        {/* Try Demo button */}
+        {/* Demo toggle */}
         <AnimatePresence mode="wait">
           {!showDemo ? (
             <motion.button
@@ -219,18 +228,17 @@ export default function LoginPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              whileHover={{ borderColor: 'rgba(255,255,255,0.3)' }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setShowDemo(true)}
               style={{
-                width: '100%', padding: '12px', borderRadius: 10,
+                width: '100%', padding: '10px', borderRadius: 8,
                 background: 'transparent',
-                border: '1px solid rgba(255,255,255,0.15)',
-                color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: 600,
+                border: '1px solid #1f2937',
+                color: '#9ca3af', fontSize: 13, fontWeight: 600,
                 cursor: 'pointer',
               }}
             >
-              Try Demo →
+              Try Demo
             </motion.button>
           ) : (
             <motion.div
@@ -240,46 +248,57 @@ export default function LoginPage() {
               exit={{ opacity: 0, height: 0 }}
               style={{ overflow: 'hidden' }}
             >
-              {/* Back button */}
-              <button
-                onClick={() => setShowDemo(false)}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  color: 'rgba(255,255,255,0.5)', fontSize: 13, padding: '0 0 12px 0',
-                  display: 'flex', alignItems: 'center', gap: 4,
-                }}
-              >
-                ← Back
-              </button>
-
-              {/* User grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  Sign in as
+                </span>
+                <button
+                  onClick={() => setShowDemo(false)}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: '#6b7280', fontSize: 13, padding: 0,
+                    display: 'flex', alignItems: 'center', gap: 4,
+                  }}
+                >
+                  ↑ Hide
+                </button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {DEMO_USERS.map((user, i) => (
                   <motion.button
-                    key={user.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    whileHover={{ y: -2, borderColor: user.avatarBg }}
-                    whileTap={{ scale: 0.97 }}
+                    key={user.userId}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => handleDemoSelect(user)}
                     style={{
-                      display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
-                      background: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      borderRadius: 10, cursor: 'pointer', textAlign: 'left',
-                      transition: 'border-color 0.2s',
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      padding: '9px 12px', borderRadius: 8,
+                      background: '#0d1525',
+                      border: '1px solid #1f2937',
+                      cursor: 'pointer', textAlign: 'left',
                     }}
                   >
-                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: user.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                    <div style={{
+                      width: 34, height: 34, borderRadius: '50%',
+                      background: user.avatarBg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0,
+                    }}>
                       {user.initials}
                     </div>
-                    <div>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: '#fff', marginBottom: 2 }}>{user.name}</div>
-                      <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 20, background: `${user.avatarBg}30`, color: user.avatarBg }}>
-                        {user.badgeLabel}
-                      </span>
-                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#f9fafb', flex: 1 }}>
+                      {user.name}
+                    </span>
+                    <span style={{
+                      fontSize: 11, fontWeight: 600,
+                      padding: '2px 8px', borderRadius: 4,
+                      background: user.avatarBg + '25',
+                      color: user.avatarBg,
+                    }}>
+                      {user.badgeLabel}
+                    </span>
                   </motion.button>
                 ))}
               </div>
@@ -288,8 +307,7 @@ export default function LoginPage() {
         </AnimatePresence>
       </motion.div>
 
-      {/* Footer */}
-      <p style={{ position: 'relative', zIndex: 1, marginTop: 32, fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>
+      <p style={{ marginTop: 28, fontSize: 11, color: '#374151' }}>
         NestOps © 2026 · Built for STR operators
       </p>
     </div>
