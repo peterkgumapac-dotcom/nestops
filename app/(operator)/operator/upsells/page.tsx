@@ -79,13 +79,48 @@ function getTargetingLabel(rule: UpsellRule): string {
 }
 
 type EditorTab = 'details' | 'targeting' | 'conditions'
+type PageTab = 'catalog' | 'dashboard'
+
+const PRICING_UNITS = [
+  { value: 'flat', label: 'Flat fee' },
+  { value: 'per_night', label: 'Per night' },
+  { value: 'per_person', label: 'Per person' },
+  { value: 'per_pet', label: 'Per pet' },
+  { value: 'pct_nightly', label: '% of nightly rate' },
+  { value: 'per_bedroom', label: 'Per bedroom' },
+  { value: 'tiered', label: 'Tiered' },
+]
+
+const TOP_PERFORMERS = [
+  { title: 'Early Check-in (+2h)',  category: 'Arrival',    purchases: 38, revenue: '13,300 NOK' },
+  { title: 'Late Checkout (+2h)',   category: 'Departure',  purchases: 34, revenue: '11,900 NOK' },
+  { title: 'Airport Transfer',      category: 'Transport',  purchases: 21, revenue: '17,850 NOK' },
+  { title: 'Welcome Basket',        category: 'Extras',     purchases: 19, revenue: '4,750 NOK' },
+  { title: 'Local Food Tour',       category: 'Experience', purchases: 12, revenue: '7,800 NOK' },
+]
+
+const CATEGORY_BREAKDOWN = [
+  { label: 'Extras',     pct: 35 },
+  { label: 'Arrival',    pct: 25 },
+  { label: 'Departure',  pct: 20 },
+  { label: 'Experience', pct: 12 },
+  { label: 'Transport',  pct: 8 },
+]
 
 export default function UpsellsPage() {
   const { accent } = useRole()
+  const [pageTab, setPageTab] = useState<PageTab>('catalog')
   const [rules, setRules] = useState<UpsellRule[]>(UPSELL_RULES)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editingRule, setEditingRule] = useState<UpsellRule | null>(null)
   const [editorTab, setEditorTab] = useState<EditorTab>('details')
+  const [pricingUnit, setPricingUnit] = useState('flat')
+  const [availWindowOpen, setAvailWindowOpen] = useState(false)
+  const [showFrom, setShowFrom] = useState('7')
+  const [hideAfterMode, setHideAfterMode] = useState('checkin')
+  const [suppressIfPurchased, setSuppressIfPurchased] = useState(false)
+  const [capacityEnabled, setCapacityEnabled] = useState(false)
+  const [capacityLimit, setCapacityLimit] = useState('10')
   const [toast, setToast] = useState('')
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
@@ -197,6 +232,17 @@ export default function UpsellsPage() {
 
   const targetCount = editingRule ? countTargetedProperties(editingRule) : 0
 
+  const pageTabStyle = (t: PageTab): React.CSSProperties => ({
+    padding: '8px 16px',
+    borderRadius: 8,
+    border: 'none',
+    background: pageTab === t ? `${accent}22` : 'transparent',
+    color: pageTab === t ? accent : 'var(--text-muted)',
+    fontSize: 13,
+    fontWeight: pageTab === t ? 600 : 400,
+    cursor: 'pointer',
+  })
+
   return (
     <div>
       <PageHeader
@@ -212,8 +258,68 @@ export default function UpsellsPage() {
         }
       />
 
-      {/* Catalog list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {/* Page tabs */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid var(--border)', paddingBottom: 10 }}>
+        <button style={pageTabStyle('catalog')}   onClick={() => setPageTab('catalog')}>Catalog</button>
+        <button style={pageTabStyle('dashboard')} onClick={() => setPageTab('dashboard')}>Dashboard</button>
+      </div>
+
+      {/* ── Dashboard Tab ──────────────────────────────────────── */}
+      {pageTab === 'dashboard' && (
+        <div>
+          {/* Stat cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
+            {[
+              { label: 'Total Active Rules',    value: '6',          sub: 'Across all properties' },
+              { label: 'Est. Monthly Revenue',  value: '12,400 NOK', sub: 'Based on last 30 days' },
+              { label: 'Avg Attach Rate',        value: '18%',        sub: 'Of eligible bookings' },
+            ].map(c => (
+              <div key={c.label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px 20px' }}>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>{c.label}</div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>{c.value}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-subtle)' }}>{c.sub}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Top performers */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', marginBottom: 20 }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Top Performers</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 12, padding: '8px 16px', background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
+              {['Upsell', 'Category', 'Purchases', 'Revenue'].map(h => (
+                <span key={h} style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
+              ))}
+            </div>
+            {TOP_PERFORMERS.map((p, i) => (
+              <div key={p.title} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 12, padding: '11px 16px', borderBottom: i < TOP_PERFORMERS.length - 1 ? '1px solid var(--border-subtle)' : 'none', alignItems: 'center' }}>
+                <span style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500 }}>{p.title}</span>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{p.category}</span>
+                <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>{p.purchases}</span>
+                <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>{p.revenue}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Category breakdown */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '20px 24px' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 16 }}>Upsells by Category</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {CATEGORY_BREAKDOWN.map(c => (
+                <div key={c.label} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)', width: 100, flexShrink: 0 }}>{c.label}</span>
+                  <div style={{ flex: 1, height: 18, background: 'var(--bg-elevated)', borderRadius: 4, overflow: 'hidden' }}>
+                    <div style={{ width: `${c.pct}%`, height: '100%', background: `${accent}cc`, borderRadius: 4 }} />
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', width: 32, textAlign: 'right' }}>{c.pct}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Catalog Tab ────────────────────────────────────────── */}
+      {pageTab === 'catalog' && <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {rules.map(rule => {
           const catColor = CATEGORY_COLORS[rule.category]
           const targetLabel = getTargetingLabel(rule)
@@ -277,9 +383,9 @@ export default function UpsellsPage() {
             </div>
           )
         })}
-      </div>
+      </div>}
 
-      {rules.length === 0 && (
+      {pageTab === 'catalog' && rules.length === 0 && (
         <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-subtle)', fontSize: 14 }}>
           No upsell rules yet. Click "+ New Upsell" to create one.
         </div>
@@ -330,6 +436,69 @@ export default function UpsellsPage() {
                       </select>
                     </div>
                   </div>
+                  <div>
+                    <label style={labelStyle}>Pricing Unit</label>
+                    <select style={{ ...selectStyle, width: '100%' }} value={pricingUnit} onChange={e => setPricingUnit(e.target.value)}>
+                      {PRICING_UNITS.map(u => <option key={u.value} value={u.value}>{u.label}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Availability window */}
+                  <div style={{ border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+                    <button
+                      onClick={() => setAvailWindowOpen(o => !o)}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: 'var(--bg-elevated)', border: 'none', color: 'var(--text-primary)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+                    >
+                      Availability Window
+                      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{availWindowOpen ? '▲' : '▼'}</span>
+                    </button>
+                    {availWindowOpen && (
+                      <div style={{ padding: '14px 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <label style={{ ...labelStyle, margin: 0, width: 80, flexShrink: 0 }}>Show from</label>
+                          <input
+                            type="number"
+                            min={0}
+                            value={showFrom}
+                            onChange={e => setShowFrom(e.target.value)}
+                            style={{ width: 60, padding: '6px 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontSize: 12, outline: 'none' }}
+                          />
+                          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>days before check-in</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <label style={{ ...labelStyle, margin: 0, width: 80, flexShrink: 0 }}>Hide after</label>
+                          <select
+                            value={hideAfterMode}
+                            onChange={e => setHideAfterMode(e.target.value)}
+                            style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontSize: 12, outline: 'none' }}
+                          >
+                            <option value="checkin">Check-in day</option>
+                            <option value="hours_before">X hours before check-in</option>
+                          </select>
+                        </div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: 'var(--text-primary)' }}>
+                          <input type="checkbox" checked={suppressIfPurchased} onChange={e => setSuppressIfPurchased(e.target.checked)} style={{ accentColor: accent }} />
+                          Suppress if already purchased
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: 'var(--text-primary)' }}>
+                          <input type="checkbox" checked={capacityEnabled} onChange={e => setCapacityEnabled(e.target.checked)} style={{ accentColor: accent }} />
+                          Capacity limit
+                          {capacityEnabled && (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 4 }}>
+                              Max <input
+                                type="number"
+                                min={1}
+                                value={capacityLimit}
+                                onChange={e => setCapacityLimit(e.target.value)}
+                                style={{ width: 56, padding: '4px 6px', borderRadius: 5, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontSize: 12, outline: 'none' }}
+                              /> purchases
+                            </span>
+                          )}
+                        </label>
+                      </div>
+                    )}
+                  </div>
+
                   <div>
                     <label style={labelStyle}>Category</label>
                     <select style={{ ...selectStyle, width: '100%' }} value={editingRule.category} onChange={e => updateEditing({ category: e.target.value as UpsellCategory })}>

@@ -10,6 +10,18 @@ interface ChangeEntry {
 
 const CHANGELOG: ChangeEntry[] = [
   {
+    version: 'v1.8',
+    date: 'Mar 18, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'Guest Verification module — /operator/verification with Guests table, per-property Step Configurator, and Analytics tab; verification statuses: Not Started, In Progress, Verified, Failed, Overridden' },
+      { tag: '⚡ Feature', text: 'Variables tab in Guidebook editor — token picker organized by Booking, Guest, Listing, Access, and Calculated categories; click to copy {{token_name}} syntax' },
+      { tag: '⚡ Feature', text: 'Conditions tab in Guidebook editor — available-from, expiry, and conditions engine (channel, booking source, nights, guest type, season) with AND/OR logic toggle' },
+      { tag: '⚡ Feature', text: 'Upsell pricing units — Flat fee, Per night, Per person, Per pet, % of nightly rate, Per bedroom, Tiered; availability window and suppress-if-purchased controls' },
+      { tag: '🎨 UI', text: 'Upsells Dashboard tab — stat cards (active rules, est. revenue, attach rate), top performers table, and category breakdown bars' },
+      { tag: '🧭 Nav', text: 'Verification added to Platform section in operator and app sidebars (ShieldCheck icon)' },
+    ],
+  },
+  {
     version: 'v1.7',
     date: 'Mar 18, 2026',
     items: [

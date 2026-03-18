@@ -73,10 +73,55 @@ export default function GuidebooksPage() {
   const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)' as const, fontSize: 14, outline: 'none' }
   const labelStyle: React.CSSProperties = { fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }
 
+  const [variablesCopied, setVariablesCopied] = useState('')
+  const [conditionRows, setConditionRows] = useState<{ id: string; field: string; operator: string; value: string }[]>([])
+  const [conditionLogic, setConditionLogic] = useState<'and' | 'or'>('and')
+  const [availableFrom, setAvailableFrom] = useState('3')
+  const [expiryMode, setExpiryMode] = useState('checkout')
+
+  const copyToken = (token: string) => {
+    navigator.clipboard.writeText(token).catch(() => {})
+    setVariablesCopied(token)
+    setTimeout(() => setVariablesCopied(''), 2000)
+  }
+
+  const addConditionRow = () => {
+    setConditionRows(prev => [...prev, { id: Date.now().toString(), field: 'channel', operator: 'is', value: '' }])
+  }
+  const removeConditionRow = (id: string) => setConditionRows(prev => prev.filter(r => r.id !== id))
+  const updateConditionRow = (id: string, patch: Partial<{ field: string; operator: string; value: string }>) => {
+    setConditionRows(prev => prev.map(r => r.id === id ? { ...r, ...patch } : r))
+  }
+
+  const VARIABLE_CATEGORIES = [
+    {
+      label: 'Booking',
+      tokens: ['{{booking_nights}}', '{{booking_id}}', '{{booking_checkin}}', '{{booking_checkout}}', '{{booking_total}}', '{{booking_source}}'],
+    },
+    {
+      label: 'Guest',
+      tokens: ['{{guest_first_name}}', '{{guest_last_name}}', '{{guest_email}}', '{{guest_phone}}', '{{guest_count}}'],
+    },
+    {
+      label: 'Listing',
+      tokens: ['{{property_name}}', '{{property_address}}', '{{checkin_time}}', '{{checkout_time}}', '{{host_name}}'],
+    },
+    {
+      label: 'Access & Utility',
+      tokens: ['{{wifi_name}}', '{{wifi_password}}', '{{door_code}}', '{{parking_code}}', '{{mailbox_code}}'],
+    },
+    {
+      label: 'Calculated',
+      tokens: ['{{days_until_checkin}}', '{{days_since_checkout}}', '{{stay_midpoint}}', '{{local_time}}'],
+    },
+  ]
+
   const editorTabs = [
     { key: 'content', label: 'Content' },
     { key: 'sections', label: 'Sections' },
     { key: 'theme', label: 'Theme' },
+    { key: 'variables', label: 'Variables' },
+    { key: 'conditions', label: 'Conditions' },
     { key: 'upsells', label: 'Upsells' },
     { key: 'share', label: 'Share' },
   ]
@@ -180,6 +225,153 @@ export default function GuidebooksPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div><label style={labelStyle}>Accent Color</label><input type="color" defaultValue={accent} style={{ height: 36, borderRadius: 6, border: '1px solid var(--border)', cursor: 'pointer' }} /></div>
               <div><label style={labelStyle}>Cover Image URL</label><input style={inputStyle} placeholder="https://..." /></div>
+            </div>
+          </div>
+        )}
+
+        {editorTab === 'variables' && (
+          <div style={{ maxWidth: 680 }}>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20, margin: '0 0 20px' }}>
+              Use these tokens in your guidebook content — they resolve dynamically at display time.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {VARIABLE_CATEGORIES.map(cat => (
+                <details key={cat.label} open style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+                  <summary style={{ padding: '12px 16px', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', cursor: 'pointer', userSelect: 'none', listStyle: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    {cat.label}
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400 }}>{cat.tokens.length} tokens</span>
+                  </summary>
+                  <div style={{ padding: '0 16px 14px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {cat.tokens.map(token => (
+                      <button
+                        key={token}
+                        onClick={() => { copyToken(token); showToast('Copied!') }}
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 6, border: `1px solid ${variablesCopied === token ? accent : 'var(--border)'}`, background: variablesCopied === token ? `${accent}18` : 'var(--bg-elevated)', color: variablesCopied === token ? accent : 'var(--text-primary)', fontFamily: 'monospace', fontSize: 12, cursor: 'pointer', transition: 'all 0.15s' }}
+                        title="Click to copy"
+                      >
+                        {token}
+                        <span style={{ fontSize: 10, color: 'var(--text-subtle)' }}>⧉</span>
+                      </button>
+                    ))}
+                  </div>
+                </details>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {editorTab === 'conditions' && (
+          <div style={{ maxWidth: 580 }}>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20, margin: '0 0 20px' }}>
+              Control which guests see this guidebook.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {/* Available from */}
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px' }}>
+                <label style={labelStyle}>Show starting X days before check-in</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input
+                    type="number"
+                    min={0}
+                    value={availableFrom}
+                    onChange={e => setAvailableFrom(e.target.value)}
+                    style={{ width: 72, padding: '8px 10px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontSize: 13, outline: 'none' }}
+                  />
+                  <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>days before check-in</span>
+                </div>
+              </div>
+
+              {/* Expiry */}
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px' }}>
+                <label style={labelStyle}>Hide after</label>
+                <select
+                  value={expiryMode}
+                  onChange={e => setExpiryMode(e.target.value)}
+                  style={{ padding: '8px 12px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontSize: 13, outline: 'none' }}
+                >
+                  <option value="checkout">Check-out</option>
+                  <option value="days_after">X days after check-in</option>
+                  <option value="never">Never</option>
+                </select>
+              </div>
+
+              {/* Display conditions */}
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>Display conditions</div>
+
+                {conditionRows.length === 0 && (
+                  <div style={{ padding: '12px', borderRadius: 8, background: 'var(--bg-elevated)', textAlign: 'center', fontSize: 13, color: 'var(--text-subtle)', marginBottom: 12 }}>
+                    No conditions — guidebook shows for all guests
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+                  {conditionRows.map(row => (
+                    <div key={row.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 8, background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                      <select
+                        value={row.field}
+                        onChange={e => updateConditionRow(row.id, { field: e.target.value })}
+                        style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: 12, outline: 'none' }}
+                      >
+                        <option value="channel">Channel</option>
+                        <option value="booking_source">Booking source</option>
+                        <option value="nights">Nights</option>
+                        <option value="guest_type">Guest type</option>
+                        <option value="property_group">Property group</option>
+                        <option value="season">Season</option>
+                      </select>
+                      <select
+                        value={row.operator}
+                        onChange={e => updateConditionRow(row.id, { operator: e.target.value })}
+                        style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: 12, outline: 'none', width: 72 }}
+                      >
+                        <option value="is">is</option>
+                        <option value="is_not">is not</option>
+                        <option value=">">{'>'}</option>
+                        <option value="<">{'<'}</option>
+                      </select>
+                      <input
+                        style={{ flex: 1, padding: '6px 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: 12, outline: 'none' }}
+                        value={row.value}
+                        onChange={e => updateConditionRow(row.id, { value: e.target.value })}
+                        placeholder="Value"
+                      />
+                      <button onClick={() => removeConditionRow(row.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', padding: 4 }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={addConditionRow}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 7, border: '1px dashed var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', marginBottom: 16 }}
+                >
+                  + Add condition
+                </button>
+
+                {/* AND / OR toggle */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingTop: 12, borderTop: '1px solid var(--border-subtle)' }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Match logic:</span>
+                  {(['and', 'or'] as const).map(l => (
+                    <button
+                      key={l}
+                      onClick={() => setConditionLogic(l)}
+                      style={{ padding: '4px 12px', borderRadius: 6, border: `1px solid ${conditionLogic === l ? accent : 'var(--border)'}`, background: conditionLogic === l ? `${accent}18` : 'transparent', color: conditionLogic === l ? accent : 'var(--text-muted)', fontSize: 12, fontWeight: conditionLogic === l ? 600 : 400, cursor: 'pointer', textTransform: 'uppercase' }}
+                    >
+                      {l}
+                    </button>
+                  ))}
+                  <span style={{ fontSize: 12, color: 'var(--text-subtle)' }}>
+                    {conditionLogic === 'and' ? 'All conditions must match' : 'Any condition must match'}
+                  </span>
+                </div>
+              </div>
+
+              <button onClick={() => showToast('Conditions saved')} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', width: 'fit-content' }}>
+                Save Conditions
+              </button>
             </div>
           </div>
         )}
