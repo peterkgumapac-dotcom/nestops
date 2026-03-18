@@ -13,6 +13,7 @@ import { OWNERS } from '@/lib/data/owners'
 import { REQUESTS } from '@/lib/data/requests'
 import { STOCK_ITEMS } from '@/lib/data/inventory'
 import { SHIFTS } from '@/lib/data/staffScheduling'
+import type { Shift } from '@/lib/data/staffScheduling'
 import { STAFF_MEMBERS } from '@/lib/data/staff'
 import { GUEST_ISSUES, OVERNIGHT_REPORTS, getActiveIssues } from '@/lib/data/guestServices'
 import { JOBS } from '@/lib/data/staff'
@@ -98,6 +99,14 @@ const SHIFT_TASKS: Record<string, string[]> = {
   standby: ['Monitor messages', 'Be available for emergency callouts'],
 }
 
+// Simulated team clock status for operator view
+const TEAM_CLOCK_STATUS = [
+  { id: 's1', name: 'Maria S.',  initials: 'MS', clockedIn: true,  clockInTime: '09:05', shiftStart: '09:00' },
+  { id: 's3', name: 'Bjorn L.', initials: 'BL', clockedIn: false, clockInTime: '',      shiftStart: '09:00' },
+  { id: 's2', name: 'Fatima N.',initials: 'FN', clockedIn: true,  clockInTime: '08:55', shiftStart: '09:00' },
+  { id: 's4', name: 'Johan L.', initials: 'JL', clockedIn: false, clockInTime: '',      shiftStart: '14:00' },
+]
+
 function SectionHeader({ title, href, linkLabel = 'View all' }: { title: string; href?: string; linkLabel?: string }) {
   const { accent } = useRole()
   return (
@@ -124,8 +133,8 @@ export default function AppDashboard() {
   const [clockIn, setClockIn] = useState<ClockInRecord | null>(null)
   const [showCodes, setShowCodes] = useState<Record<string, boolean>>({})
   const [grantedPTE, setGrantedPTE] = useState<Record<string, boolean>>({})
-  const [teamStatuses, setTeamStatuses] = useState<{ staffId: string; name: string; initials: string; shift: { date: string; startTime: string; status: string } | null }[]>([])
   const [elapsed, setElapsed] = useState('')
+  const [todayStaffShift, setTodayStaffShift] = useState<Shift | null>(null)
 
   useEffect(() => {
     const stored = localStorage.getItem('nestops_user')
@@ -145,11 +154,29 @@ export default function AppDashboard() {
     }
   }, [])
 
-  // Elapsed time for clocked-in staff
+  // Find today's shift for staff
   useEffect(() => {
-    if (!clockIn?.clockInTime) return
+    if (!currentUser) return
+    const staffId = USER_TO_STAFF[currentUser.id]
+    if (!staffId) return
+    const today = new Date().toISOString().split('T')[0]
+    const shift = SHIFTS.find(s => s.staffId === staffId && s.date === today) ?? null
+    setTodayStaffShift(shift)
+  }, [currentUser])
+
+  // Elapsed time for clocked-in staff — poll every 60s
+  useEffect(() => {
+    if (!clockIn?.clockInTime || clockIn.status !== 'in_progress') return
     const calc = () => {
-      const ms = Date.now() - new Date(clockIn.clockInTime).getTime()
+      // clockInTime is stored as locale time string like "09:05 AM"
+      // Parse it relative to today
+      const today = new Date().toISOString().split('T')[0]
+      const parsed = new Date(`${today}T${convertTo24h(clockIn.clockInTime)}`)
+      const ms = Date.now() - parsed.getTime()
+      if (ms < 0) {
+        setElapsed('0m')
+        return
+      }
       const h = Math.floor(ms / 3600000)
       const m = Math.floor((ms % 3600000) / 60000)
       setElapsed(h > 0 ? `${h}h ${m}m` : `${m}m`)
@@ -158,26 +185,6 @@ export default function AppDashboard() {
     const interval = setInterval(calc, 60000)
     return () => clearInterval(interval)
   }, [clockIn])
-
-  // Team status for operator
-  useEffect(() => {
-    if (role !== 'operator') return
-    const buildTeam = () => {
-      const statuses = STAFF_MEMBERS.map(member => {
-        const shift = SHIFTS.find(s => s.staffId === member.id && s.date === TODAY) ?? null
-        return {
-          staffId: member.id,
-          name: member.name,
-          initials: member.initials,
-          shift: shift ? { date: shift.date, startTime: shift.startTime, status: shift.status } : null,
-        }
-      })
-      setTeamStatuses(statuses)
-    }
-    buildTeam()
-    const interval = setInterval(buildTeam, 60000)
-    return () => clearInterval(interval)
-  }, [role])
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
@@ -211,6 +218,45 @@ export default function AppDashboard() {
   const isStaff = currentUser?.role === 'staff' || role === 'staff'
   const effectiveSubRole = currentUser?.subRole ?? user?.subRole ?? ''
 
+  // Clock-in handlers
+  const handleClockIn = () => {
+    if (!currentUser || !todayStaffShift) return
+    const record: ClockInRecord = {
+      staffId: USER_TO_STAFF[currentUser.id] ?? currentUser.id,
+      shiftId: todayStaffShift.id,
+      propertyId: todayStaffShift.propertyId,
+      date: new Date().toISOString().split('T')[0],
+      clockInTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      status: 'in_progress',
+    }
+    localStorage.setItem('nestops_clockin', JSON.stringify(record))
+    setClockIn(record)
+  }
+
+  const handleClockOut = () => {
+    if (!clockIn) return
+    const updated: ClockInRecord = {
+      ...clockIn,
+      status: 'completed',
+      clockOutTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+    }
+    localStorage.setItem('nestops_clockin', JSON.stringify(updated))
+    setClockIn(updated)
+  }
+
+  // Late status for current staff shift
+  const lateStatus = todayStaffShift && clockIn?.status !== 'in_progress' && clockIn?.status !== 'completed'
+    ? getLateStatus({ status: todayStaffShift.status, date: todayStaffShift.date, startTime: todayStaffShift.startTime })
+    : null
+
+  const shiftMinsUntil = todayStaffShift
+    ? (() => {
+        const todayStr = new Date().toISOString().split('T')[0]
+        const shiftMs = new Date(`${todayStr}T${todayStaffShift.startTime}:00`).getTime()
+        return (shiftMs - Date.now()) / 60000
+      })()
+    : null
+
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
 
@@ -242,19 +288,7 @@ export default function AppDashboard() {
 
       {/* Clock status bar — staff only */}
       {isStaff && (() => {
-        const staffIdForClock = currentUser ? (USER_TO_STAFF[currentUser.id] ?? null) : null
-        const todayStr = new Date().toISOString().split('T')[0]
-        const todayStaffShift = staffIdForClock ? SHIFTS.find(s => s.staffId === staffIdForClock && s.date === todayStr) ?? null : null
-        const lateStatus = todayStaffShift && clockIn?.status !== 'in_progress'
-          ? getLateStatus({ status: todayStaffShift.status, date: todayStaffShift.date, startTime: todayStaffShift.startTime })
-          : null
-        const shiftMins = todayStaffShift
-          ? (() => {
-              const shiftMs = new Date(`${todayStr}T${todayStaffShift.startTime}:00`).getTime()
-              return (shiftMs - Date.now()) / 60000
-            })()
-          : null
-
+        // Clocked in and active
         if (clockIn?.status === 'in_progress') {
           return (
             <div style={{ padding: '12px 16px', borderRadius: 10, marginBottom: 20, background: '#10b98112', border: '1px solid #10b98130' }}>
@@ -266,11 +300,7 @@ export default function AppDashboard() {
                   </span>
                 </div>
                 <button
-                  onClick={() => {
-                    const updated = { ...clockIn, status: 'completed', clockOutTime: new Date().toISOString() }
-                    localStorage.setItem('nestops_clockin', JSON.stringify(updated))
-                    setClockIn(updated)
-                  }}
+                  onClick={handleClockOut}
                   style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #10b98140', background: 'transparent', color: '#10b981', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                 >
                   Clock Out
@@ -280,6 +310,16 @@ export default function AppDashboard() {
           )
         }
 
+        // Clocked out (completed)
+        if (clockIn?.status === 'completed') {
+          return (
+            <div style={{ padding: '12px 16px', borderRadius: 10, marginBottom: 20, background: 'rgba(107,114,128,0.1)', border: '1px solid rgba(107,114,128,0.25)' }}>
+              <span style={{ fontSize: 13, color: '#6b7280' }}>✓ Shift complete · {elapsed || clockIn.clockOutTime}</span>
+            </div>
+          )
+        }
+
+        // Late — pulsing red bar
         if (todayStaffShift && lateStatus?.isLate) {
           return (
             <motion.div
@@ -289,32 +329,53 @@ export default function AppDashboard() {
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: 13, color: '#f87171', fontWeight: 600 }}>🔴 You are {lateStatus.minutesLate}m late — shift started at {todayStaffShift.startTime}</span>
-                <Link href="/staff/start" style={{ fontSize: 12, color: '#f87171', fontWeight: 600, textDecoration: 'none' }}>▶ Clock In</Link>
+                <button
+                  onClick={handleClockIn}
+                  style={{ fontSize: 12, color: '#f87171', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  ▶ Clock In
+                </button>
               </div>
             </motion.div>
           )
         }
 
-        if (todayStaffShift && shiftMins !== null && shiftMins > 0) {
-          const minsUntil = Math.round(shiftMins)
+        // Upcoming shift — amber bar
+        if (todayStaffShift && shiftMinsUntil !== null && shiftMinsUntil > 0) {
+          const minsUntil = Math.round(shiftMinsUntil)
           return (
             <div style={{ padding: '12px 16px', borderRadius: 10, marginBottom: 20, background: '#d9770612', border: '1px solid #d9770630' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: 13, color: '#d97706' }}>⏰ Shift starts in {minsUntil}m · {todayStaffShift.startTime}</span>
-                <Link href="/staff/start" style={{ fontSize: 12, color: '#d97706', fontWeight: 600, textDecoration: 'none' }}>▶ Start Shift</Link>
+                <button
+                  onClick={handleClockIn}
+                  style={{ fontSize: 12, color: '#d97706', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  ▶ Clock In
+                </button>
               </div>
             </div>
           )
         }
 
-        return (
-          <div style={{ padding: '12px 16px', borderRadius: 10, marginBottom: 20, background: '#d9770612', border: '1px solid #d9770630' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 13, color: '#d97706' }}>⏰ No active shift · Start your shift when ready</span>
-              <Link href="/staff/start" style={{ fontSize: 12, color: '#d97706', fontWeight: 600, textDecoration: 'none' }}>▶ Start Shift</Link>
+        // No shift or shift time passed with no clock-in
+        if (todayStaffShift) {
+          return (
+            <div style={{ padding: '12px 16px', borderRadius: 10, marginBottom: 20, background: '#d9770612', border: '1px solid #d9770630' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 13, color: '#d97706' }}>⏰ Ready for your shift · {todayStaffShift.startTime}</span>
+                <button
+                  onClick={handleClockIn}
+                  style={{ fontSize: 12, color: '#d97706', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  ▶ Clock In
+                </button>
+              </div>
             </div>
-          </div>
-        )
+          )
+        }
+
+        return null
       })()}
 
       {/* ═══ OPERATOR DASHBOARD ═══ */}
@@ -363,31 +424,36 @@ export default function AppDashboard() {
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 20 }}>
             <SectionHeader title="Team Status 👥" href="/app/team" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {teamStatuses.map(member => {
-                const lateStatus = member.shift ? getLateStatus(member.shift) : null
+              {TEAM_CLOCK_STATUS.map(member => {
+                const todayShift = SHIFTS.find(s => s.staffId === member.id && s.date === TODAY) ?? null
+                const lateInfo = todayShift && !member.clockedIn
+                  ? getLateStatus({ status: todayShift.status, date: todayShift.date, startTime: todayShift.startTime })
+                  : null
                 return (
-                  <div key={member.staffId} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                  <div key={member.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: member.clockedIn ? '#10b981' : '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
                       {member.initials}
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{member.name}</div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                        {member.shift ? `${member.shift.startTime} shift` : 'No shift today'}
+                        {member.clockedIn
+                          ? `Clocked in at ${member.clockInTime}`
+                          : `Shift: ${member.shiftStart}`}
                       </div>
                     </div>
-                    {member.shift && (
-                      <span style={{
-                        fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20,
-                        background: member.shift.status === 'in_progress' ? '#10b98120' : member.shift.status === 'completed' ? '#6b728020' : '#d9770620',
-                        color: member.shift.status === 'in_progress' ? '#10b981' : member.shift.status === 'completed' ? '#6b7280' : '#d97706',
-                      }}>
-                        {member.shift.status === 'in_progress' ? 'On Shift' : member.shift.status === 'completed' ? 'Done' : 'Scheduled'}
+                    {member.clockedIn ? (
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: '#10b98120', color: '#10b981' }}>
+                        On Shift
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: '#d9770620', color: '#d97706' }}>
+                        Not In
                       </span>
                     )}
-                    {lateStatus?.isLate && (
-                      <span style={{ fontSize: 10, fontWeight: 700, color: lateStatus.severity === 'very_late' ? '#f87171' : '#d97706' }}>
-                        {lateStatus.minutesLate}m late
+                    {lateInfo?.isLate && (
+                      <span style={{ fontSize: 10, fontWeight: 700, color: lateInfo.severity === 'very_late' ? '#f87171' : '#d97706' }}>
+                        {lateInfo.minutesLate}m late
                       </span>
                     )}
                   </div>
@@ -449,7 +515,7 @@ export default function AppDashboard() {
                 return (
                   <div key={shift.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 12 }}>
                     {prop?.imageUrl && (
-                      <img src={prop.imageUrl} alt={prop.name} style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 8, marginBottom: 12 }} />
+                      <img src={prop.imageUrl} alt={prop.name} style={{ width: '100%', height: 128, objectFit: 'cover', borderRadius: 8, marginBottom: 12 }} />
                     )}
                     <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>{prop?.name ?? shift.propertyId}</div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>{shift.startTime} – {shift.endTime}</div>
@@ -488,7 +554,7 @@ export default function AppDashboard() {
                     <button
                       style={{ marginTop: 12, width: '100%', padding: '10px', borderRadius: 8, background: accent, color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}
                     >
-                      Start This Clean →
+                      ▶ Start This Clean
                     </button>
                   </div>
                 )
@@ -522,23 +588,42 @@ export default function AppDashboard() {
               const jobPTEStatus = grantedPTE[job.id] ? 'granted' : (job.pteStatus ?? 'not_required')
               const pteBadge = getPTEBadge(jobPTEStatus)
               const canShowCode = jobPTEStatus === 'granted' || jobPTEStatus === 'auto_granted' || jobPTEStatus === 'not_required'
+              const priorityEmoji = job.priority === 'urgent' ? '🔴' : job.priority === 'high' ? '🟡' : '⚪'
+
+              // PTE display text
+              const pteDisplayText = (() => {
+                switch (jobPTEStatus) {
+                  case 'auto_granted': return '✓ Auto-granted (property empty)'
+                  case 'granted': return `✓ Granted — Enter after ${job.dueTime}`
+                  case 'pending': return '⏳ Pending — contacting guest'
+                  case 'not_required': return '✓ No PTE required'
+                  default: return pteBadge.label
+                }
+              })()
+
               return (
                 <div key={job.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20, background: PRIORITY_COLORS[job.priority] + '20', color: PRIORITY_COLORS[job.priority], flexShrink: 0, marginTop: 2 }}>
-                      {job.priority.toUpperCase()}
-                    </span>
+                    <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{priorityEmoji}</span>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{job.title}</div>
                       <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{job.propertyName} · Due {job.dueTime}</div>
                     </div>
-                    <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 20, background: pteBadge.color + '20', color: pteBadge.color, flexShrink: 0 }}>
-                      {pteBadge.icon} {pteBadge.label}
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20, background: PRIORITY_COLORS[job.priority] + '20', color: PRIORITY_COLORS[job.priority], flexShrink: 0 }}>
+                      {job.priority.toUpperCase()}
                     </span>
                   </div>
 
+                  {/* PTE section */}
+                  <div style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--bg-surface)', border: '1px solid var(--border)', marginBottom: 10 }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 4 }}>Permission to Enter</div>
+                    <div style={{ fontSize: 12, color: canShowCode ? '#10b981' : '#d97706', fontWeight: 500 }}>
+                      {pteDisplayText}
+                    </div>
+                  </div>
+
                   {/* Access code */}
-                  <div style={{ padding: '10px 14px', borderRadius: 8, background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                  <div style={{ padding: '10px 14px', borderRadius: 8, background: 'var(--bg-surface)', border: '1px solid var(--border)', marginBottom: 10 }}>
                     {canShowCode ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <div>
@@ -563,6 +648,16 @@ export default function AppDashboard() {
                       </div>
                     )}
                   </div>
+
+                  {/* Action buttons */}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button style={{ flex: 1, padding: '8px', borderRadius: 8, background: accent, color: '#fff', fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
+                      ▶ Start Job
+                    </button>
+                    <button style={{ flex: 1, padding: '8px', borderRadius: 8, background: 'transparent', color: 'var(--text-muted)', fontSize: 12, border: '1px solid var(--border)', cursor: 'pointer' }}>
+                      Get Directions
+                    </button>
+                  </div>
                 </div>
               )
             })
@@ -579,12 +674,17 @@ export default function AppDashboard() {
             {activeIssues.slice(0, 3).map(issue => (
               <div key={issue.id} style={{ padding: '10px 0', borderBottom: '1px solid var(--border-subtle)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <span style={{ fontSize: 14 }}>{issue.severity === 'critical' || issue.severity === 'high' ? '🔴' : '🟡'}</span>
                   <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: issue.severity === 'critical' ? '#dc262620' : issue.severity === 'high' ? '#f8717120' : '#fb923c20', color: issue.severity === 'critical' ? '#dc2626' : issue.severity === 'high' ? '#f87171' : '#fb923c' }}>
                     {issue.severity.toUpperCase()}
                   </span>
                   <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{issue.title}</span>
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>{issue.propertyName} · {issue.guestName}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>{issue.propertyName} · {issue.guestName}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
+                  Reported: {new Date(issue.reportedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                  {issue.checkOutDate && ` · Checkout: ${issue.checkOutDate}`}
+                </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button style={{ padding: '4px 10px', borderRadius: 6, border: `1px solid ${accent}40`, background: 'transparent', color: accent, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>View Task</button>
                   <button style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer' }}>Contact</button>
@@ -609,12 +709,17 @@ export default function AppDashboard() {
                   {grantedPTE[job.id] ? (
                     <span style={{ fontSize: 11, fontWeight: 600, color: '#16a34a' }}>✓ Granted</span>
                   ) : (
-                    <button
-                      onClick={() => grantPTE(job.id)}
-                      style={{ padding: '5px 12px', borderRadius: 6, background: '#16a34a', color: '#fff', fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer' }}
-                    >
-                      Grant PTE
-                    </button>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        onClick={() => grantPTE(job.id)}
+                        style={{ padding: '5px 12px', borderRadius: 6, background: '#16a34a', color: '#fff', fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer' }}
+                      >
+                        Grant PTE
+                      </button>
+                      <button style={{ padding: '5px 10px', borderRadius: 6, background: 'transparent', color: 'var(--text-muted)', fontSize: 12, border: '1px solid var(--border)', cursor: 'pointer' }}>
+                        Deny
+                      </button>
+                    </div>
                   )}
                 </div>
               ))
@@ -624,13 +729,33 @@ export default function AppDashboard() {
           {/* Check-ins today */}
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 20 }}>
             <SectionHeader title="Check-ins Today" />
-            {PROPERTIES.filter(p => p.status === 'live').slice(0, 3).map(prop => (
-              <div key={prop.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+            {[
+              { time: '15:00', property: 'Sunset Villa', guest: 'Lars Eriksen', cleaner: 'Maria S.', cleanStatus: 'done' as const },
+              { time: '17:00', property: 'Ocean View Apt', guest: 'Sophie K.', cleaner: 'Maria S.', cleanStatus: 'tight' as const },
+            ].map((checkin, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', minWidth: 40 }}>{checkin.time}</span>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{prop.name}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{prop.city} · 15:00 check-in</div>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{checkin.property} · {checkin.guest}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    Clean: {checkin.cleaner} {checkin.cleanStatus === 'done' ? '✓' : '⚠️ tight'}
+                  </div>
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: '#10b98120', color: '#10b981' }}>Ready</span>
+                <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: checkin.cleanStatus === 'done' ? '#10b98120' : '#d9770620', color: checkin.cleanStatus === 'done' ? '#10b981' : '#d97706' }}>
+                  {checkin.cleanStatus === 'done' ? 'Ready' : 'Watch'}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* My tasks */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 20 }}>
+            <SectionHeader title="My Tasks" />
+            {TODAY_TASKS.map(t => (
+              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                <div style={{ width: 16, height: 16, borderRadius: 4, border: '2px solid var(--border)', flexShrink: 0 }} />
+                <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>{t.title}</span>
+                <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-muted)' }}>{t.due}</span>
               </div>
             ))}
           </div>
@@ -747,4 +872,17 @@ export default function AppDashboard() {
 
     </motion.div>
   )
+}
+
+// Helper to convert locale time string like "09:05 AM" to "09:05"
+function convertTo24h(timeStr: string): string {
+  if (!timeStr) return '00:00'
+  // If already 24h format
+  if (!timeStr.includes('AM') && !timeStr.includes('PM')) return timeStr
+  const [timePart, period] = timeStr.split(' ')
+  const [h, m] = timePart.split(':').map(Number)
+  let hour = h
+  if (period === 'AM' && h === 12) hour = 0
+  if (period === 'PM' && h !== 12) hour = h + 12
+  return `${String(hour).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }

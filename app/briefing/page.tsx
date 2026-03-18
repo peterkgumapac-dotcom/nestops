@@ -191,6 +191,9 @@ export default function BriefingPage() {
 
   const shiftProperty = firstShift ? PROPERTIES.find(p => p.id === firstShift.propertyId) : null
 
+  // Suppress unused import warnings for WeatherWidget
+  void WeatherWidget
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -210,7 +213,7 @@ export default function BriefingPage() {
           <span style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>NestOps</span>
         </div>
         <Link
-          href="/login"
+          href="/app/dashboard"
           style={{
             padding: '6px 14px', borderRadius: 8,
             border: '1px solid rgba(255,255,255,0.2)',
@@ -218,7 +221,7 @@ export default function BriefingPage() {
             textDecoration: 'none',
           }}
         >
-          Sign In to Start →
+          Dashboard →
         </Link>
       </div>
 
@@ -361,14 +364,14 @@ export default function BriefingPage() {
               </div>
 
               <Link
-                href="/owner"
+                href="/app/dashboard"
                 style={{
                   display: 'block', width: '100%', padding: '18px', borderRadius: 16,
                   background: '#2563eb', color: '#fff', fontSize: 16, fontWeight: 700,
                   textDecoration: 'none', textAlign: 'center', marginTop: 8,
                 }}
               >
-                Go to Owner Portal →
+                Go to Dashboard →
               </Link>
             </motion.div>
           )}
@@ -449,31 +452,18 @@ export default function BriefingPage() {
                 </div>
               </div>
 
-              {/* Bottom buttons */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <Link
-                  href={minutesUntilShift <= 30 ? '/staff/start' : '/app/dashboard'}
-                  style={{
-                    display: 'block', padding: '18px', borderRadius: 16,
-                    background: minutesUntilShift <= 30 ? '#10b981' : '#7c3aed',
-                    color: '#fff', fontSize: 16, fontWeight: 700,
-                    textDecoration: 'none', textAlign: 'center',
-                  }}
-                >
-                  {minutesUntilShift <= 30 ? '▶ Clock In Now' : 'Go to Dashboard →'}
-                </Link>
-                <Link
-                  href="/app/dashboard"
-                  style={{
-                    display: 'block', padding: '14px', borderRadius: 14,
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: 600,
-                    textDecoration: 'none', textAlign: 'center',
-                  }}
-                >
-                  View Dashboard
-                </Link>
-              </div>
+              {/* Go to Dashboard */}
+              <Link
+                href="/app/dashboard"
+                style={{
+                  display: 'block', padding: '18px', borderRadius: 16,
+                  background: '#7c3aed',
+                  color: '#fff', fontSize: 16, fontWeight: 700,
+                  textDecoration: 'none', textAlign: 'center',
+                }}
+              >
+                Go to Dashboard →
+              </Link>
             </motion.div>
           )}
 
@@ -513,31 +503,17 @@ export default function BriefingPage() {
                 )}
               </div>
 
-              {/* Bottom buttons */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <Link
-                  href={minutesUntilShift <= 30 ? '/staff/start' : '/app/dashboard'}
-                  style={{
-                    display: 'block', padding: '18px', borderRadius: 16,
-                    background: minutesUntilShift <= 30 ? '#10b981' : '#7c3aed',
-                    color: '#fff', fontSize: 16, fontWeight: 700,
-                    textDecoration: 'none', textAlign: 'center',
-                  }}
-                >
-                  {minutesUntilShift <= 30 ? '▶ Clock In Now' : 'Go to Dashboard →'}
-                </Link>
-                <Link
-                  href="/app/dashboard"
-                  style={{
-                    display: 'block', padding: '14px', borderRadius: 14,
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: 600,
-                    textDecoration: 'none', textAlign: 'center',
-                  }}
-                >
-                  View Dashboard
-                </Link>
-              </div>
+              {/* Go to Dashboard */}
+              <Link
+                href="/app/dashboard"
+                style={{
+                  display: 'block', padding: '18px', borderRadius: 16,
+                  background: '#7c3aed', color: '#fff', fontSize: 16, fontWeight: 700,
+                  textDecoration: 'none', textAlign: 'center',
+                }}
+              >
+                Go to Dashboard →
+              </Link>
             </motion.div>
           )}
 
@@ -581,19 +557,17 @@ export default function BriefingPage() {
                 </div>
               )}
 
-              {/* Bottom buttons */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <Link
-                  href="/app/dashboard"
-                  style={{
-                    display: 'block', padding: '18px', borderRadius: 16,
-                    background: '#7c3aed', color: '#fff', fontSize: 16, fontWeight: 700,
-                    textDecoration: 'none', textAlign: 'center',
-                  }}
-                >
-                  Go to Dashboard →
-                </Link>
-              </div>
+              {/* Go to Dashboard */}
+              <Link
+                href="/app/dashboard"
+                style={{
+                  display: 'block', padding: '18px', borderRadius: 16,
+                  background: '#7c3aed', color: '#fff', fontSize: 16, fontWeight: 700,
+                  textDecoration: 'none', textAlign: 'center',
+                }}
+              >
+                Go to Dashboard →
+              </Link>
             </motion.div>
           )}
 

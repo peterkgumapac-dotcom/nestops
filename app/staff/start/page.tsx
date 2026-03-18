@@ -76,6 +76,10 @@ export default function StaffStartPage() {
   const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening'
 
   useEffect(() => {
+    router.push('/app/dashboard')
+  }, [router])
+
+  useEffect(() => {
     setMounted(true)
     const now = new Date()
     setCurrentTime(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }))
