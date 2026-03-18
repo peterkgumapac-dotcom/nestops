@@ -3,8 +3,10 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { SHIFTS, DAYS, type Shift } from '@/lib/data/staffScheduling'
+import { SHIFTS, type Shift } from '@/lib/data/staffScheduling'
 import { PROPERTIES } from '@/lib/data/properties'
+import { JOBS } from '@/lib/data/staff'
+import { getPTEBadge } from '@/lib/utils/pteUtils'
 import type { UserProfile } from '@/context/RoleContext'
 
 const USER_TO_STAFF: Record<string, string> = {
@@ -68,6 +70,7 @@ export default function StaffStartPage() {
   const [currentTime, setCurrentTime] = useState('')
   const [showConfetti, setShowConfetti] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [showCodes, setShowCodes] = useState<Record<string, boolean>>({})
 
   const hour = new Date().getHours()
   const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening'
@@ -140,6 +143,24 @@ export default function StaffStartPage() {
     ? SHIFTS.filter(s => s.staffId === (USER_TO_STAFF[currentUser.id] ?? '') && s.status === 'scheduled').length
     : 0
 
+  // Compute late status for clock status bar
+  const today = new Date().toISOString().split('T')[0]
+  const minutesUntilShift = todayShift
+    ? (() => {
+        const shiftMs = new Date(`${today}T${todayShift.startTime}:00`).getTime()
+        return (shiftMs - Date.now()) / 60000
+      })()
+    : Infinity
+
+  const isLate = todayShift && minutesUntilShift < -15
+
+  // Maintenance jobs for this staff
+  const staffId = currentUser ? USER_TO_STAFF[currentUser.id] : null
+  const myJobs = staffId ? JOBS.filter(j => j.staffId === staffId) : []
+  const isMaintenance = currentUser?.subRole?.includes('Maintenance') ?? false
+
+  const toggleCode = (id: string) => setShowCodes(prev => ({ ...prev, [id]: !prev[id] }))
+
   if (!mounted) return null
 
   return (
@@ -206,6 +227,34 @@ export default function StaffStartPage() {
             })}
           </AnimatePresence>
 
+          {/* Clock status bar */}
+          {todayShift && (
+            <div style={{
+              marginBottom: 20,
+              padding: '10px 14px',
+              borderRadius: 10,
+              ...(isLate
+                ? { background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)' }
+                : minutesUntilShift > 0
+                  ? { background: 'rgba(217,119,6,0.12)', border: '1px solid rgba(217,119,6,0.3)' }
+                  : { background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)' }),
+            }}>
+              {isLate ? (
+                <motion.div
+                  animate={{ opacity: [1, 0.5, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  style={{ fontSize: 12, fontWeight: 600, color: '#f87171' }}
+                >
+                  🔴 You are late — shift started at {todayShift.startTime}
+                </motion.div>
+              ) : (
+                <div style={{ fontSize: 12, fontWeight: 500, color: '#fbbf24' }}>
+                  ○ Shift starts at {todayShift.startTime} · {propertyName}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Greeting */}
           <h2 style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 6 }}>
             Good {timeOfDay}, {currentUser?.name?.split(' ')[0]} 👋
@@ -248,7 +297,7 @@ export default function StaffStartPage() {
 
               {/* Tasks preview */}
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.5)', marginBottom: 10 }}>Today's tasks:</div>
+                <div style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.5)', marginBottom: 10 }}>Today&apos;s tasks:</div>
                 {tasks.slice(0, 3).map((task, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                     <div style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.2)', flexShrink: 0 }} />
@@ -261,6 +310,39 @@ export default function StaffStartPage() {
                   </div>
                 )}
               </div>
+
+              {/* Maintenance: job cards with PTE */}
+              {isMaintenance && myJobs.length > 0 && (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.5)', marginBottom: 10 }}>Your jobs:</div>
+                  {myJobs.map(job => {
+                    const jobPTEStatus = job.pteStatus ?? 'not_required'
+                    const pteBadge = getPTEBadge(jobPTEStatus)
+                    const canShowCode = jobPTEStatus === 'granted' || jobPTEStatus === 'auto_granted' || jobPTEStatus === 'not_required'
+                    return (
+                      <div key={job.id} style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>{job.title}</div>
+                          <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 20, background: pteBadge.color + '20', color: pteBadge.color }}>
+                            {pteBadge.icon} {pteBadge.label}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>{job.propertyName}</div>
+                        {canShowCode ? (
+                          <button
+                            onClick={() => toggleCode(job.id)}
+                            style={{ fontSize: 12, color: '#7c3aed', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 600 }}
+                          >
+                            {showCodes[job.id] ? `Code: 4821` : 'Show Code 👁'}
+                          </button>
+                        ) : (
+                          <span style={{ fontSize: 12, color: '#d97706' }}>🔒 Locked until PTE granted</span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
 
               {/* Unconfirmed shifts alert */}
               {unconfirmedCount > 0 && (
@@ -327,6 +409,13 @@ export default function StaffStartPage() {
               </div>
             </div>
           )}
+
+          {/* Back to Briefing */}
+          <div style={{ textAlign: 'center', marginTop: 20 }}>
+            <Link href="/briefing" style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 16px', borderRadius: 8, display: 'inline-block' }}>
+              ← Back to Briefing
+            </Link>
+          </div>
         </motion.div>
       </div>
     </div>

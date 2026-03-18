@@ -125,6 +125,7 @@ export default function AppDashboard() {
   const [showCodes, setShowCodes] = useState<Record<string, boolean>>({})
   const [grantedPTE, setGrantedPTE] = useState<Record<string, boolean>>({})
   const [teamStatuses, setTeamStatuses] = useState<{ staffId: string; name: string; initials: string; shift: { date: string; startTime: string; status: string } | null }[]>([])
+  const [elapsed, setElapsed] = useState('')
 
   useEffect(() => {
     const stored = localStorage.getItem('nestops_user')
@@ -143,6 +144,20 @@ export default function AppDashboard() {
       } catch {}
     }
   }, [])
+
+  // Elapsed time for clocked-in staff
+  useEffect(() => {
+    if (!clockIn?.clockInTime) return
+    const calc = () => {
+      const ms = Date.now() - new Date(clockIn.clockInTime).getTime()
+      const h = Math.floor(ms / 3600000)
+      const m = Math.floor((ms % 3600000) / 60000)
+      setElapsed(h > 0 ? `${h}h ${m}m` : `${m}m`)
+    }
+    calc()
+    const interval = setInterval(calc, 60000)
+    return () => clearInterval(interval)
+  }, [clockIn])
 
   // Team status for operator
   useEffect(() => {
@@ -185,6 +200,14 @@ export default function AppDashboard() {
   const toggleCode = (id: string) => setShowCodes(prev => ({ ...prev, [id]: !prev[id] }))
   const grantPTE = (jobId: string) => setGrantedPTE(prev => ({ ...prev, [jobId]: true }))
 
+  const canShowCodeForShift = (shift: { startTime: string }) => {
+    const [h, m] = shift.startTime.split(':').map(Number)
+    const shiftStart = new Date()
+    shiftStart.setHours(h, m, 0, 0)
+    const minsUntil = (shiftStart.getTime() - Date.now()) / 60000
+    return minsUntil <= 30
+  }
+
   const isStaff = currentUser?.role === 'staff' || role === 'staff'
   const effectiveSubRole = currentUser?.subRole ?? user?.subRole ?? ''
 
@@ -218,40 +241,81 @@ export default function AppDashboard() {
       </div>
 
       {/* Clock status bar — staff only */}
-      {isStaff && (
-        <div style={{
-          padding: '12px 16px', borderRadius: 10, marginBottom: 20,
-          ...(clockIn?.status === 'in_progress'
-            ? { background: '#10b98112', borderLeft: '3px solid #10b981', border: '1px solid #10b98130' }
-            : { background: '#d9770612', borderLeft: '3px solid #d97706', border: '1px solid #d9770630' })
-        }}>
-          {clockIn?.status === 'in_progress' ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} />
-                <span style={{ fontSize: 13, color: '#10b981', fontWeight: 500 }}>
-                  On shift · {PROPERTIES.find(p => p.id === clockIn.propertyId)?.name ?? 'Property'} · Started {new Date(clockIn.clockInTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                </span>
+      {isStaff && (() => {
+        const staffIdForClock = currentUser ? (USER_TO_STAFF[currentUser.id] ?? null) : null
+        const todayStr = new Date().toISOString().split('T')[0]
+        const todayStaffShift = staffIdForClock ? SHIFTS.find(s => s.staffId === staffIdForClock && s.date === todayStr) ?? null : null
+        const lateStatus = todayStaffShift && clockIn?.status !== 'in_progress'
+          ? getLateStatus({ status: todayStaffShift.status, date: todayStaffShift.date, startTime: todayStaffShift.startTime })
+          : null
+        const shiftMins = todayStaffShift
+          ? (() => {
+              const shiftMs = new Date(`${todayStr}T${todayStaffShift.startTime}:00`).getTime()
+              return (shiftMs - Date.now()) / 60000
+            })()
+          : null
+
+        if (clockIn?.status === 'in_progress') {
+          return (
+            <div style={{ padding: '12px 16px', borderRadius: 10, marginBottom: 20, background: '#10b98112', border: '1px solid #10b98130' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} />
+                  <span style={{ fontSize: 13, color: '#10b981', fontWeight: 500 }}>
+                    On shift · {PROPERTIES.find(p => p.id === clockIn.propertyId)?.name ?? 'Property'} · {elapsed && `${elapsed} elapsed`}
+                  </span>
+                </div>
+                <button
+                  onClick={() => {
+                    const updated = { ...clockIn, status: 'completed', clockOutTime: new Date().toISOString() }
+                    localStorage.setItem('nestops_clockin', JSON.stringify(updated))
+                    setClockIn(updated)
+                  }}
+                  style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #10b98140', background: 'transparent', color: '#10b981', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                >
+                  Clock Out
+                </button>
               </div>
-              <button
-                onClick={() => {
-                  const updated = { ...clockIn, status: 'completed', clockOutTime: new Date().toISOString() }
-                  localStorage.setItem('nestops_clockin', JSON.stringify(updated))
-                  setClockIn(updated)
-                }}
-                style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #10b98140', background: 'transparent', color: '#10b981', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
-              >
-                Clock Out
-              </button>
             </div>
-          ) : (
+          )
+        }
+
+        if (todayStaffShift && lateStatus?.isLate) {
+          return (
+            <motion.div
+              animate={{ opacity: [1, 0.7, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              style={{ padding: '12px 16px', borderRadius: 10, marginBottom: 20, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 13, color: '#f87171', fontWeight: 600 }}>🔴 You are {lateStatus.minutesLate}m late — shift started at {todayStaffShift.startTime}</span>
+                <Link href="/staff/start" style={{ fontSize: 12, color: '#f87171', fontWeight: 600, textDecoration: 'none' }}>▶ Clock In</Link>
+              </div>
+            </motion.div>
+          )
+        }
+
+        if (todayStaffShift && shiftMins !== null && shiftMins > 0) {
+          const minsUntil = Math.round(shiftMins)
+          return (
+            <div style={{ padding: '12px 16px', borderRadius: 10, marginBottom: 20, background: '#d9770612', border: '1px solid #d9770630' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 13, color: '#d97706' }}>⏰ Shift starts in {minsUntil}m · {todayStaffShift.startTime}</span>
+                <Link href="/staff/start" style={{ fontSize: 12, color: '#d97706', fontWeight: 600, textDecoration: 'none' }}>▶ Start Shift</Link>
+              </div>
+            </div>
+          )
+        }
+
+        return (
+          <div style={{ padding: '12px 16px', borderRadius: 10, marginBottom: 20, background: '#d9770612', border: '1px solid #d9770630' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: 13, color: '#d97706' }}>⏰ No active shift · Start your shift when ready</span>
               <Link href="/staff/start" style={{ fontSize: 12, color: '#d97706', fontWeight: 600, textDecoration: 'none' }}>▶ Start Shift</Link>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )
+      })()}
 
       {/* ═══ OPERATOR DASHBOARD ═══ */}
       {role === 'operator' && (
@@ -398,20 +462,27 @@ export default function AppDashboard() {
                       </div>
                     ))}
 
-                    {/* Access code */}
+                    {/* Access code — only show within 30 min of shift start */}
                     <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 8, background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Access Code</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '0.15em', color: showCodes[shift.id] ? 'var(--text-primary)' : 'transparent', textShadow: showCodes[shift.id] ? 'none' : '0 0 8px rgba(255,255,255,0.5)', userSelect: showCodes[shift.id] ? 'text' : 'none' }}>
-                          {showCodes[shift.id] ? '4821' : '••••'}
-                        </span>
-                        <button
-                          onClick={() => toggleCode(shift.id)}
-                          style={{ fontSize: 12, color: accent, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 600 }}
-                        >
-                          {showCodes[shift.id] ? 'Hide' : 'Show Code 👁'}
-                        </button>
-                      </div>
+                      {canShowCodeForShift(shift) ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '0.15em', color: showCodes[shift.id] ? 'var(--text-primary)' : 'transparent', textShadow: showCodes[shift.id] ? 'none' : '0 0 8px rgba(255,255,255,0.5)', userSelect: showCodes[shift.id] ? 'text' : 'none' }}>
+                            {showCodes[shift.id] ? '4821' : '••••'}
+                          </span>
+                          <button
+                            onClick={() => toggleCode(shift.id)}
+                            style={{ fontSize: 12, color: accent, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 600 }}
+                          >
+                            {showCodes[shift.id] ? 'Hide' : 'Show Code 👁'}
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#d97706' }}>
+                          <span style={{ fontSize: 13 }}>🔒</span>
+                          <span style={{ fontSize: 12, fontWeight: 500 }}>Available 30 min before shift</span>
+                        </div>
+                      )}
                     </div>
 
                     <button
