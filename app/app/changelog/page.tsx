@@ -103,6 +103,7 @@ const TAG_COLORS: Record<string, string> = {
   '🎨 UI': '#0891b2',
   '🐛 Fix': '#dc2626',
   '♿ A11y': '#059669',
+  '🧭 Nav': '#d97706',
 }
 
 export default function ChangelogPage() {
