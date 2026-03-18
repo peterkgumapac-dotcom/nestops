@@ -34,6 +34,8 @@ const TEMPLATES = [
   { name: 'Long Vacancy → Schedule Inspection',       icon: '🔍' },
   { name: 'Bad Review → Create Follow-up Task',       icon: '⭐' },
   { name: 'Seasonal Changeover Checklist',            icon: '🗓️' },
+  { name: 'Post-Checkout Review Request',             icon: '⭐' },
+  { name: '5★ Review Follow-up + Referral',           icon: '🙏' },
 ]
 
 const TRIGGER_OPTIONS = [
@@ -61,6 +63,10 @@ export default function AutomationsPage() {
   const [conditions, setConditions] = useState<ConditionRow[]>([])
   const [actions, setActions] = useState<ActionRow[]>([{ id: 'act1', type: 'Create task' }])
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const [toast, setToast] = useState('')
+  const [builderName, setBuilderName] = useState('')
+  const [nameError, setNameError] = useState('')
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   const toggleActive = (id: string) => setAutomations(prev => prev.map(a => a.id === id ? { ...a, active: !a.active } : a))
 
@@ -74,7 +80,7 @@ export default function AutomationsPage() {
       <PageHeader
         title="Automations"
         subtitle="Set up rules that run your operations automatically"
-        action={<button onClick={() => setBuilderOpen(true)} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>+ New Automation</button>}
+        action={<button onClick={() => { setNameError(''); setBuilderOpen(true) }} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>+ New Automation</button>}
       />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 28 }}>
@@ -143,7 +149,7 @@ export default function AutomationsPage() {
               <span style={{ fontSize: 24 }}>{t.icon}</span>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 8 }}>{t.name}</div>
-                <button style={{ padding: '4px 10px', borderRadius: 6, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, fontSize: 11, fontWeight: 500, cursor: 'pointer' }}>Use Template</button>
+                <button onClick={() => { setBuilderName(t.name); setNameError(''); setBuilderOpen(true) }} style={{ padding: '4px 10px', borderRadius: 6, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, fontSize: 11, fontWeight: 500, cursor: 'pointer' }}>Use Template</button>
               </div>
             </div>
           ))}
@@ -159,7 +165,13 @@ export default function AutomationsPage() {
             {/* Name */}
             <div>
               <label style={labelStyle}>Automation Name</label>
-              <input placeholder="e.g. Post-Checkout Cleaning" style={inputStyle} />
+              <input
+                value={builderName}
+                onChange={e => { setBuilderName(e.target.value); if (e.target.value.trim()) setNameError('') }}
+                placeholder="e.g. Post-Checkout Cleaning"
+                style={{ ...inputStyle, borderColor: nameError ? '#ef4444' : undefined }}
+              />
+              {nameError && <span style={{ color: '#ef4444', fontSize: 12, marginTop: 4, display: 'block' }}>{nameError}</span>}
             </div>
 
             {/* Active toggle */}
@@ -251,11 +263,21 @@ export default function AutomationsPage() {
           </div>
           <SheetFooter>
             <button onClick={() => setBuilderOpen(false)} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-            <button style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: `1px solid ${accent}`, background: 'transparent', color: accent, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Save Draft</button>
-            <button style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Activate</button>
+            <button onClick={() => { setBuilderOpen(false); setNameError(''); showToast('Draft saved') }} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: `1px solid ${accent}`, background: 'transparent', color: accent, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Save Draft</button>
+            <button onClick={() => {
+              if (!builderName.trim()) { setNameError('Automation name is required'); return }
+              const name = builderName.trim()
+              setAutomations(prev => [{ id: Date.now().toString(), name, trigger: 'Manual trigger', action: 'Custom action', active: true, properties: ['All properties'], lastTriggered: 'Never' }, ...prev])
+              setBuilderOpen(false); setBuilderName(''); setNameError(''); showToast('Automation activated')
+            }} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Activate</button>
           </SheetFooter>
         </SheetContent>
       </Sheet>
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#16a34a', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+          {toast}
+        </div>
+      )}
     </motion.div>
   )
 }

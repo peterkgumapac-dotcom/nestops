@@ -282,6 +282,7 @@ export default function BriefingPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button
+            aria-label="Briefing preferences"
             onClick={() => setShowToggles(true)}
             style={{
               background: 'rgba(255,255,255,0.08)',
@@ -441,6 +442,11 @@ export default function BriefingPage() {
                     </div>
                   </div>
                 ))}
+                {PROPERTIES.length > 2 && (
+                  <Link href="/owner/properties" style={{ display: 'block', marginTop: 10, fontSize: 13, color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}>
+                    +{PROPERTIES.length - 2} more properties →
+                  </Link>
+                )}
               </div>
 
               <div style={{ marginTop: 8 }}>{renderCTA()}</div>

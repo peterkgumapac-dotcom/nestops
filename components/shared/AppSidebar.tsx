@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, X, Sun, Moon } from 'lucide-react'
 import { useRole } from '@/context/RoleContext'
 import { useTheme } from '@/context/ThemeContext'
-import { NAV_BY_ROLE } from '@/lib/nav'
+import { NAV_BY_ROLE, getStaffNav } from '@/lib/nav'
 
 interface AppSidebarProps {
   isOpen?: boolean
@@ -19,6 +19,8 @@ const PORTAL_OPTIONS = [
   { role: 'staff'    as const, label: 'Staff Portal',    color: '#d97706', href: '/staff' },
 ]
 
+interface StoredUser { id?: string; name?: string; role?: string; subRole?: string }
+
 export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
   const { role, setRole, accent, portalLabel } = useRole()
   const { theme, toggleTheme } = useTheme()
@@ -26,6 +28,7 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
   const router = useRouter()
   const [collapsed, setCollapsed] = useState(false)
   const [switcherOpen, setSwitcherOpen] = useState(false)
+  const [storedUser, setStoredUser] = useState<StoredUser | null>(null)
   const switcherRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -38,7 +41,22 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  const sections = NAV_BY_ROLE[role]
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('nestops_user')
+      if (raw) setStoredUser(JSON.parse(raw))
+    } catch { /* ignore */ }
+  }, [])
+
+  const displayName = storedUser?.name ?? 'User'
+  const nameParts = displayName.trim().split(' ')
+  const displayInitials = nameParts.length >= 2
+    ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
+    : displayName.slice(0, 2).toUpperCase()
+
+  const sections = role === 'staff'
+    ? getStaffNav(storedUser?.subRole)
+    : NAV_BY_ROLE[role]
 
   // Flatten items for stagger index calculation
   let globalIndex = 0
@@ -155,11 +173,11 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
             style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '8px', borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', overflow: 'hidden' }}
           >
             <div style={{ width: 32, height: 32, borderRadius: '50%', background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-              PK
+              {displayInitials}
             </div>
             <div style={{ textAlign: 'left', opacity: collapsed ? 0 : 1, transition: 'opacity 0.2s ease', whiteSpace: 'nowrap', flex: 1, overflow: 'hidden' }}>
-              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>Peter K.</div>
-              <div style={{ fontSize: 11, textTransform: 'capitalize', color: 'var(--text-muted)' }}>{role}</div>
+              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{displayName}</div>
+              <div style={{ fontSize: 11, textTransform: 'capitalize', color: 'var(--text-muted)' }}>{storedUser?.subRole ?? role}</div>
             </div>
           </button>
 

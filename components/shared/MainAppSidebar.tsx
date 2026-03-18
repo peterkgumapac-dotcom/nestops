@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, X, Sun, Moon } from 'lucide-react'
 import { useRole } from '@/context/RoleContext'
 import { useTheme } from '@/context/ThemeContext'
-import { MAIN_APP_NAV_BY_ROLE } from '@/lib/nav'
+import { MAIN_APP_NAV_BY_ROLE, getStaffNav } from '@/lib/nav'
 
 interface MainAppSidebarProps {
   isOpen?: boolean
@@ -20,6 +20,7 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
   const router = useRouter()
   const [collapsed, setCollapsed] = useState(false)
   const [switcherOpen, setSwitcherOpen] = useState(false)
+  const [currentSubRole, setCurrentSubRole] = useState<string | undefined>(user?.subRole)
   const switcherRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -32,7 +33,20 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  const sections = MAIN_APP_NAV_BY_ROLE[role] ?? MAIN_APP_NAV_BY_ROLE.operator
+  // Read subRole from localStorage so nav is always correct on first render
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('nestops_user')
+      if (stored) {
+        const u = JSON.parse(stored)
+        setCurrentSubRole(u.subRole)
+      }
+    } catch {}
+  }, [])
+
+  const sections = role === 'staff'
+    ? getStaffNav(currentSubRole ?? user?.subRole)
+    : (MAIN_APP_NAV_BY_ROLE[role] ?? MAIN_APP_NAV_BY_ROLE.operator)
 
   let globalIndex = 0
 
@@ -67,6 +81,7 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
           <button
             onClick={toggleTheme}
             title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4, borderRadius: 6, display: 'flex', alignItems: 'center', flexShrink: 0 }}
           >
             {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
@@ -149,6 +164,7 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
           <button
             onClick={() => setSwitcherOpen(o => !o)}
             title={collapsed ? 'Switch Portal' : undefined}
+            aria-label="Switch portal or sign out"
             style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '8px', borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', overflow: 'hidden' }}
           >
             <div style={{ width: 32, height: 32, borderRadius: '50%', background: avatarColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
@@ -169,7 +185,7 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
                 Switch account
               </button>
               <button
-                onClick={() => { localStorage.removeItem('nestops_user'); localStorage.removeItem('nestops_role'); setSwitcherOpen(false); router.push('/login') }}
+                onClick={() => { ['nestops_user','nestops_role','nestops_theme','nestops_briefing_prefs','nestops_clockin','nestops_field_reports','nestops_owner_work_orders'].forEach(k => localStorage.removeItem(k)); setSwitcherOpen(false); router.push('/login') }}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 7, background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 13, color: '#f87171', textAlign: 'left' }}
               >
                 Sign out
@@ -181,6 +197,7 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
         <button
           onClick={() => setCollapsed(c => !c)}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '7px', borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-subtle)', marginTop: 2 }}
         >
           {collapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
@@ -202,7 +219,7 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)' }} onClick={onClose} />
           <div style={{ position: 'absolute', left: 0, top: 0, height: '100%' }}>
             {sidebarContent}
-            <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+            <button onClick={onClose} aria-label="Close sidebar" style={{ position: 'absolute', top: 16, right: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
               <X size={16} />
             </button>
           </div>

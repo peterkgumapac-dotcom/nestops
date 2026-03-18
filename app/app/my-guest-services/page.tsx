@@ -51,6 +51,8 @@ export default function MyGuestServicesPage() {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
   const [selectedIssue, setSelectedIssue] = useState<GuestIssue | null>(null)
   const [newIssueOpen, setNewIssueOpen] = useState(false)
+  const [issues, setIssues] = useState<GuestIssue[]>(GUEST_ISSUES)
+  const [refundReviewIssue, setRefundReviewIssue] = useState<GuestIssue | null>(null)
 
   useEffect(() => {
     const stored = localStorage.getItem('nestops_user')
@@ -61,14 +63,21 @@ export default function MyGuestServicesPage() {
 
   const staffName = currentUser?.name ?? null
 
-  const myIssues = GUEST_ISSUES.filter(i => !staffName || i.assignedTo === staffName)
+  const handleStatusUpdate = (issueId: string, newStatus: string) => {
+    if (!newStatus) return
+    const confirmed = window.confirm(`Update status to "${newStatus.replace(/_/g, ' ')}"?`)
+    if (!confirmed) return
+    setIssues(prev => prev.map(i => i.id === issueId ? { ...i, status: newStatus as GuestIssue['status'] } : i))
+  }
+
+  const myIssues = issues.filter(i => !staffName || i.assignedTo === staffName)
   const activeIssues = getActiveIssues(myIssues)
   const openCount = myIssues.filter(i => ['open', 'investigating', 'escalated'].includes(i.status)).length
   const pendingRefunds = myIssues.filter(i => i.refund?.status === 'pending').length
   const avgHrs = getAvgResolutionHrs(myIssues)
 
   // All open issues (for "Active Complaints at My Properties" section)
-  const allOpenIssues = getActiveIssues(GUEST_ISSUES)
+  const allOpenIssues = getActiveIssues(issues)
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -132,15 +141,51 @@ export default function MyGuestServicesPage() {
               {issue.refund?.requested && issue.refund.status === 'pending' && (
                 <div style={{ padding: '6px 10px', borderRadius: 6, background: '#d9770610', border: '1px solid #d9770625', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: 12, color: '#d97706' }}>Refund requested: {fmtNok(issue.refund.suggestedAmount)}</span>
-                  <button style={{ fontSize: 11, color: '#d97706', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}>Review</button>
+                  <button
+                    onClick={() => setRefundReviewIssue(refundReviewIssue?.id === issue.id ? null : issue)}
+                    style={{ fontSize: 11, color: '#d97706', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
+                  >
+                    {refundReviewIssue?.id === issue.id ? 'Close' : 'Review'}
+                  </button>
+                </div>
+              )}
+              {refundReviewIssue?.id === issue.id && (
+                <div style={{ padding: '10px 12px', borderRadius: 8, background: 'var(--bg-elevated)', border: '1px solid #d9770640', marginBottom: 10 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>Refund Details</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>
+                    <span style={{ color: 'var(--text-subtle)' }}>Amount: </span>{fmtNok(issue.refund?.suggestedAmount ?? 0)}
+                  </div>
+                  {issue.refund?.notes && (
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>
+                      <span style={{ color: 'var(--text-subtle)' }}>Notes: </span>{issue.refund.notes}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
+                    <span style={{ color: 'var(--text-subtle)' }}>Guest: </span>{issue.guestName} — {issue.propertyName}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={() => { handleStatusUpdate(issue.id, 'refund_issued'); setRefundReviewIssue(null) }}
+                      style={{ flex: 1, padding: '5px 10px', borderRadius: 6, background: '#059669', color: '#fff', border: 'none', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      Approve Refund
+                    </button>
+                    <button
+                      onClick={() => setRefundReviewIssue(null)}
+                      style={{ flex: 1, padding: '5px 10px', borderRadius: 6, background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)', fontSize: 11, cursor: 'pointer' }}
+                    >
+                      Dismiss
+                    </button>
+                  </div>
                 </div>
               )}
               <div style={{ display: 'flex', gap: 8 }}>
                 <select
-                  onChange={(e) => console.log('Update status:', e.target.value)}
+                  defaultValue=""
+                  onChange={(e) => { handleStatusUpdate(issue.id, e.target.value); e.target.value = '' }}
                   style={{ flex: 1, padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer' }}
                 >
-                  <option>Update Status</option>
+                  <option value="">Update Status</option>
                   <option value="investigating">Investigating</option>
                   <option value="resolved">Resolved</option>
                   <option value="escalated">Escalate to Operator</option>

@@ -2,36 +2,47 @@ import { cn } from '@/lib/utils'
 
 type StatusVariant = 'open' | 'pending' | 'resolved' | 'expired' | 'missing' | 'live' | 'onboarding' | 'offboarding' | 'active' | 'inactive' | 'valid' | 'expiring' | 'draft' | 'published' | 'needs_update' | 'ok' | 'low' | 'critical' | 'out' | 'urgent' | 'high' | 'medium' | 'ordered' | 'received' | 'cancelled' | 'in_progress' | 'done' | 'scheduled' | 'none'
 
-const VARIANT_STYLES: Record<StatusVariant, { bg: string; color: string; label: string; pulse?: boolean }> = {
-  open:         { bg: 'rgba(124,58,237,0.15)',  color: '#a78bfa', label: 'Open' },
-  pending:      { bg: 'rgba(217,119,6,0.15)',   color: '#fbbf24', label: 'Pending' },
-  resolved:     { bg: 'rgba(5,150,105,0.15)',   color: '#34d399', label: 'Resolved' },
-  expired:      { bg: 'rgba(239,68,68,0.15)',   color: '#f87171', label: 'Expired', pulse: true },
-  missing:      { bg: 'rgba(239,68,68,0.12)',   color: '#f87171', label: 'Missing', pulse: true },
-  live:         { bg: 'rgba(5,150,105,0.15)',   color: '#34d399', label: 'Live' },
-  onboarding:   { bg: 'rgba(124,58,237,0.15)',  color: '#a78bfa', label: 'Onboarding' },
-  inactive:     { bg: 'rgba(100,100,120,0.15)', color: '#7878a0', label: 'Inactive' },
-  valid:        { bg: 'rgba(5,150,105,0.15)',   color: '#34d399', label: 'Valid' },
-  expiring:     { bg: 'rgba(217,119,6,0.15)',   color: '#fbbf24', label: 'Expiring', pulse: true },
-  draft:        { bg: 'rgba(100,100,120,0.15)', color: '#7878a0', label: 'Draft' },
-  published:    { bg: 'rgba(5,150,105,0.15)',   color: '#34d399', label: 'Published' },
-  needs_update: { bg: 'rgba(217,119,6,0.15)',   color: '#fbbf24', label: 'Needs Update' },
-  ok:           { bg: 'rgba(5,150,105,0.15)',   color: '#34d399', label: 'OK' },
-  low:          { bg: 'rgba(217,119,6,0.15)',   color: '#fbbf24', label: 'Low', pulse: true },
-  critical:     { bg: 'rgba(239,68,68,0.15)',   color: '#f87171', label: 'Critical', pulse: true },
-  out:          { bg: 'rgba(239,68,68,0.2)',    color: '#f87171', label: 'Out of Stock', pulse: true },
-  urgent:       { bg: 'rgba(239,68,68,0.15)',   color: '#f87171', label: 'Urgent', pulse: true },
-  high:         { bg: 'rgba(239,68,68,0.12)',   color: '#f87171', label: 'High' },
-  medium:       { bg: 'rgba(217,119,6,0.12)',   color: '#fbbf24', label: 'Medium' },
-  ordered:      { bg: 'rgba(124,58,237,0.15)',  color: '#a78bfa', label: 'Ordered' },
-  received:     { bg: 'rgba(5,150,105,0.15)',   color: '#34d399', label: 'Received' },
-  cancelled:    { bg: 'rgba(100,100,120,0.15)', color: '#7878a0', label: 'Cancelled' },
-  in_progress:  { bg: 'rgba(124,58,237,0.15)',  color: '#a78bfa', label: 'In Progress' },
-  done:         { bg: 'rgba(5,150,105,0.15)',   color: '#34d399', label: 'Done' },
-  scheduled:    { bg: 'rgba(59,130,246,0.15)',  color: '#60a5fa', label: 'Scheduled' },
-  active:       { bg: 'rgba(5,150,105,0.15)',   color: '#34d399', label: 'Active' },
-  offboarding:  { bg: 'rgba(217,119,6,0.15)',   color: '#fbbf24', label: 'Offboarding' },
-  none:         { bg: 'rgba(100,100,120,0.1)',  color: '#7878a0', label: '—' },
+// NOTE: These colors are intentionally defined as CSS variables so they respond to
+// light/dark mode. The semantic groupings are:
+//   --status-purple-*  → open, onboarding, ordered, in_progress
+//   --status-amber-*   → pending, expiring, needs_update, low, medium, offboarding
+//   --status-green-*   → resolved, live, valid, published, ok, received, done, active
+//   --status-red-*     → expired, missing, critical, out, urgent, high
+//   --status-blue-*    → scheduled
+//   --status-muted-*   → inactive, draft, cancelled, none
+//
+// The variables are defined in globals.css. If a project-wide design token update is
+// needed, update them there rather than here.
+const VARIANT_STYLES: Record<StatusVariant, { bgVar: string; colorVar: string; label: string; pulse?: boolean }> = {
+  open:         { bgVar: 'var(--status-purple-bg)',  colorVar: 'var(--status-purple-fg)',  label: 'Open' },
+  pending:      { bgVar: 'var(--status-amber-bg)',   colorVar: 'var(--status-amber-fg)',   label: 'Pending' },
+  resolved:     { bgVar: 'var(--status-green-bg)',   colorVar: 'var(--status-green-fg)',   label: 'Resolved' },
+  expired:      { bgVar: 'var(--status-red-bg)',     colorVar: 'var(--status-red-fg)',     label: 'Expired',     pulse: true },
+  missing:      { bgVar: 'var(--status-red-bg)',     colorVar: 'var(--status-red-fg)',     label: 'Missing',     pulse: true },
+  live:         { bgVar: 'var(--status-green-bg)',   colorVar: 'var(--status-green-fg)',   label: 'Live' },
+  onboarding:   { bgVar: 'var(--status-purple-bg)',  colorVar: 'var(--status-purple-fg)',  label: 'Onboarding' },
+  inactive:     { bgVar: 'var(--status-muted-bg)',   colorVar: 'var(--status-muted-fg)',   label: 'Inactive' },
+  valid:        { bgVar: 'var(--status-green-bg)',   colorVar: 'var(--status-green-fg)',   label: 'Valid' },
+  expiring:     { bgVar: 'var(--status-amber-bg)',   colorVar: 'var(--status-amber-fg)',   label: 'Expiring',    pulse: true },
+  draft:        { bgVar: 'var(--status-muted-bg)',   colorVar: 'var(--status-muted-fg)',   label: 'Draft' },
+  published:    { bgVar: 'var(--status-green-bg)',   colorVar: 'var(--status-green-fg)',   label: 'Published' },
+  needs_update: { bgVar: 'var(--status-amber-bg)',   colorVar: 'var(--status-amber-fg)',   label: 'Needs Update' },
+  ok:           { bgVar: 'var(--status-green-bg)',   colorVar: 'var(--status-green-fg)',   label: 'OK' },
+  low:          { bgVar: 'var(--status-amber-bg)',   colorVar: 'var(--status-amber-fg)',   label: 'Low',         pulse: true },
+  critical:     { bgVar: 'var(--status-red-bg)',     colorVar: 'var(--status-red-fg)',     label: 'Critical',    pulse: true },
+  out:          { bgVar: 'var(--status-red-bg)',     colorVar: 'var(--status-red-fg)',     label: 'Out of Stock', pulse: true },
+  urgent:       { bgVar: 'var(--status-red-bg)',     colorVar: 'var(--status-red-fg)',     label: 'Urgent',      pulse: true },
+  high:         { bgVar: 'var(--status-red-bg)',     colorVar: 'var(--status-red-fg)',     label: 'High' },
+  medium:       { bgVar: 'var(--status-amber-bg)',   colorVar: 'var(--status-amber-fg)',   label: 'Medium' },
+  ordered:      { bgVar: 'var(--status-purple-bg)',  colorVar: 'var(--status-purple-fg)',  label: 'Ordered' },
+  received:     { bgVar: 'var(--status-green-bg)',   colorVar: 'var(--status-green-fg)',   label: 'Received' },
+  cancelled:    { bgVar: 'var(--status-muted-bg)',   colorVar: 'var(--status-muted-fg)',   label: 'Cancelled' },
+  in_progress:  { bgVar: 'var(--status-purple-bg)',  colorVar: 'var(--status-purple-fg)',  label: 'In Progress' },
+  done:         { bgVar: 'var(--status-green-bg)',   colorVar: 'var(--status-green-fg)',   label: 'Done' },
+  scheduled:    { bgVar: 'var(--status-blue-bg)',    colorVar: 'var(--status-blue-fg)',    label: 'Scheduled' },
+  active:       { bgVar: 'var(--status-green-bg)',   colorVar: 'var(--status-green-fg)',   label: 'Active' },
+  offboarding:  { bgVar: 'var(--status-amber-bg)',   colorVar: 'var(--status-amber-fg)',   label: 'Offboarding' },
+  none:         { bgVar: 'var(--status-muted-bg)',   colorVar: 'var(--status-muted-fg)',   label: '—' },
 }
 
 interface StatusBadgeProps {
@@ -40,11 +51,11 @@ interface StatusBadgeProps {
 }
 
 export default function StatusBadge({ status, className }: StatusBadgeProps) {
-  const style = VARIANT_STYLES[status] ?? { bg: 'rgba(100,100,120,0.15)', color: '#7878a0', label: status }
+  const style = VARIANT_STYLES[status] ?? { bgVar: 'var(--status-muted-bg)', colorVar: 'var(--status-muted-fg)', label: status }
   return (
     <span
       className={cn('inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium', style.pulse ? 'pulse-urgent' : '', className)}
-      style={{ background: style.bg, color: style.color }}
+      style={{ background: style.bgVar, color: style.colorVar }}
     >
       {style.label}
     </span>

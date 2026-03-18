@@ -1,0 +1,130 @@
+'use client'
+import PageHeader from '@/components/shared/PageHeader'
+import { useRole } from '@/context/RoleContext'
+
+interface ChangeEntry {
+  version: string
+  date: string
+  items: { tag: string; text: string }[]
+}
+
+const CHANGELOG: ChangeEntry[] = [
+  {
+    version: 'v1.5',
+    date: 'Mar 18, 2026',
+    items: [
+      { tag: '🐛 Fix', text: 'Maintenance dashboard no longer shows cleaning content — subRole isolation hardened with mount guard to prevent cross-role content bleed' },
+      { tag: '⚡ Feature', text: 'Work Orders: "Requires Owner Approval" toggle — when checked, work order surfaces in owner Approvals portal automatically' },
+      { tag: '⚡ Feature', text: 'Cleaning dashboard: "Add Cleaning" CTA with 5-template drawer (Full Turnover, Mid-Stay Refresh, Post-Construction, Pre-Inspection, Seasonal Deep Clean)' },
+      { tag: '⚡ Feature', text: 'Cleaning templates: step 1 template selection → step 2 property + date + notes + read-only task preview → Create Cleaning toast + "N added today" badge' },
+    ],
+  },
+  {
+    version: 'v1.4',
+    date: 'Mar 18, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'Cleaning staff: "Report Maintenance Issue" CTA — submit issue type, urgency, description, surfaces in operator Field Reports widget' },
+      { tag: '⚡ Feature', text: 'Work Orders page — submit work orders, vendor approvals, and purchase approvals' },
+      { tag: '⚡ Feature', text: 'Work Orders added to cleaning, maintenance, and guest services nav bars' },
+      { tag: '⚡ Feature', text: 'My Tasks now filters by subRole type — maintenance staff see only maintenance tasks, cleaners see only cleaning/inspection' },
+      { tag: '⚡ Feature', text: 'Operator tickets: Approve/Decline for purchase requests, Assign to Staff popover, Resolve closes and updates status' },
+    ],
+  },
+  {
+    version: 'v1.3',
+    date: 'Mar 18, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'Role-specific navigation per staff subRole — Cleaning, Maintenance, and Guest Services each see only their relevant menu items' },
+      { tag: '⚡ Feature', text: 'Sidebar now shows logged-in user\'s real name and initials from session storage' },
+      { tag: '⚡ Feature', text: '"Add Contractor" wired — opens slide-in drawer with form, saves new contractor to list with toast confirmation' },
+      { tag: '⚡ Feature', text: '"Add Asset" and "Submit Report" wired on Fixed Assets page' },
+      { tag: '⚡ Feature', text: 'Compliance: Edit, Send Request, and Save buttons wired with state and toast feedback' },
+      { tag: '⚡ Feature', text: 'Automations: "Use Template" pre-fills form, "Save Draft" and "Activate" fully wired' },
+      { tag: '⚡ Feature', text: 'Guidebooks: Publish/Unpublish toggle, Save Changes, theme selector, Copy URL, Download QR, New Guidebook, and Preview buttons all wired' },
+      { tag: '🎨 UI', text: 'Floating toast notifications for all interactive actions — consistent pattern across all pages' },
+      { tag: '🎨 UI', text: 'Changelog page added under Account section for transparency on shipped improvements' },
+    ],
+  },
+  {
+    version: 'v1.2',
+    date: 'Mar 18, 2026',
+    items: [
+      { tag: '♿ A11y', text: 'WCAG AA contrast fix for --text-subtle color token' },
+      { tag: '♿ A11y', text: ':focus-visible keyboard navigation rings on all interactive elements' },
+      { tag: '♿ A11y', text: 'prefers-reduced-motion respected for all pulsing animations' },
+      { tag: '♿ A11y', text: 'aria-label added to Notifications bell and Briefing preferences button' },
+      { tag: '⚡ Feature', text: 'Staff page reads auth from localStorage — shows correct logged-in user, not hardcoded Johan' },
+      { tag: '⚡ Feature', text: 'Team schedule week dates computed dynamically from current date' },
+      { tag: '🐛 Fix', text: 'Dynamic copyright year — no longer hardcoded' },
+      { tag: '🐛 Fix', text: '"Show Code" shows locked state before 30-min threshold instead of disappearing' },
+      { tag: '🐛 Fix', text: 'Demo user click guard prevents double-click login race condition' },
+    ],
+  },
+  {
+    version: 'v1.1',
+    date: 'Mar 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'Dark theme system with CSS custom properties — full token architecture' },
+      { tag: '⚡ Feature', text: 'Role-based accent colors: operator purple, owner green, staff amber' },
+      { tag: '⚡ Feature', text: 'Framer Motion page transitions on briefing flow' },
+      { tag: '⚡ Feature', text: 'Briefing preferences persisted to localStorage per user' },
+      { tag: '🎨 UI', text: 'Industrial design language — #0a0f1a background, card hierarchy, monospace accents' },
+      { tag: '⚡ Feature', text: 'Multi-role demo login with 6 persona accounts' },
+    ],
+  },
+]
+
+const TAG_COLORS: Record<string, string> = {
+  '⚡ Feature': '#7c3aed',
+  '🎨 UI': '#0891b2',
+  '🐛 Fix': '#dc2626',
+  '♿ A11y': '#059669',
+}
+
+export default function ChangelogPage() {
+  const { accent } = useRole()
+
+  return (
+    <div>
+      <PageHeader title="Changelog" subtitle="What's been shipped in NestOps" />
+
+      <div style={{ maxWidth: 720 }}>
+        {CHANGELOG.map((entry, eIdx) => (
+          <div key={entry.version} style={{ display: 'flex', gap: 24, marginBottom: 48 }}>
+            {/* Timeline line */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+              <div style={{ width: 12, height: 12, borderRadius: '50%', background: accent, marginTop: 6, flexShrink: 0 }} />
+              {eIdx < CHANGELOG.length - 1 && (
+                <div style={{ width: 2, flex: 1, background: 'var(--border)', marginTop: 8 }} />
+              )}
+            </div>
+
+            {/* Content */}
+            <div style={{ flex: 1, paddingBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 20, background: `${accent}18`, border: `1px solid ${accent}40`, fontSize: 12, fontWeight: 700, color: accent, letterSpacing: '0.04em' }}>
+                  {entry.version}
+                </span>
+                <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{entry.date}</span>
+              </div>
+
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {entry.items.map((item, iIdx) => {
+                  const tagColor = TAG_COLORS[item.tag] ?? accent
+                  return (
+                    <div key={iIdx} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: tagColor, background: `${tagColor}18`, border: `1px solid ${tagColor}30`, borderRadius: 5, padding: '2px 7px', flexShrink: 0, whiteSpace: 'nowrap', marginTop: 1 }}>
+                        {item.tag}
+                      </span>
+                      <span style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>{item.text}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}

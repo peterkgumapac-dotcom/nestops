@@ -36,10 +36,23 @@ const STATUS_LABEL: Record<string, string> = {
   no_show:     'No Show',
 }
 
-const WEEK_DATES: Record<DayOfWeek, string> = {
-  Mon: 'Mar 16', Tue: 'Mar 17', Wed: 'Mar 18',
-  Thu: 'Mar 19', Fri: 'Mar 20', Sat: 'Mar 21', Sun: 'Mar 22',
+function getWeekDates(): Record<DayOfWeek, string> {
+  const now = new Date()
+  const dayOfWeek = now.getDay()
+  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+  const monday = new Date(now)
+  monday.setDate(now.getDate() + diffToMonday)
+  const days: DayOfWeek[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+  const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return Object.fromEntries(
+    days.map((day, i) => {
+      const d = new Date(monday)
+      d.setDate(monday.getDate() + i)
+      return [day, fmt(d)]
+    })
+  ) as Record<DayOfWeek, string>
 }
+const WEEK_DATES = getWeekDates()
 
 // ─── Shift detail sheet ───────────────────────────────────────────────────────
 function ShiftSheet({ shift, onClose }: { shift: Shift; onClose: () => void }) {
@@ -150,8 +163,8 @@ function ShiftSheet({ shift, onClose }: { shift: Shift; onClose: () => void }) {
         </div>
 
         <div style={{ padding: '14px 24px', borderTop: '1px solid var(--border)', display: 'flex', gap: 10 }}>
-          <button style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-            Edit Shift
+          <button onClick={onClose} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+            Close
           </button>
           <button style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             Mark Complete
@@ -400,6 +413,21 @@ export default function TeamPage() {
               ))}
             </div>
 
+            {/* Utilization legend */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '10px 14px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8 }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-subtle)' }}>Utilization:</span>
+              {[
+                { color: '#10b981', label: '<70% On track' },
+                { color: '#d97706', label: '70–89% Busy' },
+                { color: '#ef4444', label: '≥90% Overloaded' },
+              ].map(({ color, label }) => (
+                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: color }} />
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{label}</span>
+                </div>
+              ))}
+            </div>
+
             {/* Staff bars */}
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '18px 20px' }}>
               <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 18 }}>Weekly Hours by Staff</h2>
@@ -509,7 +537,7 @@ export default function TeamPage() {
             {/* Per-staff rows */}
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
               <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Staff Time Log — Week of Mar 16</h2>
+                <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Staff Time Log — Week of {WEEK_DATES['Mon']}</h2>
                 <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Estimates based on scheduled hours</span>
               </div>
 

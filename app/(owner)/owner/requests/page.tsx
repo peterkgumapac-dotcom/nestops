@@ -8,7 +8,7 @@ import { REQUESTS } from '@/lib/data/requests'
 import { PROPERTIES } from '@/lib/data/properties'
 import { useRole } from '@/context/RoleContext'
 
-const MY_REQUESTS = REQUESTS.filter(r => r.ownerId === 'o1')
+const INITIAL_REQUESTS = REQUESTS.filter(r => r.ownerId === 'o1')
 
 type RequestType = 'maintenance' | 'purchase' | 'inquiry'
 
@@ -20,11 +20,40 @@ const TYPE_OPTIONS: { type: RequestType; label: string; icon: typeof Wrench; des
 
 export default function OwnerRequestsPage() {
   const { accent } = useRole()
+  const [requests, setRequests] = useState(INITIAL_REQUESTS)
   const [newDrawer, setNewDrawer] = useState(false)
   const [selectedType, setSelectedType] = useState<RequestType | null>(null)
+  const [title, setTitle] = useState('')
+  const [details, setDetails] = useState('')
+  const [selectedPropertyId, setSelectedPropertyId] = useState(PROPERTIES.filter(p => p.ownerId === 'o1')[0]?.id ?? 'p1')
+  const [toast, setToast] = useState('')
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)' as const, fontSize: 14, outline: 'none' }
   const labelStyle: React.CSSProperties = { fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }
+
+  const handleSubmit = () => {
+    if (!selectedType) return
+    const property = PROPERTIES.find(p => p.id === selectedPropertyId)
+    const newRequest = {
+      id: `req-${Date.now()}`,
+      title: title || `New ${selectedType} request`,
+      type: selectedType,
+      propertyId: selectedPropertyId,
+      ownerId: 'o1',
+      status: 'open' as const,
+      priority: 'medium' as const,
+      date: new Date().toISOString().split('T')[0],
+      description: details || '',
+      comments: [],
+    }
+    setRequests(prev => [newRequest, ...prev])
+    setNewDrawer(false)
+    setSelectedType(null)
+    setTitle('')
+    setDetails('')
+    showToast('Request submitted')
+  }
 
   return (
     <div>
@@ -39,7 +68,7 @@ export default function OwnerRequestsPage() {
       />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 700 }}>
-        {MY_REQUESTS.map(r => {
+        {requests.map(r => {
           const property = PROPERTIES.find(p => p.id === r.propertyId)
           return (
             <div key={r.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
@@ -48,7 +77,7 @@ export default function OwnerRequestsPage() {
                   <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)', marginBottom: 2 }}>{r.title}</div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                     {property?.name} · {r.date} · <span style={{ textTransform: 'capitalize' }}>{r.type}</span>
-                    {r.amount && ` · ${r.amount} ${r.currency}`}
+                    {('amount' in r && r.amount) ? ` · ${r.amount} ${'currency' in r ? r.currency : ''}` : ''}
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
@@ -79,7 +108,7 @@ export default function OwnerRequestsPage() {
         footer={selectedType ? (
           <div style={{ display: 'flex', gap: 8, width: '100%' }}>
             <button onClick={() => setSelectedType(null)} style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>Back</button>
-            <button style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Submit</button>
+            <button onClick={handleSubmit} style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Submit</button>
           </div>
         ) : undefined}
       >
@@ -110,12 +139,12 @@ export default function OwnerRequestsPage() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div><label style={labelStyle}>Property</label>
-              <select style={inputStyle}>
-                {PROPERTIES.filter(p => p.ownerId === 'o1').map(p => <option key={p.id}>{p.name}</option>)}
+              <select style={inputStyle} value={selectedPropertyId} onChange={e => setSelectedPropertyId(e.target.value)}>
+                {PROPERTIES.filter(p => p.ownerId === 'o1').map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
-            <div><label style={labelStyle}>Title</label><input style={inputStyle} placeholder="Brief description" /></div>
-            <div><label style={labelStyle}>Details</label><textarea style={{ ...inputStyle, minHeight: 100, resize: 'vertical' }} placeholder="Describe your request in detail…" /></div>
+            <div><label style={labelStyle}>Title</label><input style={inputStyle} placeholder="Brief description" value={title} onChange={e => setTitle(e.target.value)} /></div>
+            <div><label style={labelStyle}>Details</label><textarea style={{ ...inputStyle, minHeight: 100, resize: 'vertical' }} placeholder="Describe your request in detail…" value={details} onChange={e => setDetails(e.target.value)} /></div>
             {selectedType === 'purchase' && (
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 8 }}>
                 <div><label style={labelStyle}>Amount</label><input type="number" style={inputStyle} placeholder="0" /></div>
@@ -129,6 +158,12 @@ export default function OwnerRequestsPage() {
           </div>
         )}
       </AppDrawer>
+
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#16a34a', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+          {toast}
+        </div>
+      )}
     </div>
   )
 }

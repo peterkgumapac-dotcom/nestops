@@ -24,6 +24,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <button
             className="md:hidden"
             onClick={() => setMobileOpen(true)}
+            aria-label="Open navigation menu"
             style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}
           >
             <Menu size={20} />
@@ -35,18 +36,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
           {/* Notification bell */}
           <button
+            aria-label="Notifications"
             style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 6, borderRadius: 8, display: 'flex', alignItems: 'center' }}
           >
             <Bell size={18} strokeWidth={1.6} />
-            <span style={{
-              position: 'absolute', top: 2, right: 2,
-              width: 16, height: 16, borderRadius: '50%',
-              background: accent, color: '#fff',
-              fontSize: 9, fontWeight: 700,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              3
-            </span>
           </button>
         </div>
 

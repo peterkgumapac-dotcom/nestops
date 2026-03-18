@@ -42,13 +42,14 @@ export default function StatCard({ label, value, icon: Icon, subtitle, animate =
   return (
     <div
       ref={ref}
-      className="card-elevated p-5 cursor-default group"
       style={{
         background: 'var(--bg-card)',
         border: '1px solid var(--border)',
         borderRadius: 'var(--radius-lg)',
         boxShadow: '0 2px 8px rgba(0,0,0,0.15), 0 8px 32px rgba(0,0,0,0.1)',
         transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        padding: 20,
+        cursor: 'default',
       }}
       onMouseEnter={e => {
         (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'
@@ -59,17 +60,25 @@ export default function StatCard({ label, value, icon: Icon, subtitle, animate =
         ;(e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.15), 0 8px 32px rgba(0,0,0,0.1)'
       }}
     >
-      <div className="flex items-start justify-between">
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div>
-          <p className="label-upper mb-2">{label}</p>
-          <p className="text-3xl font-semibold heading" style={{ color: 'var(--text-primary)' }}>
+          <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 }}>{label}</p>
+          <p style={{ fontSize: 30, fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
             {displayValue}
           </p>
-          {subtitle && <p className="text-xs mt-1" style={{ color: 'var(--text-subtle)' }}>{subtitle}</p>}
+          {subtitle && <p style={{ fontSize: 12, marginTop: 4, color: 'var(--text-subtle)' }}>{subtitle}</p>}
         </div>
         <div
-          className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ background: `${accent}26` }}
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            background: `${accent}26`,
+          }}
         >
           <Icon size={20} style={{ color: accent }} strokeWidth={1.5} />
         </div>

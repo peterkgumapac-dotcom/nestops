@@ -36,6 +36,8 @@ export default function BillingPage() {
   const [filter, setFilter] = useState<StatementFilter>('all')
   const [methods, setMethods] = useState(INITIAL_METHODS)
   const [addingMethod, setAddingMethod] = useState(false)
+  const [toast, setToast] = useState('')
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   const filtered = STATEMENTS.filter(s => filter === 'all' || s.status === filter)
   const ytdRevenue = STATEMENTS.filter(s => s.status === 'paid').reduce((sum, s) => sum + s.revenue, 0)
@@ -196,7 +198,7 @@ export default function BillingPage() {
                 </td>
                 <td style={{ padding: '13px 16px' }}>
                   {s.status === 'paid' && (
-                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: ACCENT, display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, whiteSpace: 'nowrap' }}>
+                    <button onClick={() => showToast(`Downloading ${s.month} statement…`)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: ACCENT, display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, whiteSpace: 'nowrap' }}>
                       <Download size={13} /> Download
                     </button>
                   )}
@@ -210,6 +212,12 @@ export default function BillingPage() {
       <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 16 }}>
         Payouts are processed on the 5th of each month. Management fee is 12% of gross revenue. All amounts in NOK.
       </p>
+
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#16a34a', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+          {toast}
+        </div>
+      )}
     </motion.div>
   )
 }

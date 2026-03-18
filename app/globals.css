@@ -12,11 +12,25 @@
   --border-subtle: #222222;
   --text-primary: #f5f5f5;
   --text-muted: #888888;
-  --text-subtle: #555555;
+  --text-subtle: #6b7280;
   --accent-operator: #7c3aed;
   --accent-owner: #059669;
   --accent-staff: #d97706;
   --accent: #7c3aed;
+
+  /* Status badge tokens — dark mode defaults */
+  --status-purple-bg: rgba(124, 58, 237, 0.15);
+  --status-purple-fg: #a78bfa;
+  --status-amber-bg:  rgba(217, 119, 6, 0.15);
+  --status-amber-fg:  #fbbf24;
+  --status-green-bg:  rgba(5, 150, 105, 0.15);
+  --status-green-fg:  #34d399;
+  --status-red-bg:    rgba(239, 68, 68, 0.15);
+  --status-red-fg:    #f87171;
+  --status-blue-bg:   rgba(59, 130, 246, 0.15);
+  --status-blue-fg:   #60a5fa;
+  --status-muted-bg:  rgba(100, 100, 120, 0.15);
+  --status-muted-fg:  #7878a0;
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 10px;
@@ -34,6 +48,25 @@
   --text-primary: #0f0f0f;
   --text-muted: #666666;
   --text-subtle: #999999;
+
+  /* Status badge tokens — light mode overrides */
+  --status-purple-bg: rgba(124, 58, 237, 0.10);
+  --status-purple-fg: #6d28d9;
+  --status-amber-bg:  rgba(217, 119, 6, 0.10);
+  --status-amber-fg:  #b45309;
+  --status-green-bg:  rgba(5, 150, 105, 0.10);
+  --status-green-fg:  #047857;
+  --status-red-bg:    rgba(239, 68, 68, 0.10);
+  --status-red-fg:    #dc2626;
+  --status-blue-bg:   rgba(59, 130, 246, 0.10);
+  --status-blue-fg:   #2563eb;
+  --status-muted-bg:  rgba(100, 100, 120, 0.10);
+  --status-muted-fg:  #6b7280;
+  --accent: #6366f1;
+  --accent-operator: #7c3aed;
+  --accent-owner: #059669;
+  --accent-staff: #0891b2;
+  --accent-foreground: #ffffff;
 }
 
 * {
@@ -123,6 +156,12 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 8px 32px rgba(0,0,0,0.1);
 }
 
+/* Loading skeleton pulse */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 /* Status badge pulse */
 @keyframes urgentPulse {
   0%, 100% { opacity: 1; }
@@ -131,6 +170,29 @@ body {
 
 .pulse-urgent {
   animation: urgentPulse 1.5s ease-in-out infinite;
+}
+
+/* Focus-visible accessibility */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+/* Smooth scroll + reduced motion */
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Scrollbar */

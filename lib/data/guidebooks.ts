@@ -1,6 +1,14 @@
 export type GuidebookStatus = 'published' | 'draft' | 'needs_update'
 export type GuidebookTheme = 'dark' | 'light' | 'brand'
 
+export interface UpsellItem {
+  id: string
+  title: string
+  description: string
+  price: number
+  enabled: boolean
+}
+
 export interface Guidebook {
   id: string
   propertyId: string
@@ -20,6 +28,7 @@ export interface Guidebook {
   houseRules?: string
   checkInTime: string
   checkOutTime: string
+  upsells?: UpsellItem[]
 }
 
 export const GUIDEBOOKS: Guidebook[] = [

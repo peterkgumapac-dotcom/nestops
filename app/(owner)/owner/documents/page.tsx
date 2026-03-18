@@ -1,8 +1,10 @@
 'use client'
+import { useState } from 'react'
 import { FileText, Download } from 'lucide-react'
 import { motion } from 'framer-motion'
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
+import AppDrawer from '@/components/shared/AppDrawer'
 import { useRole } from '@/context/RoleContext'
 
 const DOCUMENTS = [
@@ -13,8 +15,23 @@ const DOCUMENTS = [
   { id: 'd5', name: 'Short-Term Rental Permit',       property: 'Harbor Studio', expiry: '2026-06-30', status: 'pending'  as const, size: '0.5 MB' },
 ]
 
+const inputStyle: React.CSSProperties = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontSize: 13, outline: 'none', boxSizing: 'border-box' }
+const labelStyle: React.CSSProperties = { fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }
+
 export default function DocumentsPage() {
   const { accent } = useRole()
+  const [requestDocDrawer, setRequestDocDrawer] = useState(false)
+  const [docType, setDocType] = useState('Lease Agreement')
+  const [docNotes, setDocNotes] = useState('')
+  const [toast, setToast] = useState('')
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
+
+  const handleRequestSubmit = () => {
+    showToast('Document request submitted')
+    setRequestDocDrawer(false)
+    setDocType('Lease Agreement')
+    setDocNotes('')
+  }
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -22,7 +39,10 @@ export default function DocumentsPage() {
         title="Documents"
         subtitle="Contracts, insurance, and compliance documents"
         action={
-          <button style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>
+          <button
+            onClick={() => setRequestDocDrawer(true)}
+            style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}
+          >
             Request Document
           </button>
         }
@@ -66,6 +86,59 @@ export default function DocumentsPage() {
           </tbody>
         </table>
       </div>
+
+      <AppDrawer
+        open={requestDocDrawer}
+        onClose={() => setRequestDocDrawer(false)}
+        title="Request Document"
+        subtitle="Submit a request for a specific document from the operations team"
+        footer={
+          <>
+            <button
+              onClick={() => setRequestDocDrawer(false)}
+              style={{ padding: '9px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleRequestSubmit}
+              style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+            >
+              Submit Request
+            </button>
+          </>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div>
+            <label style={labelStyle}>Document Type</label>
+            <select
+              value={docType}
+              onChange={e => setDocType(e.target.value)}
+              style={inputStyle}
+            >
+              {['Lease Agreement', 'Insurance Certificate', 'Inspection Report', 'Compliance Certificate', 'Other'].map(opt => (
+                <option key={opt}>{opt}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Notes</label>
+            <textarea
+              value={docNotes}
+              onChange={e => setDocNotes(e.target.value)}
+              placeholder="Any additional details about the document you need…"
+              style={{ ...inputStyle, minHeight: 100, resize: 'vertical' }}
+            />
+          </div>
+        </div>
+      </AppDrawer>
+
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#16a34a', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+          {toast}
+        </div>
+      )}
     </motion.div>
   )
 }

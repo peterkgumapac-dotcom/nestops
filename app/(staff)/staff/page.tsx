@@ -1,5 +1,7 @@
 'use client'
+import { useState, useEffect } from 'react'
 import { ClipboardList, CheckSquare, Building2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import PageHeader from '@/components/shared/PageHeader'
 import StatCard from '@/components/shared/StatCard'
 import StatusBadge from '@/components/shared/StatusBadge'
@@ -7,26 +9,68 @@ import { JOBS, STAFF_MEMBERS } from '@/lib/data/staff'
 import { PROPERTIES } from '@/lib/data/properties'
 import { useRole } from '@/context/RoleContext'
 import Link from 'next/link'
+import type { StaffMember } from '@/lib/data/staff'
 
-const CURRENT_STAFF = STAFF_MEMBERS[0] // Johan Larsson
-const MY_JOBS = JOBS.filter(j => CURRENT_STAFF.jobIds.includes(j.id))
-const MY_PROPERTIES = PROPERTIES.filter(p => CURRENT_STAFF.assignedPropertyIds.includes(p.id))
-const MY_URGENT = MY_JOBS.filter(j => j.urgencyLabel === 'Urgent')
+const USER_TO_STAFF: Record<string, string> = {
+  u3: 's1',
+  u4: 's3',
+  u5: 's2',
+}
 
 export default function StaffHome() {
   const { accent } = useRole()
+  const router = useRouter()
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
+  const [currentStaff, setCurrentStaff] = useState<StaffMember | null>(null)
+  const [checkedJobs, setCheckedJobs] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('nestops_user')
+      if (stored) {
+        const profile = JSON.parse(stored)
+        const staffId = USER_TO_STAFF[profile.id]
+        const staff = staffId
+          ? STAFF_MEMBERS.find(s => s.id === staffId) ?? STAFF_MEMBERS[0]
+          : STAFF_MEMBERS[0]
+        setCurrentStaff(staff)
+        setCheckedJobs(new Set(
+          JOBS.filter(j => staff.jobIds.includes(j.id) && j.status === 'done').map(j => j.id)
+        ))
+      } else {
+        setCurrentStaff(STAFF_MEMBERS[0])
+      }
+    } catch {
+      setCurrentStaff(STAFF_MEMBERS[0])
+    }
+  }, [])
+
+  if (!currentStaff) return null
+
+  const myJobs = JOBS.filter(j => currentStaff.jobIds.includes(j.id))
+  const myProperties = PROPERTIES.filter(p => currentStaff.assignedPropertyIds.includes(p.id))
+  const firstName = currentStaff.name.split(' ')[0]
+
+  const toggleJob = (id: string) => {
+    setCheckedJobs(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   return (
     <div>
-      <PageHeader title={`${greeting}, Johan 👋`} subtitle="Here's your day at a glance" />
+      <PageHeader title={`${greeting}, ${firstName} 👋`} subtitle="Here's your day at a glance" />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 32 }}>
-        <StatCard label="Assigned Properties" value={MY_PROPERTIES.length} icon={Building2} />
-        <StatCard label="Open Tasks" value={MY_JOBS.filter(j => j.status !== 'done').length} icon={CheckSquare} />
-        <StatCard label="My Jobs" value={MY_JOBS.length} icon={ClipboardList} />
+        <StatCard label="Assigned Properties" value={myProperties.length} icon={Building2} />
+        <StatCard label="Open Tasks" value={myJobs.filter(j => !checkedJobs.has(j.id)).length} icon={CheckSquare} />
+        <StatCard label="My Jobs" value={myJobs.length} icon={ClipboardList} />
       </div>
 
       {/* New Intake CTA */}
@@ -51,8 +95,8 @@ export default function StaffHome() {
         <div>
           <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>Today's Properties</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {MY_PROPERTIES.map(p => {
-              const job = MY_JOBS.find(j => j.propertyId === p.id)
+            {myProperties.map(p => {
+              const job = myJobs.find(j => j.propertyId === p.id)
               return (
                 <div key={p.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 14 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -61,11 +105,12 @@ export default function StaffHome() {
                   </div>
                   {job?.checkoutTime && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 2 }}>Checkout: {job.checkoutTime}</div>}
                   {job?.checkinTime && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>Check-in: {job.checkinTime}</div>}
-                  <Link href="/staff/new-intake">
-                    <button style={{ padding: '6px 14px', borderRadius: 7, border: 'none', background: accent, color: '#fff', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
-                      Start Intake
-                    </button>
-                  </Link>
+                  <button
+                    onClick={() => router.push('/staff/new-intake')}
+                    style={{ padding: '6px 14px', borderRadius: 7, border: 'none', background: accent, color: '#fff', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
+                  >
+                    Start Intake
+                  </button>
                 </div>
               )
             })}
@@ -76,16 +121,24 @@ export default function StaffHome() {
         <div>
           <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>Today's Tasks</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {MY_JOBS.map(j => (
-              <div key={j.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 9 }}>
-                <input type="checkbox" defaultChecked={j.status === 'done'} style={{ accentColor: accent, flexShrink: 0 }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: j.status === 'done' ? 'var(--text-subtle)' : 'var(--text-primary)', textDecoration: j.status === 'done' ? 'line-through' : 'none' }}>{j.title}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{j.propertyName} · Due {j.dueTime}</div>
+            {myJobs.map(j => {
+              const isDone = checkedJobs.has(j.id)
+              return (
+                <div key={j.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 9 }}>
+                  <input
+                    type="checkbox"
+                    checked={isDone}
+                    onChange={() => toggleJob(j.id)}
+                    style={{ accentColor: accent, flexShrink: 0 }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: isDone ? 'var(--text-subtle)' : 'var(--text-primary)', textDecoration: isDone ? 'line-through' : 'none' }}>{j.title}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{j.propertyName} · Due {j.dueTime}</div>
+                  </div>
+                  <StatusBadge status={j.priority} />
                 </div>
-                <StatusBadge status={j.priority} />
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>

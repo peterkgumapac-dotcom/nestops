@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, ReactNode } from 'react'
+import { useEffect, useRef, ReactNode } from 'react'
 import { X } from 'lucide-react'
 import { useRole } from '@/context/RoleContext'
 
@@ -13,18 +13,40 @@ interface AppDrawerProps {
   width?: number
 }
 
+const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+
 export default function AppDrawer({ open, onClose, title, subtitle, children, footer, width = 420 }: AppDrawerProps) {
   const { accent } = useRole()
+  const drawerRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<Element | null>(null)
 
+  // Escape key handler
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     if (open) document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
   }, [open, onClose])
 
+  // Body scroll lock
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
+  }, [open])
+
+  // Focus trap: save trigger, focus first element on open; restore on close
+  useEffect(() => {
+    if (open) {
+      triggerRef.current = document.activeElement
+      const focusable = drawerRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE)
+      if (focusable && focusable.length > 0) {
+        focusable[0].focus()
+      }
+    } else {
+      if (triggerRef.current instanceof HTMLElement) {
+        triggerRef.current.focus()
+      }
+      triggerRef.current = null
+    }
   }, [open])
 
   return (
@@ -36,7 +58,7 @@ export default function AppDrawer({ open, onClose, title, subtitle, children, fo
           position: 'fixed',
           inset: 0,
           background: 'rgba(0,0,0,0.5)',
-          backdropFilter: 'blur(2px)',
+          backdropFilter: 'blur(4px)',
           zIndex: 40,
           opacity: open ? 1 : 0,
           pointerEvents: open ? 'auto' : 'none',
@@ -45,6 +67,10 @@ export default function AppDrawer({ open, onClose, title, subtitle, children, fo
       />
       {/* Drawer */}
       <div
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         style={{
           position: 'fixed',
           top: 0,
@@ -79,6 +105,7 @@ export default function AppDrawer({ open, onClose, title, subtitle, children, fo
           </div>
           <button
             onClick={onClose}
+            aria-label="Close"
             style={{
               color: 'var(--text-muted)',
               background: 'none',

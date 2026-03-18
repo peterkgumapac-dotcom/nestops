@@ -21,6 +21,9 @@ export default function AssetsPage() {
   const [collapsedGroups, setCollapsedGroups] = useState<string[]>([])
   const [reportDrawer, setReportDrawer] = useState(false)
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null)
+  const [addDrawer, setAddDrawer] = useState(false)
+  const [toast, setToast] = useState('')
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   const totalValue = ASSETS.reduce((s, a) => s + a.valueNOK, 0)
   const needAttention = ASSETS.filter(a => a.warrantyStatus === 'expired' || a.condition === 'poor').length
@@ -65,7 +68,7 @@ export default function AssetsPage() {
       <PageHeader
         title="Fixed Assets"
         subtitle="Equipment and asset tracking"
-        action={<button style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Add Asset</button>}
+        action={<button onClick={() => setAddDrawer(true)} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Add Asset</button>}
       />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 24 }}>
@@ -119,6 +122,30 @@ export default function AssetsPage() {
         })}
       </div>
 
+      {/* Add Asset Drawer */}
+      <AppDrawer
+        open={addDrawer}
+        onClose={() => setAddDrawer(false)}
+        title="Add Asset"
+        footer={
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => setAddDrawer(false)} style={{ padding: '9px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
+            <button onClick={() => { setAddDrawer(false); showToast('Asset added') }} style={{ padding: '9px 16px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Save</button>
+          </div>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div><label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>Asset Name</label><input style={inputStyle} placeholder="e.g. Bosch Dishwasher" /></div>
+          <div><label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>Category</label>
+            <select style={inputStyle}><option>Appliance</option><option>Electronics</option><option>Furniture</option><option>Other</option></select>
+          </div>
+          <div><label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>Property</label>
+            <select style={inputStyle}>{PROPERTIES.map(p => <option key={p.id}>{p.name}</option>)}</select>
+          </div>
+          <div><label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>Value (NOK)</label><input type="number" style={inputStyle} placeholder="0" /></div>
+        </div>
+      </AppDrawer>
+
       {/* Report Issue Drawer */}
       <AppDrawer
         open={reportDrawer}
@@ -128,7 +155,7 @@ export default function AssetsPage() {
         footer={
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setReportDrawer(false)} style={{ padding: '9px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
-            <button style={{ padding: '9px 16px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Submit Report</button>
+            <button onClick={() => { setReportDrawer(false); showToast('Issue reported — team notified') }} style={{ padding: '9px 16px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Submit Report</button>
           </div>
         }
       >
@@ -167,6 +194,12 @@ export default function AssetsPage() {
           </div>
         </div>
       </AppDrawer>
+
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#16a34a', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+          {toast}
+        </div>
+      )}
     </div>
   )
 }

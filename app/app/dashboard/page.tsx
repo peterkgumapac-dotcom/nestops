@@ -1,16 +1,27 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Plus, Check } from 'lucide-react'
 import Link from 'next/link'
 import { useRole } from '@/context/RoleContext'
 import type { UserProfile } from '@/context/RoleContext'
 import CountdownTimer from '@/components/shared/CountdownTimer'
+import AppDrawer from '@/components/shared/AppDrawer'
 import { OVERNIGHT_REPORTS } from '@/lib/data/guestServices'
 import { PROPERTIES } from '@/lib/data/properties'
 import { PROPERTY_WEATHER } from '@/lib/data/weather'
 import { JOBS } from '@/lib/data/staff'
 import { sortJobsByAccessibility } from '@/lib/utils/pteUtils'
+
+// ─── Cleaning Templates ───────────────────────────────────────────────────────
+
+const CLEANING_TEMPLATES = [
+  { id: 't1', name: 'Full Turnover Clean', estimatedMinutes: 90, tasks: ['Strip and remake all beds', 'Deep clean bathrooms', 'Mop all floors', 'Restock amenities', 'Check all appliances'] },
+  { id: 't2', name: 'Mid-Stay Refresh', estimatedMinutes: 45, tasks: ['Replace towels and toiletries', 'Empty bins', 'Wipe surfaces', 'Vacuum high-traffic areas'] },
+  { id: 't3', name: 'Post-Construction Clean', estimatedMinutes: 120, tasks: ['Dust all surfaces and vents', 'Wash windows inside', 'Deep clean kitchen', 'Clean all fixtures', 'Vacuum and mop all rooms'] },
+  { id: 't4', name: 'Pre-Inspection Check', estimatedMinutes: 30, tasks: ['Walk-through all rooms', 'Check for damage', 'Verify inventory', 'Test all appliances', 'Photo documentation'] },
+  { id: 't5', name: 'Seasonal Deep Clean', estimatedMinutes: 150, tasks: ['Clean behind appliances', 'Wash curtains', 'Clean inside all cupboards', 'Detail bathroom grouting', 'Exterior windows if accessible'] },
+]
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
 
@@ -121,6 +132,11 @@ const GS_PENDING_PTE = [
   { id: 'pte1', property: 'Downtown Loft', staff: 'Bjorn Larsen', guest: 'Henrik Solberg', task: 'Fix toilet' },
 ]
 
+const NEEDS_ACTION_ITEMS = [
+  { id: 'na1', text: '⚠️ Noise complaint unassigned · Downtown Loft', action: 'Assign Now' },
+  { id: 'na2', text: '⚠️ Bjorn L. 18 min late · not clocked in', action: 'Send Reminder' },
+]
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function convertTo24h(timeStr: string): string {
@@ -200,7 +216,8 @@ function ActionBtn({ label, onClick }: { label: string; onClick?: () => void }) 
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function AppDashboard() {
-  const { role, user } = useRole()
+  const { role, user, accent } = useRole()
+  const [mounted, setMounted] = useState(false)
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
   const [clockIn, setClockIn] = useState<ClockInRecord | null>(null)
   const [elapsed, setElapsed] = useState('')
@@ -209,6 +226,18 @@ export default function AppDashboard() {
   const [grantedPTE, setGrantedPTE] = useState<Record<string, boolean>>({})
   const [expandPTEPanel, setExpandPTEPanel] = useState<string | null>(null)
   const [toast, setToast] = useState('')
+  const [maintenanceReportDrawer, setMaintenanceReportDrawer] = useState(false)
+  const [reportedIssues, setReportedIssues] = useState<{ id: string; property: string; issueType: string; urgency: string; description: string; reporter: string; time: string }[]>([])
+  const [reportProperty, setReportProperty] = useState('')
+  const [reportIssueType, setReportIssueType] = useState('Plumbing')
+  const [reportUrgency, setReportUrgency] = useState<'Urgent' | 'Standard'>('Standard')
+  const [reportDescription, setReportDescription] = useState('')
+  const [addCleaningDrawer, setAddCleaningDrawer] = useState(false)
+  const [selectedTemplate, setSelectedTemplate] = useState<typeof CLEANING_TEMPLATES[0] | null>(null)
+  const [newCleaningProperty, setNewCleaningProperty] = useState(PROPERTIES[0]?.id ?? 'p1')
+  const [newCleaningDate, setNewCleaningDate] = useState(new Date().toISOString().split('T')[0])
+  const [newCleaningNotes, setNewCleaningNotes] = useState('')
+  const [addedCleanings, setAddedCleanings] = useState<{id:string, templateName:string, property:string, date:string}[]>([])
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -217,6 +246,7 @@ export default function AppDashboard() {
     if (stored) {
       try { setCurrentUser(JSON.parse(stored)) } catch { /* ignore */ }
     }
+    setMounted(true)
   }, [])
 
   useEffect(() => {
@@ -243,7 +273,9 @@ export default function AppDashboard() {
   const displayName = currentUser?.name?.split(' ')[0] ?? user?.name?.split(' ')[0] ?? 'there'
 
   const effectiveRole = currentUser?.role ?? role
-  const effectiveSubRole = currentUser?.subRole ?? user?.subRole ?? ''
+  // Use currentUser as sole source of truth for subRole — never fall back to context user
+  // which may hold a stale previous session's subRole
+  const effectiveSubRole = currentUser?.subRole ?? ''
   const isStaff = effectiveRole === 'staff'
   const isOperator = effectiveRole === 'operator'
   const isCleaning = effectiveSubRole.includes('Cleaning')
@@ -290,6 +322,8 @@ export default function AppDashboard() {
   const toggleCode = (id: string) => setShowCodes(prev => ({ ...prev, [id]: !prev[id] }))
   const toggleTask = (id: string) => setTaskChecks(prev => ({ ...prev, [id]: !prev[id] }))
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
+  const prefersReducedMotion = typeof window !== 'undefined'
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false
 
   // Shift time helpers for cleaning
   const firstShiftMins = shiftMinsFromNow(CLEANING_SHIFTS[0]?.startTime ?? '09:00')
@@ -308,6 +342,14 @@ export default function AppDashboard() {
 
   // used for unused import suppression
   void convertTo24h
+
+  if (!mounted) return (
+    <div style={{ padding: 24 }}>
+      {[1,2,3].map(i => (
+        <div key={i} style={{ height: 80, borderRadius: 10, background: 'var(--bg-card)', marginBottom: 12, animation: 'pulse 1.5s ease-in-out infinite' }} />
+      ))}
+    </div>
+  )
 
   return (
     <motion.div
@@ -389,7 +431,7 @@ export default function AppDashboard() {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
                   <motion.span
-                    animate={{ opacity: [1, 0.4, 1] }}
+                    animate={prefersReducedMotion ? undefined : { opacity: [1, 0.4, 1] }}
                     transition={{ duration: 1.2, repeat: Infinity }}
                     style={{ fontSize: 13, color: C.red }}
                   >⚠</motion.span>
@@ -497,13 +539,17 @@ export default function AppDashboard() {
                   {/* Access */}
                   <div style={{ fontSize: 12, color: C.muted, marginBottom: 8 }}>
                     Access: {shift.accessType}
-                    {canSeeCode && (
+                    {canSeeCode ? (
                       <button
                         onClick={() => toggleCode(shift.id)}
                         style={{ marginLeft: 8, background: 'none', border: 'none', color: C.blue, fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0 }}
                       >
                         {showCodes[shift.id] ? `Code: ${shift.code}` : 'Show Code 👁'}
                       </button>
+                    ) : (
+                      <span style={{ marginLeft: 8, fontSize: 12, color: C.muted, opacity: 0.6 }}>
+                        🔒 Code available at {shift.startTime}
+                      </span>
                     )}
                   </div>
 
@@ -541,7 +587,7 @@ export default function AppDashboard() {
                   ))}
                   {!isFirst && (
                     <div style={{ fontSize: 12, color: C.muted }}>
-                      {shift.tasks.length} tasks · <button style={{ background: 'none', border: 'none', color: C.blue, fontSize: 12, cursor: 'pointer', padding: 0 }}>View Tasks →</button>
+                      {shift.tasks.length} tasks
                     </div>
                   )}
 
@@ -557,6 +603,49 @@ export default function AppDashboard() {
               </motion.div>
             )
           })}
+
+          {/* Report Maintenance Issue CTA */}
+          <div
+            onClick={() => setMaintenanceReportDrawer(true)}
+            style={{
+              background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 10,
+              padding: '14px 16px', marginBottom: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12,
+            }}
+          >
+            <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(59,130,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 16 }}>
+              🔧
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 2 }}>Report Maintenance Issue</div>
+              <div style={{ fontSize: 12, color: C.muted }}>
+                {reportedIssues.length > 0
+                  ? `${reportedIssues.length} issue${reportedIssues.length > 1 ? 's' : ''} reported today — tap to add another`
+                  : 'Spotted something broken? Alert the maintenance team instantly.'}
+              </div>
+            </div>
+            <span style={{ fontSize: 18, color: C.muted }}>›</span>
+          </div>
+
+          {/* Add Cleaning CTA */}
+          <button
+            onClick={() => setAddCleaningDrawer(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 12, width: '100%',
+              padding: '14px 16px', borderRadius: 10,
+              border: `1px dashed ${accent}50`, background: `${accent}08`,
+              cursor: 'pointer', marginBottom: 16, textAlign: 'left',
+            }}
+          >
+            <div style={{ width: 32, height: 32, borderRadius: 7, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Plus size={16} style={{ color: accent }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: accent }}>Add Cleaning</div>
+              <div style={{ fontSize: 11, color: C.muted }}>
+                Create a task from a template{addedCleanings.length > 0 ? ` · ${addedCleanings.length} added today` : ''}
+              </div>
+            </div>
+          </button>
 
           {/* Other tasks */}
           <SectionLabel label="Other Tasks Today" />
@@ -605,6 +694,189 @@ export default function AppDashboard() {
               ))}
             </div>
           </Card>
+
+          {/* Add Cleaning Drawer */}
+          <AppDrawer
+            open={addCleaningDrawer}
+            onClose={() => { setAddCleaningDrawer(false); setSelectedTemplate(null); setNewCleaningNotes('') }}
+            title={selectedTemplate ? selectedTemplate.name : 'Add Cleaning'}
+            subtitle={selectedTemplate ? `~${selectedTemplate.estimatedMinutes} min · Select property and date` : 'Choose a cleaning template'}
+            footer={selectedTemplate ? (
+              <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+                <button onClick={() => setSelectedTemplate(null)} style={{ flex: 1, padding: '9px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.muted, fontSize: 14, cursor: 'pointer' }}>Back</button>
+                <button
+                  onClick={() => {
+                    const prop = PROPERTIES.find(p => p.id === newCleaningProperty)
+                    setAddedCleanings(prev => [...prev, {
+                      id: `cl-${Date.now()}`,
+                      templateName: selectedTemplate.name,
+                      property: prop?.name ?? newCleaningProperty,
+                      date: newCleaningDate,
+                    }])
+                    setAddCleaningDrawer(false)
+                    setSelectedTemplate(null)
+                    setNewCleaningNotes('')
+                    showToast(`Cleaning scheduled — ${selectedTemplate.name}`)
+                  }}
+                  style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+                >
+                  Create Cleaning
+                </button>
+              </div>
+            ) : undefined}
+          >
+            {!selectedTemplate ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <p style={{ fontSize: 14, color: C.muted, margin: '0 0 6px' }}>Select a cleaning template to get started:</p>
+                {CLEANING_TEMPLATES.map(tmpl => (
+                  <button
+                    key={tmpl.id}
+                    onClick={() => setSelectedTemplate(tmpl)}
+                    style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 16px', borderRadius: 10, border: `1px solid ${C.border}`, background: C.card, cursor: 'pointer', textAlign: 'left' }}
+                  >
+                    <div style={{ width: 36, height: 36, borderRadius: 8, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 16 }}>🧹</div>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 2 }}>{tmpl.name}</div>
+                      <div style={{ fontSize: 12, color: C.muted }}>~{tmpl.estimatedMinutes} min · {tmpl.tasks.length} tasks</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 500, color: C.muted, marginBottom: 6, display: 'block' }}>Property</label>
+                  <select
+                    value={newCleaningProperty}
+                    onChange={e => setNewCleaningProperty(e.target.value)}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: '#1f2937', color: C.text, fontSize: 14, outline: 'none' }}
+                  >
+                    {PROPERTIES.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 500, color: C.muted, marginBottom: 6, display: 'block' }}>Scheduled Date</label>
+                  <input
+                    type="date"
+                    value={newCleaningDate}
+                    onChange={e => setNewCleaningDate(e.target.value)}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: '#1f2937', color: C.text, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 500, color: C.muted, marginBottom: 6, display: 'block' }}>Notes (optional)</label>
+                  <textarea
+                    value={newCleaningNotes}
+                    onChange={e => setNewCleaningNotes(e.target.value)}
+                    placeholder="Any special instructions…"
+                    style={{ width: '100%', minHeight: 72, padding: '10px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: '#1f2937', color: C.text, fontSize: 13, resize: 'vertical', outline: 'none' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 500, color: C.muted, marginBottom: 8, display: 'block' }}>Included Tasks</label>
+                  <div style={{ background: '#1f2937', borderRadius: 8, border: `1px solid ${C.border}`, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {selectedTemplate.tasks.map((task, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 14, height: 14, borderRadius: '50%', border: `2px solid ${C.border}`, flexShrink: 0 }} />
+                        <span style={{ fontSize: 13, color: C.muted }}>{task}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </AppDrawer>
+
+          {/* Maintenance Report Drawer */}
+          <AppDrawer
+            open={maintenanceReportDrawer}
+            onClose={() => setMaintenanceReportDrawer(false)}
+            title="Report Maintenance Issue"
+            subtitle="Alert maintenance team to an issue you found on-site"
+            footer={
+              <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+                <button onClick={() => setMaintenanceReportDrawer(false)} style={{ flex: 1, padding: '9px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.muted, fontSize: 14, cursor: 'pointer' }}>Cancel</button>
+                <button
+                  onClick={() => {
+                    const newReport = {
+                      id: `fr-${Date.now()}`,
+                      property: reportProperty || (PROPERTIES[0]?.name ?? 'Unknown'),
+                      issueType: reportIssueType,
+                      urgency: reportUrgency,
+                      description: reportDescription,
+                      reporter: currentUser?.name ?? 'Cleaner',
+                      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                    }
+                    const updated = [...reportedIssues, newReport]
+                    setReportedIssues(updated)
+                    // Share with operator via localStorage
+                    try { localStorage.setItem('nestops_field_reports', JSON.stringify(updated)) } catch {}
+                    setMaintenanceReportDrawer(false)
+                    setReportDescription('')
+                    if (reportUrgency === 'Urgent') {
+                      showToast('🚨 Urgent issue reported — maintenance alerted')
+                    } else {
+                      showToast('Maintenance issue reported — team notified')
+                    }
+                  }}
+                  style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: '#3b82f6', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+                >
+                  Submit Report
+                </button>
+              </div>
+            }
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 500, color: C.muted, marginBottom: 6, display: 'block' }}>Property</label>
+                <select
+                  value={reportProperty || ''}
+                  onChange={e => setReportProperty(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: '#1f2937', color: C.text, fontSize: 14, outline: 'none' }}
+                >
+                  {PROPERTIES.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 500, color: C.muted, marginBottom: 6, display: 'block' }}>Issue Type</label>
+                <select
+                  value={reportIssueType}
+                  onChange={e => setReportIssueType(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: '#1f2937', color: C.text, fontSize: 14, outline: 'none' }}
+                >
+                  {['Plumbing', 'Electrical', 'Appliance', 'HVAC', 'Structural', 'Other'].map(t => <option key={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 500, color: C.muted, marginBottom: 6, display: 'block' }}>Urgency</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {(['Standard', 'Urgent'] as const).map(u => (
+                    <button
+                      key={u}
+                      onClick={() => setReportUrgency(u)}
+                      style={{
+                        flex: 1, padding: '9px', borderRadius: 8, border: `1px solid ${reportUrgency === u ? (u === 'Urgent' ? '#ef4444' : '#3b82f6') : C.border}`,
+                        background: reportUrgency === u ? (u === 'Urgent' ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)') : 'transparent',
+                        color: reportUrgency === u ? (u === 'Urgent' ? '#ef4444' : '#3b82f6') : C.muted,
+                        fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                      }}
+                    >
+                      {u === 'Urgent' ? '🚨 Urgent' : '⏰ Standard'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 500, color: C.muted, marginBottom: 6, display: 'block' }}>Description</label>
+                <textarea
+                  value={reportDescription}
+                  onChange={e => setReportDescription(e.target.value)}
+                  placeholder="Describe what you found…"
+                  style={{ width: '100%', minHeight: 90, padding: '10px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: '#1f2937', color: C.text, fontSize: 13, resize: 'vertical', outline: 'none' }}
+                />
+              </div>
+            </div>
+          </AppDrawer>
         </>
       )}
 
@@ -679,7 +951,7 @@ export default function AppDashboard() {
                           color: C.blue, cursor: 'pointer',
                         }}
                       >
-                        {showCodes[job.id] ? 'Code: 4821' : 'Show Code 👁'}
+                        {showCodes[job.id] ? `Code: ${String(1000 + parseInt(job.id.replace(/\D/g, '') || '0', 10) % 9000)}` : 'Show Code 👁'}
                       </button>
                     ) : (
                       <span style={{
@@ -905,22 +1177,22 @@ export default function AppDashboard() {
               const isActuallyLate = member.late && minsLate > 0
               return (
                 <div key={member.id} style={{
-                  display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px',
+                  display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, padding: '9px 10px',
                   borderRadius: 8, marginBottom: i < TEAM_CLOCK_STATUS.length - 1 ? 6 : 0,
                   background: isActuallyLate ? 'rgba(217,119,6,0.08)' : 'transparent',
                 }}>
                   <div style={{ width: 34, height: 34, borderRadius: '50%', background: member.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
                     {member.initials}
                   </div>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: 140 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{member.name}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: C.text, minWidth: 60 }}>{member.name}</span>
                       {member.clockedIn
                         ? <span style={{ fontSize: 11, color: C.green }}>● Clocked in {member.clockInTime}</span>
                         : isActuallyLate
                           ? (
                             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 1.2, repeat: Infinity }} style={{ fontSize: 11, color: C.amber }}>⚠️</motion.span>
+                              <motion.span animate={prefersReducedMotion ? undefined : { opacity: [1, 0.4, 1] }} transition={{ duration: 1.2, repeat: Infinity }} style={{ fontSize: 11, color: C.amber }}>⚠️</motion.span>
                               <span style={{ fontSize: 11, color: C.amber }}>{minsLate} min late</span>
                             </span>
                           )
@@ -987,16 +1259,14 @@ export default function AppDashboard() {
           <Card>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>NEEDS ACTION</span>
-              <span style={{ fontSize: 12, color: C.muted }}>2 items</span>
+              <span style={{ fontSize: 12, color: C.muted }}>{NEEDS_ACTION_ITEMS.length} items</span>
             </div>
-            <div style={{ paddingBottom: 10, marginBottom: 10, borderBottom: `1px solid ${C.border}` }}>
-              <div style={{ fontSize: 13, color: C.text, marginBottom: 4 }}>⚠️ Noise complaint unassigned · Downtown Loft</div>
-              <ActionBtn label="Assign Now" />
-            </div>
-            <div>
-              <div style={{ fontSize: 13, color: C.text, marginBottom: 4 }}>⚠️ Bjorn L. 18 min late · not clocked in</div>
-              <ActionBtn label="Send Reminder" />
-            </div>
+            {NEEDS_ACTION_ITEMS.map((item, i) => (
+              <div key={item.id} style={i < NEEDS_ACTION_ITEMS.length - 1 ? { paddingBottom: 10, marginBottom: 10, borderBottom: `1px solid ${C.border}` } : {}}>
+                <div style={{ fontSize: 13, color: C.text, marginBottom: 4 }}>{item.text}</div>
+                <ActionBtn label={item.action} />
+              </div>
+            ))}
           </Card>
 
           {/* My tasks */}

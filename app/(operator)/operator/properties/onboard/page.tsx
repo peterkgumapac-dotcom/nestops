@@ -1,8 +1,9 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, ArrowRight, Check, MapPin, Wifi, Car, Waves, Flame, Wind, Tv, Dumbbell, ChefHat, WashingMachine, Thermometer, Zap, UtensilsCrossed } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, MapPin, Wifi, Car, Waves, Flame, Wind, Tv, Dumbbell, ChefHat, WashingMachine, Thermometer, Zap, UtensilsCrossed, ChevronDown } from 'lucide-react'
+import { getCleaningChecklist, type ChecklistItem } from '@/lib/data/checklists'
 import { useRole } from '@/context/RoleContext'
 import { OWNERS } from '@/lib/data/owners'
 
@@ -129,6 +130,8 @@ export default function OnboardPage() {
   const [form, setForm] = useState<FormState>(DEFAULT_FORM)
   const [success, setSuccess] = useState(false)
   const [direction, setDirection] = useState(1)
+  const [showTemplate, setShowTemplate] = useState(false)
+  const [templateSaved, setTemplateSaved] = useState(false)
 
   useEffect(() => {
     try {
@@ -136,6 +139,18 @@ export default function OnboardPage() {
       if (saved) { const parsed = JSON.parse(saved); setStep(parsed.step ?? 1); setForm(parsed.form ?? DEFAULT_FORM) }
     } catch { /* ignore */ }
   }, [])
+
+  const templateItems = useMemo(() =>
+    getCleaningChecklist(form.bedrooms, form.bathrooms, form.amenities),
+    [form.bedrooms, form.bathrooms, form.amenities]
+  )
+
+  const templateGroups = useMemo(() => {
+    const seen = new Set<string>()
+    const order: string[] = []
+    templateItems.forEach((item: ChecklistItem) => { if (!seen.has(item.category)) { seen.add(item.category); order.push(item.category) } })
+    return order.map(cat => ({ name: cat, items: templateItems.filter((i: ChecklistItem) => i.category === cat) }))
+  }, [templateItems])
 
   const save = (nextStep: number, nextForm: FormState) => {
     try { localStorage.setItem(LS_KEY, JSON.stringify({ step: nextStep, form: nextForm })) } catch { /* ignore */ }
@@ -495,6 +510,49 @@ export default function OnboardPage() {
                 <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{item}</span>
               </div>
             ))}
+          </div>
+          {/* Auto-generate Task Template */}
+          <div style={{ border: `1px solid ${accent}30`, borderRadius: 10, background: `${accent}06`, overflow: 'hidden', marginBottom: 20 }}>
+            <button
+              onClick={() => setShowTemplate(v => !v)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+            >
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: accent, marginBottom: 2 }}>
+                  🗂 Auto-Generated Task Template
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                  {form.bedrooms} bed · {form.bathrooms} bath · {form.amenities.length} amenities → {templateItems.length} checklist items
+                </div>
+              </div>
+              <ChevronDown size={16} style={{ color: accent, transform: showTemplate ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }} />
+            </button>
+            {showTemplate && (
+              <div style={{ borderTop: `1px solid ${accent}20`, padding: '12px 16px 16px' }}>
+                <div style={{ maxHeight: 260, overflowY: 'auto', marginBottom: 12 }}>
+                  {templateGroups.map(group => (
+                    <div key={group.name} style={{ marginBottom: 10 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>{group.name}</div>
+                      {group.items.map((item: ChecklistItem) => (
+                        <div key={item.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, padding: '4px 0', fontSize: 12, color: 'var(--text-muted)' }}>
+                          <div style={{ width: 12, height: 12, borderRadius: '50%', border: '1px solid var(--border)', flexShrink: 0, marginTop: 1 }} />
+                          {item.label}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => {
+                    try { localStorage.setItem(`nestops_template_${form.name || 'property'}`, JSON.stringify(templateItems)) } catch {}
+                    setTemplateSaved(true)
+                  }}
+                  style={{ width: '100%', padding: '9px', borderRadius: 8, border: 'none', background: templateSaved ? '#10b981' : accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                >
+                  {templateSaved ? '✓ Template Saved to Property' : 'Save Task Template for This Property'}
+                </button>
+              </div>
+            )}
           </div>
           <div style={{ display: 'flex', gap: 12 }}>
             <button onClick={() => { setDirection(-1); setStep(1) }} style={{ flex: 1, padding: '11px 0', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>

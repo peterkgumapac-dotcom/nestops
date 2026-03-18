@@ -1,6 +1,10 @@
 'use client'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Building2, Users, Ticket, Package, AlertTriangle, Headphones, ChevronRight } from 'lucide-react'
+import { Building2, Users, Ticket, Package, AlertTriangle, Headphones, ChevronRight, CheckCircle, ShieldAlert, Wrench, ClipboardList, FileText, Star } from 'lucide-react'
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
+} from '@/components/ui/sheet'
 import PageHeader from '@/components/shared/PageHeader'
 import StatCard from '@/components/shared/StatCard'
 import StatusBadge from '@/components/shared/StatusBadge'
@@ -11,6 +15,9 @@ import { OWNERS } from '@/lib/data/owners'
 import { PROPERTIES } from '@/lib/data/properties'
 import { STOCK_ITEMS } from '@/lib/data/inventory'
 import { GUEST_ISSUES, getActiveIssues, getTotalRefunds, getRedFlagProperties, fmtNok } from '@/lib/data/guestServices'
+import { APPROVALS, type Approval } from '@/lib/data/approvals'
+import { COMPLIANCE_DOCS } from '@/lib/data/compliance'
+import { JOBS, STAFF_MEMBERS } from '@/lib/data/staff'
 import { useRole } from '@/context/RoleContext'
 
 const recentRequests = REQUESTS.slice(0, 5).map(r => ({
@@ -21,8 +28,64 @@ const recentRequests = REQUESTS.slice(0, 5).map(r => ({
 
 type RequestRow = typeof recentRequests[0]
 
+interface FieldReport {
+  id: string
+  property: string
+  issueType: string
+  urgency: 'Urgent' | 'Standard'
+  description: string
+  reporter: string
+  time: string
+}
+
+interface QaPendingItem {
+  id: string
+  taskId: string
+  property: string
+  propertyId: string
+  cleaner: string
+  rating: number
+  notes: string
+  photos: string[]
+  submittedAt: string
+  qaStatus: 'pending' | 'approved' | 'redo'
+}
+
 export default function OperatorDashboard() {
   const { accent } = useRole()
+  const [mounted, setMounted] = useState(false)
+  const [pendingApprovals, setPendingApprovals] = useState<Approval[]>(APPROVALS)
+  const [fieldReports, setFieldReports] = useState<FieldReport[]>([])
+  const [ownerWorkOrders, setOwnerWorkOrders] = useState<{id:string; title:string; property:string; requestedBy:string; requestedDate:string}[]>([])
+  const [qaPending, setQaPending] = useState<QaPendingItem[]>([])
+  const [qaReviewItem, setQaReviewItem] = useState<QaPendingItem | null>(null)
+  const [toast, setToast] = useState('')
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
+
+  // Read field reports, owner work orders, and QA pending from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('nestops_field_reports')
+      if (stored) setFieldReports(JSON.parse(stored))
+    } catch {}
+    try {
+      const wo = localStorage.getItem('nestops_owner_work_orders')
+      if (wo) setOwnerWorkOrders(JSON.parse(wo))
+    } catch {}
+    try {
+      const qa = localStorage.getItem('nestops_qa_pending')
+      if (qa) setQaPending(JSON.parse(qa))
+    } catch {}
+    setMounted(true)
+  }, [])
+
+  const handleQaAction = (id: string, action: 'approved' | 'redo') => {
+    const updated = qaPending.map(q => q.id === id ? { ...q, qaStatus: action } : q).filter(q => q.qaStatus === 'pending')
+    setQaPending(updated)
+    try { localStorage.setItem('nestops_qa_pending', JSON.stringify(updated)) } catch {}
+    setQaReviewItem(null)
+    showToast(action === 'approved' ? '✓ Cleaning approved' : 'Flag sent — cleaner notified to redo')
+  }
 
   const columns: Column<RequestRow>[] = [
     { key: 'title', label: 'Title', sortable: true },
@@ -38,32 +101,101 @@ export default function OperatorDashboard() {
   const activeIssues = getActiveIssues(GUEST_ISSUES)
   const totalRefunds = getTotalRefunds(GUEST_ISSUES)
   const redFlags     = getRedFlagProperties(GUEST_ISSUES)
+  const complianceAlerts = COMPLIANCE_DOCS.filter(d => d.status === 'expired' || d.status === 'expiring' || d.status === 'missing')
+  const todayJobs = JOBS.filter(j => j.status !== 'done').slice(0, 5)
+
+  const handleDismissApproval = (id: string) => {
+    setPendingApprovals(prev => prev.filter(a => a.id !== id))
+    showToast('Approval dismissed')
+  }
+
+  const handleApproveApproval = (id: string) => {
+    setPendingApprovals(prev => prev.filter(a => a.id !== id))
+    showToast('Approved — owner notified')
+  }
+
+  if (!mounted) return (
+    <div style={{ padding: 24 }}>
+      {[1,2,3].map(i => (
+        <div key={i} style={{ height: 80, borderRadius: 10, background: 'var(--bg-card)', marginBottom: 12, animation: 'pulse 1.5s ease-in-out infinite' }} />
+      ))}
+    </div>
+  )
 
   return (
     <div>
       <PageHeader title="Dashboard" subtitle="Operations overview" />
 
       {/* Stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 32 }}>
         <StatCard label="Total Properties" value={PROPERTIES.length} icon={Building2} subtitle="Across all owners" />
         <StatCard label="Active Owners" value={OWNERS.filter(o => o.status === 'active').length} icon={Users} subtitle="Currently managing" />
         <StatCard label="Open Requests" value={REQUESTS.filter(r => r.status === 'open').length} icon={Ticket} subtitle="Awaiting action" />
         <StatCard label="Low Stock Items" value={lowStock.length} icon={Package} subtitle="Needs restocking" />
         <StatCard label="Active Issues" value={activeIssues.length} icon={Headphones} subtitle="Guest issues open" />
+        <StatCard label="Pending Approvals" value={pendingApprovals.length} icon={CheckCircle} subtitle="Owner decisions" />
+        <StatCard label="Compliance Alerts" value={complianceAlerts.length} icon={ShieldAlert} subtitle="Docs expiring/missing" />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24 }}>
-        {/* Recent requests table */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>Recent Requests</h2>
-            <a href="/operator/tickets" style={{ fontSize: 13, color: accent, textDecoration: 'none' }}>View all →</a>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20 }}>
+        {/* Left column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, flex: 1, minWidth: 280 }}>
+          {/* Recent requests table */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>Recent Requests</h2>
+              <a href="/operator/tickets" style={{ fontSize: 13, color: accent, textDecoration: 'none' }}>View all →</a>
+            </div>
+            <DataTable columns={columns} data={recentRequests} />
           </div>
-          <DataTable columns={columns} data={recentRequests} />
+
+          {/* Owner Approvals Panel */}
+          <div style={{ background: `${accent}08`, border: `1px solid ${accent}28`, borderRadius: 10, padding: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <CheckCircle size={15} style={{ color: accent }} />
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+                  Owner Approvals
+                  {pendingApprovals.length > 0 && (
+                    <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 700, padding: '1px 6px', borderRadius: 10, background: accent, color: '#fff' }}>
+                      {pendingApprovals.length}
+                    </span>
+                  )}
+                </h3>
+              </div>
+              <a href="/owner/approvals" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: accent, textDecoration: 'none' }}>
+                Owner portal <ChevronRight size={12} />
+              </a>
+            </div>
+            {pendingApprovals.length === 0 ? (
+              <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+                ✓ No pending owner approvals
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {pendingApprovals.map(a => (
+                  <div key={a.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)' }}>{a.title}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{a.property} · {a.category}</div>
+                      </div>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{a.amount.toLocaleString()} {a.currency}</div>
+                    </div>
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.4, margin: '0 0 8px' }}>{a.description}</p>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={() => handleApproveApproval(a.id)} style={{ flex: 1, padding: '6px', borderRadius: 6, border: 'none', background: '#16a34a1a', color: '#34d399', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>Approve</button>
+                      <button onClick={() => handleDismissApproval(a.id)} style={{ flex: 1, padding: '6px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer' }}>Dismiss</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, flexShrink: 0, width: 320, minWidth: 0 }}>
           {/* Owners summary */}
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
             <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>Owners</h3>
@@ -79,6 +211,157 @@ export default function OperatorDashboard() {
                 <StatusBadge status={owner.status} />
               </div>
             ))}
+          </div>
+
+          {/* Today's Jobs */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Wrench size={14} style={{ color: accent }} />
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Today&apos;s Jobs</h3>
+              </div>
+              <Link href="/operator/team" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: accent, textDecoration: 'none' }}>
+                View all <ChevronRight size={12} />
+              </Link>
+            </div>
+            {todayJobs.length === 0 ? (
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: '16px 0' }}>✓ All jobs complete</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {todayJobs.map(job => {
+                  const staff = STAFF_MEMBERS.find(s => s.id === job.staffId)
+                  const priorityColors: Record<string, string> = { urgent: '#ef4444', high: '#f97316', medium: '#3b82f6', low: '#6b7280' }
+                  return (
+                    <div key={job.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job.title}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{job.propertyName} · {job.dueTime}</div>
+                        {staff && <div style={{ fontSize: 10, color: 'var(--text-subtle)', marginTop: 1 }}>{staff.name}</div>}
+                      </div>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 5px', borderRadius: 3, background: `${priorityColors[job.priority]}18`, color: priorityColors[job.priority], textTransform: 'capitalize', flexShrink: 0 }}>
+                        {job.priority}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Work Orders */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <FileText size={14} style={{ color: accent }} />
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Work Orders</h3>
+              </div>
+              <Link href="/app/work-orders" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: accent, textDecoration: 'none' }}>
+                View all <ChevronRight size={12} />
+              </Link>
+            </div>
+            {REQUESTS.filter(r => r.status !== 'resolved').length === 0 && ownerWorkOrders.length === 0 ? (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>No open work orders</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {ownerWorkOrders.slice(0, 3).map(wo => (
+                  <div key={wo.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: 8 }}>{wo.title}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(239,68,68,0.12)', color: '#ef4444', whiteSpace: 'nowrap', flexShrink: 0 }}>Owner Approval</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{wo.property} · {wo.requestedBy}</div>
+                  </div>
+                ))}
+                {REQUESTS.filter(r => r.status !== 'resolved').slice(0, 3).map(r => {
+                  const prop = PROPERTIES.find(p => p.id === r.propertyId)
+                  return (
+                    <div key={r.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+                        <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: 8 }}>{r.title}</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: r.requiresOwnerApproval ? 'rgba(239,68,68,0.12)' : 'rgba(124,58,237,0.12)', color: r.requiresOwnerApproval ? '#ef4444' : accent, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                          {r.requiresOwnerApproval ? 'Owner Approval' : 'Operator'}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{prop?.name ?? r.propertyId} · {r.type}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Field Reports */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <ClipboardList size={14} style={{ color: accent }} />
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Field Reports</h3>
+              </div>
+              {fieldReports.length > 0 && (
+                <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 6px', borderRadius: 10, background: '#ef444420', color: '#ef4444' }}>
+                  {fieldReports.length} today
+                </span>
+              )}
+            </div>
+            {fieldReports.length === 0 ? (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>
+                No field reports submitted today
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {fieldReports.map(r => (
+                  <div key={r.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>{r.issueType}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 5px', borderRadius: 3, background: r.urgency === 'Urgent' ? '#ef444418' : '#6b728018', color: r.urgency === 'Urgent' ? '#ef4444' : '#6b7280' }}>
+                        {r.urgency}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{r.property} · {r.reporter} · {r.time}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* QA Pending */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Star size={14} style={{ color: '#f59e0b' }} />
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
+                  QA Pending
+                  {qaPending.length > 0 && (
+                    <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 700, padding: '1px 6px', borderRadius: 10, background: '#f59e0b20', color: '#f59e0b' }}>
+                      {qaPending.length}
+                    </span>
+                  )}
+                </h3>
+              </div>
+            </div>
+            {qaPending.length === 0 ? (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>No cleaning reviews pending</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {qaPending.map(item => (
+                  <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: 8 }}>{item.property}</span>
+                      <span style={{ fontSize: 12, color: '#f59e0b', fontWeight: 700, flexShrink: 0 }}>{'★'.repeat(item.rating)}{'☆'.repeat(5 - item.rating)}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.cleaner}</span>
+                      <button
+                        onClick={() => setQaReviewItem(item)}
+                        style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, cursor: 'pointer', fontWeight: 500 }}
+                      >
+                        Review
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Low stock */}
@@ -134,6 +417,67 @@ export default function OperatorDashboard() {
           </div>
         </div>
       </div>
+
+      {/* QA Review Sheet */}
+      <Sheet open={!!qaReviewItem} onOpenChange={open => { if (!open) setQaReviewItem(null) }}>
+        <SheetContent side="right" style={{ maxWidth: 440, width: '100%' }}>
+          <SheetHeader><SheetTitle>QA Review — {qaReviewItem?.property}</SheetTitle></SheetHeader>
+          {qaReviewItem && (
+            <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto', flex: 1 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Cleaner</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-primary)' }}>{qaReviewItem.cleaner}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Rating</div>
+                  <div style={{ fontSize: 18, color: '#f59e0b', lineHeight: 1 }}>
+                    {'★'.repeat(qaReviewItem.rating)}
+                    <span style={{ color: 'var(--border)' }}>{'★'.repeat(5 - qaReviewItem.rating)}</span>
+                  </div>
+                </div>
+              </div>
+              {qaReviewItem.photos.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Photos</div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {qaReviewItem.photos.map((url, i) => (
+                      <img key={i} src={url} style={{ width: 90, height: 68, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--border)' }} alt="qa photo" />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {qaReviewItem.notes && (
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Notes</div>
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, background: 'var(--bg-elevated)', padding: 10, borderRadius: 8 }}>{qaReviewItem.notes}</p>
+                </div>
+              )}
+              <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Submitted {new Date(qaReviewItem.submittedAt).toLocaleString()}</div>
+            </div>
+          )}
+          <SheetFooter>
+            <button
+              onClick={() => qaReviewItem && handleQaAction(qaReviewItem.id, 'redo')}
+              style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: '1px solid #ef4444', background: 'transparent', color: '#ef4444', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+            >
+              Flag for Redo
+            </button>
+            <button
+              onClick={() => qaReviewItem && handleQaAction(qaReviewItem.id, 'approved')}
+              style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+            >
+              Approve
+            </button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#16a34a', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+          {toast}
+        </div>
+      )}
     </div>
   )
 }

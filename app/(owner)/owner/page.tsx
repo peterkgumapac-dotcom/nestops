@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { Building2, Inbox, CheckCircle, MapPin, Bed, Bath, Clock, ChevronRight } from 'lucide-react'
+import { Building2, Inbox, CheckCircle, MapPin, Bed, Bath, Clock, ChevronRight, AlertTriangle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import PageHeader from '@/components/shared/PageHeader'
@@ -8,36 +8,26 @@ import StatCard from '@/components/shared/StatCard'
 import StatusBadge from '@/components/shared/StatusBadge'
 import { PROPERTIES } from '@/lib/data/properties'
 import { REQUESTS } from '@/lib/data/requests'
+import { COMPLIANCE_DOCS } from '@/lib/data/compliance'
+import { APPROVALS } from '@/lib/data/approvals'
 import { useRole } from '@/context/RoleContext'
 
-const ACCENT = '#2563eb'
 const MY_PROPERTIES = PROPERTIES.filter(p => p.ownerId === 'o1')
+const MY_PROPERTY_IDS = MY_PROPERTIES.map(p => p.id)
 const MY_REQUESTS    = REQUESTS.filter(r => r.ownerId === 'o1')
 const OPEN_REQUESTS  = MY_REQUESTS.filter(r => r.status === 'open' || r.status === 'pending')
 
-interface Approval {
-  id: string
-  title: string
-  property: string
-  amount: number
-  currency: string
-  category: string
-  description: string
-  requestedBy: string
-}
-
-const INITIAL_APPROVALS: Approval[] = [
-  { id: 'a1', title: 'Emergency Plumbing Repair',    property: 'Sunset Villa',  amount: 4800, currency: 'NOK', category: 'Maintenance', description: 'Burst pipe under kitchen sink. Immediate repair required before next guest arrival.', requestedBy: 'Lars Plumbing AS' },
-  { id: 'a2', title: 'Replace Dishwasher',           property: 'Sunset Villa',  amount: 9200, currency: 'NOK', category: 'Appliance',   description: 'Current unit is 8 years old and leaking. Bosch SMS6ZCW00E recommended.', requestedBy: 'Peter K.' },
-  { id: 'a3', title: 'New Outdoor Furniture Set',    property: 'Harbor Studio', amount: 6400, currency: 'NOK', category: 'Furniture',   description: 'Patio furniture worn out. 4-piece rattan set from Jysk would improve guest reviews.', requestedBy: 'Peter K.' },
-]
+// Compliance alerts for owner's properties
+const MY_COMPLIANCE = COMPLIANCE_DOCS.filter(d => MY_PROPERTY_IDS.includes(d.propertyId))
+const EXPIRED_DOCS = MY_COMPLIANCE.filter(d => d.status === 'expired' || d.status === 'missing')
+const EXPIRING_DOCS = MY_COMPLIANCE.filter(d => d.status === 'expiring')
 
 export default function OwnerOverview() {
-  const { user } = useRole()
-  const [approvals, setApprovals] = useState(INITIAL_APPROVALS)
+  const { user, accent } = useRole()
+  const [approvals, setApprovals] = useState(APPROVALS)
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
 
-  const displayName = user?.name?.split(' ')[0] ?? 'Sarah'
+  const displayName = user?.name?.split(' ')[0] ?? 'there'
 
   const handleApprove = (id: string) => {
     setApprovals(prev => prev.filter(a => a.id !== id))
@@ -47,9 +37,35 @@ export default function OwnerOverview() {
 
   const confirmingApproval = approvals.find(a => a.id === confirmingId)
 
+  const priorityColors: Record<string, string> = { urgent: '#ef4444', high: '#f97316', medium: '#3b82f6', low: '#6b7280' }
+
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <PageHeader title={`Welcome back, ${displayName}`} subtitle="Here's what's happening with your portfolio" />
+
+      {/* Compliance alert banners */}
+      {EXPIRED_DOCS.length > 0 && (
+        <Link href="/owner/properties" style={{ textDecoration: 'none', display: 'block', marginBottom: 10 }}>
+          <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+            <AlertTriangle size={15} style={{ color: '#f87171', flexShrink: 0 }} />
+            <span style={{ fontSize: 14, color: '#f87171', fontWeight: 500, flex: 1 }}>
+              {EXPIRED_DOCS.length} compliance {EXPIRED_DOCS.length === 1 ? 'document' : 'documents'} expired or missing — action required
+            </span>
+            <ChevronRight size={14} style={{ color: '#f87171' }} />
+          </div>
+        </Link>
+      )}
+      {EXPIRING_DOCS.length > 0 && (
+        <Link href="/owner/properties" style={{ textDecoration: 'none', display: 'block', marginBottom: 16 }}>
+          <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 8, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+            <AlertTriangle size={15} style={{ color: '#fbbf24', flexShrink: 0 }} />
+            <span style={{ fontSize: 14, color: '#fbbf24', fontWeight: 500, flex: 1 }}>
+              {EXPIRING_DOCS.length} compliance {EXPIRING_DOCS.length === 1 ? 'document' : 'documents'} expiring within 60 days
+            </span>
+            <ChevronRight size={14} style={{ color: '#fbbf24' }} />
+          </div>
+        </Link>
+      )}
 
       {/* Stat cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 28 }}>
@@ -59,27 +75,31 @@ export default function OwnerOverview() {
       </div>
 
       {/* Pending Approvals */}
-      {approvals.length > 0 && (
-        <div style={{ background: 'rgba(37,99,235,0.06)', border: '1px solid rgba(37,99,235,0.2)', borderRadius: 10, padding: 16, marginBottom: 28 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: ACCENT, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-              Pending Approvals ({approvals.length})
-            </div>
-            <Link href="/owner/approvals" style={{ fontSize: 13, color: ACCENT, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 2 }}>
-              View all <ChevronRight size={13} />
-            </Link>
+      <div style={{ background: `${accent}0f`, border: `1px solid ${accent}30`, borderRadius: 10, padding: 16, marginBottom: 28 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: accent, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+            Pending Approvals ({approvals.length})
           </div>
+          <Link href="/owner/approvals" style={{ fontSize: 13, color: accent, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 2 }}>
+            View all <ChevronRight size={13} />
+          </Link>
+        </div>
+        {approvals.length === 0 ? (
+          <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
+            ✓ All caught up — no pending approvals
+          </div>
+        ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {approvals.slice(0, 3).map(a => (
-              <div key={a.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, padding: 14 }}>
+              <div key={a.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6, gap: 8 }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: 14, color: '#0f172a', marginBottom: 2 }}>{a.title}</div>
-                    <div style={{ fontSize: 12, color: '#64748b' }}>{a.property} · {a.category}</div>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)', marginBottom: 2 }}>{a.title}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{a.property} · {a.category}</div>
                   </div>
-                  <div style={{ fontWeight: 700, fontSize: 16, color: '#0f172a', whiteSpace: 'nowrap' }}>{a.amount.toLocaleString()} {a.currency}</div>
+                  <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{a.amount.toLocaleString()} {a.currency}</div>
                 </div>
-                <p style={{ fontSize: 12, color: '#64748b', margin: '0 0 10px', lineHeight: 1.5 }}>{a.description}</p>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 10px', lineHeight: 1.5 }}>{a.description}</p>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button
                     onClick={() => setConfirmingId(a.id)}
@@ -89,16 +109,16 @@ export default function OwnerOverview() {
                   </button>
                   <button
                     onClick={() => handleDecline(a.id)}
-                    style={{ flex: 1, padding: '7px 0', borderRadius: 7, border: '1px solid #e2e8f0', background: 'transparent', color: '#64748b', fontSize: 13, cursor: 'pointer' }}
+                    style={{ flex: 1, padding: '7px 0', borderRadius: 7, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}
                   >
-                    Ask for more info
+                    Dismiss
                   </button>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Confirmation dialog */}
       <AnimatePresence>
@@ -115,18 +135,18 @@ export default function OwnerOverview() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={e => e.stopPropagation()}
-              style={{ background: '#fff', borderRadius: 12, padding: 24, maxWidth: 420, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 24, maxWidth: 420, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}
             >
-              <div style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>Confirm Payment</div>
-              <p style={{ fontSize: 14, color: '#64748b', marginBottom: 20 }}>You are about to approve and pay for:</p>
-              <div style={{ background: '#f8fafc', borderRadius: 8, padding: 14, marginBottom: 20 }}>
-                <div style={{ fontWeight: 600, fontSize: 15, color: '#0f172a', marginBottom: 4 }}>{confirmingApproval.title}</div>
-                <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>{confirmingApproval.property}</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>Confirm Payment</div>
+              <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 20 }}>You are about to approve and pay for:</p>
+              <div style={{ background: 'var(--bg-elevated)', borderRadius: 8, padding: 14, marginBottom: 20 }}>
+                <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary)', marginBottom: 4 }}>{confirmingApproval.title}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>{confirmingApproval.property}</div>
                 <div style={{ fontSize: 22, fontWeight: 700, color: '#16a34a' }}>{confirmingApproval.amount.toLocaleString()} {confirmingApproval.currency}</div>
               </div>
-              <p style={{ fontSize: 12, color: '#94a3b8', marginBottom: 16 }}>This amount will be deducted from your next payout or charged to your payment method on file.</p>
+              <p style={{ fontSize: 12, color: 'var(--text-subtle)', marginBottom: 16 }}>This amount will be deducted from your next payout or charged to your payment method on file.</p>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setConfirmingId(null)} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: '1px solid #e2e8f0', background: 'transparent', color: '#64748b', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
+                <button onClick={() => setConfirmingId(null)} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
                 <button onClick={() => handleApprove(confirmingApproval.id)} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Confirm Payment</button>
               </div>
             </motion.div>
@@ -138,30 +158,30 @@ export default function OwnerOverview() {
         {/* My Properties */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 600, color: '#0f172a', margin: 0 }}>My Properties</h2>
-            <Link href="/owner/properties" style={{ fontSize: 13, color: ACCENT, textDecoration: 'none' }}>View all →</Link>
+            <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>My Properties</h2>
+            <Link href="/owner/properties" style={{ fontSize: 13, color: accent, textDecoration: 'none' }}>View all →</Link>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {MY_PROPERTIES.map(p => (
-              <div key={p.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, overflow: 'hidden' }}>
+              <div key={p.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
                 {p.imageUrl ? (
                   <img src={p.imageUrl} alt={p.name} style={{ width: '100%', height: 110, objectFit: 'cover', display: 'block' }} />
                 ) : (
-                  <div style={{ height: 110, background: `linear-gradient(135deg, ${ACCENT}22, ${ACCENT}08)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Building2 size={32} style={{ color: ACCENT, opacity: 0.4 }} strokeWidth={1} />
+                  <div style={{ height: 110, background: `linear-gradient(135deg, ${accent}22, ${accent}08)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Building2 size={32} style={{ color: accent, opacity: 0.4 }} strokeWidth={1} />
                   </div>
                 )}
                 <div style={{ padding: 14 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-                    <span style={{ fontWeight: 600, fontSize: 14, color: '#0f172a' }}>{p.name}</span>
+                    <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>{p.name}</span>
                     <StatusBadge status={p.status} />
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#64748b', marginBottom: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
                     <MapPin size={11} /> {p.address}, {p.city}
                   </div>
                   <div style={{ display: 'flex', gap: 14 }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#64748b' }}><Bed size={12} /> {p.beds} beds</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#64748b' }}><Bath size={12} /> {p.baths} baths</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-muted)' }}><Bed size={12} /> {p.beds} beds</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-muted)' }}><Bath size={12} /> {p.baths} baths</span>
                   </div>
                 </div>
               </div>
@@ -169,31 +189,35 @@ export default function OwnerOverview() {
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 600, color: '#0f172a', margin: 0 }}>Recent Activity</h2>
-            <Link href="/owner/requests" style={{ fontSize: 13, color: ACCENT, textDecoration: 'none' }}>View all →</Link>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {MY_REQUESTS.slice(0, 3).map(r => (
-              <div key={r.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: 14 }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontWeight: 500, fontSize: 14, color: '#0f172a' }}>{r.title}</span>
-                  <StatusBadge status={r.status} />
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#64748b', marginBottom: r.comments.length > 0 ? 8 : 0 }}>
-                  <Clock size={11} /> {r.date} · {r.type}
-                </div>
-                {r.comments.length > 0 && (
-                  <div style={{ background: '#f8fafc', borderRadius: 7, padding: '8px 10px' }}>
-                    <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 3 }}>Latest from Operations</div>
-                    <p style={{ fontSize: 12, color: '#64748b', lineHeight: 1.4, margin: 0 }}>{r.comments[r.comments.length - 1]?.message}</p>
+        {/* Right column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* Recent Activity */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Recent Activity</h2>
+              <Link href="/owner/requests" style={{ fontSize: 13, color: accent, textDecoration: 'none' }}>View all →</Link>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {MY_REQUESTS.slice(0, 3).map(r => (
+                <div key={r.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <span style={{ fontWeight: 500, fontSize: 14, color: 'var(--text-primary)' }}>{r.title}</span>
+                    <StatusBadge status={r.status} />
                   </div>
-                )}
-              </div>
-            ))}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-muted)', marginBottom: r.comments.length > 0 ? 8 : 0 }}>
+                    <Clock size={11} /> {r.date} · {r.type}
+                  </div>
+                  {r.comments.length > 0 && (
+                    <div style={{ background: 'var(--bg-elevated)', borderRadius: 7, padding: '8px 10px' }}>
+                      <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginBottom: 3 }}>Latest from Operations</div>
+                      <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.4, margin: 0 }}>{r.comments[r.comments.length - 1]?.message}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
+
         </div>
       </div>
     </motion.div>

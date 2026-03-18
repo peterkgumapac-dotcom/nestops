@@ -1,11 +1,14 @@
 'use client'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { CheckSquare, Filter, AlertTriangle, Clock } from 'lucide-react'
+import { Filter, Camera, X, Check } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
+import AppDrawer from '@/components/shared/AppDrawer'
 import { useRole } from '@/context/RoleContext'
 import type { UserProfile } from '@/context/RoleContext'
+import { PROPERTIES } from '@/lib/data/properties'
+import { getCleaningChecklist, getMaintenanceChecklist, type ChecklistItem } from '@/lib/data/checklists'
 
 interface PersonalTask {
   id: string
@@ -15,6 +18,7 @@ interface PersonalTask {
   status: 'overdue' | 'today' | 'this_week' | 'upcoming' | 'completed'
   assignee: string
   propertyName: string
+  propertyId: string
   propertyImage: string
   due: string
   dueDisplay: string
@@ -22,36 +26,30 @@ interface PersonalTask {
 }
 
 const ALL_TASKS: PersonalTask[] = [
-  { id: 't1', title: 'Deep clean — Harbor Studio', type: 'Cleaning', priority: 'high', status: 'today', assignee: 'Maria S.', propertyName: 'Harbor Studio', propertyImage: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=100&q=80', due: '2026-03-17', dueDisplay: 'Today 13:00' },
-  { id: 't2', title: 'Update guest welcome pack', type: 'Content', priority: 'medium', status: 'this_week', assignee: 'Maria S.', propertyName: 'Sunset Villa', propertyImage: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=100&q=80', due: '2026-03-20', dueDisplay: 'Thu 11:00' },
-  { id: 't3', title: 'Annual fire safety check', type: 'Compliance', priority: 'urgent', status: 'overdue', assignee: 'Bjorn L.', propertyName: 'Ocean View Apt', propertyImage: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=100&q=80', due: '2026-03-14', dueDisplay: '3 days overdue' },
-  { id: 't4', title: 'Fix bathroom extractor fan', type: 'Maintenance', priority: 'high', status: 'today', assignee: 'Bjorn L.', propertyName: 'Harbor Studio', propertyImage: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=100&q=80', due: '2026-03-17', dueDisplay: 'Today 14:00' },
-  { id: 't5', title: 'Inspect heating system', type: 'Maintenance', priority: 'high', status: 'today', assignee: 'Bjorn L.', propertyName: 'Downtown Loft', propertyImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=100&q=80', due: '2026-03-17', dueDisplay: 'Today 12:00' },
-  { id: 't6', title: 'Restock toiletry kits', type: 'Inventory', priority: 'low', status: 'completed', assignee: 'Maria S.', propertyName: 'Sunset Villa', propertyImage: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=100&q=80', due: '2026-03-15', dueDisplay: 'Completed Mar 15' },
-  { id: 't7', title: 'Guest issue follow-up — Camilla Dahl', type: 'Compliance', priority: 'medium', status: 'today', assignee: 'Fatima N.', propertyName: 'Downtown Loft', propertyImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=100&q=80', due: '2026-03-17', dueDisplay: 'Today 17:00' },
-  { id: 't8', title: 'Quarterly inspection — Ocean View', type: 'Inspection', priority: 'medium', status: 'this_week', assignee: 'Maria S.', propertyName: 'Ocean View Apt', propertyImage: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=100&q=80', due: '2026-03-19', dueDisplay: 'Thu 10:00' },
+  { id: 't1', title: 'Deep clean — Harbor Studio',             type: 'Cleaning',    priority: 'high',   status: 'today',     assignee: 'Maria S.',  propertyId: 'p2', propertyName: 'Harbor Studio',  propertyImage: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=100&q=80', due: '2026-03-17', dueDisplay: 'Today 13:00' },
+  { id: 't2', title: 'Update guest welcome pack',               type: 'Content',     priority: 'medium', status: 'this_week', assignee: 'Maria S.',  propertyId: 'p1', propertyName: 'Sunset Villa',    propertyImage: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=100&q=80', due: '2026-03-20', dueDisplay: 'Thu 11:00' },
+  { id: 't3', title: 'Annual fire safety check',                type: 'Compliance',  priority: 'urgent', status: 'overdue',   assignee: 'Bjorn L.',  propertyId: 'p3', propertyName: 'Ocean View Apt',  propertyImage: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=100&q=80', due: '2026-03-14', dueDisplay: '3 days overdue' },
+  { id: 't4', title: 'Fix bathroom extractor fan',              type: 'Maintenance', priority: 'high',   status: 'today',     assignee: 'Bjorn L.',  propertyId: 'p2', propertyName: 'Harbor Studio',  propertyImage: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=100&q=80', due: '2026-03-17', dueDisplay: 'Today 14:00' },
+  { id: 't5', title: 'Inspect heating system',                  type: 'Maintenance', priority: 'high',   status: 'today',     assignee: 'Bjorn L.',  propertyId: 'p4', propertyName: 'Downtown Loft',   propertyImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=100&q=80', due: '2026-03-17', dueDisplay: 'Today 12:00' },
+  { id: 't6', title: 'Restock toiletry kits',                   type: 'Inventory',   priority: 'low',    status: 'completed', assignee: 'Maria S.',  propertyId: 'p1', propertyName: 'Sunset Villa',    propertyImage: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=100&q=80', due: '2026-03-15', dueDisplay: 'Completed Mar 15' },
+  { id: 't7', title: 'Guest issue follow-up — Camilla Dahl',   type: 'Compliance',  priority: 'medium', status: 'today',     assignee: 'Fatima N.', propertyId: 'p4', propertyName: 'Downtown Loft',   propertyImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=100&q=80', due: '2026-03-17', dueDisplay: 'Today 17:00' },
+  { id: 't8', title: 'Quarterly inspection — Ocean View',       type: 'Inspection',  priority: 'medium', status: 'this_week', assignee: 'Maria S.',  propertyId: 'p3', propertyName: 'Ocean View Apt',  propertyImage: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=100&q=80', due: '2026-03-19', dueDisplay: 'Thu 10:00' },
 ]
 
 const USER_ASSIGNEE_MAP: Record<string, string> = {
-  'Maria S.': 'Maria S.',
-  'Bjorn L.': 'Bjorn L.',
-  'Fatima N.': 'Fatima N.',
-  'Peter K.': 'Peter K.',
+  'Maria S.': 'Maria S.', 'Bjorn L.': 'Bjorn L.', 'Fatima N.': 'Fatima N.', 'Peter K.': 'Peter K.',
 }
 
 const PRIORITY_BORDER: Record<string, string> = {
-  urgent: '#ef4444',
-  high: '#f97316',
-  medium: '#3b82f6',
-  low: '#6b7280',
+  urgent: '#ef4444', high: '#f97316', medium: '#3b82f6', low: '#6b7280',
 }
 
 const STATUS_GROUPS: { key: string; label: string; color: string }[] = [
-  { key: 'overdue',   label: 'Overdue',    color: '#ef4444' },
-  { key: 'today',     label: 'Today',      color: '#7c3aed' },
-  { key: 'this_week', label: 'This Week',  color: '#3b82f6' },
-  { key: 'upcoming',  label: 'Upcoming',   color: '#6b7280' },
-  { key: 'completed', label: 'Completed',  color: '#10b981' },
+  { key: 'overdue',   label: 'Overdue',   color: '#ef4444' },
+  { key: 'today',     label: 'Today',     color: '#7c3aed' },
+  { key: 'this_week', label: 'This Week', color: '#3b82f6' },
+  { key: 'upcoming',  label: 'Upcoming',  color: '#6b7280' },
+  { key: 'completed', label: 'Completed', color: '#10b981' },
 ]
 
 export default function MyTasksPage() {
@@ -61,82 +59,165 @@ export default function MyTasksPage() {
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set())
 
+  // Task detail drawer state
+  const [selectedTask, setSelectedTask] = useState<PersonalTask | null>(null)
+  const [checklistChecked, setChecklistChecked] = useState<Record<string, boolean>>({})
+  const [checklistPhotos, setChecklistPhotos] = useState<Record<string, string>>({})
+  const [beforePhotos, setBeforePhotos] = useState<string[]>([])
+  const [afterPhotos, setAfterPhotos] = useState<string[]>([])
+  const [uploadTarget, setUploadTarget] = useState<string | null>(null)
+  const [qaRating, setQaRating] = useState(0)
+  const [qaNotes, setQaNotes] = useState('')
+  const [toast, setToast] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     const stored = localStorage.getItem('nestops_user')
-    if (stored) {
-      try { setCurrentUser(JSON.parse(stored)) } catch {}
-    }
+    if (stored) { try { setCurrentUser(JSON.parse(stored)) } catch {} }
   }, [])
 
-  const markComplete = (taskId: string) => {
-    setCompletedIds(prev => new Set([...prev, taskId]))
-  }
+  // Reset checklist state when task changes
+  useEffect(() => {
+    setChecklistChecked({})
+    setChecklistPhotos({})
+    setBeforePhotos([])
+    setAfterPhotos([])
+    setQaRating(0)
+    setQaNotes('')
+  }, [selectedTask?.id])
+
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   const assigneeName = currentUser ? (USER_ASSIGNEE_MAP[currentUser.name] ?? currentUser.name) : null
+  const subRole = currentUser?.subRole ?? ''
 
   const filteredTasks = useMemo(() => {
     return ALL_TASKS.filter(task => {
       const matchesAssignee = !assigneeName || task.assignee === assigneeName
+      let matchesType = true
+      if (subRole.includes('Maintenance')) matchesType = task.type === 'Maintenance'
+      else if (subRole.includes('Cleaning')) matchesType = task.type === 'Cleaning' || task.type === 'Inspection'
       const effectiveStatus = completedIds.has(task.id) ? 'completed' : task.status
       const matchesStatus = statusFilter === 'all' || effectiveStatus === statusFilter
       const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter
-      return matchesAssignee && matchesStatus && matchesPriority
+      return matchesAssignee && matchesType && matchesStatus && matchesPriority
     })
-  }, [assigneeName, statusFilter, priorityFilter, completedIds])
+  }, [assigneeName, subRole, statusFilter, priorityFilter, completedIds])
+
+  // Generate checklist from task + property data
+  const activeChecklist = useMemo((): ChecklistItem[] => {
+    if (!selectedTask) return []
+    const prop = PROPERTIES.find(p => p.id === selectedTask.propertyId)
+    if (selectedTask.type === 'Cleaning') {
+      return getCleaningChecklist(prop?.beds ?? 1, prop?.baths ?? 1, prop?.amenities ?? [])
+    }
+    if (selectedTask.type === 'Maintenance') return getMaintenanceChecklist()
+    return []
+  }, [selectedTask])
+
+  // Group checklist by category
+  const checklistGroups = useMemo(() => {
+    const seen = new Set<string>()
+    const order: string[] = []
+    activeChecklist.forEach(item => { if (!seen.has(item.category)) { seen.add(item.category); order.push(item.category) } })
+    return order.map(cat => ({ name: cat, items: activeChecklist.filter(i => i.category === cat) }))
+  }, [activeChecklist])
+
+  const checkedCount = activeChecklist.filter(i => checklistChecked[i.id]).length
+  const totalCount = activeChecklist.length
+  const progressPct = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0
+
+  const isCleaningComplete = selectedTask?.type === 'Cleaning' && progressPct === 100
+  const canSubmit = selectedTask?.type === 'Maintenance'
+    ? beforePhotos.length > 0 && checkedCount === totalCount && afterPhotos.length > 0
+    : isCleaningComplete
+      ? qaRating > 0 && afterPhotos.length > 0
+      : checkedCount > 0
+
+  const toggleCheck = (id: string) => setChecklistChecked(prev => ({ ...prev, [id]: !prev[id] }))
+
+  const triggerUpload = (target: string) => {
+    setUploadTarget(target)
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !uploadTarget) return
+    const url = URL.createObjectURL(file)
+    if (uploadTarget === 'before') setBeforePhotos(p => [...p, url])
+    else if (uploadTarget === 'after') setAfterPhotos(p => [...p, url])
+    else if (uploadTarget.startsWith('item:')) {
+      const itemId = uploadTarget.slice(5)
+      setChecklistPhotos(p => ({ ...p, [itemId]: url }))
+    }
+    e.target.value = ''
+    setUploadTarget(null)
+  }, [uploadTarget])
+
+  const handleSubmit = () => {
+    if (!selectedTask) return
+    if (isCleaningComplete && qaRating > 0) {
+      try {
+        const existing = JSON.parse(localStorage.getItem('nestops_qa_pending') || '[]')
+        existing.push({
+          id: Date.now().toString(),
+          taskId: selectedTask.id,
+          property: selectedTask.propertyName,
+          propertyId: selectedTask.propertyId,
+          cleaner: selectedTask.assignee,
+          rating: qaRating,
+          notes: qaNotes,
+          photos: afterPhotos,
+          submittedAt: new Date().toISOString(),
+          qaStatus: 'pending',
+        })
+        localStorage.setItem('nestops_qa_pending', JSON.stringify(existing))
+      } catch {}
+    }
+    setCompletedIds(prev => new Set([...prev, selectedTask.id]))
+    setSelectedTask(null)
+    showToast(
+      isCleaningComplete
+        ? '✓ Submitted for QA Review'
+        : selectedTask.type === 'Maintenance'
+          ? '✓ Maintenance report submitted for approval'
+          : `✓ Cleaning complete — ${checkedCount}/${totalCount} tasks · submitted`
+    )
+  }
 
   const statusPills = [
-    { key: 'all', label: 'All' },
-    { key: 'today', label: 'Today' },
-    { key: 'this_week', label: 'This Week' },
-    { key: 'overdue', label: 'Overdue' },
+    { key: 'all', label: 'All' }, { key: 'today', label: 'Today' },
+    { key: 'this_week', label: 'This Week' }, { key: 'overdue', label: 'Overdue' },
     { key: 'completed', label: 'Completed' },
   ]
-
   const priorityPills = [
-    { key: 'all', label: 'All' },
-    { key: 'urgent', label: 'Urgent' },
-    { key: 'high', label: 'High' },
-    { key: 'medium', label: 'Medium' },
-    { key: 'low', label: 'Low' },
+    { key: 'all', label: 'All' }, { key: 'urgent', label: 'Urgent' },
+    { key: 'high', label: 'High' }, { key: 'medium', label: 'Medium' }, { key: 'low', label: 'Low' },
   ]
+
+  const pillStyle = (active: boolean): React.CSSProperties => ({
+    padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: 'pointer',
+    border: `1px solid ${active ? accent : 'var(--border)'}`,
+    background: active ? `${accent}1a` : 'transparent',
+    color: active ? accent : 'var(--text-muted)',
+  })
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      <PageHeader title="My Tasks" subtitle="All tasks assigned to you" />
+      <PageHeader title="My Tasks" subtitle="Tasks assigned to you — click any task to open its checklist" />
 
       {/* Filters */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
           <Filter size={13} style={{ color: 'var(--text-muted)' }} />
           {statusPills.map(p => (
-            <button
-              key={p.key}
-              onClick={() => setStatusFilter(p.key)}
-              style={{
-                padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: 'pointer',
-                border: `1px solid ${statusFilter === p.key ? accent : 'var(--border)'}`,
-                background: statusFilter === p.key ? `${accent}1a` : 'transparent',
-                color: statusFilter === p.key ? accent : 'var(--text-muted)',
-              }}
-            >
-              {p.label}
-            </button>
+            <button key={p.key} onClick={() => setStatusFilter(p.key)} style={pillStyle(statusFilter === p.key)}>{p.label}</button>
           ))}
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {priorityPills.map(p => (
-            <button
-              key={p.key}
-              onClick={() => setPriorityFilter(p.key)}
-              style={{
-                padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: 'pointer',
-                border: `1px solid ${priorityFilter === p.key ? accent : 'var(--border)'}`,
-                background: priorityFilter === p.key ? `${accent}1a` : 'transparent',
-                color: priorityFilter === p.key ? accent : 'var(--text-muted)',
-              }}
-            >
-              {p.label}
-            </button>
+            <button key={p.key} onClick={() => setPriorityFilter(p.key)} style={pillStyle(priorityFilter === p.key)}>{p.label}</button>
           ))}
         </div>
       </div>
@@ -148,32 +229,26 @@ export default function MyTasksPage() {
         </div>
       ) : (
         STATUS_GROUPS.map(group => {
-          const groupTasks = filteredTasks.filter(t => {
-            const effectiveStatus = completedIds.has(t.id) ? 'completed' : t.status
-            return effectiveStatus === group.key
-          })
+          const groupTasks = filteredTasks.filter(t => (completedIds.has(t.id) ? 'completed' : t.status) === group.key)
           if (groupTasks.length === 0) return null
           return (
             <div key={group.key} style={{ marginBottom: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: group.color }} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: group.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  {group.label}
-                </span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: group.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{group.label}</span>
                 <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{groupTasks.length}</span>
               </div>
               {groupTasks.map(task => (
                 <motion.div
-                  layout
-                  key={task.id}
+                  layout key={task.id}
+                  onClick={() => !completedIds.has(task.id) && setSelectedTask(task)}
                   style={{
-                    background: 'var(--bg-card)',
-                    border: '1px solid var(--border)',
+                    background: 'var(--bg-card)', border: '1px solid var(--border)',
                     borderLeft: `4px solid ${PRIORITY_BORDER[task.priority]}`,
-                    borderRadius: 10,
-                    padding: '14px 16px',
-                    marginBottom: 8,
+                    borderRadius: 10, padding: '14px 16px', marginBottom: 8,
                     opacity: completedIds.has(task.id) ? 0.5 : 1,
+                    cursor: completedIds.has(task.id) ? 'default' : 'pointer',
+                    transition: 'box-shadow 0.15s',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
@@ -188,21 +263,14 @@ export default function MyTasksPage() {
                         <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{task.propertyName}</span>
                         <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>·</span>
                         <span style={{ fontSize: 12, color: 'var(--text-subtle)' }}>{task.dueDisplay}</span>
+                        {(task.type === 'Cleaning' || task.type === 'Maintenance') && !completedIds.has(task.id) && (
+                          <span style={{ fontSize: 11, color: accent, fontWeight: 500 }}>→ Open checklist</span>
+                        )}
                       </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                       <StatusBadge status={task.priority} />
-                      {!completedIds.has(task.id) && (
-                        <button
-                          onClick={() => markComplete(task.id)}
-                          style={{ fontSize: 11, padding: '4px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-muted)', cursor: 'pointer' }}
-                        >
-                          Mark Complete
-                        </button>
-                      )}
-                      {completedIds.has(task.id) && (
-                        <span style={{ fontSize: 11, color: '#10b981' }}>✓ Done</span>
-                      )}
+                      {completedIds.has(task.id) && <span style={{ fontSize: 11, color: '#10b981' }}>✓ Done</span>}
                     </div>
                   </div>
                 </motion.div>
@@ -210,6 +278,324 @@ export default function MyTasksPage() {
             </div>
           )
         })
+      )}
+
+      {/* Hidden file input */}
+      <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
+
+      {/* Task Detail Drawer */}
+      <AppDrawer
+        open={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+        title={selectedTask?.title ?? ''}
+        subtitle={`${selectedTask?.propertyName} · ${selectedTask?.dueDisplay}`}
+        width={500}
+        footer={
+          <div style={{ width: '100%' }}>
+            {totalCount > 0 && (
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{checkedCount} of {totalCount} complete</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: progressPct === 100 ? '#10b981' : accent }}>{progressPct}%</span>
+                </div>
+                <div style={{ height: 4, borderRadius: 2, background: 'var(--border)' }}>
+                  <div style={{ height: '100%', borderRadius: 2, background: progressPct === 100 ? '#10b981' : accent, width: `${progressPct}%`, transition: 'width 0.3s' }} />
+                </div>
+              </div>
+            )}
+            {selectedTask?.type === 'Maintenance' && (
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>
+                {beforePhotos.length === 0 && '⚠ Upload at least 1 before photo · '}
+                {afterPhotos.length === 0 && checkedCount === totalCount && '⚠ Upload at least 1 after photo'}
+              </div>
+            )}
+            <button
+              onClick={handleSubmit}
+              disabled={!canSubmit}
+              style={{
+                width: '100%', padding: '10px', borderRadius: 8, border: 'none',
+                background: canSubmit ? accent : 'var(--border)',
+                color: canSubmit ? '#fff' : 'var(--text-muted)',
+                fontSize: 14, fontWeight: 600, cursor: canSubmit ? 'pointer' : 'not-allowed',
+                transition: 'background 0.2s',
+              }}
+            >
+              {isCleaningComplete ? 'Submit for QA Review' : selectedTask?.type === 'Maintenance' ? 'Submit for Approval' : progressPct === 100 ? '✓ Submit Complete Clean' : 'Submit Progress Report'}
+            </button>
+          </div>
+        }
+      >
+        {selectedTask?.type === 'Cleaning' && (
+          <div>
+            {/* Property info banner */}
+            {(() => {
+              const prop = PROPERTIES.find(p => p.id === selectedTask.propertyId)
+              return prop ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: `${accent}08`, border: `1px solid ${accent}20`, borderRadius: 8, marginBottom: 16 }}>
+                  {prop.imageUrl && <img src={prop.imageUrl} alt="" style={{ width: 48, height: 36, borderRadius: 5, objectFit: 'cover', flexShrink: 0 }} />}
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{prop.name}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                      {prop.beds} bed · {prop.baths} bath
+                      {prop.amenities && prop.amenities.length > 0 && ` · ${prop.amenities.length} special areas`}
+                    </div>
+                  </div>
+                </div>
+              ) : null
+            })()}
+
+            {/* Checklist by category */}
+            {checklistGroups.map(group => {
+              const groupChecked = group.items.filter(i => checklistChecked[i.id]).length
+              const groupDone = groupChecked === group.items.length
+              return (
+                <div key={group.name} style={{ marginBottom: 20 }}>
+                  {/* Category header */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <div style={{ height: 1, flex: 1, background: 'var(--border)' }} />
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
+                      color: groupDone ? '#10b981' : accent,
+                      padding: '0 6px', whiteSpace: 'nowrap',
+                    }}>
+                      {group.name} {groupDone ? '✓' : `${groupChecked}/${group.items.length}`}
+                    </span>
+                    <div style={{ height: 1, flex: 1, background: 'var(--border)' }} />
+                  </div>
+
+                  {/* Items */}
+                  {group.items.map(item => (
+                    <div key={item.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 4px', borderBottom: '1px solid var(--border-subtle)' }}>
+                      {/* Checkbox */}
+                      <button
+                        onClick={() => toggleCheck(item.id)}
+                        style={{
+                          width: 20, height: 20, borderRadius: 5, flexShrink: 0, marginTop: 1,
+                          border: `2px solid ${checklistChecked[item.id] ? '#10b981' : 'var(--border)'}`,
+                          background: checklistChecked[item.id] ? '#10b981' : 'transparent',
+                          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}
+                      >
+                        {checklistChecked[item.id] && <Check size={11} color="#fff" />}
+                      </button>
+
+                      {/* Label */}
+                      <span style={{
+                        flex: 1, fontSize: 13, lineHeight: 1.4,
+                        color: checklistChecked[item.id] ? 'var(--text-subtle)' : 'var(--text-primary)',
+                        textDecoration: checklistChecked[item.id] ? 'line-through' : 'none',
+                      }}>
+                        {item.label}
+                        {item.photoRequired && <span style={{ fontSize: 10, color: '#f97316', marginLeft: 4 }}>● photo req.</span>}
+                      </span>
+
+                      {/* Photo upload */}
+                      {checklistPhotos[item.id] ? (
+                        <div style={{ position: 'relative', flexShrink: 0 }}>
+                          <img src={checklistPhotos[item.id]} style={{ width: 44, height: 44, borderRadius: 6, objectFit: 'cover', border: '1px solid var(--border)', display: 'block' }} alt="proof" />
+                          <button
+                            onClick={() => setChecklistPhotos(p => { const n = { ...p }; delete n[item.id]; return n })}
+                            style={{ position: 'absolute', top: -5, right: -5, width: 16, height: 16, borderRadius: '50%', background: '#ef4444', border: '2px solid var(--bg-surface)', color: '#fff', fontSize: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
+                          >×</button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => triggerUpload(`item:${item.id}`)}
+                          title="Upload photo proof"
+                          style={{
+                            width: 36, height: 36, borderRadius: 7, flexShrink: 0,
+                            border: `1px dashed ${item.photoRequired ? '#f97316' : 'var(--border)'}`,
+                            background: 'transparent', color: item.photoRequired ? '#f97316' : 'var(--text-subtle)',
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}
+                        >
+                          <Camera size={14} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )
+            })}
+
+            {/* QA Step — appears when all checklist items are checked */}
+            {progressPct === 100 && (
+              <div style={{ marginTop: 8, padding: 16, background: `${accent}08`, border: `1px solid ${accent}30`, borderRadius: 10 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: accent, marginBottom: 14 }}>QA Review Required</div>
+
+                {/* Star rating */}
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>Quality Rating</div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <button
+                        key={star}
+                        onClick={() => setQaRating(star)}
+                        style={{ fontSize: 28, lineHeight: 1, background: 'none', border: 'none', cursor: 'pointer', padding: '2px 3px', color: star <= qaRating ? '#f59e0b' : 'var(--border)', transition: 'color 0.1s' }}
+                      >
+                        ★
+                      </button>
+                    ))}
+                    {qaRating > 0 && <span style={{ fontSize: 12, color: 'var(--text-muted)', alignSelf: 'center', marginLeft: 4 }}>{qaRating}/5</span>}
+                  </div>
+                </div>
+
+                {/* Photo upload */}
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>
+                    Photos <span style={{ color: '#ef4444', fontSize: 11 }}>(at least 1 required)</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {afterPhotos.map((url, i) => (
+                      <div key={i} style={{ position: 'relative' }}>
+                        <img src={url} style={{ width: 72, height: 54, borderRadius: 8, objectFit: 'cover', border: `2px solid ${accent}`, display: 'block' }} alt="qa" />
+                        <button
+                          onClick={() => setAfterPhotos(p => p.filter((_, j) => j !== i))}
+                          style={{ position: 'absolute', top: -5, right: -5, width: 16, height: 16, borderRadius: '50%', background: '#ef4444', border: '2px solid var(--bg-surface)', color: '#fff', fontSize: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        >×</button>
+                      </div>
+                    ))}
+                    {afterPhotos.length < 5 && (
+                      <button
+                        onClick={() => triggerUpload('after')}
+                        style={{ width: 72, height: 54, borderRadius: 8, border: `2px dashed ${accent}`, background: `${accent}08`, color: accent, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}
+                      >
+                        <Camera size={16} />
+                        <span style={{ fontSize: 9, fontWeight: 600 }}>Add</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>Notes (optional)</div>
+                  <textarea
+                    value={qaNotes}
+                    onChange={e => setQaNotes(e.target.value)}
+                    placeholder="Any notes for the operator..."
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontSize: 13, outline: 'none', resize: 'vertical', minHeight: 60, boxSizing: 'border-box' }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {selectedTask?.type === 'Maintenance' && (
+          <div>
+            {/* Before Photos */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#ef4444', marginBottom: 10 }}>
+                Before Photos {beforePhotos.length === 0 && <span style={{ fontWeight: 400, color: 'var(--text-muted)', textTransform: 'none', letterSpacing: 0 }}>(required)</span>}
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {beforePhotos.map((url, i) => (
+                  <div key={i} style={{ position: 'relative' }}>
+                    <img src={url} style={{ width: 80, height: 60, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--border)', display: 'block' }} alt="before" />
+                    <button
+                      onClick={() => setBeforePhotos(p => p.filter((_, j) => j !== i))}
+                      style={{ position: 'absolute', top: -5, right: -5, width: 16, height: 16, borderRadius: '50%', background: '#ef4444', border: '2px solid var(--bg-surface)', color: '#fff', fontSize: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >×</button>
+                  </div>
+                ))}
+                {beforePhotos.length < 5 && (
+                  <button
+                    onClick={() => triggerUpload('before')}
+                    style={{ width: 80, height: 60, borderRadius: 8, border: `2px dashed #ef4444`, background: 'rgba(239,68,68,0.05)', color: '#ef4444', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}
+                  >
+                    <Camera size={16} />
+                    <span style={{ fontSize: 9, fontWeight: 600 }}>Add</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Work Items checklist */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: accent, marginBottom: 10 }}>
+                Work Items <span style={{ fontWeight: 400, color: 'var(--text-muted)', textTransform: 'none', letterSpacing: 0 }}>{checkedCount}/{totalCount}</span>
+              </div>
+              {activeChecklist.map(item => (
+                <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 4px', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <button
+                    onClick={() => toggleCheck(item.id)}
+                    style={{
+                      width: 20, height: 20, borderRadius: 5, flexShrink: 0,
+                      border: `2px solid ${checklistChecked[item.id] ? '#10b981' : 'var(--border)'}`,
+                      background: checklistChecked[item.id] ? '#10b981' : 'transparent',
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >
+                    {checklistChecked[item.id] && <Check size={11} color="#fff" />}
+                  </button>
+                  <span style={{
+                    flex: 1, fontSize: 13,
+                    color: checklistChecked[item.id] ? 'var(--text-subtle)' : 'var(--text-primary)',
+                    textDecoration: checklistChecked[item.id] ? 'line-through' : 'none',
+                  }}>
+                    {item.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* After Photos */}
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#10b981', marginBottom: 10 }}>
+                After Photos {afterPhotos.length === 0 && <span style={{ fontWeight: 400, color: 'var(--text-muted)', textTransform: 'none', letterSpacing: 0 }}>(required for approval)</span>}
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {afterPhotos.map((url, i) => (
+                  <div key={i} style={{ position: 'relative' }}>
+                    <img src={url} style={{ width: 80, height: 60, borderRadius: 8, objectFit: 'cover', border: '2px solid #10b981', display: 'block' }} alt="after" />
+                    <button
+                      onClick={() => setAfterPhotos(p => p.filter((_, j) => j !== i))}
+                      style={{ position: 'absolute', top: -5, right: -5, width: 16, height: 16, borderRadius: '50%', background: '#ef4444', border: '2px solid var(--bg-surface)', color: '#fff', fontSize: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >×</button>
+                  </div>
+                ))}
+                {afterPhotos.length < 5 && (
+                  <button
+                    onClick={() => triggerUpload('after')}
+                    disabled={checkedCount < totalCount}
+                    style={{ width: 80, height: 60, borderRadius: 8, border: `2px dashed ${checkedCount === totalCount ? '#10b981' : 'var(--border)'}`, background: checkedCount === totalCount ? 'rgba(16,185,129,0.05)' : 'transparent', color: checkedCount === totalCount ? '#10b981' : 'var(--text-subtle)', cursor: checkedCount === totalCount ? 'pointer' : 'not-allowed', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}
+                  >
+                    <Camera size={16} />
+                    <span style={{ fontSize: 9, fontWeight: 600 }}>{checkedCount < totalCount ? 'Complete work first' : 'Add'}</span>
+                  </button>
+                )}
+              </div>
+              {afterPhotos.length === 0 && checkedCount < totalCount && (
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>Complete all work items before uploading after photos.</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {selectedTask && selectedTask.type !== 'Cleaning' && selectedTask.type !== 'Maintenance' && (
+          <div style={{ padding: '20px 0' }}>
+            <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 16 }}>
+              {selectedTask.description ?? 'No additional details for this task.'}
+            </div>
+            <div style={{ background: 'var(--bg-elevated)', borderRadius: 8, padding: 12, marginBottom: 16 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Property</div>
+              <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500 }}>{selectedTask.propertyName}</div>
+            </div>
+            <button
+              onClick={() => { setCompletedIds(p => new Set([...p, selectedTask.id])); setSelectedTask(null); showToast('Task marked complete') }}
+              style={{ width: '100%', padding: '10px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+            >
+              Mark Complete
+            </button>
+          </div>
+        )}
+      </AppDrawer>
+
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#10b981', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+          {toast}
+        </div>
       )}
     </motion.div>
   )

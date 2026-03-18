@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 
 interface CountdownTimerProps {
@@ -20,6 +20,9 @@ function calculateTimeLeft(target: string) {
 
 export default function CountdownTimer({ targetTime, label, context, onComplete }: CountdownTimerProps) {
   const [timeLeft, setTimeLeft] = useState(() => calculateTimeLeft(targetTime))
+  // Track whether the component has already mounted so we only animate on initial entry,
+  // not on every subsequent per-second state update.
+  const hasMounted = useRef(false)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -59,6 +62,15 @@ export default function CountdownTimer({ targetTime, label, context, onComplete 
     )
   }
 
+  // Animate digits only on the initial mount; after that render without re-animating
+  // so the entry transition doesn't fire on every 1-second tick.
+  const animateProps = !hasMounted.current
+    ? { initial: { y: -10, opacity: 0 }, animate: { y: 0, opacity: 1 } }
+    : { initial: false as const, animate: { y: 0, opacity: 1 } }
+
+  // Mark as mounted after the first render pass
+  if (!hasMounted.current) hasMounted.current = true
+
   return (
     <div style={{ textAlign: 'center' }}>
       <div style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>
@@ -68,9 +80,7 @@ export default function CountdownTimer({ targetTime, label, context, onComplete 
         {[hours, minutes, seconds].map((unit, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <motion.div
-              key={i}
-              animate={{ y: 0, opacity: 1 }}
-              initial={{ y: -10, opacity: 0 }}
+              {...animateProps}
               style={{
                 fontSize: 48,
                 fontWeight: 800,

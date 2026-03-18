@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { CheckCircle, XCircle, Clock, MessageSquare } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageHeader from '@/components/shared/PageHeader'
@@ -58,16 +58,42 @@ export default function ApprovalsPage() {
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
   const [decliningId, setDecliningId] = useState<string | null>(null)
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('nestops_owner_work_orders')
+      if (stored) {
+        const workOrders: Approval[] = JSON.parse(stored)
+        setApprovals(prev => {
+          const existingIds = new Set(prev.map(a => a.id))
+          const newItems = workOrders.filter(wo => !existingIds.has(wo.id))
+          return newItems.length > 0 ? [...newItems, ...prev] : prev
+        })
+      }
+    } catch {}
+  }, [])
+
   const filtered = tab === 'all' ? approvals : approvals.filter(a => a.status === tab)
   const pendingCount = approvals.filter(a => a.status === 'pending').length
 
+  const removeFromLocalStorage = (id: string) => {
+    try {
+      const stored = localStorage.getItem('nestops_owner_work_orders')
+      if (stored) {
+        const items = JSON.parse(stored).filter((wo: Approval) => wo.id !== id)
+        localStorage.setItem('nestops_owner_work_orders', JSON.stringify(items))
+      }
+    } catch {}
+  }
+
   const handleApprove = (id: string) => {
     setApprovals(prev => prev.map(a => a.id === id ? { ...a, status: 'approved' as const, resolvedDate: new Date().toISOString().split('T')[0] } : a))
+    removeFromLocalStorage(id)
     setConfirmingId(null)
   }
 
   const handleDecline = (id: string) => {
     setApprovals(prev => prev.map(a => a.id === id ? { ...a, status: 'declined' as const, resolvedDate: new Date().toISOString().split('T')[0] } : a))
+    removeFromLocalStorage(id)
     setDecliningId(null)
   }
 

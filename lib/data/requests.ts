@@ -24,6 +24,7 @@ export interface Request {
   currency?: string
   comments: RequestComment[]
   assignedTo?: string
+  requiresOwnerApproval?: boolean
 }
 
 export const REQUESTS: Request[] = [

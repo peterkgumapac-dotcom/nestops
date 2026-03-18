@@ -136,15 +136,24 @@ const PROPERTIES_CLEANING = [
   { id: 'p5', name: 'Mountain Cabin' },
 ]
 
-const CLEANING_JOBS: { propId: string; day: number; label: string; color: string }[] = [
-  { propId: 'p1', day: 1, label: 'Deep Clean', color: '#7c3aed' },
-  { propId: 'p2', day: 0, label: 'Turnover',   color: '#059669' },
-  { propId: 'p3', day: 2, label: 'Inspection', color: '#d97706' },
-  { propId: 'p4', day: 4, label: 'Turnover',   color: '#059669' },
-  { propId: 'p5', day: 3, label: 'Deep Clean', color: '#7c3aed' },
-  { propId: 'p1', day: 5, label: 'Turnover',   color: '#059669' },
-  { propId: 'p3', day: 6, label: 'Turnover',   color: '#059669' },
+interface CleaningJob {
+  propId: string; day: number; label: string; color: string
+  cleaner?: string; timeWindow?: string; checklistTemplate?: string
+  status?: 'scheduled' | 'in_progress' | 'done'; gapHrs?: number
+}
+
+const CLEANING_JOBS_SEED: CleaningJob[] = [
+  { propId: 'p1', day: 1, label: 'Deep Clean', color: '#7c3aed', cleaner: 'Maria S.',  timeWindow: '10:00–14:00', checklistTemplate: 'Full Turnover',    status: 'scheduled',  gapHrs: 2.5 },
+  { propId: 'p2', day: 0, label: 'Turnover',   color: '#059669', cleaner: 'Fatima N.', timeWindow: '11:00–13:00', checklistTemplate: 'Standard Turnover', status: 'in_progress', gapHrs: 1.2 },
+  { propId: 'p3', day: 2, label: 'Inspection', color: '#d97706', cleaner: 'Bjorn L.',  timeWindow: '09:00–10:30', checklistTemplate: 'Pre-Inspection',    status: 'scheduled' },
+  { propId: 'p4', day: 4, label: 'Turnover',   color: '#059669', cleaner: 'Maria S.',  timeWindow: '12:00–14:00', checklistTemplate: 'Standard Turnover', status: 'scheduled',  gapHrs: 0.8 },
+  { propId: 'p5', day: 3, label: 'Deep Clean', color: '#7c3aed', cleaner: 'Fatima N.', timeWindow: '10:00–14:00', checklistTemplate: 'Seasonal Deep Clean', status: 'done' },
+  { propId: 'p1', day: 5, label: 'Turnover',   color: '#059669', cleaner: 'Maria S.',  timeWindow: '11:00–13:00', checklistTemplate: 'Standard Turnover', status: 'scheduled' },
+  { propId: 'p3', day: 6, label: 'Turnover',   color: '#059669', cleaner: 'Fatima N.', timeWindow: '11:00–13:00', checklistTemplate: 'Standard Turnover', status: 'scheduled' },
 ]
+
+const CLEANING_TEMPLATES = ['Full Turnover', 'Mid-Stay Refresh', 'Deep Clean', 'Inspection', 'Standard Turnover', 'Pre-Inspection', 'Seasonal Deep Clean']
+const STAFF_NAMES = ['Maria S.', 'Fatima N.', 'Bjorn L.', 'Ivan P.']
 
 const SOP_STATUS_MAP: Record<SopStatus, 'draft' | 'pending' | 'published'> = {
   draft: 'draft', pending: 'pending', approved: 'published',
@@ -237,7 +246,12 @@ function CalendarTaskView({ accent }: { accent: string }) {
 
 // ─── Cleaning Calendar ────────────────────────────────────────────────────────
 
-function CleaningCalendar({ accent }: { accent: string }) {
+function CleaningCalendar({ accent, jobs, onCellClick, onJobClick }: {
+  accent: string
+  jobs: CleaningJob[]
+  onCellClick: (propId: string, dayIdx: number) => void
+  onJobClick: (job: CleaningJob) => void
+}) {
   const now = new Date()
   const startOfWeek = new Date(now)
   startOfWeek.setDate(now.getDate() - now.getDay())
@@ -263,13 +277,29 @@ function CleaningCalendar({ accent }: { accent: string }) {
         <div key={prop.id} style={{ display: 'grid', gridTemplateColumns: '140px repeat(7, 1fr)', borderBottom: pi < PROPERTIES_CLEANING.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
           <div style={{ padding: '10px 16px', fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', borderRight: '1px solid var(--border)', display: 'flex', alignItems: 'center' }}>{prop.name}</div>
           {[0, 1, 2, 3, 4, 5, 6].map(dayIdx => {
-            const job = CLEANING_JOBS.find(j => j.propId === prop.id && j.day === dayIdx)
+            const job = jobs.find(j => j.propId === prop.id && j.day === dayIdx)
+            const isToday = days[dayIdx].toDateString() === now.toDateString()
+            const gapColor = job?.gapHrs !== undefined ? (job.gapHrs < 1.5 ? '#ef4444' : '#f59e0b') : null
             return (
-              <div key={dayIdx} style={{ padding: '8px 6px', borderRight: dayIdx < 6 ? '1px solid var(--border-subtle)' : 'none', minHeight: 52, display: 'flex', alignItems: 'center', background: days[dayIdx].toDateString() === now.toDateString() ? `${accent}04` : 'transparent' }}>
-                {job && (
-                  <span style={{ fontSize: 11, fontWeight: 500, padding: '3px 8px', borderRadius: 12, background: `${job.color}22`, color: job.color, whiteSpace: 'nowrap' }}>
-                    {job.label}
-                  </span>
+              <div
+                key={dayIdx}
+                onClick={() => !job && onCellClick(prop.id, dayIdx)}
+                style={{ padding: '8px 6px', borderRight: dayIdx < 6 ? '1px solid var(--border-subtle)' : 'none', minHeight: 56, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3, background: isToday ? `${accent}04` : 'transparent', cursor: job ? 'default' : 'pointer' }}
+              >
+                {job ? (
+                  <div onClick={e => { e.stopPropagation(); onJobClick(job) }} style={{ cursor: 'pointer' }}>
+                    <span style={{ fontSize: 11, fontWeight: 500, padding: '3px 8px', borderRadius: 12, background: `${job.color}22`, color: job.color, whiteSpace: 'nowrap', display: 'inline-block' }}>
+                      {job.label}
+                    </span>
+                    {job.cleaner && <div style={{ fontSize: 10, color: 'var(--text-subtle)', marginTop: 2, paddingLeft: 2 }}>{job.cleaner}</div>}
+                    {gapColor && job.gapHrs !== undefined && job.gapHrs < 3 && (
+                      <div style={{ fontSize: 9, fontWeight: 700, color: gapColor, paddingLeft: 2 }}>{job.gapHrs}h gap</div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0 }} className="cell-add">
+                    <span style={{ fontSize: 18, color: 'var(--text-subtle)' }}>+</span>
+                  </div>
                 )}
               </div>
             )
@@ -301,6 +331,37 @@ function OperationsContent() {
   const [taskDialog, setTaskDialog] = useState(false)
   const [newSopSheet, setNewSopSheet] = useState(false)
   const [meetingSheet, setMeetingSheet] = useState(false)
+
+  // Cleaning schedule state
+  const [cleaningJobs, setCleaningJobs] = useState<CleaningJob[]>(CLEANING_JOBS_SEED)
+  const [scheduleDrawerOpen, setScheduleDrawerOpen] = useState(false)
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false)
+  const [scheduleTemplate, setScheduleTemplate] = useState(CLEANING_TEMPLATES[0])
+  const [schedulePropId, setSchedulePropId] = useState(PROPERTIES_CLEANING[0].id)
+  const [scheduleDayIdx, setScheduleDayIdx] = useState(0)
+  const [scheduleStaff, setScheduleStaff] = useState(STAFF_NAMES[0])
+  const [scheduleTime, setScheduleTime] = useState('10:00')
+  const [detailJob, setDetailJob] = useState<CleaningJob | null>(null)
+  const [cleaningToast, setCleaningToast] = useState('')
+
+  const showCleaningToast = (msg: string) => { setCleaningToast(msg); setTimeout(() => setCleaningToast(''), 3000) }
+
+  const openScheduleDrawer = (propId?: string, dayIdx?: number) => {
+    if (propId) setSchedulePropId(propId)
+    if (dayIdx !== undefined) setScheduleDayIdx(dayIdx)
+    setScheduleDrawerOpen(true)
+  }
+
+  const handleSaveSchedule = () => {
+    const newJob: CleaningJob = {
+      propId: schedulePropId, day: scheduleDayIdx,
+      label: scheduleTemplate, color: scheduleTemplate.includes('Deep') ? '#7c3aed' : scheduleTemplate === 'Inspection' || scheduleTemplate === 'Pre-Inspection' ? '#d97706' : '#059669',
+      cleaner: scheduleStaff, timeWindow: `${scheduleTime}–${scheduleTime}`, checklistTemplate: scheduleTemplate, status: 'scheduled',
+    }
+    setCleaningJobs(prev => [...prev.filter(j => !(j.propId === schedulePropId && j.day === scheduleDayIdx)), newJob])
+    setScheduleDrawerOpen(false)
+    showCleaningToast('Cleaning scheduled')
+  }
 
   // DnD
   const handleDragEnd = (event: DragEndEvent) => {
@@ -343,9 +404,10 @@ function OperationsContent() {
   ]
 
   const topAction = () => {
-    if (activeTab === 'tasks')    return <button onClick={() => setTaskDialog(true)}   style={btnStyle(accent)}>+ New Task</button>
-    if (activeTab === 'sops')     return <button onClick={() => setNewSopSheet(true)}  style={btnStyle(accent)}>+ New SOP</button>
-    if (activeTab === 'meetings') return <button onClick={() => setMeetingSheet(true)} style={btnStyle(accent)}>+ New Meeting</button>
+    if (activeTab === 'tasks')    return <button onClick={() => setTaskDialog(true)}         style={btnStyle(accent)}>+ New Task</button>
+    if (activeTab === 'sops')     return <button onClick={() => setNewSopSheet(true)}        style={btnStyle(accent)}>+ New SOP</button>
+    if (activeTab === 'cleaning') return <button onClick={() => openScheduleDrawer()}        style={btnStyle(accent)}>Schedule Cleaning</button>
+    if (activeTab === 'meetings') return <button onClick={() => setMeetingSheet(true)}       style={btnStyle(accent)}>+ New Meeting</button>
     return null
   }
 
@@ -531,8 +593,19 @@ function OperationsContent() {
       {/* ── Cleaning Tab ── */}
       {activeTab === 'cleaning' && (
         <div>
-          <div style={{ marginBottom: 16, fontSize: 13, color: 'var(--text-muted)' }}>Week of {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</div>
-          <CleaningCalendar accent={accent} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Week of {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</span>
+            <div style={{ display: 'flex', gap: 12, fontSize: 11, color: 'var(--text-subtle)' }}>
+              <span style={{ color: '#f59e0b', fontWeight: 600 }}>● &lt;3h gap</span>
+              <span style={{ color: '#ef4444', fontWeight: 600 }}>● &lt;1.5h gap</span>
+            </div>
+          </div>
+          <CleaningCalendar
+            accent={accent}
+            jobs={cleaningJobs}
+            onCellClick={(propId, dayIdx) => openScheduleDrawer(propId, dayIdx)}
+            onJobClick={job => { setDetailJob(job); setDetailDrawerOpen(true) }}
+          />
         </div>
       )}
 
@@ -702,6 +775,94 @@ function OperationsContent() {
           </SheetFooter>
         </SheetContent>
       </Sheet>
+
+      {/* ── Schedule Cleaning Drawer ── */}
+      <Sheet open={scheduleDrawerOpen} onOpenChange={setScheduleDrawerOpen}>
+        <SheetContent side="right" style={{ maxWidth: 440, width: '100%' }}>
+          <SheetHeader><SheetTitle>Schedule Cleaning</SheetTitle></SheetHeader>
+          <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div>
+              <label style={labelStyle}>Checklist Template</label>
+              <select value={scheduleTemplate} onChange={e => setScheduleTemplate(e.target.value)} style={inputStyle}>
+                {CLEANING_TEMPLATES.map(t => <option key={t}>{t}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Property</label>
+              <select value={schedulePropId} onChange={e => setSchedulePropId(e.target.value)} style={inputStyle}>
+                {PROPERTIES_CLEANING.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Day</label>
+              <select value={scheduleDayIdx} onChange={e => setScheduleDayIdx(Number(e.target.value))} style={inputStyle}>
+                {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((d, i) => (
+                  <option key={i} value={i}>{d}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Start Time</label>
+              <input type="time" value={scheduleTime} onChange={e => setScheduleTime(e.target.value)} style={inputStyle} />
+            </div>
+            <div>
+              <label style={labelStyle}>Assigned Staff</label>
+              <select value={scheduleStaff} onChange={e => setScheduleStaff(e.target.value)} style={inputStyle}>
+                {STAFF_NAMES.map(s => <option key={s}>{s}</option>)}
+              </select>
+            </div>
+          </div>
+          <SheetFooter>
+            <button onClick={() => setScheduleDrawerOpen(false)} style={ghostBtn}>Cancel</button>
+            <button onClick={handleSaveSchedule} style={btnStyle(accent)}>Save Cleaning</button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      {/* ── Cleaning Detail Drawer ── */}
+      <Sheet open={detailDrawerOpen} onOpenChange={open => { if (!open) setDetailDrawerOpen(false) }}>
+        <SheetContent side="right" style={{ maxWidth: 440, width: '100%' }}>
+          <SheetHeader><SheetTitle>{detailJob?.label ?? 'Cleaning Detail'}</SheetTitle></SheetHeader>
+          {detailJob && (
+            <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {[
+                { label: 'Property',           value: PROPERTIES_CLEANING.find(p => p.id === detailJob.propId)?.name ?? detailJob.propId },
+                { label: 'Type',               value: detailJob.label },
+                { label: 'Cleaner',            value: detailJob.cleaner ?? 'Unassigned' },
+                { label: 'Time Window',        value: detailJob.timeWindow ?? '—' },
+                { label: 'Checklist Template', value: detailJob.checklistTemplate ?? '—' },
+              ].map(row => (
+                <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{row.label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{row.value}</span>
+                </div>
+              ))}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Status</span>
+                <span style={{ fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: detailJob.status === 'done' ? '#10b98118' : detailJob.status === 'in_progress' ? '#3b82f618' : `${accent}18`, color: detailJob.status === 'done' ? '#10b981' : detailJob.status === 'in_progress' ? '#3b82f6' : accent, textTransform: 'capitalize' }}>
+                  {detailJob.status?.replace('_', ' ') ?? 'Scheduled'}
+                </span>
+              </div>
+              {detailJob.gapHrs !== undefined && detailJob.gapHrs < 3 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', background: detailJob.gapHrs < 1.5 ? '#ef444412' : '#f59e0b12', border: `1px solid ${detailJob.gapHrs < 1.5 ? '#ef444430' : '#f59e0b30'}`, borderRadius: 8 }}>
+                  <span style={{ fontSize: 13, color: detailJob.gapHrs < 1.5 ? '#ef4444' : '#f59e0b', fontWeight: 600 }}>
+                    ⚠ {detailJob.gapHrs}h turnover gap — {detailJob.gapHrs < 1.5 ? 'critical' : 'tight'}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+          <SheetFooter>
+            <button onClick={() => setDetailDrawerOpen(false)} style={ghostBtn}>Close</button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      {cleaningToast && (
+        <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#16a34a', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+          {cleaningToast}
+        </div>
+      )}
 
       {/* ── Task Detail Sheet ── */}
       <TaskSheet

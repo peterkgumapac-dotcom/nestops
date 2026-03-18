@@ -55,6 +55,8 @@ export default function LoginPage() {
   const [showDemo, setShowDemo] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [shake, setShake] = useState(false)
+  const [emailFocused, setEmailFocused] = useState(false)
+  const [passwordFocused, setPasswordFocused] = useState(false)
 
   const buildProfile = (user: DemoUser): UserProfile => ({
     id: USER_ID_MAP[user.userId] ?? user.userId,
@@ -67,6 +69,8 @@ export default function LoginPage() {
 
   // Demo click → briefing (morning ritual flow)
   const handleDemoSelect = (user: DemoUser) => {
+    if (isLoading) return
+    setIsLoading(true)
     const profile = buildProfile(user)
     localStorage.setItem('nestops_user', JSON.stringify(profile))
     setUser(profile)
@@ -153,11 +157,15 @@ export default function LoginPage() {
             value={email}
             onChange={e => { setEmail(e.target.value); setError('') }}
             onKeyDown={e => { if (e.key === 'Enter') handleLogin() }}
+            onFocus={() => setEmailFocused(true)}
+            onBlur={() => setEmailFocused(false)}
             style={{
               width: '100%', padding: '10px 12px', borderRadius: 8,
               background: '#1f2937',
               border: `1px solid ${error ? '#dc2626' : '#374151'}`,
               color: '#f9fafb', fontSize: 14, outline: 'none', boxSizing: 'border-box',
+              boxShadow: emailFocused ? '0 0 0 3px rgba(124,58,237,0.25)' : 'none',
+              transition: 'box-shadow 0.15s',
             }}
           />
         </div>
@@ -175,11 +183,15 @@ export default function LoginPage() {
             value={password}
             onChange={e => { setPassword(e.target.value); setError('') }}
             onKeyDown={e => { if (e.key === 'Enter') handleLogin() }}
+            onFocus={() => setPasswordFocused(true)}
+            onBlur={() => setPasswordFocused(false)}
             style={{
               width: '100%', padding: '10px 40px 10px 12px', borderRadius: 8,
               background: '#1f2937',
               border: `1px solid ${error ? '#dc2626' : '#374151'}`,
               color: '#f9fafb', fontSize: 14, outline: 'none', boxSizing: 'border-box',
+              boxShadow: passwordFocused ? '0 0 0 3px rgba(124,58,237,0.25)' : 'none',
+              transition: 'box-shadow 0.15s',
             }}
           />
           <button
@@ -312,7 +324,7 @@ export default function LoginPage() {
       </motion.div>
 
       <p style={{ marginTop: 28, fontSize: 11, color: '#374151' }}>
-        NestOps © 2026 · Built for STR operators
+        NestOps © {new Date().getFullYear()} · Built for STR operators
       </p>
     </div>
   )

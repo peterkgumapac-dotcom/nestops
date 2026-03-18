@@ -61,11 +61,18 @@ const labelStyle: React.CSSProperties = { fontSize: 12, fontWeight: 500, color: 
 export default function AlertsPage() {
   const { accent } = useRole()
   const [rules, setRules] = useState<AlertRule[]>(ALERT_RULES)
+  const [integrations, setIntegrations] = useState<Integration[]>(INTEGRATIONS)
   const [ruleSheet, setRuleSheet] = useState(false)
   const [slackSheet, setSlackSheet] = useState(false)
   const [connectDialog, setConnectDialog] = useState<Integration | null>(null)
+  const [editingRule, setEditingRule] = useState<AlertRule | null>(null)
+  const [slackMappings, setSlackMappings] = useState([['Maintenance alerts', '#maintenance'], ['Low stock', '#inventory'], ['Compliance', '#compliance'], ['General', '#nestops-alerts']])
+  const [toast, setToast] = useState('')
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   const toggleRule = (id: string) => setRules(prev => prev.map(r => r.id === id ? { ...r, active: !r.active } : r))
+  const deleteRule = (id: string) => { setRules(prev => prev.filter(r => r.id !== id)); showToast('Alert rule deleted') }
+  const disconnectIntegration = (id: string) => { setIntegrations(prev => prev.map(i => i.id === id ? { ...i, connected: false, detail: undefined } : i)); showToast('Integration disconnected') }
 
   const categories = ['Communication', 'PMS', 'Operations', 'Payments']
 
@@ -112,8 +119,8 @@ export default function AlertsPage() {
                     </td>
                     <td style={{ padding: '11px 12px' }}>
                       <div style={{ display: 'flex', gap: 4 }}>
-                        <button style={{ padding: '3px 8px', borderRadius: 5, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, fontSize: 11, cursor: 'pointer' }}>Edit</button>
-                        <button style={{ padding: '3px 8px', borderRadius: 5, border: '1px solid var(--border)', background: 'transparent', color: '#f87171', fontSize: 11, cursor: 'pointer' }}>Delete</button>
+                        <button onClick={() => { setEditingRule(r); setRuleSheet(true) }} style={{ padding: '3px 8px', borderRadius: 5, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, fontSize: 11, cursor: 'pointer' }}>Edit</button>
+                        <button onClick={() => deleteRule(r.id)} style={{ padding: '3px 8px', borderRadius: 5, border: '1px solid var(--border)', background: 'transparent', color: '#f87171', fontSize: 11, cursor: 'pointer' }}>Delete</button>
                       </div>
                     </td>
                   </tr>
@@ -130,7 +137,7 @@ export default function AlertsPage() {
             <div key={cat} style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-subtle)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{cat}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {INTEGRATIONS.filter(i => i.category === cat).map(intg => (
+                {integrations.filter(i => i.category === cat).map(intg => (
                   <div key={intg.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 14 }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
                       <span style={{ fontSize: 22, flexShrink: 0 }}>{intg.emoji}</span>
@@ -149,7 +156,7 @@ export default function AlertsPage() {
                       {intg.connected ? (
                         <>
                           <button onClick={() => intg.id === 'slack' && setSlackSheet(true)} style={{ padding: '5px 12px', borderRadius: 7, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, fontSize: 12, cursor: 'pointer' }}>Configure</button>
-                          <button style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid var(--border)', background: 'transparent', color: '#f87171', fontSize: 12, cursor: 'pointer' }}>Disconnect</button>
+                          <button onClick={() => disconnectIntegration(intg.id)} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid var(--border)', background: 'transparent', color: '#f87171', fontSize: 12, cursor: 'pointer' }}>Disconnect</button>
                         </>
                       ) : (
                         <button onClick={() => setConnectDialog(intg)} style={{ padding: '5px 12px', borderRadius: 7, border: 'none', background: accent, color: '#fff', fontSize: 12, cursor: 'pointer' }}>Connect</button>
@@ -166,7 +173,7 @@ export default function AlertsPage() {
       {/* ── Alert Rule Builder Sheet ── */}
       <Sheet open={ruleSheet} onOpenChange={setRuleSheet}>
         <SheetContent side="right">
-          <SheetHeader><SheetTitle>New Alert Rule</SheetTitle></SheetHeader>
+          <SheetHeader><SheetTitle>{editingRule ? 'Edit Alert Rule' : 'New Alert Rule'}</SheetTitle></SheetHeader>
           <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div><label style={labelStyle}>Alert Name</label><input placeholder="e.g. Urgent Request Alert" style={inputStyle} /></div>
             <div><label style={labelStyle}>Trigger Event</label>
@@ -196,8 +203,8 @@ export default function AlertsPage() {
             </div>
           </div>
           <SheetFooter>
-            <button onClick={() => setRuleSheet(false)} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-            <button style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Save</button>
+            <button onClick={() => { setRuleSheet(false); setEditingRule(null) }} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+            <button onClick={() => { setRuleSheet(false); setEditingRule(null); showToast('Alert rule saved') }} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Save</button>
           </SheetFooter>
         </SheetContent>
       </Sheet>
@@ -211,23 +218,23 @@ export default function AlertsPage() {
             <div><label style={labelStyle}>Default Alert Channel</label><input defaultValue="#nestops-alerts" style={inputStyle} /></div>
             <div>
               <label style={labelStyle}>Channel Mapping</label>
-              {[['Maintenance alerts', '#maintenance'], ['Low stock', '#inventory'], ['Compliance', '#compliance'], ['General', '#nestops-alerts']].map(([type, channel]) => (
-                <div key={type} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              {slackMappings.map(([type, channel], idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                   <span style={{ fontSize: 12, color: 'var(--text-muted)', width: 140, flexShrink: 0 }}>{type}</span>
                   <input defaultValue={channel} style={{ ...inputStyle, flex: 1 }} />
                 </div>
               ))}
-              <button style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: accent, background: 'none', border: 'none', cursor: 'pointer', marginTop: 4 }}>
+              <button onClick={() => setSlackMappings(prev => [...prev, ['New alert', '#channel']])} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: accent, background: 'none', border: 'none', cursor: 'pointer', marginTop: 4 }}>
                 <Plus size={12} /> Add mapping
               </button>
             </div>
-            <button style={{ padding: '9px 0', borderRadius: 8, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, fontSize: 13, cursor: 'pointer' }}>
+            <button onClick={() => showToast('Test message sent to #nestops-alerts')} style={{ padding: '9px 0', borderRadius: 8, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, fontSize: 13, cursor: 'pointer' }}>
               Send Test Message
             </button>
           </div>
           <SheetFooter>
             <button onClick={() => setSlackSheet(false)} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-            <button style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Save</button>
+            <button onClick={() => { setSlackSheet(false); showToast('Slack configuration saved') }} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Save</button>
           </SheetFooter>
         </SheetContent>
       </Sheet>
@@ -256,6 +263,11 @@ export default function AlertsPage() {
           )}
         </DialogContent>
       </Dialog>
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#16a34a', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+          {toast}
+        </div>
+      )}
     </motion.div>
   )
 }

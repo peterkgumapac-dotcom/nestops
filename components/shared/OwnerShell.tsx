@@ -103,7 +103,7 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
             <div style={{ fontSize: 11, color: '#64748b' }}>Owner</div>
           </div>
           <button
-            onClick={() => { localStorage.removeItem('nestops_user'); localStorage.removeItem('nestops_role'); router.push('/login') }}
+            onClick={() => { ['nestops_user','nestops_role','nestops_theme','nestops_briefing_prefs','nestops_clockin','nestops_field_reports','nestops_owner_work_orders'].forEach(k => localStorage.removeItem(k)); router.push('/login') }}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 4, borderRadius: 6, display: 'flex' }}
             title="Sign out"
           >

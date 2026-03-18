@@ -18,6 +18,8 @@ export default function CompliancePage() {
   const [emailSubject, setEmailSubject] = useState('')
   const [emailBody, setEmailBody] = useState('')
   const [selectedDoc, setSelectedDoc] = useState<typeof COMPLIANCE_DOCS[0] | null>(null)
+  const [toast, setToast] = useState('')
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   const categories = [...new Set(COMPLIANCE_DOCS.map(d => d.category))]
   const expired = COMPLIANCE_DOCS.filter(d => d.status === 'expired')
@@ -116,7 +118,7 @@ export default function CompliancePage() {
                         <div style={{ fontSize: 12, color: 'var(--text-subtle)', minWidth: 80 }}>{doc.expiryDate ?? '—'}</div>
                         <StatusBadge status={doc.status} />
                         <div style={{ display: 'flex', gap: 6 }}>
-                          <button style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}>Edit</button>
+                          <button onClick={() => { setSelectedDoc(doc); setAddDrawer(true) }} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}>Edit</button>
                           <button
                             onClick={() => { setSelectedDoc(doc); setRequestDrawer(true) }}
                             style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: 'none', background: `${accent}1a`, color: accent, cursor: 'pointer', fontWeight: 500 }}
@@ -143,7 +145,7 @@ export default function CompliancePage() {
         footer={
           <div style={{ display: 'flex', gap: 8, width: '100%' }}>
             <button onClick={() => setRequestDrawer(false)} style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
-            <button style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Send Request</button>
+            <button onClick={() => { setRequestDrawer(false); setEmailSubject(''); setEmailBody(''); showToast('Request sent to owner') }} style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Send Request</button>
           </div>
         }
       >
@@ -184,7 +186,7 @@ export default function CompliancePage() {
         footer={
           <div style={{ display: 'flex', gap: 8, width: '100%' }}>
             <button onClick={() => setAddDrawer(false)} style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
-            <button style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Save</button>
+            <button onClick={() => { setAddDrawer(false); setSelectedDoc(null); showToast('Document added') }} style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Save</button>
           </div>
         }
       >
@@ -205,6 +207,12 @@ export default function CompliancePage() {
           </div>
         </div>
       </AppDrawer>
+
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#16a34a', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+          {toast}
+        </div>
+      )}
     </div>
   )
 }

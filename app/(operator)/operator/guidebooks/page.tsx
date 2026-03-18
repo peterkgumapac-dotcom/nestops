@@ -1,12 +1,20 @@
 'use client'
 import { useState } from 'react'
-import { BookOpen, Grid, List, Eye, Edit, Globe, QrCode, Copy, Sparkles } from 'lucide-react'
+import { BookOpen, Grid, List, Eye, Edit, Globe, QrCode, Copy, Sparkles, Tag } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
 import Tabs from '@/components/shared/Tabs'
-import { GUIDEBOOKS, type Guidebook } from '@/lib/data/guidebooks'
+import { GUIDEBOOKS, type Guidebook, type UpsellItem } from '@/lib/data/guidebooks'
 import { PROPERTIES } from '@/lib/data/properties'
 import { useRole } from '@/context/RoleContext'
+
+const DEFAULT_UPSELLS: UpsellItem[] = [
+  { id: 'u1', title: 'Early Check-in (+2h)',  description: 'Check in 2 hours before standard time', price: 350, enabled: false },
+  { id: 'u2', title: 'Late Checkout (+2h)',   description: 'Check out 2 hours after standard time',  price: 350, enabled: false },
+  { id: 'u3', title: 'Airport Transfer',      description: 'Private car transfer to/from airport',   price: 650, enabled: false },
+  { id: 'u4', title: 'Local Tour',            description: 'Guided local experience (3 hours)',       price: 450, enabled: false },
+  { id: 'u5', title: 'Welcome Basket',        description: 'Local produce, wine & snacks on arrival', price: 250, enabled: false },
+]
 
 export default function GuidebooksPage() {
   const { accent } = useRole()
@@ -18,6 +26,11 @@ export default function GuidebooksPage() {
   const [houseRules, setHouseRules] = useState('')
   const [howTo, setHowTo] = useState('')
   const [localTips, setLocalTips] = useState('')
+  const [publishedIds, setPublishedIds] = useState<Set<string>>(new Set())
+  const [activeTheme, setActiveTheme] = useState<string>('dark')
+  const [toast, setToast] = useState('')
+  const [upsells, setUpsells] = useState<UpsellItem[]>(DEFAULT_UPSELLS)
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   const handleGenerateAI = async () => {
     if (!editingGuide) return
@@ -71,12 +84,13 @@ export default function GuidebooksPage() {
     { key: 'content', label: 'Content' },
     { key: 'sections', label: 'Sections' },
     { key: 'theme', label: 'Theme' },
+    { key: 'upsells', label: 'Upsells' },
     { key: 'share', label: 'Share' },
   ]
 
   if (editingGuide) {
     return (
-      <div>
+      <div style={{ position: 'relative' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
           <button
             onClick={() => setEditingGuide(null)}
@@ -86,8 +100,18 @@ export default function GuidebooksPage() {
           </button>
           <h1 className="heading" style={{ fontSize: 20, color: 'var(--text-primary)' }}>{editingGuide.propertyName}</h1>
           <StatusBadge status={editingGuide.status} />
-          <button style={{ marginLeft: 'auto', padding: '8px 16px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
-            Publish
+          <button
+            onClick={() => {
+              if (publishedIds.has(editingGuide.id)) {
+                setPublishedIds(prev => { const n = new Set(prev); n.delete(editingGuide.id); return n })
+                showToast('Guidebook unpublished')
+              } else {
+                setPublishedIds(prev => new Set([...prev, editingGuide.id]))
+                showToast('Guidebook published')
+              }
+            }}
+            style={{ marginLeft: 'auto', padding: '8px 16px', borderRadius: 8, border: 'none', background: publishedIds.has(editingGuide.id) ? 'var(--border)' : accent, color: publishedIds.has(editingGuide.id) ? 'var(--text-muted)' : '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
+            {publishedIds.has(editingGuide.id) ? 'Unpublish' : 'Publish'}
           </button>
         </div>
 
@@ -130,7 +154,7 @@ export default function GuidebooksPage() {
                 <label style={labelStyle}>Local Tips</label>
                 <textarea style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={localTips} onChange={e => setLocalTips(e.target.value)} placeholder="Restaurants, transport, activities…" />
               </div>
-              <button style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', width: 'fit-content' }}>Save Changes</button>
+              <button onClick={() => showToast('Changes saved')} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', width: 'fit-content' }}>Save Changes</button>
             </div>
           </div>
         )}
@@ -154,7 +178,7 @@ export default function GuidebooksPage() {
           <div style={{ maxWidth: 500 }}>
             <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
               {['dark', 'light', 'brand'].map(t => (
-                <div key={t} onClick={() => {}} style={{ flex: 1, padding: 16, borderRadius: 10, border: `2px solid ${editingGuide.theme === t ? accent : 'var(--border)'}`, cursor: 'pointer', textAlign: 'center' }}>
+                <div key={t} onClick={() => setActiveTheme(t)} style={{ flex: 1, padding: 16, borderRadius: 10, border: `2px solid ${activeTheme === t ? accent : 'var(--border)'}`, cursor: 'pointer', textAlign: 'center' }}>
                   <div style={{ width: 40, height: 40, borderRadius: 8, background: t === 'dark' ? '#111' : t === 'light' ? '#f5f5f5' : accent, margin: '0 auto 8px', border: '1px solid var(--border)' }} />
                   <span style={{ fontSize: 13, fontWeight: 500, textTransform: 'capitalize', color: 'var(--text-primary)' }}>{t}</span>
                 </div>
@@ -163,6 +187,73 @@ export default function GuidebooksPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div><label style={labelStyle}>Accent Color</label><input type="color" defaultValue={accent} style={{ height: 36, borderRadius: 6, border: '1px solid var(--border)', cursor: 'pointer' }} /></div>
               <div><label style={labelStyle}>Cover Image URL</label><input style={inputStyle} placeholder="https://..." /></div>
+            </div>
+          </div>
+        )}
+
+        {editorTab === 'upsells' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'start' }}>
+            {/* Editor panel */}
+            <div style={{ maxWidth: 480 }}>
+              <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
+                Enable upsells to offer guests paid extras when they view this guidebook.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {upsells.map(item => (
+                  <div key={item.id} style={{ background: 'var(--bg-card)', border: `1px solid ${item.enabled ? accent : 'var(--border)'}`, borderRadius: 10, padding: '14px 16px', transition: 'border-color 0.15s' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 2 }}>{item.title}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{item.description}</div>
+                      </div>
+                      <input
+                        type="number"
+                        value={item.price}
+                        onChange={e => setUpsells(prev => prev.map(u => u.id === item.id ? { ...u, price: Number(e.target.value) } : u))}
+                        style={{ width: 72, padding: '5px 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontSize: 13, textAlign: 'right', outline: 'none' }}
+                      />
+                      <span style={{ fontSize: 12, color: 'var(--text-muted)', flexShrink: 0 }}>NOK</span>
+                      <button
+                        onClick={() => setUpsells(prev => prev.map(u => u.id === item.id ? { ...u, enabled: !u.enabled } : u))}
+                        style={{ width: 36, height: 20, borderRadius: 10, border: 'none', background: item.enabled ? accent : 'var(--border)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}
+                      >
+                        <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3, left: item.enabled ? 19 : 3, transition: 'left 0.2s' }} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => showToast('Upsells saved')} style={{ marginTop: 16, padding: '10px 20px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Save Upsells</button>
+            </div>
+            {/* Preview panel */}
+            <div>
+              <div className="label-upper" style={{ marginBottom: 12 }}>Preview</div>
+              {upsells.filter(u => u.enabled).length === 0 ? (
+                <div style={{ background: 'var(--bg-elevated)', borderRadius: 10, padding: 24, textAlign: 'center', color: 'var(--text-subtle)', fontSize: 13 }}>
+                  Enable upsells to see preview
+                </div>
+              ) : (
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
+                    <Tag size={14} style={{ color: accent }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Extras & Add-ons</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {upsells.filter(u => u.enabled).map(item => (
+                      <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--bg-elevated)', borderRadius: 8 }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{item.title}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.description}</div>
+                        </div>
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: accent }}>{item.price.toLocaleString()} NOK</div>
+                          <button style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, cursor: 'pointer', marginTop: 3 }}>Add</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -176,7 +267,7 @@ export default function GuidebooksPage() {
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <input style={{ ...inputStyle, flex: 1 }} readOnly value={editingGuide.shareUrl} />
-                  <button style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: 13 }}>
+                  <button onClick={() => { navigator.clipboard.writeText(editingGuide.shareUrl); showToast('Link copied to clipboard') }} style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: 13 }}>
                     <Copy size={13} /> Copy
                   </button>
                 </div>
@@ -188,7 +279,7 @@ export default function GuidebooksPage() {
                 <div style={{ width: 120, height: 120, background: 'var(--bg-elevated)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
                   <QrCode size={64} style={{ color: 'var(--text-subtle)' }} />
                 </div>
-                <button style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}>Download QR</button>
+                <button onClick={() => { const a = document.createElement('a'); a.href = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(editingGuide.shareUrl)}`; a.download = `qr-${editingGuide.id}.png`; a.click(); showToast('QR code downloaded') }} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}>Download QR</button>
               </div>
               <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
                 <div className="label-upper" style={{ marginBottom: 10 }}>Embed Code</div>
@@ -197,6 +288,11 @@ export default function GuidebooksPage() {
             </div>
           </div>
         )}
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#16a34a', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+          {toast}
+        </div>
+      )}
       </div>
     )
   }
@@ -210,7 +306,7 @@ export default function GuidebooksPage() {
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setView('grid')} style={{ padding: '6px 10px', borderRadius: 6, border: `1px solid ${view === 'grid' ? accent : 'var(--border)'}`, background: view === 'grid' ? `${accent}1a` : 'transparent', color: view === 'grid' ? accent : 'var(--text-muted)', cursor: 'pointer' }}><Grid size={15} /></button>
             <button onClick={() => setView('list')} style={{ padding: '6px 10px', borderRadius: 6, border: `1px solid ${view === 'list' ? accent : 'var(--border)'}`, background: view === 'list' ? `${accent}1a` : 'transparent', color: view === 'list' ? accent : 'var(--text-muted)', cursor: 'pointer' }}><List size={15} /></button>
-            <button style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>New Guidebook</button>
+            <button onClick={() => setEditingGuide(GUIDEBOOKS[0])} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>New Guidebook</button>
           </div>
         }
       />
@@ -263,7 +359,7 @@ export default function GuidebooksPage() {
               >
                 <Edit size={12} /> Edit
               </button>
-              <button style={{ flex: 1, padding: '7px', borderRadius: 7, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+              <button onClick={() => window.open(g.shareUrl, '_blank')} style={{ flex: 1, padding: '7px', borderRadius: 7, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
                 <Eye size={12} /> Preview
               </button>
             </div>
@@ -272,6 +368,12 @@ export default function GuidebooksPage() {
           )
         })}
       </div>
+
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#16a34a', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+          {toast}
+        </div>
+      )}
     </div>
   )
 }
