@@ -1,18 +1,31 @@
 'use client'
 import PageHeader from '@/components/shared/PageHeader'
 import Tabs from '@/components/shared/Tabs'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRole } from '@/context/RoleContext'
+import {
+  getPrefs, savePrefs, resetPrefs,
+  TOGGLE_LABELS, ALWAYS_ON,
+} from '@/lib/data/briefingPrefs'
+import type { BriefingPrefs, BriefingToggles } from '@/lib/data/briefingPrefs'
 
 export default function SettingsPage() {
-  const { accent } = useRole()
+  const { accent, user } = useRole()
   const [activeTab, setActiveTab] = useState('brand')
+  const [briefingPrefs, setBriefingPrefs] = useState<BriefingPrefs | null>(null)
+
+  useEffect(() => {
+    if (!user) return
+    const p = getPrefs(user.id, user.subRole ?? '', user.role)
+    setBriefingPrefs(p)
+  }, [user])
 
   const tabs = [
     { key: 'brand', label: 'Brand' },
     { key: 'warehouses', label: 'Warehouses' },
     { key: 'notifications', label: 'Notifications' },
     { key: 'integrations', label: 'Integrations' },
+    { key: 'briefing', label: 'Briefing' },
   ]
 
   const inputStyle = {
@@ -33,6 +46,7 @@ export default function SettingsPage() {
       <PageHeader title="Settings" subtitle="Platform configuration" />
       <div style={{ maxWidth: 600 }}>
         <Tabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
+
         {activeTab === 'brand' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div><label style={labelStyle}>Company Name</label><input style={inputStyle} defaultValue="NestOps Management" /></div>
@@ -49,6 +63,7 @@ export default function SettingsPage() {
             </button>
           </div>
         )}
+
         {activeTab === 'warehouses' && (
           <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -64,6 +79,7 @@ export default function SettingsPage() {
             </div>
           </div>
         )}
+
         {activeTab === 'notifications' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {['Email alerts for new requests', 'Low stock notifications', 'Compliance expiry reminders', 'New owner onboarding alerts'].map(item => (
@@ -76,6 +92,7 @@ export default function SettingsPage() {
             ))}
           </div>
         )}
+
         {activeTab === 'integrations' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[
@@ -94,6 +111,107 @@ export default function SettingsPage() {
                 </button>
               </div>
             ))}
+          </div>
+        )}
+
+        {activeTab === 'briefing' && (
+          <div>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24 }}>
+              Choose what appears on your daily briefing screen. Changes are saved instantly.
+            </p>
+
+            {!briefingPrefs || !user ? (
+              <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>Loading preferences…</div>
+            ) : (
+              <>
+                {Object.entries(TOGGLE_LABELS)
+                  .filter(([key, meta]) =>
+                    !ALWAYS_ON.includes(key as keyof BriefingToggles) &&
+                    (meta.roles.includes('all') ||
+                      meta.roles.includes(
+                        user.role === 'operator'
+                          ? 'operator'
+                          : user.subRole ?? ''
+                      ))
+                  )
+                  .map(([key, meta]) => {
+                    const toggleKey = key as keyof BriefingToggles
+                    const isOn = briefingPrefs.toggles[toggleKey]
+                    return (
+                      <div key={key} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '16px 0',
+                        borderBottom: '1px solid var(--border-subtle)',
+                      }}>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 4 }}>
+                            {meta.label}
+                          </div>
+                          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                            {meta.description}
+                          </div>
+                        </div>
+                        {/* Toggle switch */}
+                        <div
+                          onClick={() => {
+                            const updated: BriefingPrefs = {
+                              ...briefingPrefs,
+                              toggles: {
+                                ...briefingPrefs.toggles,
+                                [toggleKey]: !isOn,
+                              },
+                            }
+                            setBriefingPrefs(updated)
+                            savePrefs(updated)
+                          }}
+                          style={{
+                            width: 44, height: 24,
+                            borderRadius: 12,
+                            background: isOn ? accent : 'var(--border)',
+                            position: 'relative',
+                            cursor: 'pointer',
+                            transition: 'background 0.2s',
+                            flexShrink: 0,
+                            marginLeft: 20,
+                          }}
+                        >
+                          <div style={{
+                            position: 'absolute',
+                            top: 2,
+                            left: isOn ? 22 : 2,
+                            width: 20, height: 20,
+                            borderRadius: '50%',
+                            background: 'white',
+                            transition: 'left 0.2s',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                          }} />
+                        </div>
+                      </div>
+                    )
+                  })}
+
+                <button
+                  onClick={() => {
+                    const reset = resetPrefs(user.id, user.subRole ?? '', user.role)
+                    setBriefingPrefs(reset)
+                  }}
+                  style={{
+                    marginTop: 24,
+                    padding: '10px 20px',
+                    background: 'none',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    color: 'var(--text-muted)',
+                    fontSize: 13,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Reset to defaults
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
