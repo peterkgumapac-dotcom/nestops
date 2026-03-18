@@ -1,20 +1,14 @@
 'use client'
 import { useState } from 'react'
-import { BookOpen, Grid, List, Eye, Edit, Globe, QrCode, Copy, Sparkles, Tag } from 'lucide-react'
+import { BookOpen, Grid, List, Eye, Edit, Globe, QrCode, Copy, Sparkles, Tag, ShoppingBag, ArrowRight } from 'lucide-react'
+import Link from 'next/link'
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
 import Tabs from '@/components/shared/Tabs'
-import { GUIDEBOOKS, type Guidebook, type UpsellItem } from '@/lib/data/guidebooks'
+import { GUIDEBOOKS, type Guidebook } from '@/lib/data/guidebooks'
 import { PROPERTIES } from '@/lib/data/properties'
+import { UPSELL_RULES, PROPERTY_GROUPS } from '@/lib/data/upsells'
 import { useRole } from '@/context/RoleContext'
-
-const DEFAULT_UPSELLS: UpsellItem[] = [
-  { id: 'u1', title: 'Early Check-in (+2h)',  description: 'Check in 2 hours before standard time', price: 350, enabled: false },
-  { id: 'u2', title: 'Late Checkout (+2h)',   description: 'Check out 2 hours after standard time',  price: 350, enabled: false },
-  { id: 'u3', title: 'Airport Transfer',      description: 'Private car transfer to/from airport',   price: 650, enabled: false },
-  { id: 'u4', title: 'Local Tour',            description: 'Guided local experience (3 hours)',       price: 450, enabled: false },
-  { id: 'u5', title: 'Welcome Basket',        description: 'Local produce, wine & snacks on arrival', price: 250, enabled: false },
-]
 
 export default function GuidebooksPage() {
   const { accent } = useRole()
@@ -29,7 +23,6 @@ export default function GuidebooksPage() {
   const [publishedIds, setPublishedIds] = useState<Set<string>>(new Set())
   const [activeTheme, setActiveTheme] = useState<string>('dark')
   const [toast, setToast] = useState('')
-  const [upsells, setUpsells] = useState<UpsellItem[]>(DEFAULT_UPSELLS)
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   const handleGenerateAI = async () => {
@@ -191,72 +184,70 @@ export default function GuidebooksPage() {
           </div>
         )}
 
-        {editorTab === 'upsells' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'start' }}>
-            {/* Editor panel */}
-            <div style={{ maxWidth: 480 }}>
-              <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-                Enable upsells to offer guests paid extras when they view this guidebook.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {upsells.map(item => (
-                  <div key={item.id} style={{ background: 'var(--bg-card)', border: `1px solid ${item.enabled ? accent : 'var(--border)'}`, borderRadius: 10, padding: '14px 16px', transition: 'border-color 0.15s' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 2 }}>{item.title}</div>
-                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{item.description}</div>
-                      </div>
-                      <input
-                        type="number"
-                        value={item.price}
-                        onChange={e => setUpsells(prev => prev.map(u => u.id === item.id ? { ...u, price: Number(e.target.value) } : u))}
-                        style={{ width: 72, padding: '5px 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontSize: 13, textAlign: 'right', outline: 'none' }}
-                      />
-                      <span style={{ fontSize: 12, color: 'var(--text-muted)', flexShrink: 0 }}>NOK</span>
-                      <button
-                        onClick={() => setUpsells(prev => prev.map(u => u.id === item.id ? { ...u, enabled: !u.enabled } : u))}
-                        style={{ width: 36, height: 20, borderRadius: 10, border: 'none', background: item.enabled ? accent : 'var(--border)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}
-                      >
-                        <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3, left: item.enabled ? 19 : 3, transition: 'left 0.2s' }} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+        {editorTab === 'upsells' && (() => {
+          const prop = PROPERTIES.find(p => p.name === editingGuide.propertyName) ?? PROPERTIES.find(p => editingGuide.propertyName.includes(p.name.split(' ')[0]))
+          const propId = prop?.id
+          const activeRules = UPSELL_RULES.filter(rule => {
+            if (!rule.enabled) return false
+            if (rule.targeting === 'all') return true
+            if (rule.targeting === 'properties') return propId ? rule.targetPropertyIds.includes(propId) : false
+            if (rule.targeting === 'groups') {
+              if (!propId) return false
+              return rule.targetGroupIds.some(gid => {
+                const grp = PROPERTY_GROUPS.find(g => g.id === gid)
+                return grp?.propertyIds.includes(propId)
+              })
+            }
+            return false
+          })
+          return (
+            <div style={{ maxWidth: 560 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
+                  Active upsell rules for this property (read-only).
+                </p>
+                <Link href="/operator/upsells" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: accent, textDecoration: 'none', fontWeight: 500 }}>
+                  Manage Upsells <ArrowRight size={13} />
+                </Link>
               </div>
-              <button onClick={() => showToast('Upsells saved')} style={{ marginTop: 16, padding: '10px 20px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Save Upsells</button>
-            </div>
-            {/* Preview panel */}
-            <div>
-              <div className="label-upper" style={{ marginBottom: 12 }}>Preview</div>
-              {upsells.filter(u => u.enabled).length === 0 ? (
+              {activeRules.length === 0 ? (
                 <div style={{ background: 'var(--bg-elevated)', borderRadius: 10, padding: 24, textAlign: 'center', color: 'var(--text-subtle)', fontSize: 13 }}>
-                  Enable upsells to see preview
+                  No active upsell rules apply to this property.{' '}
+                  <Link href="/operator/upsells" style={{ color: accent }}>Create rules →</Link>
                 </div>
               ) : (
-                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
-                    <Tag size={14} style={{ color: accent }} />
-                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Extras & Add-ons</span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {upsells.filter(u => u.enabled).map(item => (
-                      <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--bg-elevated)', borderRadius: 8 }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{item.title}</div>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.description}</div>
-                        </div>
-                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: accent }}>{item.price.toLocaleString()} NOK</div>
-                          <button style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, cursor: 'pointer', marginTop: 3 }}>Add</button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {activeRules.map(rule => {
+                    let reasonLabel = 'All properties'
+                    if (rule.targeting === 'groups') {
+                      const matchedGroup = rule.targetGroupIds.map(gid => PROPERTY_GROUPS.find(g => g.id === gid)).find(g => g && propId && g.propertyIds.includes(propId))
+                      if (matchedGroup) reasonLabel = matchedGroup.name + ' group'
+                    } else if (rule.targeting === 'properties') {
+                      reasonLabel = 'Specifically targeted'
+                    }
+                    return (
+                      <div key={rule.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <ShoppingBag size={14} style={{ color: accent, flexShrink: 0 }} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>{rule.title}</div>
+                            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                              {rule.price.toLocaleString()} {rule.currency}
+                              {rule.conditions.length > 0 && ` · ${rule.conditions.length} condition${rule.conditions.length > 1 ? 's' : ''}`}
+                            </div>
+                          </div>
+                          <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 5, background: `${accent}18`, color: accent }}>
+                            {reasonLabel}
+                          </span>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    )
+                  })}
                 </div>
               )}
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {editorTab === 'share' && (
           <div style={{ maxWidth: 500 }}>

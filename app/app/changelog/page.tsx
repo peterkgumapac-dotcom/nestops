@@ -10,6 +10,18 @@ interface ChangeEntry {
 
 const CHANGELOG: ChangeEntry[] = [
   {
+    version: 'v1.7',
+    date: 'Mar 18, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'Upsell Rules Engine — new /operator/upsells page with a central upsell catalog; 8 seed rules covering Early Check-in, Late Checkout, Airport Transfer, Welcome Basket, Local Food Tour, Mid-Stay Refresh, Ski Equipment Rental, and Pet Fee Add-on' },
+      { tag: '⚡ Feature', text: 'Targeting system — each upsell rule can target All Properties, Property Groups (with color-coded group chips), or Specific Properties; summary bar shows live property count' },
+      { tag: '⚡ Feature', text: 'Conditions engine — add/remove condition rows (stay length, check-in day, guests, booking source, property group) with field / operator / value dropdowns; AND logic' },
+      { tag: '⚡ Feature', text: 'Rule Editor drawer — three-tab interface: Details (title, description, price, currency, category, CTA label, image URL), Targeting, and Conditions; Save / Delete / Cancel actions' },
+      { tag: '🎨 UI', text: 'Guidebooks Upsells tab replaced with read-only Active Upsells preview — shows which rules apply to the selected property and why (group name or "All properties"), with "Manage Upsells →" deep-link' },
+      { tag: '🧭 Nav', text: 'Upsells added to Platform section in operator sidebar (ShoppingBag icon)' },
+    ],
+  },
+  {
     version: 'v1.6',
     date: 'Mar 18, 2026',
     items: [

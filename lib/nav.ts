@@ -3,7 +3,7 @@ import {
   ClipboardList, Ticket, Package, HardDrive,
   UserCheck, HardHat,
   BookOpen, Headphones,
-  Zap, Bell,
+  Zap, Bell, ShoppingBag,
   Settings, History,
   Home, Inbox, PlusCircle, FileText, CheckSquare,
   Wrench, Users, CreditCard,
@@ -58,6 +58,7 @@ export const OPERATOR_NAV: NavSection[] = [
     label: 'Platform',
     items: [
       { label: 'Guidebooks',  href: '/operator/guidebooks',  icon: BookOpen },
+      { label: 'Upsells',     href: '/operator/upsells',     icon: ShoppingBag },
       { label: 'Automations', href: '/operator/automations', icon: Zap },
       { label: 'Alerts',      href: '/operator/alerts',      icon: Bell },
     ],
@@ -214,6 +215,7 @@ export const MAIN_APP_OPERATOR_NAV: NavSection[] = [
     label: 'Platform',
     items: [
       { label: 'Guidebooks',  href: '/app/guidebooks',  icon: BookOpen },
+      { label: 'Upsells',     href: '/app/upsells',     icon: ShoppingBag },
       { label: 'Automations', href: '/app/automations', icon: Zap },
       { label: 'Alerts',      href: '/app/alerts',      icon: Bell },
     ],
