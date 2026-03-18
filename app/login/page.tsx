@@ -65,16 +65,15 @@ export default function LoginPage() {
     avatarColor: user.avatarBg,
   })
 
-  const doLogin = (profile: UserProfile) => {
+  // Demo click → briefing (morning ritual flow)
+  const handleDemoSelect = (user: DemoUser) => {
+    const profile = buildProfile(user)
     localStorage.setItem('nestops_user', JSON.stringify(profile))
     setUser(profile)
-    router.push('/app/dashboard')
+    router.push('/briefing')
   }
 
-  const handleDemoSelect = (user: DemoUser) => {
-    doLogin(buildProfile(user))
-  }
-
+  // Email+password login → dashboard directly (power user, skip briefing)
   const handleLogin = () => {
     setError('')
     const cred = CREDENTIALS.find(
@@ -84,7 +83,12 @@ export default function LoginPage() {
       const demoUser = DEMO_USER_MAP[cred.userId]
       if (demoUser) {
         setIsLoading(true)
-        setTimeout(() => doLogin(buildProfile(demoUser)), 150)
+        setTimeout(() => {
+          const profile = buildProfile(demoUser)
+          localStorage.setItem('nestops_user', JSON.stringify(profile))
+          setUser(profile)
+          router.push('/app/dashboard')
+        }, 150)
       }
     } else {
       setError('Invalid email or password')

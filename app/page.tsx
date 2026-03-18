@@ -7,7 +7,7 @@ export default function RootPage() {
   useEffect(() => {
     const storedUser = localStorage.getItem('nestops_user')
     if (storedUser) {
-      router.push('/app/dashboard')
+      router.push('/briefing')
     } else {
       router.push('/login')
     }

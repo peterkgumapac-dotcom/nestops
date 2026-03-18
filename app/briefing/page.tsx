@@ -1,5 +1,6 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import type { UserProfile } from '@/context/RoleContext'
@@ -50,6 +51,7 @@ const SHIFT_TYPE_LABEL: Record<string, string> = {
 }
 
 export default function BriefingPage() {
+  const router = useRouter()
   const [today, setToday] = useState('')
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
   const [myShiftsToday, setMyShiftsToday] = useState<Shift[]>([])
@@ -196,6 +198,75 @@ export default function BriefingPage() {
   // Suppress unused import warnings for WeatherWidget
   void WeatherWidget
 
+  // Clock-in from briefing → save to localStorage then go to dashboard
+  const handleClockInAndGo = useCallback(() => {
+    if (!currentUser) return
+    localStorage.setItem('nestops_clockin', JSON.stringify({
+      staffId: currentUser.id,
+      shiftId: firstShift?.id ?? 'unknown',
+      date: today,
+      clockInTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      clockInTimestamp: Date.now(),
+      status: 'in_progress',
+    }))
+    router.push('/app/dashboard')
+  }, [currentUser, firstShift, today, router])
+
+  // Role-aware CTA buttons for personalized screen
+  const primaryBtnBase: React.CSSProperties = {
+    display: 'block', width: '100%', padding: '18px', borderRadius: 16,
+    fontSize: 16, fontWeight: 700, textDecoration: 'none', textAlign: 'center',
+    border: 'none', cursor: 'pointer',
+  }
+  const secondaryBtnStyle: React.CSSProperties = {
+    display: 'block', width: '100%', padding: '14px', borderRadius: 16,
+    fontSize: 14, fontWeight: 600, textDecoration: 'none', textAlign: 'center',
+    background: 'transparent', border: '1px solid rgba(255,255,255,0.15)',
+    color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
+  }
+
+  const renderCTA = () => {
+    if (!currentUser) return null
+    if (currentUser.role === 'operator') {
+      return (
+        <Link href="/app/dashboard" style={{ ...primaryBtnBase, background: '#7c3aed', color: '#fff' }}>
+          Go to Dashboard →
+        </Link>
+      )
+    }
+    if (currentUser.role === 'owner') {
+      return (
+        <Link href="/owner" style={{ ...primaryBtnBase, background: '#2563eb', color: '#fff' }}>
+          Go to Owner Portal →
+        </Link>
+      )
+    }
+    // Staff — show clock-in if within 30min of shift, otherwise dashboard link
+    const canClockIn = minutesUntilShift <= 30
+    const accentColor = currentUser.subRole?.includes('Cleaning') ? '#d97706'
+      : currentUser.subRole?.includes('Maintenance') ? '#0ea5e9'
+      : '#ec4899'
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {canClockIn ? (
+          <button
+            onClick={handleClockInAndGo}
+            style={{ ...primaryBtnBase, background: accentColor, color: '#fff' }}
+          >
+            ▶ Clock In Now
+          </button>
+        ) : (
+          <Link href="/app/dashboard" style={{ ...primaryBtnBase, background: '#7c3aed', color: '#fff' }}>
+            Go to Dashboard →
+          </Link>
+        )}
+        <Link href="/app/dashboard" style={secondaryBtnStyle}>
+          View Full Dashboard
+        </Link>
+      </div>
+    )
+  }
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -332,16 +403,7 @@ export default function BriefingPage() {
                 </div>
               )}
 
-              <Link
-                href="/app/dashboard"
-                style={{
-                  display: 'block', width: '100%', padding: '18px', borderRadius: 16,
-                  background: '#7c3aed', color: '#fff', fontSize: 16, fontWeight: 700,
-                  textDecoration: 'none', textAlign: 'center', marginTop: 8,
-                }}
-              >
-                Go to Dashboard →
-              </Link>
+              <div style={{ marginTop: 8 }}>{renderCTA()}</div>
             </motion.div>
           )}
 
@@ -365,16 +427,7 @@ export default function BriefingPage() {
                 ))}
               </div>
 
-              <Link
-                href="/app/dashboard"
-                style={{
-                  display: 'block', width: '100%', padding: '18px', borderRadius: 16,
-                  background: '#2563eb', color: '#fff', fontSize: 16, fontWeight: 700,
-                  textDecoration: 'none', textAlign: 'center', marginTop: 8,
-                }}
-              >
-                Go to Dashboard →
-              </Link>
+              <div style={{ marginTop: 8 }}>{renderCTA()}</div>
             </motion.div>
           )}
 
@@ -454,18 +507,7 @@ export default function BriefingPage() {
                 </div>
               </div>
 
-              {/* Go to Dashboard */}
-              <Link
-                href="/app/dashboard"
-                style={{
-                  display: 'block', padding: '18px', borderRadius: 16,
-                  background: '#7c3aed',
-                  color: '#fff', fontSize: 16, fontWeight: 700,
-                  textDecoration: 'none', textAlign: 'center',
-                }}
-              >
-                Go to Dashboard →
-              </Link>
+              {renderCTA()}
             </motion.div>
           )}
 
@@ -521,17 +563,7 @@ export default function BriefingPage() {
                 )}
               </div>
 
-              {/* Go to Dashboard */}
-              <Link
-                href="/app/dashboard"
-                style={{
-                  display: 'block', padding: '18px', borderRadius: 16,
-                  background: '#7c3aed', color: '#fff', fontSize: 16, fontWeight: 700,
-                  textDecoration: 'none', textAlign: 'center',
-                }}
-              >
-                Go to Dashboard →
-              </Link>
+              {renderCTA()}
             </motion.div>
           )}
 
@@ -575,17 +607,7 @@ export default function BriefingPage() {
                 </div>
               )}
 
-              {/* Go to Dashboard */}
-              <Link
-                href="/app/dashboard"
-                style={{
-                  display: 'block', padding: '18px', borderRadius: 16,
-                  background: '#7c3aed', color: '#fff', fontSize: 16, fontWeight: 700,
-                  textDecoration: 'none', textAlign: 'center',
-                }}
-              >
-                Go to Dashboard →
-              </Link>
+              {renderCTA()}
             </motion.div>
           )}
 
