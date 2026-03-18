@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users, Calendar, BarChart2, Plus, Clock, Home,
-  CheckCircle, X, ChevronDown, ChevronRight,
+  CheckCircle, X, ChevronDown, ChevronRight, DollarSign,
 } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
@@ -17,7 +17,7 @@ import {
   type Shift, type DayOfWeek, type ShiftType,
 } from '@/lib/data/staffScheduling'
 
-type Tab = 'roster' | 'schedule' | 'workload'
+type Tab = 'roster' | 'schedule' | 'workload' | 'payroll'
 
 const TYPE_LABEL: Record<ShiftType, string> = {
   cleaning:    'Cleaning',
@@ -197,6 +197,7 @@ export default function TeamPage() {
         <button style={tabStyle('roster')}   onClick={() => setTab('roster')}>   <Users size={14} /> Roster   </button>
         <button style={tabStyle('schedule')} onClick={() => setTab('schedule')}> <Calendar size={14} /> Schedule </button>
         <button style={tabStyle('workload')} onClick={() => setTab('workload')}> <BarChart2 size={14} /> Workload </button>
+        <button style={tabStyle('payroll')}  onClick={() => setTab('payroll')}>  <DollarSign size={14} /> Payroll  </button>
       </div>
 
       <AnimatePresence mode="wait">
@@ -478,6 +479,151 @@ export default function TeamPage() {
             </div>
           </motion.div>
         )}
+        {/* ── PAYROLL ── */}
+        {tab === 'payroll' && (
+          <motion.div key="payroll" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+            {/* Summary cards */}
+            {(() => {
+              const totalHours = workload.reduce((s, w) => s + w.weeklyHours, 0)
+              const totalPay = STAFF_MEMBERS.reduce((s, m) => {
+                const hrs = getStaffWeeklyHours(m.id)
+                return s + hrs * m.hourlyRate
+              }, 0)
+              return (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
+                  {[
+                    { label: 'Total Hours This Week', value: `${totalHours}h` },
+                    { label: 'Est. Weekly Payroll',   value: `NOK ${Math.round(totalPay).toLocaleString('no-NO')}` },
+                    { label: 'Active Staff',          value: STAFF_MEMBERS.filter(s => s.status === 'active').length },
+                  ].map(({ label, value }) => (
+                    <div key={label} style={{ padding: '16px 18px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-subtle)', textTransform: 'uppercase', marginBottom: 6 }}>{label}</div>
+                      <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>{value}</div>
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
+
+            {/* Per-staff rows */}
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+              <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Staff Time Log — Week of Mar 16</h2>
+                <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Estimates based on scheduled hours</span>
+              </div>
+
+              {/* Table header */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px 100px 110px', gap: 0, padding: '8px 20px', borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
+                {['Staff', 'Rate (NOK/hr)', 'Hours', 'Est. Pay', ''].map(h => (
+                  <div key={h} style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-subtle)', textTransform: 'uppercase' }}>{h}</div>
+                ))}
+              </div>
+
+              {STAFF_MEMBERS.map((member, mi) => {
+                const hrs  = getStaffWeeklyHours(member.id)
+                const pay  = Math.round(hrs * member.hourlyRate)
+                const shifts = getShiftsForStaff(member.id)
+                const isOpen = expandedStaff === member.id
+                return (
+                  <div key={member.id} style={{ borderBottom: mi < STAFF_MEMBERS.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                    {/* Staff row */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px 100px 110px', gap: 0, padding: '14px 20px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: `${accent}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: accent, flexShrink: 0 }}>
+                          {member.initials}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{member.name}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{member.role}</div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-muted)' }}>
+                        {member.hourlyRate}
+                      </div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
+                        {hrs}h
+                      </div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: accent }}>
+                        {pay.toLocaleString('no-NO')}
+                      </div>
+                      <button
+                        onClick={() => setExpandedStaff(isOpen ? null : member.id)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', padding: 0 }}
+                      >
+                        {isOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                        {shifts.length} shifts
+                      </button>
+                    </div>
+
+                    {/* Expanded shift breakdown */}
+                    <AnimatePresence>
+                      {isOpen && (
+                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} style={{ overflow: 'hidden' }}>
+                          <div style={{ background: 'var(--bg-elevated)', borderTop: '1px solid var(--border-subtle)' }}>
+                            {/* Shift table header */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '70px 90px 1fr 70px 90px', gap: 0, padding: '8px 20px 8px 62px', borderBottom: '1px solid var(--border-subtle)' }}>
+                              {['Day', 'Time', 'Property', 'Hrs', 'Subtotal'].map(h => (
+                                <div key={h} style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-subtle)', textTransform: 'uppercase' }}>{h}</div>
+                              ))}
+                            </div>
+                            {shifts.map((shift, si) => {
+                              const shiftHrs = getShiftDuration(shift) / 60
+                              const subtotal = Math.round(shiftHrs * member.hourlyRate)
+                              const propName = PROPERTIES.find(p => p.id === shift.propertyId)?.name ?? shift.propertyId
+                              const typeColor = SHIFT_TYPE_COLOR[shift.type]
+                              return (
+                                <div
+                                  key={shift.id}
+                                  style={{
+                                    display: 'grid', gridTemplateColumns: '70px 90px 1fr 70px 90px', gap: 0,
+                                    padding: '8px 20px 8px 62px',
+                                    borderBottom: si < shifts.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                                  }}
+                                >
+                                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{shift.day}</div>
+                                  <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{shift.startTime}–{shift.endTime}</div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                    <div style={{ width: 7, height: 7, borderRadius: 2, background: typeColor, flexShrink: 0 }} />
+                                    <span style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{propName}</span>
+                                  </div>
+                                  <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>{shiftHrs.toFixed(1)}h</div>
+                                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{subtotal.toLocaleString('no-NO')}</div>
+                                </div>
+                              )
+                            })}
+                            {/* Subtotal row */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '70px 90px 1fr 70px 90px', gap: 0, padding: '10px 20px 10px 62px', borderTop: '1px solid var(--border)', background: `${accent}08` }}>
+                              <div style={{ gridColumn: '1 / 4', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>Weekly Total</div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{hrs}h</div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: accent }}>NOK {pay.toLocaleString('no-NO')}</div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )
+              })}
+
+              {/* Grand total */}
+              {(() => {
+                const grandHrs = workload.reduce((s, w) => s + w.weeklyHours, 0)
+                const grandPay = STAFF_MEMBERS.reduce((s, m) => s + Math.round(getStaffWeeklyHours(m.id) * m.hourlyRate), 0)
+                return (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px 100px 110px', gap: 0, padding: '14px 20px', background: `${accent}10`, borderTop: '2px solid var(--border)' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Grand Total</div>
+                    <div />
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{grandHrs}h</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: accent }}>NOK {grandPay.toLocaleString('no-NO')}</div>
+                    <div />
+                  </div>
+                )
+              })()}
+            </div>
+          </motion.div>
+        )}
+
       </AnimatePresence>
 
       {/* Shift sheet */}

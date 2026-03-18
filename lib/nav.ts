@@ -148,12 +148,13 @@ export const MAIN_APP_STAFF_NAV: NavSection[] = [
   {
     label: '',
     items: [
-      { label: 'Home',          href: '/app/dashboard',         icon: Home },
-      { label: 'My Tasks',      href: '/app/my-tasks',          icon: CheckSquare },
-      { label: 'My Schedule',   href: '/app/team',              icon: Calendar },
-      { label: 'SOPs',          href: '/app/operations',        icon: FileText },
-      { label: 'Intake',        href: '/app/new-intake',        icon: ClipboardList },
-      { label: 'Guest Queue',   href: '/app/my-guest-services', icon: Headphones },
+      { label: 'Home',           href: '/app/dashboard',         icon: Home },
+      { label: 'My Tasks',       href: '/app/my-tasks',          icon: CheckSquare },
+      { label: 'My Schedule',    href: '/app/team',              icon: Calendar },
+      { label: 'SOPs',           href: '/app/operations',        icon: FileText },
+      { label: 'Intake',         href: '/app/new-intake',        icon: ClipboardList },
+      { label: 'Guest Queue',    href: '/app/my-guest-services', icon: Headphones },
+      { label: 'Guest Services', href: '/app/guest-services',    icon: Users },
     ],
   },
 ]

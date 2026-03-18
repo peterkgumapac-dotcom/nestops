@@ -456,12 +456,13 @@ export const GUEST_ISSUES: GuestIssue[] = [
     reportedAt: '2026-03-15T17:00:00',
     reportedBy: 'guest',
     affectedNights: 2,
-    status: 'open',
-    assignedTo: 'Peter K.',
+    status: 'investigating',
+    assignedTo: 'Fatima N.',
     photos: [],
     internalNotes: 'Update listing to remove gym access until renovation complete.',
     timeline: [
       { at: '2026-03-15T17:00:00', by: 'Guest', action: 'Reported at check-in' },
+      { at: '2026-03-15T17:30:00', by: 'Fatima N.', action: 'Acknowledged — contacting building management about timeline' },
     ],
   },
 
@@ -656,7 +657,7 @@ export const GUEST_ISSUES: GuestIssue[] = [
     reportedBy: 'guest',
     affectedNights: 1,
     status: 'resolved',
-    assignedTo: 'Peter K.',
+    assignedTo: 'Fatima N.',
     resolvedAt: '2026-03-10T21:30:00',
     resolutionTimeMinutes: 30,
     resolutionNotes: 'Guided guest via WhatsApp to reset the Netflix app. Resolved remotely.',
@@ -674,7 +675,8 @@ export const GUEST_ISSUES: GuestIssue[] = [
     internalNotes: 'Add Netflix troubleshooting to property library.',
     timeline: [
       { at: '2026-03-10T21:00:00', by: 'Guest', action: 'Reported via Airbnb' },
-      { at: '2026-03-10T21:30:00', by: 'Peter K.', action: 'Resolved via WhatsApp guide' },
+      { at: '2026-03-10T21:10:00', by: 'Fatima N.', action: 'Assigned and reached out to guest via WhatsApp' },
+      { at: '2026-03-10T21:30:00', by: 'Fatima N.', action: 'Resolved — Netflix app reset guide worked' },
     ],
   },
 
@@ -699,7 +701,7 @@ export const GUEST_ISSUES: GuestIssue[] = [
     reportedBy: 'guest',
     affectedNights: 1,
     status: 'resolved',
-    assignedTo: 'Peter K.',
+    assignedTo: 'Fatima N.',
     resolvedAt: '2026-03-01T18:20:00',
     resolutionTimeMinutes: 20,
     resolutionNotes: 'Correct code sent via WhatsApp immediately.',
@@ -717,7 +719,7 @@ export const GUEST_ISSUES: GuestIssue[] = [
     internalNotes: 'Always update welcome guide when codes change.',
     timeline: [
       { at: '2026-03-01T18:00:00', by: 'Guest', action: 'Called — gate code wrong' },
-      { at: '2026-03-01T18:20:00', by: 'Peter K.', action: 'Correct code sent via WhatsApp' },
+      { at: '2026-03-01T18:20:00', by: 'Fatima N.', action: 'Correct code sent via WhatsApp immediately' },
     ],
   },
 ]

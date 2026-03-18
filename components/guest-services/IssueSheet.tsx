@@ -16,6 +16,7 @@ import {
 interface Props {
   issue: GuestIssue
   onClose: () => void
+  readOnly?: boolean
 }
 
 const SEVERITY_COLOR: Record<string, string> = {
@@ -42,7 +43,7 @@ const CHANNEL_LABEL: Record<string, string> = {
   vrbo:        'VRBO',
 }
 
-export default function IssueSheet({ issue, onClose }: Props) {
+export default function IssueSheet({ issue, onClose, readOnly = false }: Props) {
   const { accent } = useRole()
   const [refundNights, setRefundNights] = useState(issue.affectedNights)
 
@@ -174,7 +175,7 @@ export default function IssueSheet({ issue, onClose }: Props) {
             </div>
           </div>
 
-          {/* Refund calculator */}
+          {/* Refund section */}
           <div
             style={{
               padding: '14px 16px', background: '#6366f108',
@@ -183,7 +184,14 @@ export default function IssueSheet({ issue, onClose }: Props) {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
               <DollarSign size={15} color="#6366f1" />
-              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Refund Calculator</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
+                {readOnly ? 'Refund Status' : 'Refund Calculator'}
+              </span>
+              {readOnly && (
+                <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 10, background: '#6366f118', color: '#6366f1', marginLeft: 'auto' }}>
+                  View only
+                </span>
+              )}
             </div>
 
             {issue.refund && (
@@ -192,7 +200,7 @@ export default function IssueSheet({ issue, onClose }: Props) {
                   padding: '8px 12px', borderRadius: 6,
                   background: issue.refund.status === 'issued' ? '#10b98115' : '#d9770615',
                   border: `1px solid ${issue.refund.status === 'issued' ? '#10b98130' : '#d9770630'}`,
-                  marginBottom: 14, fontSize: 12, color: 'var(--text-muted)',
+                  marginBottom: readOnly ? 0 : 14, fontSize: 12, color: 'var(--text-muted)',
                 }}
               >
                 <strong style={{ color: issue.refund.status === 'issued' ? '#10b981' : '#d97706' }}>
@@ -202,54 +210,58 @@ export default function IssueSheet({ issue, onClose }: Props) {
               </div>
             )}
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Affected nights:</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <button
-                  onClick={() => setRefundNights(n => Math.max(0, n - 1))}
-                  style={{
-                    width: 26, height: 26, borderRadius: 6,
-                    border: '1px solid var(--border)', background: 'var(--bg-elevated)',
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}
-                >
-                  <Minus size={12} color="var(--text-muted)" />
-                </button>
-                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', minWidth: 20, textAlign: 'center' }}>
-                  {refundNights}
-                </span>
-                <button
-                  onClick={() => setRefundNights(n => Math.min(issue.totalNights, n + 1))}
-                  style={{
-                    width: 26, height: 26, borderRadius: 6,
-                    border: '1px solid var(--border)', background: 'var(--bg-elevated)',
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}
-                >
-                  <Plus size={12} color="var(--text-muted)" />
-                </button>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {[
-                ['25% partial', suggested25],
-                ['50% partial', suggested50],
-                ['Full nights', suggestedFull],
-              ].map(([label, amt]) => (
-                <div
-                  key={String(label)}
-                  style={{
-                    display: 'flex', justifyContent: 'space-between',
-                    padding: '6px 10px', borderRadius: 6,
-                    background: 'var(--bg-card)', border: '1px solid var(--border)',
-                  }}
-                >
-                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{fmtNok(amt as number)}</span>
+            {!readOnly && (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Affected nights:</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <button
+                      onClick={() => setRefundNights(n => Math.max(0, n - 1))}
+                      style={{
+                        width: 26, height: 26, borderRadius: 6,
+                        border: '1px solid var(--border)', background: 'var(--bg-elevated)',
+                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}
+                    >
+                      <Minus size={12} color="var(--text-muted)" />
+                    </button>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', minWidth: 20, textAlign: 'center' }}>
+                      {refundNights}
+                    </span>
+                    <button
+                      onClick={() => setRefundNights(n => Math.min(issue.totalNights, n + 1))}
+                      style={{
+                        width: 26, height: 26, borderRadius: 6,
+                        border: '1px solid var(--border)', background: 'var(--bg-elevated)',
+                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}
+                    >
+                      <Plus size={12} color="var(--text-muted)" />
+                    </button>
+                  </div>
                 </div>
-              ))}
-            </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {[
+                    ['25% partial', suggested25],
+                    ['50% partial', suggested50],
+                    ['Full nights', suggestedFull],
+                  ].map(([label, amt]) => (
+                    <div
+                      key={String(label)}
+                      style={{
+                        display: 'flex', justifyContent: 'space-between',
+                        padding: '6px 10px', borderRadius: 6,
+                        background: 'var(--bg-card)', border: '1px solid var(--border)',
+                      }}
+                    >
+                      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{fmtNok(amt as number)}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Internal notes */}

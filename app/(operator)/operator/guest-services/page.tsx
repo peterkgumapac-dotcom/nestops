@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import {
@@ -13,6 +13,7 @@ import GuestServicesNav from '@/components/guest-services/GuestServicesNav'
 import NewIssueSheet from '@/components/guest-services/NewIssueSheet'
 import IssueSheet from '@/components/guest-services/IssueSheet'
 import { useRole } from '@/context/RoleContext'
+import type { UserProfile } from '@/context/RoleContext'
 import {
   GUEST_ISSUES,
   getActiveIssues,
@@ -63,6 +64,17 @@ export default function GuestServicesPage() {
   const { accent } = useRole()
   const [selectedIssue, setSelectedIssue] = useState<GuestIssue | null>(null)
   const [showNewIssue, setShowNewIssue] = useState(false)
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
+
+  useEffect(() => {
+    const stored = localStorage.getItem('nestops_user')
+    if (stored) {
+      try { setCurrentUser(JSON.parse(stored)) } catch {}
+    }
+  }, [])
+
+  const isStaff = currentUser?.role === 'staff'
+  const staffName = currentUser?.name ?? null
 
   const active   = getActiveIssues(GUEST_ISSUES)
   const refunds  = getTotalRefunds(GUEST_ISSUES)
@@ -73,6 +85,9 @@ export default function GuestServicesPage() {
   const resolved = GUEST_ISSUES.filter(i => i.status === 'resolved' || i.status === 'closed' || i.status === 'refund_issued')
   const resolveRate = GUEST_ISSUES.length > 0
     ? Math.round((resolved.length / GUEST_ISSUES.length) * 100)
+    : 0
+  const myAssigned = staffName
+    ? GUEST_ISSUES.filter(i => i.assignedTo === staffName && ['open', 'investigating', 'escalated'].includes(i.status)).length
     : 0
 
   const catMax = Math.max(...Object.values(catBreak))
@@ -138,10 +153,14 @@ export default function GuestServicesPage() {
         transition={{ duration: 0.3, delay: 0.05 }}
         style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}
       >
-        <StatCard label="Active Issues"      value={active.length}  icon={AlertTriangle} subtitle="Open + investigating + escalated" />
-        <StatCard label="Total Refunds"      value={fmtNok(refunds)} icon={DollarSign}   subtitle="Approved across all issues" animate={false} />
-        <StatCard label="Avg Resolution"     value={`${avgHrs}h`}   icon={Clock}        subtitle="Mean time to resolve" animate={false} />
-        <StatCard label="Resolution Rate"    value={`${resolveRate}%`} icon={CheckCircle} subtitle="Closed / total issues" animate={false} />
+        <StatCard label="Active Issues"   value={active.length}     icon={AlertTriangle} subtitle="Open + investigating + escalated" />
+        {isStaff ? (
+          <StatCard label="My Open Issues" value={myAssigned}        icon={Headphones}    subtitle="Assigned to me" animate={false} />
+        ) : (
+          <StatCard label="Total Refunds"  value={fmtNok(refunds)}   icon={DollarSign}    subtitle="Approved across all issues" animate={false} />
+        )}
+        <StatCard label="Avg Resolution"  value={`${avgHrs}h`}      icon={Clock}         subtitle="Mean time to resolve" animate={false} />
+        <StatCard label="Resolution Rate" value={`${resolveRate}%`}  icon={CheckCircle}   subtitle="Closed / total issues" animate={false} />
       </motion.div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24 }}>
@@ -345,7 +364,7 @@ export default function GuestServicesPage() {
 
       {/* Sheets */}
       {selectedIssue && (
-        <IssueSheet issue={selectedIssue} onClose={() => setSelectedIssue(null)} />
+        <IssueSheet issue={selectedIssue} onClose={() => setSelectedIssue(null)} readOnly={isStaff} />
       )}
       {showNewIssue && (
         <NewIssueSheet onClose={() => setShowNewIssue(false)} />

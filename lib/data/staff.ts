@@ -24,6 +24,7 @@ export interface StaffMember {
   assignedPropertyIds: string[]
   status: 'active' | 'inactive'
   jobIds: string[]
+  hourlyRate: number // NOK per hour
 }
 
 export const JOBS: Job[] = [
@@ -35,7 +36,7 @@ export const JOBS: Job[] = [
 ]
 
 export const STAFF_MEMBERS: StaffMember[] = [
-  { id: 's1', name: 'Johan Larsson', initials: 'JL', role: 'Senior Cleaner', assignedPropertyIds: ['p1', 'p3', 'p5'], status: 'active', jobIds: ['j1', 'j3', 'j5'] },
-  { id: 's2', name: 'Anna Kowalski', initials: 'AK', role: 'Inspector', assignedPropertyIds: ['p2', 'p4'], status: 'active', jobIds: ['j2', 'j4'] },
-  { id: 's3', name: 'Marcus Berg', initials: 'MB', role: 'Maintenance Tech', assignedPropertyIds: ['p1', 'p4'], status: 'active', jobIds: ['j2'] },
+  { id: 's1', name: 'Johan Larsson', initials: 'JL', role: 'Senior Cleaner',   assignedPropertyIds: ['p1', 'p3', 'p5'], status: 'active', jobIds: ['j1', 'j3', 'j5'], hourlyRate: 285 },
+  { id: 's2', name: 'Anna Kowalski', initials: 'AK', role: 'Inspector',         assignedPropertyIds: ['p2', 'p4'],       status: 'active', jobIds: ['j2', 'j4'],       hourlyRate: 320 },
+  { id: 's3', name: 'Marcus Berg',   initials: 'MB', role: 'Maintenance Tech',  assignedPropertyIds: ['p1', 'p4'],       status: 'active', jobIds: ['j2'],             hourlyRate: 310 },
 ]
