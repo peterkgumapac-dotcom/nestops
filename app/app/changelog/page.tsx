@@ -10,6 +10,18 @@ interface ChangeEntry {
 
 const CHANGELOG: ChangeEntry[] = [
   {
+    version: 'v1.6',
+    date: 'Mar 18, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'Cleaning QA Scoring — after all checklist items are checked on a Cleaning task, a mandatory QA step appears: star rating (1–5), at least 1 photo, optional notes, saves qaStatus: pending to localStorage' },
+      { tag: '⚡ Feature', text: 'QA Pending widget on operator dashboard — lists cleaning tasks pending review with property, cleaner, and star rating; Review opens sheet with photo + rating + Approve / Flag for Redo actions' },
+      { tag: '⚡ Feature', text: 'Upsell Module in Guidebooks — Upsells tab with 5 default items (Early Check-in, Late Checkout, Airport Transfer, Local Tour, Welcome Basket); toggle + price edit per item; live preview panel' },
+      { tag: '⚡ Feature', text: 'Review Request Automation Templates — "Post-Checkout Review Request" and "5★ Review Follow-up + Referral" added to Automation Templates' },
+      { tag: '⚡ Feature', text: 'Smart Lock Management UI — Smart Access tab on property detail: SuiteOp/Manual connection badge, masked access codes with reveal toggle and Rotate button, last-5-events access log' },
+      { tag: '⚡ Feature', text: 'Actionable Cleaning Schedule — Schedule Cleaning button in Operations → Cleaning tab; click empty grid cell to open pre-filled drawer; click existing job card to open detail drawer' },
+    ],
+  },
+  {
     version: 'v1.5',
     date: 'Mar 18, 2026',
     items: [
