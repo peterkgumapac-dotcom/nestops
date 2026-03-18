@@ -87,7 +87,8 @@ export default function StaffStartPage() {
       setCurrentUser(user)
       const staffId = USER_TO_STAFF[user.id]
       if (staffId) {
-        const shift = SHIFTS.find(s => s.staffId === staffId && s.date === '2026-03-17') ?? null
+        const today = new Date().toISOString().split('T')[0]
+        const shift = SHIFTS.find(s => s.staffId === staffId && s.date === today) ?? null
         setTodayShift(shift)
       }
     } catch {

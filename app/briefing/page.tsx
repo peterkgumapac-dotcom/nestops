@@ -20,7 +20,7 @@ const USER_TO_STAFF: Record<string, string> = {
   'u5': 's2',
 }
 
-const TODAY = '2026-03-18'
+const TODAY = new Date().toISOString().split('T')[0]
 
 function getGreeting(): string {
   const hour = new Date().getHours()

@@ -19,7 +19,7 @@ import { JOBS } from '@/lib/data/staff'
 import { getPTEBadge } from '@/lib/utils/pteUtils'
 import { getLateStatus } from '@/lib/utils/lateDetection'
 
-const TODAY = '2026-03-18'
+const TODAY = new Date().toISOString().split('T')[0]
 
 const TODAY_CLEANINGS = [
   { id: 'c1', property: 'Sunset Villa',    type: 'Checkout clean',  time: '10:00', staff: 'Maria S.',   status: 'scheduled' as const },
