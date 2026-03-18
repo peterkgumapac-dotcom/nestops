@@ -451,29 +451,17 @@ export default function BriefingPage() {
 
               {/* Bottom buttons */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {minutesUntilShift < 30 ? (
-                  <Link
-                    href="/staff/start"
-                    style={{
-                      display: 'block', padding: '18px', borderRadius: 16,
-                      background: '#10b981', color: '#fff', fontSize: 16, fontWeight: 700,
-                      textDecoration: 'none', textAlign: 'center',
-                    }}
-                  >
-                    ▶ Clock In Now
-                  </Link>
-                ) : (
-                  <Link
-                    href="/login"
-                    style={{
-                      display: 'block', padding: '18px', borderRadius: 16,
-                      background: '#7c3aed', color: '#fff', fontSize: 16, fontWeight: 700,
-                      textDecoration: 'none', textAlign: 'center',
-                    }}
-                  >
-                    Sign In to See Full Details →
-                  </Link>
-                )}
+                <Link
+                  href={minutesUntilShift <= 30 ? '/staff/start' : '/app/dashboard'}
+                  style={{
+                    display: 'block', padding: '18px', borderRadius: 16,
+                    background: minutesUntilShift <= 30 ? '#10b981' : '#7c3aed',
+                    color: '#fff', fontSize: 16, fontWeight: 700,
+                    textDecoration: 'none', textAlign: 'center',
+                  }}
+                >
+                  {minutesUntilShift <= 30 ? '▶ Clock In Now' : 'Go to Dashboard →'}
+                </Link>
                 <Link
                   href="/app/dashboard"
                   style={{
@@ -527,29 +515,17 @@ export default function BriefingPage() {
 
               {/* Bottom buttons */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {minutesUntilShift < 30 ? (
-                  <Link
-                    href="/staff/start"
-                    style={{
-                      display: 'block', padding: '18px', borderRadius: 16,
-                      background: '#10b981', color: '#fff', fontSize: 16, fontWeight: 700,
-                      textDecoration: 'none', textAlign: 'center',
-                    }}
-                  >
-                    ▶ Clock In Now
-                  </Link>
-                ) : (
-                  <Link
-                    href="/login"
-                    style={{
-                      display: 'block', padding: '18px', borderRadius: 16,
-                      background: '#7c3aed', color: '#fff', fontSize: 16, fontWeight: 700,
-                      textDecoration: 'none', textAlign: 'center',
-                    }}
-                  >
-                    Sign In to See Full Details →
-                  </Link>
-                )}
+                <Link
+                  href={minutesUntilShift <= 30 ? '/staff/start' : '/app/dashboard'}
+                  style={{
+                    display: 'block', padding: '18px', borderRadius: 16,
+                    background: minutesUntilShift <= 30 ? '#10b981' : '#7c3aed',
+                    color: '#fff', fontSize: 16, fontWeight: 700,
+                    textDecoration: 'none', textAlign: 'center',
+                  }}
+                >
+                  {minutesUntilShift <= 30 ? '▶ Clock In Now' : 'Go to Dashboard →'}
+                </Link>
                 <Link
                   href="/app/dashboard"
                   style={{
@@ -608,25 +584,14 @@ export default function BriefingPage() {
               {/* Bottom buttons */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <Link
-                  href="/login"
+                  href="/app/dashboard"
                   style={{
                     display: 'block', padding: '18px', borderRadius: 16,
                     background: '#7c3aed', color: '#fff', fontSize: 16, fontWeight: 700,
                     textDecoration: 'none', textAlign: 'center',
                   }}
                 >
-                  Sign In to Manage Queue →
-                </Link>
-                <Link
-                  href="/app/dashboard"
-                  style={{
-                    display: 'block', padding: '14px', borderRadius: 14,
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: 600,
-                    textDecoration: 'none', textAlign: 'center',
-                  }}
-                >
-                  View Dashboard
+                  Go to Dashboard →
                 </Link>
               </div>
             </motion.div>
