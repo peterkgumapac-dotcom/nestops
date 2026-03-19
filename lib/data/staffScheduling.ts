@@ -84,12 +84,14 @@ export const SHIFTS: Shift[] = [
   // Thursday 2026-03-19
   { id: 'sh-10', staffId: 's1', propertyId: 'p2', date: '2026-03-19', day: 'Thu', startTime: '09:00', endTime: '12:00', type: 'cleaning',     status: 'confirmed',  notes: 'Checkout clean',                   jobIds: [] },
   { id: 'sh-11', staffId: 's2', propertyId: 'p3', date: '2026-03-19', day: 'Thu', startTime: '14:00', endTime: '16:00', type: 'inspection',   status: 'confirmed',  notes: 'Pre-arrival check',                jobIds: [] },
-  { id: 'sh-12', staffId: 's3', propertyId: 'p1', date: '2026-03-19', day: 'Thu', startTime: '08:00', endTime: '12:00', type: 'maintenance',  status: 'confirmed',  notes: 'Full appliance service',           jobIds: [] },
+  { id: 'sh-12', staffId: 's3', propertyId: 'p1', date: '2026-03-19', day: 'Thu', startTime: '08:00', endTime: '12:00', type: 'maintenance',  status: 'confirmed',  notes: 'Full appliance service',           jobIds: ['j2', 'j6'] },
+  { id: 'sh-21', staffId: 's4', propertyId: 'p4', date: '2026-03-19', day: 'Thu', startTime: '09:00', endTime: '17:00', type: 'standby',      status: 'confirmed',  notes: 'Guest services on-call',           jobIds: ['j9', 'j10'] },
 
   // Friday 2026-03-20
   { id: 'sh-13', staffId: 's1', propertyId: 'p4', date: '2026-03-20', day: 'Fri', startTime: '08:00', endTime: '13:00', type: 'cleaning',     status: 'scheduled',  notes: 'Turnover — 3 checkouts today',    jobIds: [] },
   { id: 'sh-14', staffId: 's2', propertyId: 'p5', date: '2026-03-20', day: 'Fri', startTime: '10:00', endTime: '13:00', type: 'inspection',   status: 'scheduled',  notes: 'Cabin readiness check',            jobIds: [] },
   { id: 'sh-15', staffId: 's3', propertyId: 'p2', date: '2026-03-20', day: 'Fri', startTime: '09:00', endTime: '11:00', type: 'maintenance',  status: 'scheduled',  notes: 'Nespresso descale',                jobIds: [] },
+  { id: 'sh-22', staffId: 's4', propertyId: 'p1', date: '2026-03-20', day: 'Fri', startTime: '10:00', endTime: '17:00', type: 'standby',      status: 'scheduled',  notes: 'Guest services coverage',          jobIds: [] },
 
   // Saturday 2026-03-21
   { id: 'sh-16', staffId: 's1', propertyId: 'p1', date: '2026-03-21', day: 'Sat', startTime: '10:00', endTime: '15:00', type: 'cleaning',     status: 'scheduled',  notes: 'Weekend turnover',                 jobIds: [] },
@@ -125,6 +127,14 @@ export const AVAILABILITY: StaffAvailability[] = [
   { staffId: 's3', day: 'Fri', available: true,  preferredStart: '08:00', preferredEnd: '17:00' },
   { staffId: 's3', day: 'Sat', available: false, notes: 'Unavailable Saturdays' },
   { staffId: 's3', day: 'Sun', available: true,  preferredStart: '10:00', preferredEnd: '15:00' },
+
+  { staffId: 's4', day: 'Mon', available: true,  preferredStart: '09:00', preferredEnd: '17:00' },
+  { staffId: 's4', day: 'Tue', available: true,  preferredStart: '09:00', preferredEnd: '17:00' },
+  { staffId: 's4', day: 'Wed', available: true,  preferredStart: '09:00', preferredEnd: '17:00' },
+  { staffId: 's4', day: 'Thu', available: true,  preferredStart: '09:00', preferredEnd: '17:00' },
+  { staffId: 's4', day: 'Fri', available: true,  preferredStart: '09:00', preferredEnd: '17:00' },
+  { staffId: 's4', day: 'Sat', available: false, notes: 'Unavailable weekends' },
+  { staffId: 's4', day: 'Sun', available: false, notes: 'Unavailable weekends' },
 ]
 
 // ─── Computed helpers ────────────────────────────────────────────────────────

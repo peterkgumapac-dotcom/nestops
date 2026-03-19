@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BookOpen, Grid, List, Eye, Edit, Globe, QrCode, Copy, Sparkles, Tag, ShoppingBag, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import PageHeader from '@/components/shared/PageHeader'
@@ -20,8 +20,26 @@ export default function GuidebooksPage() {
   const [houseRules, setHouseRules] = useState('')
   const [howTo, setHowTo] = useState('')
   const [localTips, setLocalTips] = useState('')
+  const [wifiName, setWifiName] = useState('')
+  const [wifiPassword, setWifiPassword] = useState('')
+  const [checkInTime, setCheckInTime] = useState('')
+  const [checkOutTime, setCheckOutTime] = useState('')
+  const [enabledSections, setEnabledSections] = useState<Set<string>>(new Set(['Welcome', 'WiFi & Tech', 'Check-in Instructions', 'House Rules', 'Appliances']))
   const [publishedIds, setPublishedIds] = useState<Set<string>>(new Set())
   const [activeTheme, setActiveTheme] = useState<string>('dark')
+
+  useEffect(() => {
+    if (editingGuide) {
+      setWifiName(editingGuide.wifiName ?? '')
+      setWifiPassword(editingGuide.wifiPassword ?? '')
+      setCheckInTime(editingGuide.checkInTime ?? '')
+      setCheckOutTime(editingGuide.checkOutTime ?? '')
+      setBrandLogoUrl(editingGuide.brandLogo ?? '')
+      setBrandName(editingGuide.brandName ?? '')
+      setBrandColor(editingGuide.brandColor ?? '#7c3aed')
+      setRequiresVerification(editingGuide.requiresVerification ?? false)
+    }
+  }, [editingGuide])
   const [toast, setToast] = useState('')
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
@@ -116,6 +134,13 @@ export default function GuidebooksPage() {
     },
   ]
 
+  const [brandLogoUrl, setBrandLogoUrl] = useState('')
+  const [brandName, setBrandName] = useState('')
+  const [brandColor, setBrandColor] = useState('#7c3aed')
+  const [customDomain, setCustomDomain] = useState('')
+  const [stripeAccountId, setStripeAccountId] = useState('')
+  const [requiresVerification, setRequiresVerification] = useState(false)
+
   const editorTabs = [
     { key: 'content', label: 'Content' },
     { key: 'sections', label: 'Sections' },
@@ -123,6 +148,7 @@ export default function GuidebooksPage() {
     { key: 'variables', label: 'Variables' },
     { key: 'conditions', label: 'Conditions' },
     { key: 'upsells', label: 'Upsells' },
+    { key: 'branding', label: 'Branding' },
     { key: 'share', label: 'Share' },
   ]
 
@@ -138,19 +164,28 @@ export default function GuidebooksPage() {
           </button>
           <h1 className="heading" style={{ fontSize: 20, color: 'var(--text-primary)' }}>{editingGuide.propertyName}</h1>
           <StatusBadge status={editingGuide.status} />
-          <button
-            onClick={() => {
-              if (publishedIds.has(editingGuide.id)) {
-                setPublishedIds(prev => { const n = new Set(prev); n.delete(editingGuide.id); return n })
-                showToast('Guidebook unpublished')
-              } else {
-                setPublishedIds(prev => new Set([...prev, editingGuide.id]))
-                showToast('Guidebook published')
-              }
-            }}
-            style={{ marginLeft: 'auto', padding: '8px 16px', borderRadius: 8, border: 'none', background: publishedIds.has(editingGuide.id) ? 'var(--border)' : accent, color: publishedIds.has(editingGuide.id) ? 'var(--text-muted)' : '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
-            {publishedIds.has(editingGuide.id) ? 'Unpublish' : 'Publish'}
-          </button>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+            <Link
+              href={`/guest/guidebook/${editingGuide.id}`}
+              target="_blank"
+              style={{ padding: '8px 14px', borderRadius: 8, border: `1px solid ${accent}40`, background: 'transparent', color: accent, fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 5 }}
+            >
+              <Eye size={13} /> Preview as Guest ↗
+            </Link>
+            <button
+              onClick={() => {
+                if (publishedIds.has(editingGuide.id)) {
+                  setPublishedIds(prev => { const n = new Set(prev); n.delete(editingGuide.id); return n })
+                  showToast('Guidebook unpublished')
+                } else {
+                  setPublishedIds(prev => new Set([...prev, editingGuide.id]))
+                  showToast('Guidebook published')
+                }
+              }}
+              style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: publishedIds.has(editingGuide.id) ? 'var(--border)' : accent, color: publishedIds.has(editingGuide.id) ? 'var(--text-muted)' : '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
+              {publishedIds.has(editingGuide.id) ? 'Unpublish' : 'Publish'}
+            </button>
+          </div>
         </div>
 
         <Tabs tabs={editorTabs} active={editorTab} onChange={setEditorTab} />
@@ -168,10 +203,10 @@ export default function GuidebooksPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div><label style={labelStyle}>WiFi Network</label><input style={inputStyle} defaultValue={editingGuide.wifiName} /></div>
-                <div><label style={labelStyle}>WiFi Password</label><input style={inputStyle} defaultValue={editingGuide.wifiPassword} /></div>
-                <div><label style={labelStyle}>Check-in Time</label><input style={inputStyle} defaultValue={editingGuide.checkInTime} /></div>
-                <div><label style={labelStyle}>Check-out Time</label><input style={inputStyle} defaultValue={editingGuide.checkOutTime} /></div>
+                <div><label style={labelStyle}>WiFi Network</label><input style={inputStyle} value={wifiName} onChange={e => setWifiName(e.target.value)} /></div>
+                <div><label style={labelStyle}>WiFi Password</label><input style={inputStyle} value={wifiPassword} onChange={e => setWifiPassword(e.target.value)} /></div>
+                <div><label style={labelStyle}>Check-in Time</label><input style={inputStyle} value={checkInTime} onChange={e => setCheckInTime(e.target.value)} /></div>
+                <div><label style={labelStyle}>Check-out Time</label><input style={inputStyle} value={checkOutTime} onChange={e => setCheckOutTime(e.target.value)} /></div>
               </div>
               <div>
                 <label style={labelStyle}>
@@ -200,15 +235,21 @@ export default function GuidebooksPage() {
         {editorTab === 'sections' && (
           <div style={{ maxWidth: 500 }}>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>Toggle sections on/off and drag to reorder.</p>
-            {['Welcome', 'WiFi & Tech', 'Check-in Instructions', 'House Rules', 'Appliances', 'Local Restaurants', 'Transport', 'Emergency Contacts'].map((s, i) => (
-              <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--border-subtle)', cursor: 'grab' }}>
-                <span style={{ fontSize: 12, color: 'var(--text-subtle)', width: 16, textAlign: 'center' }}>{i + 1}</span>
-                <span style={{ flex: 1, fontSize: 14, color: 'var(--text-primary)' }}>{s}</span>
-                <div style={{ width: 36, height: 20, borderRadius: 10, background: i < 5 ? accent : 'var(--bg-elevated)', cursor: 'pointer', position: 'relative', border: i < 5 ? 'none' : '1px solid var(--border)' }}>
-                  <div style={{ position: 'absolute', top: 2, left: i < 5 ? 'auto' : 2, right: i < 5 ? 2 : 'auto', width: 16, height: 16, borderRadius: '50%', background: '#fff' }} />
+            {['Welcome', 'WiFi & Tech', 'Check-in Instructions', 'House Rules', 'Appliances', 'Local Restaurants', 'Transport', 'Emergency Contacts'].map((s, i) => {
+              const on = enabledSections.has(s)
+              return (
+                <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--border-subtle)', cursor: 'grab' }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-subtle)', width: 16, textAlign: 'center' }}>{i + 1}</span>
+                  <span style={{ flex: 1, fontSize: 14, color: on ? 'var(--text-primary)' : 'var(--text-subtle)' }}>{s}</span>
+                  <div
+                    onClick={() => setEnabledSections(prev => { const n = new Set(prev); on ? n.delete(s) : n.add(s); return n })}
+                    style={{ width: 36, height: 20, borderRadius: 10, background: on ? accent : 'var(--bg-elevated)', cursor: 'pointer', position: 'relative', border: on ? 'none' : '1px solid var(--border)', transition: 'background 0.2s', flexShrink: 0 }}
+                  >
+                    <div style={{ position: 'absolute', top: 2, left: on ? 'auto' : 2, right: on ? 2 : 'auto', width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left 0.2s, right 0.2s' }} />
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
 
@@ -441,6 +482,102 @@ export default function GuidebooksPage() {
           )
         })()}
 
+        {editorTab === 'branding' && (
+          <div style={{ maxWidth: 560 }}>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24 }}>
+              White-label this guidebook with your brand. Guests will see your logo, colors, and brand name instead of NestOps defaults.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+              {/* Logo */}
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px' }}>
+                <label style={labelStyle}>Custom Logo URL</label>
+                <input style={inputStyle} value={brandLogoUrl} onChange={e => setBrandLogoUrl(e.target.value)} placeholder="https://your-brand.com/logo.png" />
+                {brandLogoUrl && (
+                  <div style={{ marginTop: 10, padding: '10px', borderRadius: 8, background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <img src={brandLogoUrl} alt="Logo preview" style={{ height: 32, objectFit: 'contain', borderRadius: 4 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Logo preview</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Brand Name */}
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px' }}>
+                <label style={labelStyle}>Brand Name</label>
+                <input style={inputStyle} value={brandName} onChange={e => setBrandName(e.target.value)} placeholder="Your Brand (replaces &quot;Powered by NestOps&quot;)" />
+              </div>
+
+              {/* Primary Color */}
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px' }}>
+                <label style={labelStyle}>Primary Color</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <input
+                    type="color"
+                    value={brandColor}
+                    onChange={e => setBrandColor(e.target.value)}
+                    style={{ width: 44, height: 36, borderRadius: 6, border: '1px solid var(--border)', cursor: 'pointer', padding: 2 }}
+                  />
+                  <input
+                    style={{ ...inputStyle, flex: 1, fontFamily: 'monospace' }}
+                    value={brandColor}
+                    onChange={e => setBrandColor(e.target.value)}
+                    placeholder="#7c3aed"
+                  />
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: brandColor, border: '1px solid var(--border)', flexShrink: 0 }} />
+                </div>
+              </div>
+
+              {/* Custom Domain */}
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px' }}>
+                <label style={labelStyle}>Custom Domain</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input style={{ ...inputStyle, flex: 1 }} value={customDomain} onChange={e => setCustomDomain(e.target.value)} placeholder="guide.yourbrand.com" />
+                  <button onClick={() => showToast('Domain connection coming soon')} style={{ padding: '10px 14px', borderRadius: 8, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    Connect →
+                  </button>
+                </div>
+                <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-subtle)' }}>
+                  Point a CNAME record to nestops.app to use a custom domain.
+                </div>
+              </div>
+
+              {/* Stripe Account */}
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px' }}>
+                <label style={labelStyle}>Stripe Account ID</label>
+                <input style={inputStyle} value={stripeAccountId} onChange={e => setStripeAccountId(e.target.value)} placeholder="acct_1A2B3C4D5E6F7G8H" />
+                <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-subtle)', lineHeight: 1.5 }}>
+                  Upsell payments and security deposits will route to your connected Stripe account.
+                </div>
+              </div>
+
+              {/* Verification Toggle */}
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 3 }}>Require Guest Verification</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Gate guidebook access behind ID verification + security deposit</div>
+                  </div>
+                  <div
+                    onClick={() => setRequiresVerification(v => !v)}
+                    style={{ width: 44, height: 24, borderRadius: 12, background: requiresVerification ? accent : 'var(--bg-elevated)', cursor: 'pointer', position: 'relative', border: requiresVerification ? 'none' : '1px solid var(--border)', transition: 'background 0.2s', flexShrink: 0 }}
+                  >
+                    <div style={{ position: 'absolute', top: 3, left: requiresVerification ? 'auto' : 3, right: requiresVerification ? 3 : 'auto', width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 0.2s, right 0.2s' }} />
+                  </div>
+                </div>
+                {requiresVerification && (
+                  <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, background: `${accent}12`, border: `1px solid ${accent}40`, fontSize: 12, color: accent }}>
+                    ✓ Guests must complete the 5-step verification wizard before accessing this guidebook.
+                  </div>
+                )}
+              </div>
+
+              <button onClick={() => showToast('Branding settings saved')} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', width: 'fit-content' }}>
+                Save Branding
+              </button>
+            </div>
+          </div>
+        )}
+
         {editorTab === 'share' && (
           <div style={{ maxWidth: 500 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -459,8 +596,12 @@ export default function GuidebooksPage() {
                 <div className="label-upper" style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <QrCode size={12} /> QR Code
                 </div>
-                <div style={{ width: 120, height: 120, background: 'var(--bg-elevated)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-                  <QrCode size={64} style={{ color: 'var(--text-subtle)' }} />
+                <div style={{ width: 120, height: 120, background: 'var(--bg-elevated)', borderRadius: 8, overflow: 'hidden', marginBottom: 12 }}>
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent('https://' + editingGuide.shareUrl)}`}
+                    alt="QR code"
+                    style={{ width: 120, height: 120, display: 'block' }}
+                  />
                 </div>
                 <button onClick={() => { const a = document.createElement('a'); a.href = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(editingGuide.shareUrl)}`; a.download = `qr-${editingGuide.id}.png`; a.click(); showToast('QR code downloaded') }} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}>Download QR</button>
               </div>
@@ -542,9 +683,9 @@ export default function GuidebooksPage() {
               >
                 <Edit size={12} /> Edit
               </button>
-              <button onClick={() => window.open(g.shareUrl, '_blank')} style={{ flex: 1, padding: '7px', borderRadius: 7, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+              <Link href={`/guest/guidebook/${g.id}`} target="_blank" style={{ flex: 1, padding: '7px', borderRadius: 7, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, textDecoration: 'none' }}>
                 <Eye size={12} /> Preview
-              </button>
+              </Link>
             </div>
             </div>
           </div>

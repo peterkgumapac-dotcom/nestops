@@ -20,12 +20,13 @@ const DEMO_USERS: DemoUser[] = [
   { userId: 'ms', initials: 'MS', name: 'Maria S.',   role: 'staff'    as Role, subRole: 'Cleaning Team',  avatarBg: '#d97706', badgeLabel: 'Cleaning' },
   { userId: 'bl', initials: 'BL', name: 'Bjorn L.',   role: 'staff'    as Role, subRole: 'Maintenance',    avatarBg: '#0ea5e9', badgeLabel: 'Maintenance' },
   { userId: 'fn', initials: 'FN', name: 'Fatima N.',  role: 'staff'    as Role, subRole: 'Guest Services', avatarBg: '#ec4899', badgeLabel: 'Guest Svc' },
+  { userId: 'ak', initials: 'AK', name: 'Anna K.',    role: 'staff'    as Role, subRole: 'Inspector',      avatarBg: '#06b6d4', badgeLabel: 'Inspector' },
   { userId: 'sj', initials: 'SJ', name: 'Sarah J.',   role: 'owner'    as Role, avatarBg: '#2563eb', badgeLabel: 'Owner' },
   { userId: 'mc', initials: 'MC', name: 'Michael C.', role: 'owner'    as Role, avatarBg: '#10b981', badgeLabel: 'Owner' },
 ]
 
 const USER_ID_MAP: Record<string, string> = {
-  pk: 'u1', ms: 'u3', bl: 'u4', fn: 'u5', sj: 'u2', mc: 'u6',
+  pk: 'u1', ms: 'u3', bl: 'u4', fn: 'u5', ak: 'u7', sj: 'u2', mc: 'u6',
 }
 
 const DEMO_USER_MAP: Record<string, DemoUser> = Object.fromEntries(
@@ -33,12 +34,16 @@ const DEMO_USER_MAP: Record<string, DemoUser> = Object.fromEntries(
 )
 
 const CREDENTIALS = [
-  { email: 'peter@nestops.com',   password: 'demo123', userId: 'pk' },
-  { email: 'maria@nestops.com',   password: 'demo123', userId: 'ms' },
-  { email: 'bjorn@nestops.com',   password: 'demo123', userId: 'bl' },
-  { email: 'fatima@nestops.com',  password: 'demo123', userId: 'fn' },
-  { email: 'sarah@nestops.com',   password: 'demo123', userId: 'sj' },
-  { email: 'michael@nestops.com', password: 'demo123', userId: 'mc' },
+  { email: 'peter@nestops.com',    password: 'demo123', userId: 'pk' },
+  { email: 'operator@nestops.com', password: 'demo123', userId: 'pk' },
+  { email: 'maria@nestops.com',    password: 'demo123', userId: 'ms' },
+  { email: 'staff@nestops.com',    password: 'demo123', userId: 'ms' },
+  { email: 'bjorn@nestops.com',    password: 'demo123', userId: 'bl' },
+  { email: 'fatima@nestops.com',   password: 'demo123', userId: 'fn' },
+  { email: 'anna@nestops.com',     password: 'demo123', userId: 'ak' },
+  { email: 'sarah@nestops.com',    password: 'demo123', userId: 'sj' },
+  { email: 'owner@nestops.com',    password: 'demo123', userId: 'sj' },
+  { email: 'michael@nestops.com',  password: 'demo123', userId: 'mc' },
 ]
 
 export default function LoginPage() {
@@ -138,7 +143,7 @@ export default function LoginPage() {
           <span style={{
             fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
             background: 'rgba(124,58,237,0.2)', color: '#a78bfa', letterSpacing: '0.04em', marginLeft: 4,
-          }}>v1.0 Beta</span>
+          }}>v2.0</span>
         </div>
 
         <h2 style={{ fontSize: 20, fontWeight: 700, color: '#f9fafb', marginBottom: 4 }}>{greeting}</h2>

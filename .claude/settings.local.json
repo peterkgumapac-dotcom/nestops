@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__claude_ai_Notion__notion-fetch",
+      "Bash(ls:*)",
+      "Bash(xargs grep:*)",
+      "WebSearch",
+      "Bash(node:*)",
+      "Bash(npx tsc:*)",
+      "Bash(grep:*)"
+    ]
+  }
+}

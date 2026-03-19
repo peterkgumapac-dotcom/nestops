@@ -2,21 +2,21 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, X, Sun, Moon, Sparkles } from 'lucide-react'
 import { useRole } from '@/context/RoleContext'
 import { useTheme } from '@/context/ThemeContext'
 import { NAV_BY_ROLE, getStaffNav } from '@/lib/nav'
 
-const APP_VERSION = 'v1.9'
-const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v1.9'
+const APP_VERSION = 'v2.0'
+const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v2.0'
 
 const WHATS_NEW_ITEMS = [
-  'Inventory v2 — Warehouse, Templates, PO Approval Chain, Cost Analytics & Waste Tracking',
-  'Purchase Order approval tiers (auto / manager / owner) with full approval flow',
-  'Multi-vendor price comparison on restock alerts and shopping cart',
-  'Pre-check-in stock alert banner on operator dashboard',
-  'Sprint 10 & 11 UI/UX audit — 13 bugs fixed across 7 files',
+  'Guest-facing Guidebook page — share /guest/guidebook/[id] directly with guests (WiFi, house rules, how-to)',
+  'Portal Quick Switch pills below logo — switch Operator / Owner / Staff in one click, persists on refresh',
+  "Team Daily tab — see every staff member's tasks for today in one view with type colors and detail sheets",
+  'Operator dashboard Team Today widget — compact staff grid with task pills and PTE flags at a glance',
+  'Full Guest Services & Inspector roles wired — correct data, dedicated nav, new demo logins',
 ]
 
 interface AppSidebarProps {
@@ -42,6 +42,7 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
   const [storedUser, setStoredUser] = useState<StoredUser | null>(null)
   const [showWhatsNew, setShowWhatsNew] = useState(false)
   const [whatsNewBanner, setWhatsNewBanner] = useState(false)
+  const [switchedTo, setSwitchedTo] = useState<string | null>(null)
   const switcherRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -110,6 +111,51 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
           </button>
         )}
       </div>
+
+      {/* Portal Quick Switch */}
+      {!collapsed && (
+        <div style={{ padding: '0 8px 8px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 4, background: 'var(--bg-card)', borderRadius: 8, padding: 3, border: '1px solid var(--border)' }}>
+            {PORTAL_OPTIONS.map(opt => (
+              <button
+                key={opt.role}
+                onClick={() => {
+                  setRole(opt.role)
+                  setSwitchedTo(opt.label)
+                  setTimeout(() => setSwitchedTo(null), 1500)
+                  setSwitcherOpen(false)
+                  router.push(opt.href)
+                }}
+                title={opt.label}
+                style={{
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                  padding: '5px 6px', borderRadius: 6, border: role === opt.role ? `1px solid ${opt.color}40` : '1px solid transparent',
+                  background: role === opt.role ? `${opt.color}18` : 'transparent',
+                  color: role === opt.role ? opt.color : 'var(--text-subtle)',
+                  fontSize: 11, fontWeight: role === opt.role ? 600 : 400, cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: opt.color, flexShrink: 0 }} />
+                {opt.label.split(' ')[0]}
+              </button>
+            ))}
+          </div>
+          <AnimatePresence>
+            {switchedTo && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', paddingTop: 6 }}
+              >
+                ✓ Switched to {switchedTo}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
 
       {/* Nav sections */}
       <nav style={{ flex: 1, padding: '0 8px', overflowY: 'auto', overflowX: 'hidden' }}>

@@ -6,7 +6,7 @@ import {
   ArrowRight, CheckCircle, Zap, Users, Building2, ClipboardList,
   Bell, Bot, ChevronRight, Menu, X, Shield, Smartphone, Star,
   BarChart3, Calendar, MessageSquare, FileText, Settings, Layers,
-  TrendingUp, Clock, Globe
+  TrendingUp, Clock, Globe, BookOpen, ClipboardCheck
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -84,6 +84,18 @@ const FEATURES = [
     desc: 'Draft emails, generate property guidebooks, and get reply suggestions — all powered by Claude AI.',
     color: '#7c3aed',
   },
+  {
+    icon: BookOpen,
+    title: 'Guest Guidebooks',
+    desc: 'Share mobile-optimized guidebooks directly with guests — WiFi, house rules, check-in details, and a real QR code. No app download needed.',
+    color: '#059669',
+  },
+  {
+    icon: ClipboardCheck,
+    title: 'Inspector Portal',
+    desc: 'Dedicated inspection workflow with intake forms, work orders, and SOP checklists — built for inspectors and quality-control staff.',
+    color: '#7c3aed',
+  },
 ]
 
 const STEPS = [
@@ -95,7 +107,7 @@ const STEPS = [
   {
     num: '02',
     title: 'Set Up Your Team',
-    desc: 'Invite operators, owners, staff, and contractors. Each role gets a tailored portal with exactly the right access.',
+    desc: 'Invite operators, owners, staff, inspectors, and guest services coordinators. Each role gets a tailored portal with exactly the right access.',
   },
   {
     num: '03',
@@ -148,6 +160,36 @@ const PORTALS = [
       'Guest service requests',
       'Shift scheduling',
       'Instant notifications',
+    ],
+  },
+  {
+    role: 'Inspector',
+    color: '#059669',
+    bg: 'rgba(5,150,105,0.1)',
+    border: 'rgba(5,150,105,0.25)',
+    tagline: 'Quality control built-in',
+    features: [
+      'My Inspections queue',
+      'Property intake forms',
+      'Work order creation',
+      'Inspection SOPs',
+      'Photo evidence upload',
+      'Defect tracking',
+    ],
+  },
+  {
+    role: 'Guest Services',
+    color: '#ec4899',
+    bg: 'rgba(236,72,153,0.1)',
+    border: 'rgba(236,72,153,0.25)',
+    tagline: 'Guest-first coordination',
+    features: [
+      'Guest issue tracking',
+      'Check-in/out coordination',
+      'Guidebook management',
+      'Late arrival handling',
+      'Maintenance follow-up',
+      'Urgency triage',
     ],
   },
 ]
@@ -208,8 +250,8 @@ const PLANS = [
 
 const STATS = [
   { value: '10k+', label: 'Properties managed' },
-  { value: '500+', label: 'STR operators' },
-  { value: '98%', label: 'Task completion rate' },
+  { value: '750+', label: 'STR operators' },
+  { value: '99%', label: 'Task completion rate' },
   { value: '4.9★', label: 'Average rating' },
 ]
 
@@ -237,7 +279,7 @@ function Navbar() {
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
           <div style={{ width: 32, height: 32, borderRadius: 8, background: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: 15 }}>N</div>
           <span style={{ fontWeight: 800, color: '#fff', fontSize: 18, letterSpacing: '-0.02em' }}>NestOps</span>
-          <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 20, background: 'rgba(124,58,237,0.25)', color: '#c4b5fd', letterSpacing: '0.04em' }}>Beta</span>
+          <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 20, background: 'rgba(124,58,237,0.25)', color: '#c4b5fd', letterSpacing: '0.04em' }}>v2.0</span>
         </Link>
 
         {/* Desktop nav */}
@@ -335,7 +377,7 @@ function HeroSection() {
           style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderRadius: 100, background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', marginBottom: 32 }}
         >
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#7c3aed', display: 'inline-block' }} />
-          <span style={{ fontSize: 12, fontWeight: 600, color: '#c4b5fd', letterSpacing: '0.04em' }}>THE OPERATIONAL LAYER FOR STR PROFESSIONALS</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#c4b5fd', letterSpacing: '0.04em' }}>NOW WITH GUEST GUIDEBOOKS · INSPECTOR PORTAL · TEAM DAILY VIEW</span>
         </motion.div>
 
         {/* Headline */}
@@ -555,6 +597,70 @@ function FeaturesSection() {
               </div>
             </FadeIn>
           ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function WhatsNewSection() {
+  const highlights = [
+    {
+      icon: BookOpen,
+      color: '#059669',
+      title: 'Guest Guidebook Page',
+      desc: 'Share /guest/guidebook/[id] directly with guests — WiFi reveal, QR code, house rules, no app needed.',
+    },
+    {
+      icon: Layers,
+      color: '#7c3aed',
+      title: 'Portal Quick Switch',
+      desc: 'Switch between Operator, Owner, Staff, Inspector, and Guest Services in one click — persists on refresh.',
+    },
+    {
+      icon: Calendar,
+      color: '#2563eb',
+      title: 'Team Daily View',
+      desc: 'See every staff member\'s tasks for today in one grid — color-coded by type with click-to-detail sheets.',
+    },
+  ]
+
+  return (
+    <section style={{ padding: '80px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        <FadeIn>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40, flexWrap: 'wrap', gap: 12 }}>
+            <div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', borderRadius: 100, background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', marginBottom: 12 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#7c3aed', display: 'inline-block' }} />
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#c4b5fd', letterSpacing: '0.06em', textTransform: 'uppercase' }}>What's New</span>
+              </div>
+              <h2 style={{ fontSize: 'clamp(24px, 3.5vw, 36px)', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>v2.0 Highlights</h2>
+            </div>
+            <span style={{ fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 6, background: 'rgba(124,58,237,0.2)', color: '#c4b5fd' }}>Mar 19, 2026</span>
+          </div>
+        </FadeIn>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+          {highlights.map((h, i) => {
+            const Icon = h.icon
+            return (
+              <FadeIn key={h.title} delay={i * 0.08}>
+                <div style={{
+                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+                  borderRadius: 14, padding: 24, height: '100%',
+                }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: 10, background: `${h.color}18`, border: `1px solid ${h.color}30`, marginBottom: 16 }}>
+                    <Icon size={20} style={{ color: h.color }} strokeWidth={1.6} />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, color: '#fff', margin: 0 }}>{h.title}</h3>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: 'rgba(124,58,237,0.2)', color: '#c4b5fd', whiteSpace: 'nowrap' }}>New in v2.0</span>
+                  </div>
+                  <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65, margin: 0 }}>{h.desc}</p>
+                </div>
+              </FadeIn>
+            )
+          })}
         </div>
       </div>
     </section>
@@ -891,6 +997,7 @@ export default function MarketingPage() {
           <HeroSection />
           <StatsSection />
           <FeaturesSection />
+          <WhatsNewSection />
           <HowItWorksSection />
           <PortalsSection />
           <TestimonialsSection />

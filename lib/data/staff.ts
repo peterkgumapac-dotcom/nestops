@@ -7,7 +7,7 @@ export interface Job {
   title: string
   propertyId: string
   propertyName: string
-  type: 'cleaning' | 'maintenance' | 'inspection' | 'intake'
+  type: 'cleaning' | 'maintenance' | 'inspection' | 'intake' | 'guest_services'
   status: JobStatus
   priority: JobPriority
   dueTime: string
@@ -40,10 +40,13 @@ export const JOBS: Job[] = [
   { id: 'j6', title: 'Fix hot tub heater', propertyId: 'p1', propertyName: 'Sunset Villa', type: 'maintenance', status: 'pending', priority: 'high', dueTime: '15:00', urgencyLabel: 'Urgent', pteRequired: true, pteStatus: 'auto_granted', staffId: 's3' },
   { id: 'j7', title: 'Fix toilet — blocked', propertyId: 'p3', propertyName: 'Ocean View Apt', type: 'maintenance', status: 'pending', priority: 'urgent', dueTime: '11:00', urgencyLabel: 'Urgent', pteRequired: true, pteStatus: 'granted', staffId: 's3' },
   { id: 'j8', title: 'Pool inspection', propertyId: 'p5', propertyName: 'Mountain Cabin', type: 'inspection', status: 'pending', priority: 'medium', dueTime: '14:00', urgencyLabel: 'Scheduled', pteRequired: false, pteStatus: 'not_required', staffId: 's2' },
+  { id: 'j9', title: 'Follow up on guest complaint — heating', propertyId: 'p4', propertyName: 'Downtown Loft', type: 'guest_services', status: 'pending', priority: 'high', dueTime: '10:00', urgencyLabel: 'Urgent', pteRequired: false, pteStatus: 'not_required', staffId: 's4' },
+  { id: 'j10', title: 'Coordinate late check-in — Sunset Villa', propertyId: 'p1', propertyName: 'Sunset Villa', type: 'guest_services', status: 'pending', priority: 'medium', dueTime: '16:00', urgencyLabel: 'Scheduled', pteRequired: false, pteStatus: 'not_required', staffId: 's4' },
 ]
 
 export const STAFF_MEMBERS: StaffMember[] = [
-  { id: 's1', name: 'Johan Larsson', initials: 'JL', role: 'Senior Cleaner',   assignedPropertyIds: ['p1', 'p3', 'p5'], status: 'active', jobIds: ['j1', 'j3', 'j5'], hourlyRate: 285 },
-  { id: 's2', name: 'Anna Kowalski', initials: 'AK', role: 'Inspector',         assignedPropertyIds: ['p2', 'p4'],       status: 'active', jobIds: ['j2', 'j4'],       hourlyRate: 320 },
-  { id: 's3', name: 'Marcus Berg',   initials: 'MB', role: 'Maintenance Tech',  assignedPropertyIds: ['p1', 'p4'],       status: 'active', jobIds: ['j2'],             hourlyRate: 310 },
+  { id: 's1', name: 'Johan Larsson',  initials: 'JL', role: 'Senior Cleaner',            assignedPropertyIds: ['p1', 'p3', 'p5'],             status: 'active', jobIds: ['j1', 'j3', 'j5'],  hourlyRate: 285 },
+  { id: 's2', name: 'Anna Kowalski',  initials: 'AK', role: 'Inspector',                 assignedPropertyIds: ['p2', 'p4'],                   status: 'active', jobIds: ['j3', 'j8'],         hourlyRate: 320 },
+  { id: 's3', name: 'Marcus Berg',    initials: 'MB', role: 'Maintenance Tech',           assignedPropertyIds: ['p1', 'p4'],                   status: 'active', jobIds: ['j2', 'j6', 'j7'],   hourlyRate: 310 },
+  { id: 's4', name: 'Fatima Ndiaye',  initials: 'FN', role: 'Guest Services Coordinator', assignedPropertyIds: ['p1','p2','p3','p4','p5'],      status: 'active', jobIds: ['j9', 'j10'],        hourlyRate: 295 },
 ]

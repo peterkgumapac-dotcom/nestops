@@ -10,6 +10,44 @@ interface ChangeEntry {
 
 const CHANGELOG: ChangeEntry[] = [
   {
+    version: 'v2.1',
+    date: 'Mar 19, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'Guest Verification Wizard — /guest/verify/[id]: 5-step mobile-first wizard (Confirm Info, Upload ID, Sign Agreement, House Rules, Security Deposit); progress bar with step dots; blurred guidebook teaser at bottom; state saved to localStorage on completion' },
+      { tag: '⚡ Feature', text: 'Guidebook Lock Gate — /guest/guidebook/[id]: checks localStorage for verified flag; unverified guests see blurred preview with "Your guidebook is waiting" CTA linking to /guest/verify/[verificationId]; gate bypassed when requiresVerification is false' },
+      { tag: '⚡ Feature', text: 'White-Label Guidebooks — brandColor, brandLogo, brandName fields per guidebook; accent color, footer logo/name all driven by brand settings; Ocean View Apt (g3) ships as CoastalStays demo with blue theme' },
+      { tag: '⚡ Feature', text: 'Guidebook Branding Tab — new editor tab (between Upsells and Share) with: logo URL + live preview, brand name input, color picker + hex input, custom domain + Connect button, Stripe account ID, Verification Required toggle' },
+      { tag: '⚡ Feature', text: 'Amenities Icon Grid — emoji icon grid in guidebook (WiFi, Pool, Parking, AC, Washer, BBQ, Sea View, Pet Friendly, Balcony, etc.); populated for Sunset Villa and Ocean View' },
+      { tag: '⚡ Feature', text: 'Appliances & How-Tos — expandable <details> cards in guidebook (TV, Dishwasher, Heating/AC, Washing Machine) with step-by-step instructions for each appliance' },
+      { tag: '⚡ Feature', text: 'Local Recommendations — tabbed section (Food / Activity / Transport) with name, tip, and address; 6 recs for Sunset Villa, 7 recs for Ocean View' },
+      { tag: '⚡ Feature', text: 'FAQ Accordion — expandable Q&A section in guidebook; 4 FAQs for Sunset Villa, 5 FAQs for Ocean View (including verification FAQ)' },
+      { tag: '⚡ Feature', text: 'Inline Upsell Cards in Guidebook — Add-Ons section at bottom of guidebook pulls from UPSELL_RULES filtered by property/group; each card has emoji, title, description, price, CTA; "Add to Stay" opens Stripe mock bottom sheet with processing state' },
+      { tag: '⚡ Feature', text: 'Stripe mock bottom sheet — upsell purchase sheet with item details, price, processing animation, and "Added" confirmation state' },
+      { tag: '🎨 UI', text: 'Guidebook page fully dark-themed with brand color applied to all accent elements (progress bars, section headers, CTA buttons, upsell highlights)' },
+      { tag: '🎨 UI', text: 'Verification wizard: loading spinner state, branded progress dots, step-specific CTAs (Continue / Authorize Deposit First / Complete Verification)' },
+    ],
+  },
+  {
+    version: 'v2.0',
+    date: 'Mar 19, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'Guest-facing Guidebook page — new route /guest/guidebook/[id]: mobile-optimized, no sidebar, WiFi reveal/copy, draft watermark banner, NestOps footer branding' },
+      { tag: '⚡ Feature', text: 'Portal Quick Switch pills — compact role-switcher row below logo in both sidebars; animated "Switched to X" confirmation badge' },
+      { tag: '⚡ Feature', text: 'Team page — new Daily tab showing all staff members with their assigned jobs, color-coded by type (cleaning/maintenance/inspection/GS), click-to-detail sheet' },
+      { tag: '⚡ Feature', text: 'Operator dashboard — Team Today widget: compact 2-column staff grid showing pending tasks per person and PTE flags' },
+      { tag: '⚡ Feature', text: 'Full Guest Services role — Fatima Ndiaye added as s4 with own jobs (heating follow-up, late check-in), shifts, and availability; correct USER_TO_STAFF mapping in 4 files' },
+      { tag: '⚡ Feature', text: 'Inspector demo login — anna@nestops.com / demo123 — with dedicated Inspector nav (Home, My Inspections, Intake, Work Orders, Inspection SOPs)' },
+      { tag: '🐛 Fix', text: 'Portal role switch now persists on page refresh — setRole() patches nestops_user.role in localStorage to prevent role revert' },
+      { tag: '🐛 Fix', text: 'Guidebook editor inputs (WiFi name/password, check-in/out times) converted from defaultValue to controlled state seeded from editingGuide' },
+      { tag: '🐛 Fix', text: 'Guidebook section toggles are now interactive — click to enable/disable; state stored in enabledSections Set' },
+      { tag: '🐛 Fix', text: 'Guidebook QR code now renders a real scannable QR image (api.qrserver.com) instead of the Lucide QrCode icon placeholder' },
+      { tag: '🐛 Fix', text: 'OverduePanel: Mark Done moves task to done column; Send Reminder fires toast with staff name; Review SOP opens the SOP detail sheet' },
+      { tag: '🐛 Fix', text: 'Briefing GS check-ins card now shows live GUEST_ISSUES count (urgent + open breakdown) instead of hardcoded "2 arrivals · 15:00 and 17:00"' },
+      { tag: '🐛 Fix', text: 'Staff home: empty state card shown when no properties are assigned today; job checkbox state persisted to localStorage (survives refresh)' },
+      { tag: '🎨 UI', text: '"Preview as Guest ↗" button added in Guidebook editor header and card Preview buttons fixed to open /guest/guidebook/[id] instead of dead external URL' },
+    ],
+  },
+  {
     version: 'v1.9',
     date: 'Mar 19, 2026',
     items: [

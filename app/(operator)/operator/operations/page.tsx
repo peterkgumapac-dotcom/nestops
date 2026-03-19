@@ -26,6 +26,11 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose,
 } from '@/components/ui/dialog'
+import TodaysTimeline         from './_components/TodaysTimeline'
+import OverduePanel           from './_components/OverduePanel'
+import PropertyReadinessBoard from './_components/PropertyReadinessBoard'
+import StaffOnDuty            from './_components/StaffOnDuty'
+import TodaysNumbers          from './_components/TodaysNumbers'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -67,6 +72,17 @@ interface Meeting {
   actionItems: { id: string; text: string; assignee: string; done: boolean }[]
   agenda: string
   notes: string
+}
+
+interface StaffMember {
+  id: string; name: string; initials: string; role: string
+  property: string; clockedIn: boolean; clockInTime: string
+  shiftStart: string; late: boolean
+}
+
+interface TodayArrival {
+  time: string; propertyId: string; propertyName: string
+  guest: string; nights: number; readiness: 'ok' | 'risk'
 }
 
 // ─── Seed Data ────────────────────────────────────────────────────────────────
@@ -172,6 +188,23 @@ const ACK_DATA = [
   { id: '2', name: 'Bjorn Larsen',  status: 'done'    as const, date: '2026-03-03' },
   { id: '3', name: 'Fatima Ndiaye', status: 'pending' as const, date: '—' },
   { id: '4', name: 'Ivan Petrov',   status: 'pending' as const, date: '—' },
+]
+
+const STAFF_ON_DUTY: StaffMember[] = [
+  { id: 'ms', name: 'Maria S.',  initials: 'MS', role: 'Cleaning',       property: 'Ocean View Apt', clockedIn: true,  clockInTime: '09:05', shiftStart: '09:00', late: false },
+  { id: 'fn', name: 'Fatima N.', initials: 'FN', role: 'Guest Services',  property: 'Remote',         clockedIn: true,  clockInTime: '08:55', shiftStart: '09:00', late: false },
+  { id: 'bl', name: 'Bjorn L.',  initials: 'BL', role: 'Maintenance',    property: 'Sunset Villa',   clockedIn: false, clockInTime: '',       shiftStart: '09:00', late: true  },
+  { id: 'ip', name: 'Ivan P.',   initials: 'IP', role: 'Cleaning',       property: 'Harbor Studio',  clockedIn: false, clockInTime: '',       shiftStart: '14:00', late: false },
+]
+
+const TODAY_ARRIVALS: TodayArrival[] = [
+  { time: '15:00', propertyId: 'p1', propertyName: 'Sunset Villa',   guest: 'Lars Eriksen',       nights: 5, readiness: 'ok'   },
+  { time: '17:00', propertyId: 'p3', propertyName: 'Ocean View Apt', guest: 'Sophie Kristiansen', nights: 2, readiness: 'risk' },
+]
+
+const TODAY_CLEANING_SHIFTS = [
+  { id: 'tcs1', propId: 'p3', propName: 'Ocean View Apt', startTime: '09:00', endTime: '12:00', type: 'Turnover Clean', cleaner: 'Maria S.',  status: 'in_progress' as const },
+  { id: 'tcs2', propId: 'p2', propName: 'Harbor Studio',  startTime: '13:00', endTime: '15:00', type: 'Checkout Clean', cleaner: 'Ivan P.',   status: 'scheduled'   as const },
 ]
 
 // ─── Kanban ────────────────────────────────────────────────────────────────────
@@ -350,6 +383,8 @@ function OperationsContent() {
   const [newTaskBoardId, setNewTaskBoardId] = useState<KanbanTask['boardId']>('property-ops')
   const [newSopSheet, setNewSopSheet] = useState(false)
   const [meetingSheet, setMeetingSheet] = useState(false)
+  const [toast, setToast] = useState('')
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   // Cleaning schedule state
   const [cleaningJobs, setCleaningJobs] = useState<CleaningJob[]>(CLEANING_JOBS_SEED)
@@ -529,67 +564,122 @@ function OperationsContent() {
         const overdue     = allOpen.filter(t => t.due < today)
         const maintActive = maintenanceTasks.filter(t => t.columnId !== 'done')
         const todayCleans = cleaningJobs.filter(j => j.day === new Date().getDay() && j.status !== 'done')
+        const todayMaintTasks = maintenanceTasks.filter(t => t.due === today && t.columnId !== 'done')
 
         return (
-          <div>
-            {/* Stat cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28 }}>
-              {[
-                { label: 'Open Tasks',         value: allOpen.length,     color: accent },
-                { label: 'Overdue',            value: overdue.length,     color: '#dc2626' },
-                { label: 'Maintenance Active', value: maintActive.length, color: '#d97706' },
-                { label: "Today's Cleanings",  value: todayCleans.length, color: '#059669' },
-              ].map(s => (
-                <div key={s.label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px' }}>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{s.label}</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: s.color }}>{s.value}</div>
-                </div>
-              ))}
-            </div>
+          <>
+            <style>{`
+              @media (max-width: 1023px) {
+                .ops-overview-grid { grid-template-columns: 1fr !important; }
+              }
+            `}</style>
+            <div className="ops-overview-grid" style={{ display: 'grid', gridTemplateColumns: '65fr 35fr', gap: 20, alignItems: 'start' }}>
+              {/* Left column */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <TodaysTimeline
+                  cleaningShifts={TODAY_CLEANING_SHIFTS}
+                  arrivals={TODAY_ARRIVALS}
+                  maintenanceTasks={todayMaintTasks}
+                  accent={accent}
+                />
 
-            {/* Board summary row */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
-              {[
-                { boardId: 'property-ops' as Tab, label: 'Property Ops', icon: '🏠', tasks: propertyOpsTasks },
-                { boardId: 'onboarding'   as Tab, label: 'Onboarding',   icon: '🚀', tasks: onboardingTasks  },
-                { boardId: 'maintenance'  as Tab, label: 'Maintenance',  icon: '🔧', tasks: maintenanceTasks },
-              ].map(b => {
-                const open = b.tasks.filter(t => t.columnId !== 'done')
-                const top3 = open.slice(0, 3)
-                return (
-                  <div key={b.boardId} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{b.icon} {b.label}</span>
-                      <button onClick={() => setActiveTab(b.boardId)} style={{ fontSize: 11, color: accent, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>View →</button>
+                <OverduePanel
+                  tasks={tasks}
+                  staffOnDuty={STAFF_ON_DUTY}
+                  sops={SOPS}
+                  today={today}
+                  accent={accent}
+                  onMarkDone={id => { setTasks(prev => prev.map(t => t.id === id ? { ...t, columnId: 'done' } : t)); showToast('Task marked done') }}
+                  onSendReminder={name => showToast(`Reminder sent to ${name}`)}
+                  onReviewSop={id => { const sop = SOPS.find(s => s.id === id); if (sop) setSelectedSop(sop) }}
+                />
+
+                {/* Stat cards */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+                  {[
+                    { label: 'Open Tasks',         value: allOpen.length,     color: accent },
+                    { label: 'Overdue',            value: overdue.length,     color: '#dc2626' },
+                    { label: 'Maintenance Active', value: maintActive.length, color: '#d97706' },
+                    { label: "Today's Cleanings",  value: todayCleans.length, color: '#059669' },
+                  ].map(s => (
+                    <div key={s.label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px' }}>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{s.label}</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: s.color }}>{s.value}</div>
                     </div>
-                    {top3.length === 0
-                      ? <div style={{ fontSize: 12, color: 'var(--text-subtle)' }}>All caught up ✓</div>
-                      : top3.map(t => (
-                        <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                          <div style={{ width: 6, height: 6, borderRadius: '50%', background: t.priority === 'high' ? '#dc2626' : t.priority === 'medium' ? '#d97706' : '#059669', flexShrink: 0 }} />
-                          <span style={{ fontSize: 12, color: 'var(--text-muted)', flex: 1 }}>{t.title}</span>
-                          <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{t.assignee.split(' ')[0]}</span>
-                        </div>
-                      ))
-                    }
-                    {open.length > 3 && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>+{open.length - 3} more</div>}
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* Upcoming meetings */}
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>📅 Upcoming Meetings</div>
-              {MEETINGS.filter(m => m.status === 'upcoming').map((m, i, arr) => (
-                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: i < arr.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
-                  <span style={{ fontSize: 12, color: accent, fontWeight: 600, minWidth: 50 }}>{m.time}</span>
-                  <span style={{ fontSize: 13, color: 'var(--text-primary)', flex: 1 }}>{m.title}</span>
-                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{m.date}</span>
+                  ))}
                 </div>
-              ))}
+
+                {/* Board summary row */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                  {[
+                    { boardId: 'property-ops' as Tab, label: 'Property Ops', icon: '🏠', tasks: propertyOpsTasks },
+                    { boardId: 'onboarding'   as Tab, label: 'Onboarding',   icon: '🚀', tasks: onboardingTasks  },
+                    { boardId: 'maintenance'  as Tab, label: 'Maintenance',  icon: '🔧', tasks: maintenanceTasks },
+                  ].map(b => {
+                    const open = b.tasks.filter(t => t.columnId !== 'done')
+                    const top3 = open.slice(0, 3)
+                    return (
+                      <div key={b.boardId} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{b.icon} {b.label}</span>
+                          <button onClick={() => setActiveTab(b.boardId)} style={{ fontSize: 11, color: accent, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>View →</button>
+                        </div>
+                        {top3.length === 0
+                          ? <div style={{ fontSize: 12, color: 'var(--text-subtle)' }}>All caught up ✓</div>
+                          : top3.map(t => (
+                            <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                              <div style={{ width: 6, height: 6, borderRadius: '50%', background: t.priority === 'high' ? '#dc2626' : t.priority === 'medium' ? '#d97706' : '#059669', flexShrink: 0 }} />
+                              <span style={{ fontSize: 12, color: 'var(--text-muted)', flex: 1 }}>{t.title}</span>
+                              <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{t.assignee.split(' ')[0]}</span>
+                            </div>
+                          ))
+                        }
+                        {open.length > 3 && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>+{open.length - 3} more</div>}
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Upcoming meetings */}
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>📅 Upcoming Meetings</div>
+                  {MEETINGS.filter(m => m.status === 'upcoming').map((m, i, arr) => (
+                    <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: i < arr.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                      <span style={{ fontSize: 12, color: accent, fontWeight: 600, minWidth: 50 }}>{m.time}</span>
+                      <span style={{ fontSize: 13, color: 'var(--text-primary)', flex: 1 }}>{m.title}</span>
+                      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{m.date}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right column */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <TodaysNumbers
+                  tasks={tasks}
+                  cleaningShifts={TODAY_CLEANING_SHIFTS}
+                  sops={SOPS}
+                  arrivals={TODAY_ARRIVALS}
+                  today={today}
+                  accent={accent}
+                  onNavigate={setActiveTab}
+                />
+
+                <PropertyReadinessBoard
+                  properties={PROPERTIES_CLEANING}
+                  cleaningShifts={TODAY_CLEANING_SHIFTS}
+                  tasks={tasks}
+                  arrivals={TODAY_ARRIVALS}
+                  accent={accent}
+                />
+
+                <StaffOnDuty
+                  staff={STAFF_ON_DUTY}
+                  accent={accent}
+                />
+              </div>
             </div>
-          </div>
+          </>
         )
       })()}
 
@@ -947,6 +1037,11 @@ function OperationsContent() {
       )}
 
       {/* ── Task Detail Sheet ── */}
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#16a34a', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+          {toast}
+        </div>
+      )}
       <TaskSheet
         task={selectedTask ? {
           id: selectedTask.id,

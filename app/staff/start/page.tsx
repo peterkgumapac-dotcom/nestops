@@ -10,9 +10,10 @@ import { getPTEBadge } from '@/lib/utils/pteUtils'
 import type { UserProfile } from '@/context/RoleContext'
 
 const USER_TO_STAFF: Record<string, string> = {
-  'u3': 's1',
-  'u4': 's3',
-  'u5': 's2',
+  'u3': 's1', // Maria → Johan Larsson (cleaning)
+  'u4': 's3', // Bjorn → Marcus Berg (maintenance)
+  'u5': 's4', // Fatima → Fatima Ndiaye (guest services)
+  'u7': 's2', // Anna → Anna Kowalski (inspector)
 }
 
 const SHIFT_TYPE_LABEL: Record<string, string> = {
@@ -416,7 +417,7 @@ export default function StaffStartPage() {
 
           {/* Back to Briefing */}
           <div style={{ textAlign: 'center', marginTop: 20 }}>
-            <Link href="/briefing" style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 16px', borderRadius: 8, display: 'inline-block' }}>
+            <Link href="/briefing" style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 20px', borderRadius: 8, display: 'inline-block', minHeight: 44, lineHeight: '20px' }}>
               ← Back to Briefing
             </Link>
           </div>

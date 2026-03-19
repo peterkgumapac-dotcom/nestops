@@ -97,7 +97,7 @@ export const OWNER_NAV: NavSection[] = [
     ],
   },
   {
-    label: '',
+    label: 'Actions',
     items: [
       { label: 'Onboard Property', href: '/owner/onboard', icon: PlusCircle },
     ],
@@ -174,9 +174,28 @@ export const STAFF_GUEST_SERVICES_NAV: NavSection[] = [
   },
 ]
 
+export const STAFF_INSPECTOR_NAV: NavSection[] = [
+  {
+    label: '',
+    items: [
+      { label: 'Home',            href: '/app/dashboard',   icon: Home },
+      { label: 'My Inspections',  href: '/app/my-tasks',    icon: CheckSquare },
+      { label: 'Intake',          href: '/app/new-intake',  icon: ClipboardList },
+      { label: 'Work Orders',     href: '/app/work-orders', icon: Ticket },
+    ],
+  },
+  {
+    label: 'Reference',
+    items: [
+      { label: 'Inspection SOPs', href: '/app/operations', icon: FileText },
+    ],
+  },
+]
+
 export function getStaffNav(subRole?: string): NavSection[] {
   if (subRole?.includes('Maintenance')) return STAFF_MAINTENANCE_NAV
   if (subRole?.includes('Guest'))       return STAFF_GUEST_SERVICES_NAV
+  if (subRole?.includes('Inspector'))   return STAFF_INSPECTOR_NAV
   return STAFF_CLEANING_NAV
 }
 

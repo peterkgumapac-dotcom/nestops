@@ -1,20 +1,28 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Menu, X, LogOut, Bell } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { OWNER_NAV } from '@/lib/nav'
+import { useRole } from '@/context/RoleContext'
 
 const ACCENT = '#2563eb'
+
+const ROLE_PILLS = [
+  { label: 'Operator', role: 'operator' as const, color: '#7c3aed', href: '/operator' },
+  { label: 'Staff', role: 'staff' as const, color: '#d97706', href: '/staff' },
+]
 
 export default function OwnerShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
+  const { setRole } = useRole()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userName, setUserName] = useState('Sarah J.')
   const [userInitials, setUserInitials] = useState('SJ')
   const [avatarColor, setAvatarColor] = useState('#2563eb')
+  const [switchedTo, setSwitchedTo] = useState<string | null>(null)
 
   useEffect(() => {
     const savedUser = localStorage.getItem('nestops_user')
@@ -28,11 +36,15 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
     }
   }, [])
 
-  const navItems = OWNER_NAV[0]?.items ?? []
+  const handleRoleSwitch = (role: 'operator' | 'staff', href: string, label: string) => {
+    setRole(role)
+    setSwitchedTo(label)
+    setTimeout(() => { setSwitchedTo(null); router.push(href) }, 900)
+  }
 
   const sidebarContent = (
     <div style={{
-      width: 240, background: '#ffffff', borderRight: '1px solid #e2e8f0',
+      width: 240, background: 'var(--bg-surface)', borderRight: '1px solid var(--border)',
       display: 'flex', flexDirection: 'column', height: '100%',
     }}>
       {/* Logo */}
@@ -41,70 +53,122 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
           N
         </div>
         <div>
-          <div style={{ fontWeight: 600, fontSize: 14, color: '#0f172a' }}>NestOps</div>
-          <div style={{ fontSize: 11, color: '#64748b' }}>Owner Portal</div>
+          <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>NestOps</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Owner Portal</div>
         </div>
       </div>
 
-      {/* Nav items */}
+      {/* Quick Switch pills */}
+      <div style={{ padding: '0 12px 8px', display: 'flex', gap: 6 }}>
+        {ROLE_PILLS.map(p => (
+          <button
+            key={p.role}
+            onClick={() => handleRoleSwitch(p.role, p.href, p.label)}
+            style={{
+              flex: 1, padding: '5px 0', borderRadius: 6,
+              border: `1px solid ${p.color}33`, background: `${p.color}14`,
+              color: p.color, fontSize: 11, fontWeight: 600,
+              cursor: 'pointer', transition: 'all 0.15s',
+            }}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Switched badge */}
+      <AnimatePresence>
+        {switchedTo && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            style={{
+              margin: '0 12px 8px', padding: '6px 10px', borderRadius: 6,
+              background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)',
+              fontSize: 11, fontWeight: 600, color: '#10b981', textAlign: 'center',
+            }}
+          >
+            Switched to {switchedTo} ✓
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* All nav sections */}
       <nav style={{ flex: 1, padding: '0 8px', overflowY: 'auto' }}>
-        {navItems.map((item, i) => {
-          const Icon = item.icon
-          const isActive = pathname === item.href || (item.href !== '/owner' && pathname.startsWith(item.href + '/'))
-            || (item.href === '/owner' && pathname === '/owner')
-          return (
-            <motion.div
-              key={item.href}
-              initial={{ opacity: 0, x: -6 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.04, duration: 0.2 }}
-            >
-              <Link
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '7px 8px', borderRadius: 7, marginBottom: 1,
-                  color: isActive ? ACCENT : '#64748b',
-                  background: isActive ? `${ACCENT}12` : 'transparent',
-                  borderLeft: isActive ? `2px solid ${ACCENT}` : '2px solid transparent',
-                  textDecoration: 'none', fontSize: 13.5,
-                  transition: 'background 0.15s ease',
-                  fontWeight: isActive ? 500 : 400,
-                }}
-              >
-                <div style={{ position: 'relative', flexShrink: 0 }}>
-                  <Icon size={17} strokeWidth={1.6} />
-                  {item.badge && (
-                    <span style={{
-                      position: 'absolute', top: -6, right: -6, fontSize: 9, fontWeight: 700,
-                      color: '#fff', background: ACCENT, borderRadius: '50%',
-                      width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      {item.badge}
-                    </span>
-                  )}
-                </div>
-                {item.label}
-              </Link>
-            </motion.div>
-          )
-        })}
+        {OWNER_NAV.map((section, sIdx) => (
+          <div key={sIdx} style={{ marginBottom: 12 }}>
+            {section.label ? (
+              <div style={{
+                fontSize: 10, fontWeight: 700, color: 'var(--text-subtle)',
+                letterSpacing: '0.08em', textTransform: 'uppercase',
+                padding: '0 8px', marginBottom: 4, marginTop: sIdx > 0 ? 4 : 0,
+              }}>
+                {section.label}
+              </div>
+            ) : null}
+            {section.items.map((item, i) => {
+              const Icon = item.icon
+              const isActive = item.href === '/owner'
+                ? pathname === '/owner'
+                : pathname === item.href || pathname.startsWith(item.href + '/')
+              return (
+                <motion.div
+                  key={item.href}
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: (sIdx * 3 + i) * 0.03, duration: 0.2 }}
+                >
+                  <Link
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      padding: '7px 8px', borderRadius: 7, marginBottom: 1,
+                      color: isActive ? ACCENT : 'var(--text-muted)',
+                      background: isActive ? `${ACCENT}12` : 'transparent',
+                      borderLeft: isActive ? `2px solid ${ACCENT}` : '2px solid transparent',
+                      textDecoration: 'none', fontSize: 13.5,
+                      transition: 'background 0.15s ease',
+                      fontWeight: isActive ? 500 : 400,
+                    }}
+                  >
+                    <div style={{ position: 'relative', flexShrink: 0 }}>
+                      <Icon size={17} strokeWidth={1.6} />
+                      {item.badge && (
+                        <span style={{
+                          position: 'absolute', top: -6, right: -6, fontSize: 9, fontWeight: 700,
+                          color: '#fff', background: ACCENT, borderRadius: '50%',
+                          width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          {item.badge}
+                        </span>
+                      )}
+                    </div>
+                    {item.label}
+                  </Link>
+                </motion.div>
+              )
+            })}
+          </div>
+        ))}
       </nav>
 
       {/* Footer */}
-      <div style={{ padding: '8px', flexShrink: 0, borderTop: '1px solid #e2e8f0' }}>
+      <div style={{ padding: '8px', flexShrink: 0, borderTop: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px', borderRadius: 8 }}>
           <div style={{ width: 32, height: 32, borderRadius: '50%', background: avatarColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
             {userInitials}
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>{userName}</div>
-            <div style={{ fontSize: 11, color: '#64748b' }}>Owner</div>
+            <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{userName}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Owner</div>
           </div>
           <button
-            onClick={() => { ['nestops_user','nestops_role','nestops_theme','nestops_briefing_prefs','nestops_clockin','nestops_field_reports','nestops_owner_work_orders'].forEach(k => localStorage.removeItem(k)); router.push('/login') }}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 4, borderRadius: 6, display: 'flex' }}
+            onClick={() => {
+              ['nestops_user', 'nestops_role', 'nestops_theme', 'nestops_briefing_prefs', 'nestops_clockin', 'nestops_field_reports', 'nestops_owner_work_orders']
+                .forEach(k => localStorage.removeItem(k))
+              router.push('/login')
+            }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-subtle)', padding: 4, borderRadius: 6, display: 'flex' }}
             title="Sign out"
           >
             <LogOut size={14} />
@@ -115,7 +179,7 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
   )
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f8fafc' }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--bg-page)' }}>
       {/* Desktop sidebar */}
       <div className="hidden md:flex" style={{ height: '100vh', position: 'sticky', top: 0, flexShrink: 0 }}>
         {sidebarContent}
@@ -127,7 +191,7 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} onClick={() => setMobileOpen(false)} />
           <div style={{ position: 'absolute', left: 0, top: 0, height: '100%' }}>
             {sidebarContent}
-            <button onClick={() => setMobileOpen(false)} style={{ position: 'absolute', top: 16, right: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+            <button onClick={() => setMobileOpen(false)} style={{ position: 'absolute', top: 16, right: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
               <X size={16} />
             </button>
           </div>
@@ -138,19 +202,22 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
         {/* Top bar */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '0 20px', height: 52, borderBottom: '1px solid #e2e8f0',
-          background: '#ffffff', flexShrink: 0,
+          padding: '0 20px', height: 52, borderBottom: '1px solid var(--border)',
+          background: 'var(--bg-surface)', flexShrink: 0,
         }}>
           <button
             className="md:hidden"
             onClick={() => setMobileOpen(true)}
-            style={{ color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}
+            style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}
           >
             <Menu size={20} />
           </button>
-          <span className="md:hidden" style={{ fontWeight: 600, fontSize: 14, color: '#0f172a' }}>NestOps</span>
+          <span className="md:hidden" style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>NestOps</span>
           <div className="hidden md:block" />
-          <button style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 6, borderRadius: 8, display: 'flex', alignItems: 'center' }}>
+          <button
+            aria-label="Notifications"
+            style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 6, borderRadius: 8, display: 'flex', alignItems: 'center' }}
+          >
             <Bell size={18} strokeWidth={1.6} />
             <span style={{ position: 'absolute', top: 2, right: 2, width: 16, height: 16, borderRadius: '50%', background: ACCENT, color: '#fff', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               3

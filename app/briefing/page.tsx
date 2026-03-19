@@ -20,9 +20,10 @@ import {
 import type { BriefingPrefs, BriefingToggles } from '@/lib/data/briefingPrefs'
 
 const USER_TO_STAFF: Record<string, string> = {
-  'u3': 's1',
-  'u4': 's3',
-  'u5': 's2',
+  'u3': 's1', // Maria → Johan Larsson (cleaning)
+  'u4': 's3', // Bjorn → Marcus Berg (maintenance)
+  'u5': 's4', // Fatima → Fatima Ndiaye (guest services)
+  'u7': 's2', // Anna → Anna Kowalski (inspector)
 }
 
 function getGreeting(): string {
@@ -639,8 +640,13 @@ export default function BriefingPage() {
                   <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>
                     {`Today's Check-ins`}
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 4 }}>2 arrivals · 15:00 and 17:00</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Both properties need readiness check</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 4 }}>
+                    {activeIssues.length > 0 ? `${activeIssues.length} active issue${activeIssues.length !== 1 ? 's' : ''}` : 'No active guest issues'}
+                    {urgentIssues.length > 0 && ` · ${urgentIssues.length} urgent`}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+                    {openIssues.length > 0 ? `${openIssues.length} medium/low priority open` : 'All clear on routine issues'}
+                  </div>
                 </div>
               )}
 

@@ -9,7 +9,7 @@ import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
 import AppDrawer from '@/components/shared/AppDrawer'
 import { useRole } from '@/context/RoleContext'
-import { STAFF_MEMBERS } from '@/lib/data/staff'
+import { STAFF_MEMBERS, JOBS } from '@/lib/data/staff'
 import { PROPERTIES } from '@/lib/data/properties'
 import {
   SHIFTS, AVAILABILITY, DAYS, SHIFT_TYPE_COLOR, SHIFT_STATUS_COLOR,
@@ -18,7 +18,7 @@ import {
   type Shift, type DayOfWeek, type ShiftType,
 } from '@/lib/data/staffScheduling'
 
-type Tab = 'roster' | 'schedule' | 'workload' | 'payroll' | 'contractors'
+type Tab = 'roster' | 'schedule' | 'workload' | 'payroll' | 'contractors' | 'daily'
 
 interface Contractor {
   id: string; name: string; specialty: string; phone: string; email: string; rating: number; status: 'active' | 'inactive'
@@ -194,6 +194,8 @@ export default function TeamPage() {
   const [tab, setTab]                     = useState<Tab>('roster')
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null)
   const [expandedStaff, setExpandedStaff] = useState<string | null>(null)
+  const [dailyJobSheet, setDailyJobSheet] = useState(false)
+  const [selectedDailyJob, setSelectedDailyJob] = useState<typeof JOBS[0] | null>(null)
 
   const workload = getWorkloadSummary()
   const [contractors, setContractors] = useState<Contractor[]>(INITIAL_CONTRACTORS)
@@ -233,6 +235,7 @@ export default function TeamPage() {
         <button style={tabStyle('workload')}    onClick={() => setTab('workload')}>    <BarChart2 size={14} /> Workload    </button>
         <button style={tabStyle('payroll')}     onClick={() => setTab('payroll')}>     <DollarSign size={14} /> Payroll     </button>
         <button style={tabStyle('contractors')} onClick={() => setTab('contractors')}> <Wrench size={14} /> Contractors </button>
+        <button style={tabStyle('daily')}       onClick={() => setTab('daily')}>       <Calendar size={14} /> Daily       </button>
       </div>
 
       <AnimatePresence mode="wait">
@@ -741,6 +744,104 @@ export default function TeamPage() {
             </AppDrawer>
             {cToast && (
               <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#16a34a', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>{cToast}</div>
+            )}
+          </motion.div>
+        )}
+
+        {/* ── DAILY ── */}
+        {tab === 'daily' && (
+          <motion.div key="daily" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 20, fontWeight: 500 }}>
+              Today · {new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              {STAFF_MEMBERS.map(member => {
+                const myJobs = JOBS.filter(j => member.jobIds.includes(j.id))
+                const typeColor: Record<string, string> = {
+                  cleaning: '#7c3aed', maintenance: '#d97706', inspection: '#06b6d4',
+                  guest_services: '#ec4899', intake: '#059669',
+                }
+                return (
+                  <div key={member.id}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                      <div style={{ width: 34, height: 34, borderRadius: 8, background: `${accent}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, color: accent }}>
+                        {member.initials}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{member.name}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{member.role} · {myJobs.length} task{myJobs.length !== 1 ? 's' : ''} today</div>
+                      </div>
+                    </div>
+                    {myJobs.length === 0 ? (
+                      <div style={{ padding: '10px 14px', background: 'var(--bg-elevated)', borderRadius: 8, fontSize: 12, color: 'var(--text-subtle)' }}>
+                        No tasks assigned today
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {myJobs.map(job => (
+                          <div
+                            key={job.id}
+                            onClick={() => { setSelectedDailyJob(job); setDailyJobSheet(true) }}
+                            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 9, cursor: 'pointer', transition: 'border-color 0.15s' }}
+                            onMouseEnter={e => (e.currentTarget.style.borderColor = accent)}
+                            onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
+                          >
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: typeColor[job.type] ?? accent, flexShrink: 0 }} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job.title}</div>
+                              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{job.propertyName}</div>
+                            </div>
+                            <StatusBadge status={job.priority} />
+                            <div style={{ fontSize: 11, color: 'var(--text-subtle)', flexShrink: 0 }}>{job.dueTime}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Job detail sheet */}
+            {dailyJobSheet && selectedDailyJob && (
+              <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end' }}>
+                <div onClick={() => setDailyJobSheet(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
+                <div style={{ position: 'relative', width: 380, height: '100vh', background: 'var(--bg-page)', borderLeft: '1px solid var(--border)', padding: 24, overflowY: 'auto', zIndex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                    <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>Task Detail</span>
+                    <button onClick={() => setDailyJobSheet(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }}><X size={18} /></button>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>TITLE</div>
+                      <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>{selectedDailyJob.title}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>PROPERTY</div>
+                      <div style={{ fontSize: 13, color: 'var(--text-primary)' }}>{selectedDailyJob.propertyName}</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 16 }}>
+                      <div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>TYPE</div>
+                        <div style={{ fontSize: 13, color: 'var(--text-primary)', textTransform: 'capitalize' }}>{selectedDailyJob.type.replace('_', ' ')}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>DUE</div>
+                        <div style={{ fontSize: 13, color: 'var(--text-primary)' }}>{selectedDailyJob.dueTime}</div>
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>PRIORITY</div>
+                      <StatusBadge status={selectedDailyJob.priority} />
+                    </div>
+                    {'pteStatus' in selectedDailyJob && (selectedDailyJob as { pteStatus?: string }).pteStatus === 'pending' && (
+                      <div style={{ padding: '8px 12px', borderRadius: 8, background: '#d9770618', border: '1px solid #d9770640', fontSize: 12, color: '#d97706', fontWeight: 600 }}>
+                        🔒 PTE Pending — awaiting Guest Services approval
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             )}
           </motion.div>
         )}

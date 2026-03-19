@@ -311,6 +311,52 @@ export default function OperatorDashboard() {
             )}
           </div>
 
+          {/* Team Today */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Users size={14} style={{ color: accent }} />
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Team Today</h3>
+              </div>
+              <Link href="/operator/team?tab=daily" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: accent, textDecoration: 'none' }}>
+                Full view <ChevronRight size={12} />
+              </Link>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {STAFF_MEMBERS.map(member => {
+                const myJobs = JOBS.filter(j => member.jobIds.includes(j.id))
+                const pendingJobs = myJobs.filter(j => j.status !== 'done')
+                const hasPte = myJobs.some(j => (j as { pteStatus?: string }).pteStatus === 'pending')
+                const roleColor: Record<string, string> = { cleaning: '#7c3aed', maintenance: '#d97706', inspection: '#06b6d4', 'guest_services': '#ec4899' }
+                const memberType = myJobs[0]?.type ?? 'cleaning'
+                return (
+                  <div key={member.id} style={{ padding: '10px 12px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 9 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 7, background: `${roleColor[memberType] ?? accent}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11, color: roleColor[memberType] ?? accent, flexShrink: 0 }}>
+                        {member.initials}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name.split(' ')[0]}</div>
+                        <div style={{ fontSize: 10, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.role}</div>
+                      </div>
+                      {hasPte && <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 4, background: '#d9770620', color: '#d97706', fontWeight: 700, flexShrink: 0 }}>🔒 PTE</span>}
+                    </div>
+                    {pendingJobs.length === 0 ? (
+                      <div style={{ fontSize: 11, color: '#059669' }}>✓ All done</div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {pendingJobs.slice(0, 2).map(j => (
+                          <div key={j.id} style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>· {j.title}</div>
+                        ))}
+                        {pendingJobs.length > 2 && <div style={{ fontSize: 10, color: 'var(--text-subtle)' }}>+{pendingJobs.length - 2} more</div>}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
           {/* Work Orders */}
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>

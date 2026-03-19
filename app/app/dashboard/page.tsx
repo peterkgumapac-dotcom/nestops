@@ -26,9 +26,10 @@ const CLEANING_TEMPLATES = [
 // ─── Seed data ────────────────────────────────────────────────────────────────
 
 const USER_TO_STAFF: Record<string, string> = {
-  'u3': 's1', // Maria → cleaning
-  'u4': 's3', // Bjorn → maintenance
-  'u5': 's2', // Fatima → guest services
+  'u3': 's1', // Maria → Johan Larsson (cleaning)
+  'u4': 's3', // Bjorn → Marcus Berg (maintenance)
+  'u5': 's4', // Fatima → Fatima Ndiaye (guest services)
+  'u7': 's2', // Anna → Anna Kowalski (inspector)
 }
 
 interface ClockInRecord {

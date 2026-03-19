@@ -64,6 +64,14 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     setRoleState(r)
     localStorage.setItem('nestops_role', r)
     applyAccent(r)
+    // Patch nestops_user so page refresh doesn't revert to old role
+    try {
+      const raw = localStorage.getItem('nestops_user')
+      if (raw) {
+        const u = JSON.parse(raw)
+        localStorage.setItem('nestops_user', JSON.stringify({ ...u, role: r }))
+      }
+    } catch {}
   }
 
   const setUser = (u: UserProfile) => {
