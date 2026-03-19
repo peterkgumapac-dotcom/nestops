@@ -8,6 +8,7 @@ import Tabs from '@/components/shared/Tabs'
 import { GUIDEBOOKS, type Guidebook } from '@/lib/data/guidebooks'
 import { PROPERTIES } from '@/lib/data/properties'
 import { UPSELL_RULES, PROPERTY_GROUPS } from '@/lib/data/upsells'
+import { BRANDING_TEMPLATES, VERIFICATION_TEMPLATES } from '@/lib/data/brandingTemplates'
 import { useRole } from '@/context/RoleContext'
 
 export default function GuidebooksPage() {
@@ -38,6 +39,8 @@ export default function GuidebooksPage() {
       setBrandName(editingGuide.brandName ?? '')
       setBrandColor(editingGuide.brandColor ?? '#7c3aed')
       setRequiresVerification(editingGuide.requiresVerification ?? false)
+      setDoorCodeRevealMode(editingGuide.doorCodeRevealMode ?? 'verified_only')
+      setCodeRevealHours(String(editingGuide.codeRevealHoursBeforeCheckin ?? 2))
     }
   }, [editingGuide])
   const [toast, setToast] = useState('')
@@ -140,6 +143,8 @@ export default function GuidebooksPage() {
   const [customDomain, setCustomDomain] = useState('')
   const [stripeAccountId, setStripeAccountId] = useState('')
   const [requiresVerification, setRequiresVerification] = useState(false)
+  const [doorCodeRevealMode, setDoorCodeRevealMode] = useState<'always' | 'verified_only' | 'time_gated'>('verified_only')
+  const [codeRevealHours, setCodeRevealHours] = useState('2')
 
   const editorTabs = [
     { key: 'content', label: 'Content' },
@@ -482,14 +487,78 @@ export default function GuidebooksPage() {
           )
         })()}
 
-        {editorTab === 'branding' && (
-          <div style={{ maxWidth: 560 }}>
+        {editorTab === 'branding' && (() => {
+          const propGroupForGuide = PROPERTY_GROUPS.find(g => g.propertyIds.includes(editingGuide.propertyId))
+          const availableTemplates = BRANDING_TEMPLATES.filter(t =>
+            t.scope === 'portal' ||
+            (t.scope === 'group' && propGroupForGuide && t.targetGroupId === propGroupForGuide.id)
+          )
+          const availableVerifTemplates = VERIFICATION_TEMPLATES.filter(t =>
+            t.scope === 'portal' ||
+            (t.scope === 'group' && propGroupForGuide && t.targetGroupId === propGroupForGuide.id)
+          )
+          return (
+          <div style={{ maxWidth: 600 }}>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24 }}>
-              White-label this guidebook with your brand. Guests will see your logo, colors, and brand name instead of NestOps defaults.
+              Apply a brand template or configure custom branding for this guidebook. Templates are defined at portal or property-group level and can be applied in one click.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-              {/* Logo */}
+              {/* ── Template Picker ── */}
+              <div style={{ background: 'var(--bg-card)', border: `1px solid ${accent}40`, borderRadius: 10, padding: '16px' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>Apply Branding Template</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 14, lineHeight: 1.5 }}>
+                  Templates are shared across your portal or property group — changes propagate everywhere the template is applied.
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {availableTemplates.map(tmpl => {
+                    const isActive = brandColor === tmpl.brandColor && brandName === (tmpl.brandName ?? '')
+                    return (
+                      <div key={tmpl.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 9, background: 'var(--bg-elevated)', border: `1px solid ${isActive ? accent : 'var(--border)'}`, cursor: 'pointer', transition: 'border-color 0.15s' }}
+                        onClick={() => {
+                          setBrandLogoUrl(tmpl.brandLogo ?? '')
+                          setBrandColor(tmpl.brandColor)
+                          setBrandName(tmpl.brandName ?? '')
+                          setCustomDomain(tmpl.customDomain ?? '')
+                          setRequiresVerification(tmpl.requiresVerification)
+                          setDoorCodeRevealMode(tmpl.doorCodeRevealMode)
+                          setCodeRevealHours(String(tmpl.codeRevealHoursBeforeCheckin ?? 2))
+                          showToast(`Applied "${tmpl.name}" template`)
+                        }}
+                      >
+                        <div style={{ width: 28, height: 28, borderRadius: 6, background: tmpl.brandColor, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff' }}>
+                          {(tmpl.brandName ?? 'N')[0]}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{tmpl.name}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+                            {tmpl.scope === 'portal' ? '🌐 Portal-wide' : `📦 ${propGroupForGuide?.name ?? 'Group'}`}
+                            {tmpl.requiresVerification && ' · Verification on'}
+                            {tmpl.doorCodeRevealMode === 'time_gated' && ` · Code ${tmpl.codeRevealHoursBeforeCheckin}h before check-in`}
+                          </div>
+                        </div>
+                        {isActive
+                          ? <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 5, background: `${accent}18`, color: accent, fontWeight: 600 }}>Active</span>
+                          : <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Apply →</span>
+                        }
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Save as template */}
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Save current settings as a new template</span>
+                  <button
+                    onClick={() => showToast('Template saved — available for all guidebooks in this group')}
+                    style={{ padding: '6px 12px', borderRadius: 7, border: `1px solid ${accent}`, background: 'transparent', color: accent, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
+                  >
+                    Save as Template
+                  </button>
+                </div>
+              </div>
+
+              {/* ── Custom Logo ── */}
               <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px' }}>
                 <label style={labelStyle}>Custom Logo URL</label>
                 <input style={inputStyle} value={brandLogoUrl} onChange={e => setBrandLogoUrl(e.target.value)} placeholder="https://your-brand.com/logo.png" />
@@ -501,72 +570,115 @@ export default function GuidebooksPage() {
                 )}
               </div>
 
-              {/* Brand Name */}
-              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px' }}>
-                <label style={labelStyle}>Brand Name</label>
-                <input style={inputStyle} value={brandName} onChange={e => setBrandName(e.target.value)} placeholder="Your Brand (replaces &quot;Powered by NestOps&quot;)" />
-              </div>
-
-              {/* Primary Color */}
-              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px' }}>
-                <label style={labelStyle}>Primary Color</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <input
-                    type="color"
-                    value={brandColor}
-                    onChange={e => setBrandColor(e.target.value)}
-                    style={{ width: 44, height: 36, borderRadius: 6, border: '1px solid var(--border)', cursor: 'pointer', padding: 2 }}
-                  />
-                  <input
-                    style={{ ...inputStyle, flex: 1, fontFamily: 'monospace' }}
-                    value={brandColor}
-                    onChange={e => setBrandColor(e.target.value)}
-                    placeholder="#7c3aed"
-                  />
-                  <div style={{ width: 36, height: 36, borderRadius: 8, background: brandColor, border: '1px solid var(--border)', flexShrink: 0 }} />
+              {/* ── Brand Name + Color ── */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px' }}>
+                  <label style={labelStyle}>Brand Name</label>
+                  <input style={inputStyle} value={brandName} onChange={e => setBrandName(e.target.value)} placeholder='Replaces "Powered by NestOps"' />
+                </div>
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px' }}>
+                  <label style={labelStyle}>Primary Color</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input type="color" value={brandColor} onChange={e => setBrandColor(e.target.value)} style={{ width: 40, height: 34, borderRadius: 6, border: '1px solid var(--border)', cursor: 'pointer', padding: 2 }} />
+                    <input style={{ ...inputStyle, fontFamily: 'monospace', flex: 1 }} value={brandColor} onChange={e => setBrandColor(e.target.value)} />
+                    <div style={{ width: 34, height: 34, borderRadius: 7, background: brandColor, border: '1px solid var(--border)', flexShrink: 0 }} />
+                  </div>
                 </div>
               </div>
 
-              {/* Custom Domain */}
+              {/* ── Custom Domain + Stripe ── */}
               <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px' }}>
                 <label style={labelStyle}>Custom Domain</label>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <input style={{ ...inputStyle, flex: 1 }} value={customDomain} onChange={e => setCustomDomain(e.target.value)} placeholder="guide.yourbrand.com" />
-                  <button onClick={() => showToast('Domain connection coming soon')} style={{ padding: '10px 14px', borderRadius: 8, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                    Connect →
-                  </button>
-                </div>
-                <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-subtle)' }}>
-                  Point a CNAME record to nestops.app to use a custom domain.
+                  <button onClick={() => showToast('Domain connection coming soon')} style={{ padding: '10px 14px', borderRadius: 8, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}>Connect →</button>
                 </div>
               </div>
 
-              {/* Stripe Account */}
               <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px' }}>
                 <label style={labelStyle}>Stripe Account ID</label>
                 <input style={inputStyle} value={stripeAccountId} onChange={e => setStripeAccountId(e.target.value)} placeholder="acct_1A2B3C4D5E6F7G8H" />
-                <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-subtle)', lineHeight: 1.5 }}>
-                  Upsell payments and security deposits will route to your connected Stripe account.
-                </div>
+                <div style={{ marginTop: 6, fontSize: 11, color: 'var(--text-subtle)' }}>Upsell + deposit payments route to this Stripe account</div>
               </div>
 
-              {/* Verification Toggle */}
+              {/* ── Verification Config ── */}
               <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 3 }}>Require Guest Verification</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Gate guidebook access behind ID verification + security deposit</div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>Require Guest Verification</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Gate guidebook behind the verification wizard</div>
                   </div>
-                  <div
-                    onClick={() => setRequiresVerification(v => !v)}
-                    style={{ width: 44, height: 24, borderRadius: 12, background: requiresVerification ? accent : 'var(--bg-elevated)', cursor: 'pointer', position: 'relative', border: requiresVerification ? 'none' : '1px solid var(--border)', transition: 'background 0.2s', flexShrink: 0 }}
-                  >
+                  <div onClick={() => setRequiresVerification(v => !v)} style={{ width: 44, height: 24, borderRadius: 12, background: requiresVerification ? accent : 'var(--bg-elevated)', cursor: 'pointer', position: 'relative', border: requiresVerification ? 'none' : '1px solid var(--border)', transition: 'background 0.2s', flexShrink: 0 }}>
                     <div style={{ position: 'absolute', top: 3, left: requiresVerification ? 'auto' : 3, right: requiresVerification ? 3 : 'auto', width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 0.2s, right 0.2s' }} />
                   </div>
                 </div>
+
                 {requiresVerification && (
-                  <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, background: `${accent}12`, border: `1px solid ${accent}40`, fontSize: 12, color: accent }}>
-                    ✓ Guests must complete the 5-step verification wizard before accessing this guidebook.
+                  <div>
+                    <label style={labelStyle}>Verification Template</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+                      {availableVerifTemplates.map(vt => (
+                        <div
+                          key={vt.id}
+                          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, background: 'var(--bg-elevated)', border: `1px solid var(--border)`, cursor: 'pointer' }}
+                          onClick={() => showToast(`Verification template "${vt.name}" applied`)}
+                        >
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{vt.name}</div>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                              {vt.steps.length} steps
+                              {vt.depositAmount > 0 && ` · ${vt.depositAmount.toLocaleString()} ${vt.depositCurrency} deposit`}
+                              {' · '}{vt.scope === 'portal' ? '🌐 Portal-wide' : '📦 Group'}
+                            </div>
+                          </div>
+                          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Use →</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Door Code Access ── */}
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px' }}>
+                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 4 }}>🔐 Door Code Reveal</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 }}>
+                  Control when guests can see the access code in their guidebook.
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {(['always', 'verified_only', 'time_gated'] as const).map(mode => (
+                    <div
+                      key={mode}
+                      onClick={() => setDoorCodeRevealMode(mode)}
+                      style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px', borderRadius: 9, border: `1px solid ${doorCodeRevealMode === mode ? accent : 'var(--border)'}`, background: doorCodeRevealMode === mode ? `${accent}0e` : 'var(--bg-elevated)', cursor: 'pointer', transition: 'all 0.15s' }}
+                    >
+                      <div style={{ width: 16, height: 16, borderRadius: '50%', border: `2px solid ${doorCodeRevealMode === mode ? accent : 'var(--text-subtle)'}`, background: doorCodeRevealMode === mode ? accent : 'transparent', flexShrink: 0, marginTop: 1, transition: 'all 0.15s' }} />
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>
+                          {mode === 'always' ? 'Always visible' : mode === 'verified_only' ? 'After verification' : 'Time-gated (verification + time window)'}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                          {mode === 'always' && 'Code is always shown in the guidebook (no gate)'}
+                          {mode === 'verified_only' && 'Code unlocks after the guest completes verification'}
+                          {mode === 'time_gated' && 'Code unlocks after verification AND within X hours of check-in'}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {doorCodeRevealMode === 'time_gated' && (
+                  <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <label style={{ ...labelStyle, marginBottom: 0, whiteSpace: 'nowrap' }}>Hours before check-in:</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={48}
+                      value={codeRevealHours}
+                      onChange={e => setCodeRevealHours(e.target.value)}
+                      style={{ width: 72, padding: '8px 10px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontSize: 13, outline: 'none' }}
+                    />
+                    <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>hours before check-in</span>
                   </div>
                 )}
               </div>
@@ -576,7 +688,8 @@ export default function GuidebooksPage() {
               </button>
             </div>
           </div>
-        )}
+          )
+        })()}
 
         {editorTab === 'share' && (
           <div style={{ maxWidth: 500 }}>

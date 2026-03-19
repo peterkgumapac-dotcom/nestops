@@ -1,7 +1,7 @@
 'use client'
 import { useState, use, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Wifi, Clock, ChevronDown, ChevronUp, MapPin, Copy, Check, Eye, EyeOff, Lock, ShoppingBag, ChevronRight, Utensils, Bus, Zap, X } from 'lucide-react'
+import { Wifi, Clock, ChevronDown, ChevronUp, MapPin, Copy, Check, Eye, EyeOff, Lock, ShoppingBag, ChevronRight, Utensils, Bus, Zap, X, KeyRound, Timer } from 'lucide-react'
 import { GUIDEBOOKS } from '@/lib/data/guidebooks'
 import { PROPERTIES } from '@/lib/data/properties'
 import { UPSELL_RULES, PROPERTY_GROUPS } from '@/lib/data/upsells'
@@ -31,6 +31,9 @@ export default function GuestGuidebookPage({ params }: { params: Promise<{ id: s
   const [upsellSheet, setUpsellSheet] = useState<string | null>(null)
   const [addedUpsells, setAddedUpsells] = useState<Set<string>>(new Set())
   const [upsellProcessing, setUpsellProcessing] = useState(false)
+  const [codeRevealed, setCodeRevealed] = useState(false)
+  const [codeCopied, setCodeCopied] = useState(false)
+  const [now] = useState(() => new Date())
 
   useEffect(() => {
     if (!guidebook) return
@@ -144,6 +147,39 @@ export default function GuestGuidebookPage({ params }: { params: Promise<{ id: s
     .map(r => r.replace(/^[•\-\*]\s*/, '').trim())
     .filter(Boolean)
 
+  // Door code reveal logic
+  const accessCode = property?.accessCodes?.[0]
+  const revealMode = guidebook.doorCodeRevealMode ?? 'always'
+  const hoursBeforeCheckin = guidebook.codeRevealHoursBeforeCheckin ?? 2
+
+  // Find the guest's check-in date from verifications (for time-gating)
+  const guestVerif = GUEST_VERIFICATIONS.find(v => v.propertyId === guidebook.propertyId)
+  let doorCodeState: 'hidden' | 'countdown' | 'available' = 'available'
+  let hoursUntilAvailable = 0
+
+  if (accessCode && revealMode !== 'always') {
+    if (!isVerified) {
+      doorCodeState = 'hidden'
+    } else if (revealMode === 'time_gated' && guestVerif) {
+      const checkinMs = new Date(guestVerif.checkInDate + 'T15:00:00').getTime()
+      const revealMs = checkinMs - hoursBeforeCheckin * 60 * 60 * 1000
+      if (now.getTime() < revealMs) {
+        doorCodeState = 'countdown'
+        hoursUntilAvailable = Math.ceil((revealMs - now.getTime()) / (60 * 60 * 1000))
+      } else {
+        doorCodeState = 'available'
+      }
+    } else {
+      doorCodeState = 'available'
+    }
+  }
+
+  const copyCode = (code: string) => {
+    navigator.clipboard.writeText(code).catch(() => {})
+    setCodeCopied(true)
+    setTimeout(() => setCodeCopied(false), 2000)
+  }
+
   // Upsells for this property
   const propGroup = PROPERTY_GROUPS.find(g => g.propertyIds.includes(guidebook.propertyId))
   const activeUpsells = UPSELL_RULES.filter(rule => {
@@ -224,6 +260,60 @@ export default function GuestGuidebookPage({ params }: { params: Promise<{ id: s
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Door Code card */}
+          {accessCode && (
+            <div style={{ background: '#111827', border: `1px solid ${doorCodeState === 'available' ? '#10b98140' : '#1f2937'}`, borderRadius: 12, padding: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 12, fontWeight: 700, color: '#6b7280', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                <KeyRound size={13} style={{ color: doorCodeState === 'available' ? '#10b981' : '#6b7280' }} />
+                {accessCode.label}
+              </div>
+
+              {doorCodeState === 'hidden' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, background: '#0d1525', border: '1px solid #1f2937' }}>
+                  <Lock size={16} style={{ color: '#6b7280', flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#9ca3af' }}>Code locked</div>
+                    <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>Complete verification to reveal your access code</div>
+                  </div>
+                </div>
+              )}
+
+              {doorCodeState === 'countdown' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, background: '#0d1525', border: '1px solid #1f2937' }}>
+                  <Timer size={16} style={{ color: '#f59e0b', flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#f59e0b' }}>Code available in ~{hoursUntilAvailable}h</div>
+                    <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>
+                      Unlocks {hoursBeforeCheckin}h before check-in · {guestVerif?.checkInDate}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {doorCodeState === 'available' && (
+                <div>
+                  <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 6 }}>Access Code</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ flex: 1, padding: '10px 14px', borderRadius: 8, background: '#0d1525', border: '1px solid #10b98140', fontFamily: 'monospace', fontSize: 22, fontWeight: 700, color: '#10b981', letterSpacing: codeRevealed ? '0.2em' : '0.15em' }}>
+                      {codeRevealed ? accessCode.code : '• • • • • •'}
+                    </div>
+                    <button onClick={() => setCodeRevealed(v => !v)} style={{ padding: '10px', borderRadius: 8, border: '1px solid #1f2937', background: '#0d1525', cursor: 'pointer', color: '#6b7280', display: 'flex', alignItems: 'center' }}>
+                      {codeRevealed ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                    {codeRevealed && (
+                      <button onClick={() => copyCode(accessCode.code)} style={{ padding: '10px 12px', borderRadius: 8, border: `1px solid ${codeCopied ? '#10b981' : '#1f2937'}`, background: codeCopied ? '#10b98118' : '#0d1525', cursor: 'pointer', color: codeCopied ? '#10b981' : '#6b7280', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, transition: 'all 0.15s' }}>
+                        {codeCopied ? <Check size={14} /> : <Copy size={14} />} {codeCopied ? 'Copied!' : 'Copy'}
+                      </button>
+                    )}
+                  </div>
+                  <div style={{ marginTop: 8, fontSize: 11, color: '#4b5563' }}>
+                    Via {accessCode.source === 'suiteop' ? 'SuiteOp smart lock' : 'manual'} · Last used {accessCode.lastUsed}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

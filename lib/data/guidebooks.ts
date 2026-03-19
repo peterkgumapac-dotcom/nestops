@@ -45,7 +45,12 @@ export interface Guidebook {
   brandLogo?: string
   brandColor?: string
   brandName?: string
+  brandingTemplateId?: string
   requiresVerification: boolean
+  verificationTemplateId?: string
+  // Door code access
+  doorCodeRevealMode?: 'always' | 'verified_only' | 'time_gated'
+  codeRevealHoursBeforeCheckin?: number
   // Rich content
   amenities?: string[]
   localRecs?: LocalRec[]
@@ -73,6 +78,7 @@ export const GUIDEBOOKS: Guidebook[] = [
     checkInTime: '15:00',
     checkOutTime: '11:00',
     requiresVerification: false,
+    doorCodeRevealMode: 'verified_only',
     amenities: ['WiFi', 'Pool', 'Parking', 'AC', 'Washer', 'BBQ', 'Sea View'],
     localRecs: [
       { category: 'food', name: 'Brygga Bistro', tip: 'Best seafood in town, book ahead on weekends', address: 'Strandveien 12' },
@@ -129,7 +135,11 @@ export const GUIDEBOOKS: Guidebook[] = [
     brandLogo: 'https://placehold.co/120x40/1d4ed8/ffffff?text=CoastalStays',
     brandColor: '#1d4ed8',
     brandName: 'CoastalStays',
+    brandingTemplateId: 'bt2',
     requiresVerification: true,
+    verificationTemplateId: 'vt2',
+    doorCodeRevealMode: 'time_gated',
+    codeRevealHoursBeforeCheckin: 2,
     amenities: ['WiFi', 'AC', 'Washer', 'Sea View', 'Parking', 'Pet Friendly', 'Balcony'],
     localRecs: [
       { category: 'food', name: 'Sjøhuset Restaurant', tip: 'Iconic harbor restaurant, amazing sunset views', address: 'Bryggen 1' },

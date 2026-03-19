@@ -10,6 +10,18 @@ interface ChangeEntry {
 
 const CHANGELOG: ChangeEntry[] = [
   {
+    version: 'v2.2',
+    date: 'Mar 19, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'Branding Templates — define brand settings once at portal or property-group level; apply to any guidebook in one click; active template highlighted with "Active" badge; "Save as Template" creates reusable brand templates from current settings' },
+      { tag: '⚡ Feature', text: 'Verification Templates — define step configs (e.g. Full KYC, Light ID+Rules) at portal/group level; select from template picker inside Branding tab when verification is enabled' },
+      { tag: '⚡ Feature', text: 'Door Code Reveal — 3 modes: Always (no gate), After Verification, or Time-Gated (verified + X hours before check-in); operator configures mode + hours in Branding tab; code shows as • • • • • • until revealed' },
+      { tag: '⚡ Feature', text: 'Time-Gated Door Code — countdown state shown to verified guest ("Code available in ~4h") when within time window; transitions to masked code once window opens; reveal + copy buttons; shows smart lock source + last used timestamp' },
+      { tag: '⚡ Feature', text: 'lib/data/brandingTemplates.ts — 4 sample branding templates (Default, CoastalStays/g2, Oslo Premium/g1, Nordic Nature/g3) + 4 verification templates; all scoped to portal or group' },
+      { tag: '🎨 UI', text: 'Branding tab redesign — template picker at top with scope badges, color swatches, one-click apply; custom fields below for per-guidebook overrides; door code reveal mode as radio cards with inline descriptions' },
+    ],
+  },
+  {
     version: 'v2.1',
     date: 'Mar 19, 2026',
     items: [
