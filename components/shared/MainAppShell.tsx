@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Menu, Bell } from 'lucide-react'
 import MainAppSidebar from './MainAppSidebar'
 import ClockStatus from './ClockStatus'
+import CommandPalette from '@/components/command-palette'
 import { useRole } from '@/context/RoleContext'
 
 export default function MainAppShell({ children }: { children: React.ReactNode }) {
@@ -57,6 +58,7 @@ export default function MainAppShell({ children }: { children: React.ReactNode }
           {children}
         </main>
       </div>
+      <CommandPalette />
     </div>
   )
 }

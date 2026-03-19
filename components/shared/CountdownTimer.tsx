@@ -7,6 +7,7 @@ interface CountdownTimerProps {
   label: string
   context?: string
   onComplete?: () => void
+  compact?: boolean
 }
 
 function calculateTimeLeft(target: string) {
@@ -18,7 +19,7 @@ function calculateTimeLeft(target: string) {
   return { hours, minutes, seconds, diff }
 }
 
-export default function CountdownTimer({ targetTime, label, context, onComplete }: CountdownTimerProps) {
+export default function CountdownTimer({ targetTime, label, context, onComplete, compact }: CountdownTimerProps) {
   const [timeLeft, setTimeLeft] = useState(() => calculateTimeLeft(targetTime))
   // Track whether the component has already mounted so we only animate on initial entry,
   // not on every subsequent per-second state update.
@@ -70,6 +71,14 @@ export default function CountdownTimer({ targetTime, label, context, onComplete 
 
   // Mark as mounted after the first render pass
   if (!hasMounted.current) hasMounted.current = true
+
+  if (compact) {
+    return (
+      <div style={{ fontVariantNumeric: 'tabular-nums', fontSize: 22, fontWeight: 700, color: timerColor }}>
+        {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+      </div>
+    )
+  }
 
   return (
     <div style={{ textAlign: 'center' }}>

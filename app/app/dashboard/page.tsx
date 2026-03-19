@@ -199,13 +199,14 @@ function Card({ children, style }: { children: React.ReactNode; style?: React.CS
 }
 
 function ActionBtn({ label, onClick }: { label: string; onClick?: () => void }) {
+  const { accent } = useRole()
   return (
     <button
       onClick={onClick}
       style={{
         padding: '5px 10px', borderRadius: 6,
-        background: 'transparent', border: `1px solid ${C.border}`,
-        color: C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+        background: `${accent}18`, border: `1px solid ${accent}60`,
+        color: accent, fontSize: 12, fontWeight: 700, cursor: 'pointer',
       }}
     >
       {label}
@@ -356,7 +357,7 @@ export default function AppDashboard() {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      style={{ maxWidth: 720, margin: '0 auto' }}
+      style={{ maxWidth: isOperator ? 1100 : 720, margin: '0 auto' }}
     >
       {/* Toast */}
       {toast && (
@@ -1162,6 +1163,27 @@ export default function AppDashboard() {
       {/* ── OPERATOR ──────────────────────────────────────────────────────────── */}
       {isOperator && (
         <>
+          {/* 4 stat cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
+            {[
+              { label: 'Open Issues', value: 3, icon: '⚠️' },
+              { label: 'Turnovers Today', value: TODAY_CHECKINS.length, icon: '🔄' },
+              { label: 'Low Stock Alerts', value: 4, icon: '📦' },
+              { label: 'Pending Approvals', value: 1, icon: '✅' },
+            ].map(stat => (
+              <div key={stat.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '16px 18px' }}>
+                <div style={{ fontSize: 20, marginBottom: 8 }}>{stat.icon}</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: C.text, marginBottom: 2 }}>{stat.value}</div>
+                <div style={{ fontSize: 11, color: C.muted, fontWeight: 500 }}>{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* 2-column layout */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24, alignItems: 'start' }}>
+          {/* Left column */}
+          <div>
+
           {/* Team status */}
           <SectionLabel label="Team Today" />
           <Card>
@@ -1230,30 +1252,6 @@ export default function AppDashboard() {
             ))}
           </Card>
 
-          {/* Check-ins */}
-          <SectionLabel label="Today's Check-ins" />
-          <Card>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>CHECK-INS TODAY</span>
-              <span style={{ fontSize: 12, color: C.muted }}>{TODAY_CHECKINS.length} arrivals</span>
-            </div>
-            {TODAY_CHECKINS.map((ci, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: i < TODAY_CHECKINS.length - 1 ? `1px solid ${C.border}` : 'none' }}>
-                <div>
-                  <span style={{ fontSize: 13, color: C.text }}>{ci.time} · {ci.propertyName}</span>
-                  {ci.readinessNote && <div style={{ fontSize: 11, color: C.amber }}>{ci.readinessNote}</div>}
-                </div>
-                <span style={{
-                  fontSize: 11, fontWeight: 600, padding: '2px 7px', borderRadius: 4,
-                  background: ci.readiness === 'ok' ? 'rgba(22,163,74,0.15)' : 'rgba(217,119,6,0.15)',
-                  color: ci.readiness === 'ok' ? C.green : C.amber,
-                }}>
-                  {ci.readiness === 'ok' ? '✓ Ready' : '⚠️ At risk'}
-                </span>
-              </div>
-            ))}
-          </Card>
-
           {/* Needs action */}
           <SectionLabel label="Needs Action" />
           <Card>
@@ -1292,15 +1290,74 @@ export default function AppDashboard() {
             ))}
           </Card>
 
-          {/* Countdown */}
-          <SectionLabel label="First Check-in Countdown" />
-          <Card style={{ textAlign: 'center', padding: '20px 16px' }}>
-            <CountdownTimer
-              targetTime={`${today}T15:00:00`}
-              label="FIRST CHECK-IN"
-              context="Lars Eriksen · Sunset Villa · 15:00"
-            />
-          </Card>
+          </div>{/* end left column */}
+
+          {/* Right column */}
+          <div>
+            {/* Check-ins */}
+            <SectionLabel label="Today's Check-ins" />
+            <Card>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>CHECK-INS TODAY</span>
+                <span style={{ fontSize: 12, color: C.muted }}>{TODAY_CHECKINS.length} arrivals</span>
+              </div>
+              {TODAY_CHECKINS.map((ci, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: i < TODAY_CHECKINS.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                  <div>
+                    <span style={{ fontSize: 13, color: C.text }}>{ci.time} · {ci.propertyName}</span>
+                    {ci.readinessNote && <div style={{ fontSize: 11, color: C.amber }}>{ci.readinessNote}</div>}
+                  </div>
+                  <span style={{
+                    fontSize: 11, fontWeight: 600, padding: '2px 7px', borderRadius: 4,
+                    background: ci.readiness === 'ok' ? 'rgba(22,163,74,0.15)' : 'rgba(217,119,6,0.15)',
+                    color: ci.readiness === 'ok' ? C.green : C.amber,
+                  }}>
+                    {ci.readiness === 'ok' ? '✓ Ready' : '⚠️ At risk'}
+                  </span>
+                </div>
+              ))}
+            </Card>
+
+            {/* Compact Countdown */}
+            <SectionLabel label="First Check-in Countdown" />
+            <Card style={{ padding: '12px 16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>FIRST CHECK-IN</span>
+                <CountdownTimer
+                  targetTime={`${today}T15:00:00`}
+                  label=""
+                  compact
+                />
+              </div>
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 6 }}>Lars Eriksen · Sunset Villa · 15:00</div>
+            </Card>
+
+            {/* Quick Links */}
+            <SectionLabel label="Quick Links" />
+            <Card>
+              {[
+                { label: 'New Issue', href: '/operator/issues' },
+                { label: 'Schedule Clean', href: '/operator/operations?tab=cleaning' },
+                { label: 'View Properties', href: '/operator/properties' },
+                { label: 'Staff Overview', href: '/operator/staff' },
+              ].map((link, i, arr) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '8px 0', fontSize: 13, color: C.text, textDecoration: 'none',
+                    borderBottom: i < arr.length - 1 ? `1px solid ${C.border}` : 'none',
+                  }}
+                >
+                  {link.label}
+                  <span style={{ color: C.muted, fontSize: 16 }}>›</span>
+                </a>
+              ))}
+            </Card>
+          </div>{/* end right column */}
+
+          </div>{/* end 2-column grid */}
         </>
       )}
 

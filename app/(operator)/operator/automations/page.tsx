@@ -119,6 +119,9 @@ export default function AutomationsPage() {
                 >
                   <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3, left: auto.active ? 19 : 3, transition: 'left 0.2s' }} />
                 </button>
+                {!auto.active && (
+                  <span style={{ fontSize: 11, color: 'var(--text-subtle)', fontWeight: 500 }}>Paused</span>
+                )}
                 <div style={{ position: 'relative' }}>
                   <button
                     onClick={() => setOpenMenuId(openMenuId === auto.id ? null : auto.id)}
