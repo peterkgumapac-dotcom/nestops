@@ -1,12 +1,13 @@
 'use client'
 import { Suspense, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useSearchParams } from 'next/navigation'
 import {
-  CheckSquare, FileText, CalendarCheck, Video,
+  FileText, CalendarCheck, Video,
   List, Table2, LayoutGrid, Calendar,
   ChevronLeft, ChevronRight, Check, Search,
-  Plus, MoreHorizontal, X,
+  MoreHorizontal, X,
+  LayoutDashboard, Building2, UserPlus, Wrench,
 } from 'lucide-react'
 import {
   DndContext, DragEndEvent, closestCorners, useDroppable,
@@ -28,7 +29,7 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = 'tasks' | 'sops' | 'cleaning' | 'meetings'
+type Tab = 'overview' | 'property-ops' | 'onboarding' | 'maintenance' | 'sops' | 'cleaning' | 'meetings'
 type BoardView = 'kanban' | 'list' | 'table' | 'calendar'
 type SopStatus = 'draft' | 'pending' | 'approved'
 type SopFilterStatus = 'all' | SopStatus
@@ -41,6 +42,8 @@ interface KanbanTask {
   assignee: string
   due: string
   columnId: string
+  boardId: 'property-ops' | 'onboarding' | 'maintenance'
+  property?: string
 }
 
 interface SopRow {
@@ -68,12 +71,6 @@ interface Meeting {
 
 // ─── Seed Data ────────────────────────────────────────────────────────────────
 
-const BOARDS = [
-  { id: 'b1', name: 'Property Operations' },
-  { id: 'b2', name: 'Onboarding Pipeline' },
-  { id: 'b3', name: 'Maintenance Projects' },
-]
-
 const COLUMNS = [
   { id: 'todo',       label: 'To Do',       color: '#7878a0' },
   { id: 'inprogress', label: 'In Progress',  color: '#7c3aed' },
@@ -81,12 +78,23 @@ const COLUMNS = [
 ]
 
 const INITIAL_TASKS: KanbanTask[] = [
-  { id: 't1', title: 'Update guest welcome pack',  type: 'Content',    priority: 'medium', assignee: 'Maria S.',  due: '2026-03-20', columnId: 'todo' },
-  { id: 't2', title: 'Fix bathroom extractor fan', type: 'Maintenance',priority: 'high',   assignee: 'Bjorn L.',  due: '2026-03-18', columnId: 'todo' },
-  { id: 't3', title: 'Deep clean — Harbor Studio', type: 'Cleaning',   priority: 'high',   assignee: 'Fatima N.', due: '2026-03-17', columnId: 'inprogress' },
-  { id: 't4', title: 'Owner onboarding — Kim',     type: 'Onboarding', priority: 'medium', assignee: 'Ivan P.',   due: '2026-03-22', columnId: 'inprogress' },
-  { id: 't5', title: 'Restock toiletry kits',      type: 'Inventory',  priority: 'low',    assignee: 'Maria S.',  due: '2026-03-15', columnId: 'done' },
-  { id: 't6', title: 'Submit compliance docs',     type: 'Compliance', priority: 'medium', assignee: 'Bjorn L.',  due: '2026-03-14', columnId: 'done' },
+  // Property Ops
+  { id: 't1',  title: 'Update guest welcome pack',        type: 'Content',    priority: 'medium', assignee: 'Maria S.',  due: '2026-03-20', columnId: 'todo',       boardId: 'property-ops', property: 'Harbor Studio' },
+  { id: 't5',  title: 'Restock toiletry kits',            type: 'Inventory',  priority: 'low',    assignee: 'Maria S.',  due: '2026-03-15', columnId: 'done',       boardId: 'property-ops', property: 'Sunset Villa' },
+  { id: 't6',  title: 'Submit compliance docs',           type: 'Compliance', priority: 'medium', assignee: 'Bjorn L.',  due: '2026-03-14', columnId: 'done',       boardId: 'property-ops', property: 'Ocean View Apt' },
+  { id: 't7',  title: 'Update listing photos',            type: 'Content',    priority: 'low',    assignee: 'Ivan P.',   due: '2026-03-25', columnId: 'todo',       boardId: 'property-ops', property: 'Mountain Cabin' },
+  { id: 't8',  title: 'Pre-arrival inspection — Villa',   type: 'Compliance', priority: 'high',   assignee: 'Bjorn L.',  due: '2026-03-19', columnId: 'inprogress', boardId: 'property-ops', property: 'Sunset Villa' },
+  // Onboarding
+  { id: 't4',  title: 'Owner onboarding — Kim',           type: 'Onboarding', priority: 'medium', assignee: 'Ivan P.',   due: '2026-03-22', columnId: 'inprogress', boardId: 'onboarding' },
+  { id: 't9',  title: 'Send property onboarding pack',    type: 'Onboarding', priority: 'high',   assignee: 'Peter K.',  due: '2026-03-20', columnId: 'todo',       boardId: 'onboarding' },
+  { id: 't10', title: 'Create listing — Kim Portfolio',   type: 'Onboarding', priority: 'medium', assignee: 'Ivan P.',   due: '2026-03-24', columnId: 'todo',       boardId: 'onboarding' },
+  { id: 't11', title: 'Property walkthrough complete',    type: 'Onboarding', priority: 'low',    assignee: 'Peter K.',  due: '2026-03-18', columnId: 'done',       boardId: 'onboarding' },
+  // Maintenance
+  { id: 't2',  title: 'Fix bathroom extractor fan',       type: 'Maintenance',priority: 'high',   assignee: 'Bjorn L.',  due: '2026-03-18', columnId: 'todo',       boardId: 'maintenance', property: 'Downtown Loft' },
+  { id: 't3',  title: 'Deep clean — Harbor Studio',       type: 'Cleaning',   priority: 'high',   assignee: 'Fatima N.', due: '2026-03-17', columnId: 'inprogress', boardId: 'maintenance', property: 'Harbor Studio' },
+  { id: 't12', title: 'Replace mattress — Downtown Loft', type: 'Maintenance',priority: 'medium', assignee: 'Bjorn L.',  due: '2026-03-26', columnId: 'todo',       boardId: 'maintenance', property: 'Downtown Loft' },
+  { id: 't13', title: 'Heating system check — Sunset',    type: 'Maintenance',priority: 'low',    assignee: 'Bjorn L.',  due: '2026-03-28', columnId: 'todo',       boardId: 'maintenance', property: 'Sunset Villa' },
+  { id: 't14', title: 'Leaking tap — Ocean View kitchen', type: 'Maintenance',priority: 'high',   assignee: 'Bjorn L.',  due: '2026-03-19', columnId: 'inprogress', boardId: 'maintenance', property: 'Ocean View Apt' },
 ]
 
 const SOPS: SopRow[] = [
@@ -177,8 +185,19 @@ function SortableCard({ task, accent }: { task: KanbanTask; accent: string }) {
       {...attributes}
       {...listeners}
     >
-      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: 12, cursor: 'grab', marginBottom: 8 }}>
-        <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginBottom: 6 }}>{task.type}</div>
+      <div style={{
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border)',
+        borderLeft: `3px solid ${task.priority === 'high' ? '#dc2626' : task.priority === 'medium' ? '#d97706' : '#059669'}`,
+        borderRadius: 8,
+        padding: 12,
+        cursor: 'grab',
+        marginBottom: 8,
+      }}>
+        <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginBottom: 4 }}>{task.type}</div>
+        {task.property && (
+          <div style={{ fontSize: 10, color: accent, fontWeight: 600, marginBottom: 4 }}>{task.property}</div>
+        )}
         <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 10, lineHeight: 1.4 }}>{task.title}</div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <StatusBadge status={task.priority} />
@@ -315,12 +334,11 @@ function CleaningCalendar({ accent, jobs, onCellClick, onJobClick }: {
 function OperationsContent() {
   const searchParams = useSearchParams()
   const tabParam = searchParams.get('tab')
-  const validTabs: Tab[] = ['tasks', 'sops', 'cleaning', 'meetings']
-  const initialTab: Tab = validTabs.includes(tabParam as Tab) ? (tabParam as Tab) : 'tasks'
+  const validTabs: Tab[] = ['overview', 'property-ops', 'onboarding', 'maintenance', 'sops', 'cleaning', 'meetings']
+  const initialTab: Tab = validTabs.includes(tabParam as Tab) ? (tabParam as Tab) : 'overview'
 
   const { accent } = useRole()
   const [activeTab, setActiveTab] = useState<Tab>(initialTab)
-  const [activeBoard, setActiveBoard] = useState('b1')
   const [boardView, setBoardView] = useState<BoardView>('kanban')
   const [tasks, setTasks] = useState<KanbanTask[]>(INITIAL_TASKS)
   const [sopFilter, setSopFilter] = useState<SopFilterStatus>('all')
@@ -329,6 +347,7 @@ function OperationsContent() {
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null)
   const [selectedTask, setSelectedTask] = useState<KanbanTask | null>(null)
   const [taskDialog, setTaskDialog] = useState(false)
+  const [newTaskBoardId, setNewTaskBoardId] = useState<KanbanTask['boardId']>('property-ops')
   const [newSopSheet, setNewSopSheet] = useState(false)
   const [meetingSheet, setMeetingSheet] = useState(false)
 
@@ -375,6 +394,11 @@ function OperationsContent() {
     setTasks(prev => prev.map(t => t.id === taskId ? { ...t, columnId: targetColumnId } : t))
   }
 
+  // Derived board task lists
+  const propertyOpsTasks = tasks.filter(t => t.boardId === 'property-ops')
+  const onboardingTasks  = tasks.filter(t => t.boardId === 'onboarding')
+  const maintenanceTasks = tasks.filter(t => t.boardId === 'maintenance')
+
   // Filtered SOPs
   const filteredSops = SOPS.filter(s =>
     (sopFilter === 'all' || s.status === sopFilter) &&
@@ -390,10 +414,13 @@ function OperationsContent() {
 
   // Tab definitions
   const tabs: { key: Tab; label: string; icon: React.ReactNode; badge?: number }[] = [
-    { key: 'tasks',    label: 'Tasks',    icon: <CheckSquare size={14} />,  badge: tasks.filter(t => t.columnId !== 'done').length },
-    { key: 'sops',     label: 'SOPs',     icon: <FileText size={14} />,     badge: SOPS.filter(s => s.acknowledged < s.total).length },
-    { key: 'cleaning', label: 'Cleaning', icon: <CalendarCheck size={14} /> },
-    { key: 'meetings', label: 'Meetings', icon: <Video size={14} />,        badge: MEETINGS.filter(m => m.status === 'upcoming').length },
+    { key: 'overview',     label: 'Overview',     icon: <LayoutDashboard size={14} /> },
+    { key: 'property-ops', label: 'Property Ops', icon: <Building2 size={14} />,     badge: propertyOpsTasks.filter(t => t.columnId !== 'done').length },
+    { key: 'onboarding',   label: 'Onboarding',   icon: <UserPlus size={14} />,      badge: onboardingTasks.filter(t => t.columnId !== 'done').length },
+    { key: 'maintenance',  label: 'Maintenance',  icon: <Wrench size={14} />,        badge: maintenanceTasks.filter(t => t.columnId !== 'done').length },
+    { key: 'sops',         label: 'SOPs',         icon: <FileText size={14} />,      badge: SOPS.filter(s => s.acknowledged < s.total).length },
+    { key: 'cleaning',     label: 'Cleaning',     icon: <CalendarCheck size={14} /> },
+    { key: 'meetings',     label: 'Meetings',     icon: <Video size={14} />,         badge: MEETINGS.filter(m => m.status === 'upcoming').length },
   ]
 
   const boardViewButtons: { key: BoardView; icon: React.ReactNode }[] = [
@@ -404,19 +431,21 @@ function OperationsContent() {
   ]
 
   const topAction = () => {
-    if (activeTab === 'tasks')    return <button onClick={() => setTaskDialog(true)}         style={btnStyle(accent)}>+ New Task</button>
-    if (activeTab === 'sops')     return <button onClick={() => setNewSopSheet(true)}        style={btnStyle(accent)}>+ New SOP</button>
-    if (activeTab === 'cleaning') return <button onClick={() => openScheduleDrawer()}        style={btnStyle(accent)}>Schedule Cleaning</button>
-    if (activeTab === 'meetings') return <button onClick={() => setMeetingSheet(true)}       style={btnStyle(accent)}>+ New Meeting</button>
+    if (activeTab === 'property-ops') return <button onClick={() => { setNewTaskBoardId('property-ops'); setTaskDialog(true) }} style={btnStyle(accent)}>+ New Task</button>
+    if (activeTab === 'onboarding')   return <button onClick={() => { setNewTaskBoardId('onboarding');   setTaskDialog(true) }} style={btnStyle(accent)}>+ New Task</button>
+    if (activeTab === 'maintenance')  return <button onClick={() => { setNewTaskBoardId('maintenance');  setTaskDialog(true) }} style={btnStyle(accent)}>+ New Task</button>
+    if (activeTab === 'sops')         return <button onClick={() => setNewSopSheet(true)}  style={btnStyle(accent)}>+ New SOP</button>
+    if (activeTab === 'cleaning')     return <button onClick={() => openScheduleDrawer()} style={btnStyle(accent)}>Schedule Cleaning</button>
+    if (activeTab === 'meetings')     return <button onClick={() => setMeetingSheet(true)} style={btnStyle(accent)}>+ New Meeting</button>
     return null
   }
 
   // List view for tasks
-  const ListTaskView = () => {
+  const ListTaskView = ({ tasks: boardTasks }: { tasks: KanbanTask[] }) => {
     const groups = [
-      { label: 'To Do',       tasks: tasks.filter(t => t.columnId === 'todo') },
-      { label: 'In Progress', tasks: tasks.filter(t => t.columnId === 'inprogress') },
-      { label: 'Done',        tasks: tasks.filter(t => t.columnId === 'done') },
+      { label: 'To Do',       tasks: boardTasks.filter(t => t.columnId === 'todo') },
+      { label: 'In Progress', tasks: boardTasks.filter(t => t.columnId === 'inprogress') },
+      { label: 'Done',        tasks: boardTasks.filter(t => t.columnId === 'done') },
     ]
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -440,7 +469,7 @@ function OperationsContent() {
   }
 
   // Table view for tasks
-  const TableTaskView = () => (
+  const TableTaskView = ({ tasks: boardTasks }: { tasks: KanbanTask[] }) => (
     <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
         <thead>
@@ -451,8 +480,8 @@ function OperationsContent() {
           </tr>
         </thead>
         <tbody>
-          {tasks.map((t, i) => (
-            <tr key={t.id} onClick={() => setSelectedTask(t)} style={{ borderBottom: i < tasks.length - 1 ? '1px solid var(--border-subtle)' : 'none', cursor: 'pointer' }}>
+          {boardTasks.map((t, i) => (
+            <tr key={t.id} onClick={() => setSelectedTask(t)} style={{ borderBottom: i < boardTasks.length - 1 ? '1px solid var(--border-subtle)' : 'none', cursor: 'pointer' }}>
               <td style={{ padding: '11px 14px', fontWeight: 500, color: 'var(--text-primary)' }}>{t.title}</td>
               <td style={{ padding: '11px 14px', color: 'var(--text-muted)' }}>{t.type}</td>
               <td style={{ padding: '11px 14px' }}><StatusBadge status={t.columnId === 'todo' ? 'open' : t.columnId === 'inprogress' ? 'in_progress' : 'done'} /></td>
@@ -468,7 +497,7 @@ function OperationsContent() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      <PageHeader title="Operations" subtitle="Tasks, SOPs, and team procedures in one place" action={topAction()} />
+      <PageHeader title="Operations" subtitle="Your operations command center" action={topAction()} />
 
       {/* Tab bar */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid var(--border)', paddingBottom: 0 }}>
@@ -493,58 +522,111 @@ function OperationsContent() {
         ))}
       </div>
 
-      {/* ── Tasks Tab ── */}
-      {activeTab === 'tasks' && (
-        <div>
-          {/* Board selector + view switcher */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, gap: 12, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', gap: 6, overflowX: 'auto' }}>
-              {BOARDS.map(b => (
-                <button
-                  key={b.id}
-                  onClick={() => setActiveBoard(b.id)}
-                  style={{
-                    padding: '5px 14px', borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
-                    border: `1px solid ${activeBoard === b.id ? accent : 'var(--border)'}`,
-                    background: activeBoard === b.id ? `${accent}1a` : 'transparent',
-                    color: activeBoard === b.id ? accent : 'var(--text-muted)',
-                  }}
-                >{b.name}</button>
+      {/* ── Overview Tab ── */}
+      {activeTab === 'overview' && (() => {
+        const today = '2026-03-19'
+        const allOpen     = tasks.filter(t => t.columnId !== 'done')
+        const overdue     = allOpen.filter(t => t.due < today)
+        const maintActive = maintenanceTasks.filter(t => t.columnId !== 'done')
+        const todayCleans = cleaningJobs.filter(j => j.day === new Date().getDay() && j.status !== 'done')
+
+        return (
+          <div>
+            {/* Stat cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28 }}>
+              {[
+                { label: 'Open Tasks',         value: allOpen.length,     color: accent },
+                { label: 'Overdue',            value: overdue.length,     color: '#dc2626' },
+                { label: 'Maintenance Active', value: maintActive.length, color: '#d97706' },
+                { label: "Today's Cleanings",  value: todayCleans.length, color: '#059669' },
+              ].map(s => (
+                <div key={s.label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px' }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{s.label}</div>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: s.color }}>{s.value}</div>
+                </div>
               ))}
             </div>
-            <div style={{ display: 'flex', background: 'var(--bg-elevated)', borderRadius: 8, padding: 3, gap: 2, border: '1px solid var(--border)', flexShrink: 0 }}>
-              {boardViewButtons.map(b => (
-                <button
-                  key={b.key}
-                  onClick={() => setBoardView(b.key)}
-                  title={b.key}
-                  style={{ padding: '5px 9px', borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', background: boardView === b.key ? accent : 'transparent', color: boardView === b.key ? '#fff' : 'var(--text-muted)', transition: 'background 0.15s, color 0.15s' }}
-                >{b.icon}</button>
+
+            {/* Board summary row */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
+              {[
+                { boardId: 'property-ops' as Tab, label: 'Property Ops', icon: '🏠', tasks: propertyOpsTasks },
+                { boardId: 'onboarding'   as Tab, label: 'Onboarding',   icon: '🚀', tasks: onboardingTasks  },
+                { boardId: 'maintenance'  as Tab, label: 'Maintenance',  icon: '🔧', tasks: maintenanceTasks },
+              ].map(b => {
+                const open = b.tasks.filter(t => t.columnId !== 'done')
+                const top3 = open.slice(0, 3)
+                return (
+                  <div key={b.boardId} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{b.icon} {b.label}</span>
+                      <button onClick={() => setActiveTab(b.boardId)} style={{ fontSize: 11, color: accent, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>View →</button>
+                    </div>
+                    {top3.length === 0
+                      ? <div style={{ fontSize: 12, color: 'var(--text-subtle)' }}>All caught up ✓</div>
+                      : top3.map(t => (
+                        <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                          <div style={{ width: 6, height: 6, borderRadius: '50%', background: t.priority === 'high' ? '#dc2626' : t.priority === 'medium' ? '#d97706' : '#059669', flexShrink: 0 }} />
+                          <span style={{ fontSize: 12, color: 'var(--text-muted)', flex: 1 }}>{t.title}</span>
+                          <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{t.assignee.split(' ')[0]}</span>
+                        </div>
+                      ))
+                    }
+                    {open.length > 3 && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>+{open.length - 3} more</div>}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Upcoming meetings */}
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>📅 Upcoming Meetings</div>
+              {MEETINGS.filter(m => m.status === 'upcoming').map((m, i, arr) => (
+                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: i < arr.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                  <span style={{ fontSize: 12, color: accent, fontWeight: 600, minWidth: 50 }}>{m.time}</span>
+                  <span style={{ fontSize: 13, color: 'var(--text-primary)', flex: 1 }}>{m.title}</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{m.date}</span>
+                </div>
               ))}
             </div>
           </div>
+        )
+      })()}
 
-          {boardView === 'kanban' && (
-            <div style={{ overflowX: 'auto', paddingBottom: 8 }}>
-              <div style={{ display: 'flex', gap: 12, minWidth: 'max-content' }}>
-                <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCorners}>
-                  {COLUMNS.map(col => (
-                    <KanbanCol
-                      key={col.id}
-                      col={col}
-                      tasks={tasks.filter(t => t.columnId === col.id)}
-                      accent={accent}
-                    />
-                  ))}
-                </DndContext>
+      {/* ── Board Tabs (Property Ops / Onboarding / Maintenance) ── */}
+      {(['property-ops', 'onboarding', 'maintenance'] as const).map(boardId => {
+        if (activeTab !== boardId) return null
+        const boardTasks = tasks.filter(t => t.boardId === boardId)
+        return (
+          <div key={boardId}>
+            {/* View switcher */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+              <div style={{ display: 'flex', background: 'var(--bg-elevated)', borderRadius: 8, padding: 3, gap: 2, border: '1px solid var(--border)' }}>
+                {boardViewButtons.map(b => (
+                  <button key={b.key} onClick={() => setBoardView(b.key)} title={b.key}
+                    style={{ padding: '5px 9px', borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', background: boardView === b.key ? accent : 'transparent', color: boardView === b.key ? '#fff' : 'var(--text-muted)', transition: 'background 0.15s, color 0.15s' }}
+                  >{b.icon}</button>
+                ))}
               </div>
             </div>
-          )}
-          {boardView === 'list'     && <ListTaskView />}
-          {boardView === 'table'    && <TableTaskView />}
-          {boardView === 'calendar' && <CalendarTaskView accent={accent} />}
-        </div>
-      )}
+
+            {boardView === 'kanban' && (
+              <div style={{ overflowX: 'auto', paddingBottom: 8 }}>
+                <div style={{ display: 'flex', gap: 12, minWidth: 'max-content' }}>
+                  <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCorners}>
+                    {COLUMNS.map(col => (
+                      <KanbanCol key={col.id} col={col} tasks={boardTasks.filter(t => t.columnId === col.id)} accent={accent} />
+                    ))}
+                  </DndContext>
+                </div>
+              </div>
+            )}
+            {boardView === 'list'     && <ListTaskView tasks={boardTasks} />}
+            {boardView === 'table'    && <TableTaskView tasks={boardTasks} />}
+            {boardView === 'calendar' && <CalendarTaskView accent={accent} />}
+          </div>
+        )
+      })}
 
       {/* ── SOPs Tab ── */}
       {activeTab === 'sops' && (
