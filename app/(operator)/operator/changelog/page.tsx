@@ -10,6 +10,21 @@ interface ChangeEntry {
 
 const CHANGELOG: ChangeEntry[] = [
   {
+    version: 'v2.4',
+    date: 'Mar 19, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'Cleaner & Cleaning Supervisor demo personas — floating "Demo Personas" pill on login page (bottom-right) with one-click login as Maria S. (Cleaner) or Anna K. (Cleaning Supervisor); routes directly to /app/my-tasks' },
+      { tag: '⚡ Feature', text: 'Field Alerts page (/app/alerts) — real alerts page for cleaning staff replacing the operator re-export; filter pills (All / Urgent / Tasks / Schedule / Cleaner Report); cards grouped by Urgent → Today → Earlier; mark-as-read on tap; role-based visibility (supervisor sees all incl. upsell escalations; cleaner sees only their own alerts)' },
+      { tag: '⚡ Feature', text: '7 seeded field alerts — new_task, schedule_change, backjob, apartment_dirty, needs_consumables, upsell_escalation types; mixed cleaner-only (s1) and supervisor-visible (s1+s2) assignments' },
+      { tag: '⚡ Feature', text: 'Alerts (Bell) added as first nav item in cleaning staff sidebar; new STAFF_CLEANING_SUPERVISOR_NAV with "Team Alerts" and "Team Tasks" labels; getStaffNav() dispatches Supervisor subRole to supervisor nav' },
+      { tag: '⚡ Feature', text: 'CleanerApprovalSheet: removed price/currency/payment-mode line; replaced shift schedule with per-property workload summary (🔄 Turnovers / ⏰ Same-day check-ins / 🧹 Deep cleans / 👥 Total guests) pulled from new cleaningWorkload.ts data layer' },
+      { tag: '⚡ Feature', text: 'lib/data/cleaningWorkload.ts — property+date keyed workload lookup table with 6 seed entries; getPropertyWorkload() helper with sensible fallback' },
+      { tag: '🐛 Fix', text: 'My Tasks default filter changed from All → Today so cleaners land on their current workload immediately' },
+      { tag: '🐛 Fix', text: 'Cleaner subRole matching — "Cleaner".includes("Cleaning") was false, causing type filter to silently skip; added explicit subRole.includes("Cleaner") check so Maria sees only Cleaning/Inspection tasks' },
+      { tag: '🐛 Fix', text: 'Task seed dates refreshed from stale 2026-03-17 to 2026-03-19 (today); Maria now has 3 cleaning tasks today (Harbor Studio 10:00, Sunset Villa 13:00, Ocean View deep clean 15:00); Anna K. gets her own tasks as supervisor; upsell approvals loaded dynamically from localStorage user profile' },
+    ],
+  },
+  {
     version: 'v2.3',
     date: 'Mar 19, 2026',
     items: [
