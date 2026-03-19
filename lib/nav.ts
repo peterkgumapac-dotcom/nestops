@@ -110,8 +110,28 @@ export const STAFF_CLEANING_NAV: NavSection[] = [
   {
     label: '',
     items: [
+      { label: 'Alerts',       href: '/app/alerts',      icon: Bell },
       { label: 'Home',         href: '/app/dashboard',   icon: Home },
       { label: 'My Cleanings', href: '/app/my-tasks',    icon: CheckSquare },
+      { label: 'Intake',       href: '/app/new-intake',  icon: ClipboardList },
+      { label: 'Work Orders',  href: '/app/work-orders', icon: Ticket },
+    ],
+  },
+  {
+    label: 'Reference',
+    items: [
+      { label: 'Cleaning SOPs', href: '/app/operations', icon: FileText },
+    ],
+  },
+]
+
+export const STAFF_CLEANING_SUPERVISOR_NAV: NavSection[] = [
+  {
+    label: '',
+    items: [
+      { label: 'Team Alerts',  href: '/app/alerts',      icon: Bell },
+      { label: 'Home',         href: '/app/dashboard',   icon: Home },
+      { label: 'Team Tasks',   href: '/app/my-tasks',    icon: CheckSquare },
       { label: 'Intake',       href: '/app/new-intake',  icon: ClipboardList },
       { label: 'Work Orders',  href: '/app/work-orders', icon: Ticket },
     ],
@@ -196,6 +216,7 @@ export function getStaffNav(subRole?: string): NavSection[] {
   if (subRole?.includes('Maintenance')) return STAFF_MAINTENANCE_NAV
   if (subRole?.includes('Guest'))       return STAFF_GUEST_SERVICES_NAV
   if (subRole?.includes('Inspector'))   return STAFF_INSPECTOR_NAV
+  if (subRole?.includes('Supervisor'))  return STAFF_CLEANING_SUPERVISOR_NAV
   return STAFF_CLEANING_NAV
 }
 

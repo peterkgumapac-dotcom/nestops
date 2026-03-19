@@ -57,7 +57,7 @@ const STATUS_GROUPS: { key: string; label: string; color: string }[] = [
 export default function MyTasksPage() {
   const { accent } = useRole()
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
-  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [statusFilter, setStatusFilter] = useState<string>('today')
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set())
 
@@ -73,15 +73,8 @@ export default function MyTasksPage() {
   const [toast, setToast] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Upsell approval state
-  const LOGGED_IN_CLEANER_ID = 's1'    // placeholder for logged-in cleaner
-  const LOGGED_IN_SUPERVISOR_ID = 's2' // placeholder for field supervisor
-  const [upsellApprovalRequests, setUpsellApprovalRequests] = useState<UpsellApprovalRequest[]>(
-    UPSELL_APPROVAL_REQUESTS.filter(r =>
-      (r.status === 'pending_cleaner' && r.assignedCleanerId === LOGGED_IN_CLEANER_ID) ||
-      (r.status === 'pending_supervisor' && r.escalatedToSupervisor && r.supervisorId === LOGGED_IN_SUPERVISOR_ID)
-    )
-  )
+  // Upsell approval state — resolved after user loads from localStorage
+  const [upsellApprovalRequests, setUpsellApprovalRequests] = useState<UpsellApprovalRequest[]>([])
   const [selectedApprovalRequest, setSelectedApprovalRequest] = useState<UpsellApprovalRequest | null>(null)
 
   const handleUpsellApprove = (id: string) => {
@@ -98,7 +91,23 @@ export default function MyTasksPage() {
 
   useEffect(() => {
     const stored = localStorage.getItem('nestops_user')
-    if (stored) { try { setCurrentUser(JSON.parse(stored)) } catch {} }
+    if (stored) {
+      try {
+        const user: UserProfile = JSON.parse(stored)
+        setCurrentUser(user)
+        const isSup = user.subRole?.includes('Supervisor')
+        const cleanerId = 's1'
+        const supervisorId = 's2'
+        const requests = UPSELL_APPROVAL_REQUESTS.filter(r => {
+          if (isSup) {
+            return r.status === 'pending_cleaner' || (r.status === 'pending_supervisor' && r.escalatedToSupervisor)
+          }
+          return (r.status === 'pending_cleaner' && r.assignedCleanerId === cleanerId) ||
+            (r.status === 'pending_supervisor' && r.escalatedToSupervisor && r.supervisorId === supervisorId)
+        })
+        setUpsellApprovalRequests(requests)
+      } catch {}
+    }
   }, [])
 
   // Reset checklist state when task changes
@@ -115,19 +124,21 @@ export default function MyTasksPage() {
 
   const assigneeName = currentUser ? (USER_ASSIGNEE_MAP[currentUser.name] ?? currentUser.name) : null
   const subRole = currentUser?.subRole ?? ''
+  const isSupervisor = subRole.includes('Supervisor')
 
   const filteredTasks = useMemo(() => {
     return ALL_TASKS.filter(task => {
-      const matchesAssignee = !assigneeName || task.assignee === assigneeName
+      // Supervisor sees all team cleaning tasks; cleaner sees only their own
+      const matchesAssignee = isSupervisor ? true : (!assigneeName || task.assignee === assigneeName)
       let matchesType = true
       if (subRole.includes('Maintenance')) matchesType = task.type === 'Maintenance'
-      else if (subRole.includes('Cleaning')) matchesType = task.type === 'Cleaning' || task.type === 'Inspection'
+      else if (subRole.includes('Cleaning') || isSupervisor) matchesType = task.type === 'Cleaning' || task.type === 'Inspection'
       const effectiveStatus = completedIds.has(task.id) ? 'completed' : task.status
       const matchesStatus = statusFilter === 'all' || effectiveStatus === statusFilter
       const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter
       return matchesAssignee && matchesType && matchesStatus && matchesPriority
     })
-  }, [assigneeName, subRole, statusFilter, priorityFilter, completedIds])
+  }, [assigneeName, subRole, isSupervisor, statusFilter, priorityFilter, completedIds])
 
   // Generate checklist from task + property data
   const activeChecklist = useMemo((): ChecklistItem[] => {
@@ -230,7 +241,10 @@ export default function MyTasksPage() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      <PageHeader title="My Tasks" subtitle="Tasks assigned to you — click any task to open its checklist" />
+      <PageHeader
+        title={isSupervisor ? "Team's Cleaning Tasks" : "My Tasks"}
+        subtitle={isSupervisor ? "All team cleaning tasks — click any task to open its checklist" : "Tasks assigned to you — click any task to open its checklist"}
+      />
 
       {/* Filters */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>

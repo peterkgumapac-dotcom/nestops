@@ -17,10 +17,10 @@ interface DemoUser {
 
 const DEMO_USERS: DemoUser[] = [
   { userId: 'pk', initials: 'PK', name: 'Peter K.',   role: 'operator' as Role, avatarBg: '#7c3aed', badgeLabel: 'Operator' },
-  { userId: 'ms', initials: 'MS', name: 'Maria S.',   role: 'staff'    as Role, subRole: 'Cleaning Team',  avatarBg: '#d97706', badgeLabel: 'Cleaning' },
-  { userId: 'bl', initials: 'BL', name: 'Bjorn L.',   role: 'staff'    as Role, subRole: 'Maintenance',    avatarBg: '#0ea5e9', badgeLabel: 'Maintenance' },
-  { userId: 'fn', initials: 'FN', name: 'Fatima N.',  role: 'staff'    as Role, subRole: 'Guest Services', avatarBg: '#ec4899', badgeLabel: 'Guest Svc' },
-  { userId: 'ak', initials: 'AK', name: 'Anna K.',    role: 'staff'    as Role, subRole: 'Inspector',      avatarBg: '#06b6d4', badgeLabel: 'Inspector' },
+  { userId: 'ms', initials: 'MS', name: 'Maria S.',   role: 'staff'    as Role, subRole: 'Cleaner',             avatarBg: '#d97706', badgeLabel: 'Cleaner' },
+  { userId: 'bl', initials: 'BL', name: 'Bjorn L.',   role: 'staff'    as Role, subRole: 'Maintenance',         avatarBg: '#0ea5e9', badgeLabel: 'Maintenance' },
+  { userId: 'fn', initials: 'FN', name: 'Fatima N.',  role: 'staff'    as Role, subRole: 'Guest Services',      avatarBg: '#ec4899', badgeLabel: 'Guest Svc' },
+  { userId: 'ak', initials: 'AK', name: 'Anna K.',    role: 'staff'    as Role, subRole: 'Cleaning Supervisor', avatarBg: '#06b6d4', badgeLabel: 'Supervisor' },
   { userId: 'sj', initials: 'SJ', name: 'Sarah J.',   role: 'owner'    as Role, avatarBg: '#2563eb', badgeLabel: 'Owner' },
   { userId: 'mc', initials: 'MC', name: 'Michael C.', role: 'owner'    as Role, avatarBg: '#10b981', badgeLabel: 'Owner' },
 ]
@@ -62,6 +62,7 @@ export default function LoginPage() {
   const [shake, setShake] = useState(false)
   const [emailFocused, setEmailFocused] = useState(false)
   const [passwordFocused, setPasswordFocused] = useState(false)
+  const [floatingOpen, setFloatingOpen] = useState(false)
 
   const buildProfile = (user: DemoUser): UserProfile => ({
     id: USER_ID_MAP[user.userId] ?? user.userId,
@@ -80,6 +81,17 @@ export default function LoginPage() {
     localStorage.setItem('nestops_user', JSON.stringify(profile))
     setUser(profile)
     router.push('/briefing')
+  }
+
+  // Floating quick-login → routes directly to /app/my-tasks
+  const handleFloatingLogin = (userId: string) => {
+    const user = DEMO_USER_MAP[userId]
+    if (!user || isLoading) return
+    setIsLoading(true)
+    const profile = buildProfile(user)
+    localStorage.setItem('nestops_user', JSON.stringify(profile))
+    setUser(profile)
+    router.push('/app/my-tasks')
   }
 
   // Email+password login → dashboard directly (power user, skip briefing)
@@ -331,6 +343,80 @@ export default function LoginPage() {
       <p style={{ marginTop: 28, fontSize: 11, color: '#374151' }}>
         NestOps © {new Date().getFullYear()} · Built for STR operators
       </p>
+
+      {/* Floating Demo Switcher */}
+      <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 200 }}>
+        <AnimatePresence>
+          {floatingOpen && (
+            <motion.div
+              key="floating-panel"
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              style={{
+                background: '#111827',
+                border: '1px solid #1f2937',
+                borderRadius: 12,
+                padding: '14px 16px',
+                marginBottom: 10,
+                minWidth: 220,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+              }}
+            >
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
+                Demo Personas
+              </div>
+              <div style={{ height: 1, background: '#1f2937', marginBottom: 10 }} />
+              <button
+                onClick={() => handleFloatingLogin('ms')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  width: '100%', padding: '9px 10px', borderRadius: 8,
+                  background: '#0d1525', border: '1px solid #1f2937',
+                  cursor: 'pointer', marginBottom: 6, textAlign: 'left',
+                }}
+              >
+                <span style={{ fontSize: 16 }}>🧹</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#f9fafb' }}>Login as Cleaner</div>
+                  <div style={{ fontSize: 11, color: '#6b7280' }}>Maria S. · /app/my-tasks</div>
+                </div>
+              </button>
+              <button
+                onClick={() => handleFloatingLogin('ak')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  width: '100%', padding: '9px 10px', borderRadius: 8,
+                  background: '#0d1525', border: '1px solid #1f2937',
+                  cursor: 'pointer', textAlign: 'left',
+                }}
+              >
+                <span style={{ fontSize: 16 }}>👷</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#f9fafb' }}>Login as Cleaning Supervisor</div>
+                  <div style={{ fontSize: 11, color: '#6b7280' }}>Anna K. · /app/my-tasks</div>
+                </div>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setFloatingOpen(v => !v)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '10px 16px', borderRadius: 40,
+            background: floatingOpen ? '#1f2937' : '#7c3aed',
+            border: '1px solid ' + (floatingOpen ? '#374151' : '#7c3aed'),
+            color: '#fff', fontSize: 13, fontWeight: 600,
+            cursor: 'pointer', boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+          }}
+        >
+          <span>🎭</span>
+          <span>{floatingOpen ? 'Close' : 'Demo Personas'}</span>
+        </motion.button>
+      </div>
     </div>
   )
 }

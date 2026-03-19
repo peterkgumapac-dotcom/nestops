@@ -1,8 +1,8 @@
 'use client'
 import { useState } from 'react'
-import { X, Calendar, MapPin, User, CreditCard, Clock } from 'lucide-react'
+import { X, Calendar, MapPin, User } from 'lucide-react'
 import type { UpsellApprovalRequest } from '@/lib/data/upsellApprovals'
-import { SHIFTS, SHIFT_TYPE_COLOR } from '@/lib/data/staffScheduling'
+import { getPropertyWorkload } from '@/lib/data/cleaningWorkload'
 
 interface CleanerApprovalSheetProps {
   request: UpsellApprovalRequest
@@ -48,16 +48,12 @@ export default function CleanerApprovalSheet({
   if (!open) return null
 
   const isEscalated = request.escalatedToSupervisor === true
-  const staffIdForSchedule = isEscalated ? request.supervisorId : request.assignedCleanerId
 
-  // Determine the relevant date for schedule lookup
+  // Determine the relevant date for workload lookup
   const isEco = request.upsellTitle.toLowerCase().includes('early')
   const relevantDate = isEco ? request.checkInDate : request.checkOutDate
 
-  // Filter shifts for the assigned staff member (cleaner or supervisor) on the relevant date
-  const cleanerShifts = SHIFTS.filter(
-    s => s.staffId === staffIdForSchedule && s.date === relevantDate
-  )
+  const workload = getPropertyWorkload(request.propertyId, relevantDate)
 
   const handleApprove = () => {
     setApproved(true)
@@ -147,14 +143,7 @@ export default function CleanerApprovalSheet({
                       Check-in: {request.checkInDate} · Check-out: {request.checkOutDate}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <CreditCard size={13} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-                    <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                      {request.price} {request.currency}
-                      {' · '}
-                      {request.paymentMode === 'auth_hold' ? 'Auth Hold' : 'Auto-Charge'}
-                    </span>
-                  </div>
+
                 </div>
 
                 <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -162,10 +151,10 @@ export default function CleanerApprovalSheet({
                 </div>
               </div>
 
-              {/* Your Schedule section */}
+              {/* Workload section */}
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 10 }}>
-                  {isEscalated ? 'Your Field Schedule' : 'Your Schedule'} — {relevantDate}
+                  Your Workload at {request.propertyName} — {relevantDate}
                 </div>
                 {isEscalated && (
                   <div style={{ fontSize: 11, color: '#7c3aed', marginBottom: 8, padding: '6px 10px', background: '#7c3aed0c', border: '1px solid #7c3aed20', borderRadius: 6 }}>
@@ -173,47 +162,27 @@ export default function CleanerApprovalSheet({
                     Approving will confirm the upsell and capture the auth hold.
                   </div>
                 )}
-                {cleanerShifts.length === 0 ? (
-                  <div style={{ padding: '12px 14px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, color: 'var(--text-subtle)' }}>
-                    No shifts scheduled for this date.
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {cleanerShifts.map(shift => {
-                      const typeColor = SHIFT_TYPE_COLOR[shift.type]
-                      return (
-                        <div
-                          key={shift.id}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: 12,
-                            padding: '10px 12px', background: 'var(--bg-card)',
-                            border: `1px solid ${typeColor}30`,
-                            borderLeft: `3px solid ${typeColor}`,
-                            borderRadius: 8,
-                          }}
-                        >
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                              <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: `${typeColor}18`, color: typeColor, textTransform: 'capitalize' }}>
-                                {shift.type}
-                              </span>
-                              <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{shift.propertyId}</span>
-                            </div>
-                            {shift.notes && (
-                              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{shift.notes}</div>
-                            )}
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-                            <Clock size={11} style={{ color: 'var(--text-subtle)' }} />
-                            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                              {shift.startTime}–{shift.endTime}
-                            </span>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+                  {[
+                    { icon: '🔄', count: workload.turnovers, label: 'Turnover cleans' },
+                    { icon: '⏰', count: workload.sameDayCheckIns, label: 'Same-day check-ins' },
+                    { icon: '🧹', count: workload.deepCleans, label: 'Deep cleans' },
+                    { icon: '👥', count: workload.totalGuests, label: 'Total guests that day' },
+                  ].map((row, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '10px 14px',
+                        borderBottom: i < 3 ? '1px solid var(--border)' : 'none',
+                      }}
+                    >
+                      <span style={{ fontSize: 16, width: 22, textAlign: 'center' }}>{row.icon}</span>
+                      <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', minWidth: 28 }}>{row.count}</span>
+                      <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{row.label}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Decline notes input */}
