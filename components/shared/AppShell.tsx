@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { Menu, Bell } from 'lucide-react'
 import AppSidebar from './AppSidebar'
+import CommandPalette from '@/components/command-palette'
 import { useRole } from '@/context/RoleContext'
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -47,6 +48,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+
+      <CommandPalette />
     </div>
   )
 }

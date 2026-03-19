@@ -3,10 +3,21 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ChevronLeft, ChevronRight, X, Sun, Moon } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X, Sun, Moon, Sparkles } from 'lucide-react'
 import { useRole } from '@/context/RoleContext'
 import { useTheme } from '@/context/ThemeContext'
 import { NAV_BY_ROLE, getStaffNav } from '@/lib/nav'
+
+const APP_VERSION = 'v1.8'
+const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v1.8'
+
+const WHATS_NEW_ITEMS = [
+  'Guest Experience Engine — Guidebooks, Upsells & Verification',
+  'App-side upsell request flow with status tracking',
+  'Owner portal maintenance cross-portal approval sharing',
+  'Guest issue AI triage (priority + category suggestions)',
+  'Cmd+K command palette for quick navigation',
+]
 
 interface AppSidebarProps {
   isOpen?: boolean
@@ -29,6 +40,8 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
   const [switcherOpen, setSwitcherOpen] = useState(false)
   const [storedUser, setStoredUser] = useState<StoredUser | null>(null)
+  const [showWhatsNew, setShowWhatsNew] = useState(false)
+  const [whatsNewBanner, setWhatsNewBanner] = useState(false)
   const switcherRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -46,6 +59,10 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
       const raw = localStorage.getItem('nestops_user')
       if (raw) setStoredUser(JSON.parse(raw))
     } catch { /* ignore */ }
+    try {
+      const dismissed = localStorage.getItem(WHATS_NEW_KEY)
+      if (!dismissed) setWhatsNewBanner(true)
+    } catch {}
   }, [])
 
   const displayName = storedUser?.name ?? 'User'
@@ -197,6 +214,26 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
           )}
         </div>
 
+        {/* Version badge */}
+        {!collapsed && (
+          <button
+            onClick={() => setShowWhatsNew(true)}
+            title="What's new in this version"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              width: '100%', padding: '5px 8px', borderRadius: 6,
+              background: 'none', border: 'none', cursor: 'pointer',
+              marginTop: 4,
+            }}
+          >
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 7px', borderRadius: 10, background: `${accent}20`, color: accent }}>
+              {APP_VERSION}
+            </span>
+            <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>What&apos;s new</span>
+            <Sparkles size={11} style={{ color: accent, marginLeft: 'auto' }} />
+          </button>
+        )}
+
         <button
           onClick={() => setCollapsed(c => !c)}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -204,6 +241,76 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
         >
           {collapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
         </button>
+      </div>
+
+      {/* What's New Modal */}
+      {showWhatsNew && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 28, maxWidth: 380, width: '100%', boxShadow: '0 24px 64px rgba(0,0,0,0.3)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Sparkles size={18} style={{ color: accent }} />
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>What&apos;s New</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>NestOps {APP_VERSION}</div>
+                </div>
+              </div>
+              <button onClick={() => setShowWhatsNew(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-subtle)' }}>
+                <X size={18} />
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+              {WHATS_NEW_ITEMS.map((item, i) => (
+                <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>✦</span>
+                  <span style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>{item}</span>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowWhatsNew(false)}
+              style={{ width: '100%', padding: '10px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
+  // What's New banner — post-login, dismissable
+  const whatsNewBannerEl = whatsNewBanner && !collapsed && (
+    <div style={{
+      position: 'fixed', bottom: 24, left: 256, zIndex: 100,
+      background: 'var(--bg-surface)', border: `1px solid ${accent}40`,
+      borderRadius: 12, padding: '14px 16px', maxWidth: 320,
+      boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+        <Sparkles size={16} style={{ color: accent, flexShrink: 0, marginTop: 2 }} />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
+            NestOps {APP_VERSION} is here
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 10 }}>
+            Guest Experience Engine, AI triage, command palette, and more.
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={() => { setShowWhatsNew(true); setWhatsNewBanner(false); try { localStorage.setItem(WHATS_NEW_KEY, '1') } catch {} }}
+              style={{ fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 7, border: 'none', background: accent, color: '#fff', cursor: 'pointer' }}
+            >
+              See what&apos;s new
+            </button>
+            <button
+              onClick={() => { setWhatsNewBanner(false); try { localStorage.setItem(WHATS_NEW_KEY, '1') } catch {} }}
+              style={{ fontSize: 12, padding: '5px 10px', borderRadius: 7, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -227,6 +334,8 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
           </div>
         </div>
       )}
+
+      {whatsNewBannerEl}
     </>
   )
 }

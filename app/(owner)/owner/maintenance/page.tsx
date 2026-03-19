@@ -20,6 +20,25 @@ type MaintRow = {
   notes?: string
 }
 
+// Simulated next check-in dates per property
+const NEXT_CHECKIN: Record<string, string> = {
+  'Sunset Villa':  '2026-03-19', // tomorrow → red
+  'Harbor Studio': '2026-03-24', // 6 days → amber
+  'Ocean View Apt': '2026-04-10',
+}
+
+function getCountdownBadge(property: string): { label: string; color: string; bg: string } | null {
+  const dateStr = NEXT_CHECKIN[property]
+  if (!dateStr) return null
+  const today = new Date('2026-03-18')
+  const checkin = new Date(dateStr)
+  const days = Math.round((checkin.getTime() - today.getTime()) / 86400000)
+  if (days < 0) return null
+  if (days < 2) return { label: `${days}d to check-in`, color: '#ef4444', bg: '#ef444418' }
+  if (days < 7) return { label: `${days}d to check-in`, color: '#d97706', bg: '#d9770618' }
+  return null
+}
+
 const INITIAL_ROWS: MaintRow[] = [
   { id: 'm1', date: '2026-03-14', property: 'Sunset Villa',  issue: 'Dishwasher not draining',         cost: null,  currency: 'NOK', status: 'open',     approval: null,               notes: 'Cleaning staff reported standing water after cycle.' },
   { id: 'm3', date: '2026-03-05', property: 'Sunset Villa',  issue: 'Broken window latch (bedroom)',   cost: 1200,  currency: 'NOK', status: 'resolved', approval: 'approved',         notes: 'Replaced latch unit.' },
@@ -92,43 +111,53 @@ export default function MaintenancePage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
             <AlertTriangle size={14} style={{ color: '#f59e0b' }} />
             <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-              Requires Your Approval
+              Requires Your Approval — Cross-Portal
               <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 700, padding: '2px 6px', borderRadius: 10, background: '#f59e0b20', color: '#f59e0b' }}>
                 {pendingApprovals.length}
               </span>
             </h2>
           </div>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
-            These maintenance items involve costs above threshold, vendor work, or expense approval — your sign-off is required before work begins.
+            These maintenance items were flagged by your operator or staff and require your approval before work begins.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {pendingApprovals.map(r => (
-              <div key={r.id} style={{ background: 'var(--bg-card)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 10, padding: '14px 16px' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{r.issue}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                      {r.property} · {r.date}
-                      {r.vendor && ` · Vendor: ${r.vendor}`}
+            {pendingApprovals.map(r => {
+              const countdown = getCountdownBadge(r.property)
+              return (
+                <div key={r.id} style={{ background: 'var(--bg-card)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 10, padding: '14px 16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2, flexWrap: 'wrap' }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{r.issue}</div>
+                        {countdown && (
+                          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: countdown.bg, color: countdown.color, whiteSpace: 'nowrap' }}>
+                            {countdown.label}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                        {r.property} · {r.date}
+                        {r.vendor && ` · Vendor: ${r.vendor}`}
+                      </div>
+                      {r.notes && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, lineHeight: 1.4 }}>{r.notes}</div>}
                     </div>
-                    {r.notes && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, lineHeight: 1.4 }}>{r.notes}</div>}
+                    {r.cost && (
+                      <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                        {r.cost.toLocaleString()} {r.currency}
+                      </div>
+                    )}
                   </div>
-                  {r.cost && (
-                    <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                      {r.cost.toLocaleString()} {r.currency}
-                    </div>
-                  )}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => handleApprove(r.id)} style={{ flex: 1, padding: '7px', borderRadius: 7, border: 'none', background: '#059669', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                      ✓ Approve & Authorize
+                    </button>
+                    <button onClick={() => handleDecline(r.id)} style={{ flex: 1, padding: '7px', borderRadius: 7, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}>
+                      Decline
+                    </button>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => handleApprove(r.id)} style={{ flex: 1, padding: '7px', borderRadius: 7, border: 'none', background: '#059669', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                    ✓ Approve & Authorize
-                  </button>
-                  <button onClick={() => handleDecline(r.id)} style={{ flex: 1, padding: '7px', borderRadius: 7, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}>
-                    Decline
-                  </button>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}

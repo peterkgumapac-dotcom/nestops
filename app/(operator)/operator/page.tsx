@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Building2, Users, Ticket, Package, AlertTriangle, Headphones, ChevronRight, CheckCircle, ShieldAlert, Wrench, ClipboardList, FileText, Star } from 'lucide-react'
+import { Building2, Users, Ticket, Package, AlertTriangle, Headphones, ChevronRight, CheckCircle, ShieldAlert, Wrench, ClipboardList, FileText, Star, ChevronDown, ChevronUp, Activity } from 'lucide-react'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
 } from '@/components/ui/sheet'
@@ -60,6 +60,7 @@ export default function OperatorDashboard() {
   const [qaPending, setQaPending] = useState<QaPendingItem[]>([])
   const [qaReviewItem, setQaReviewItem] = useState<QaPendingItem | null>(null)
   const [toast, setToast] = useState('')
+  const [activityOpen, setActivityOpen] = useState(true)
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   // Read field reports, owner work orders, and QA pending from localStorage
@@ -125,6 +126,32 @@ export default function OperatorDashboard() {
   return (
     <div>
       <PageHeader title="Dashboard" subtitle="Operations overview" />
+
+      {/* Quick Stats Bar */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
+        {[
+          { label: 'Open Issues', value: activeIssues.length, href: '/operator/guest-services/issues', color: activeIssues.length > 3 ? '#ef4444' : accent },
+          { label: 'Pending Approvals', value: pendingApprovals.length, href: '/operator/approvals', color: pendingApprovals.length > 0 ? '#d97706' : accent },
+          { label: 'Cleanings Today', value: todayJobs.length, href: '/operator/team', color: accent },
+          { label: 'Low Stock', value: lowStock.length, href: '/operator/inventory', color: lowStock.length > 0 ? '#f97316' : accent },
+        ].map(({ label, value, href, color }) => (
+          <Link
+            key={label}
+            href={href}
+            style={{
+              display: 'flex', flexDirection: 'column', gap: 4,
+              padding: '12px 14px', borderRadius: 10,
+              background: 'var(--bg-card)', border: '1px solid var(--border)',
+              textDecoration: 'none', transition: 'border-color 0.15s',
+            }}
+            onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = color)}
+            onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--border)')}
+          >
+            <span style={{ fontSize: 22, fontWeight: 700, color, lineHeight: 1 }}>{value}</span>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{label}</span>
+          </Link>
+        ))}
+      </div>
 
       {/* Stat cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 32 }}>
@@ -416,6 +443,55 @@ export default function OperatorDashboard() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Collapsible Activity Feed */}
+      <div style={{ marginTop: 24, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+        <button
+          onClick={() => setActivityOpen(o => !o)}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            width: '100%', padding: '14px 16px',
+            background: 'none', border: 'none', cursor: 'pointer',
+            borderBottom: activityOpen ? '1px solid var(--border)' : 'none',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Activity size={14} style={{ color: accent }} />
+            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Activity Feed</span>
+            <span style={{ fontSize: 11, padding: '1px 6px', borderRadius: 10, background: `${accent}20`, color: accent, fontWeight: 600 }}>Live</span>
+          </div>
+          {activityOpen ? <ChevronUp size={15} style={{ color: 'var(--text-subtle)' }} /> : <ChevronDown size={15} style={{ color: 'var(--text-subtle)' }} />}
+        </button>
+
+        {activityOpen && (
+          <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 0 }}>
+            {[
+              { time: '2 min ago', actor: 'Anna Hansen', action: 'marked task complete', detail: 'Cleaning — Sunset Villa', color: '#10b981' },
+              { time: '14 min ago', actor: 'Lars Eriksen', action: 'logged a guest issue', detail: 'Noise complaint — Harbor Studio', color: '#ef4444' },
+              { time: '31 min ago', actor: 'Sofia Berg', action: 'submitted field report', detail: 'Broken window latch — Ocean View Apt', color: '#d97706' },
+              { time: '1h ago', actor: 'Operator', action: 'approved refund', detail: '750 NOK — Downtown Loft', color: '#6366f1' },
+              { time: '2h ago', actor: 'Magnus Dahl', action: 'clocked in', detail: 'Staff portal', color: accent },
+            ].map((item, i) => (
+              <div
+                key={i}
+                style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 12,
+                  padding: '10px 0',
+                  borderBottom: i < 4 ? '1px solid var(--border-subtle)' : 'none',
+                }}
+              >
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: item.color, flexShrink: 0, marginTop: 6 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500 }}>{item.actor}</span>
+                  <span style={{ fontSize: 13, color: 'var(--text-muted)' }}> {item.action} </span>
+                  <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>— {item.detail}</span>
+                </div>
+                <span style={{ fontSize: 11, color: 'var(--text-subtle)', flexShrink: 0 }}>{item.time}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* QA Review Sheet */}

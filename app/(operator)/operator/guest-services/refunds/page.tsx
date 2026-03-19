@@ -1,11 +1,12 @@
 'use client'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { DollarSign, TrendingDown, CheckCircle, Clock, Search, ChevronDown, ChevronUp } from 'lucide-react'
+import { DollarSign, TrendingDown, CheckCircle, Clock, Search, ChevronDown, ChevronUp, Plus } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
 import StatCard from '@/components/shared/StatCard'
 import GuestServicesNav from '@/components/guest-services/GuestServicesNav'
 import IssueSheet from '@/components/guest-services/IssueSheet'
+import AppDrawer from '@/components/shared/AppDrawer'
 import { useRole } from '@/context/RoleContext'
 import {
   GUEST_ISSUES,
@@ -13,6 +14,7 @@ import {
   type GuestIssue,
   type RefundStatus,
 } from '@/lib/data/guestServices'
+import { PROPERTIES } from '@/lib/data/properties'
 
 type SortKey = 'issuedAt' | 'approvedAmount' | 'propertyName' | 'status'
 
@@ -23,19 +25,34 @@ const STATUS_COLOR: Record<RefundStatus, string> = {
   declined: '#6b7280',
 }
 
+const OTAS = ['Airbnb', 'Booking.com', 'VRBO', 'Direct', 'Other']
+const REFUND_REASONS = ['Cleanliness issue', 'Maintenance failure', 'Listing inaccuracy', 'Access problem', 'Amenity unavailable', 'Early departure', 'Other']
+
 export default function RefundsPage() {
   const { accent } = useRole()
-  const [search, setSearch]     = useState('')
+  const [search, setSearch]         = useState('')
   const [statusFilter, setStatusFilter] = useState<RefundStatus | 'all'>('all')
-  const [sortKey, setSortKey]   = useState<SortKey>('issuedAt')
-  const [sortDir, setSortDir]   = useState<'asc' | 'desc'>('desc')
-  const [selected, setSelected] = useState<GuestIssue | null>(null)
+  const [sortKey, setSortKey]       = useState<SortKey>('issuedAt')
+  const [sortDir, setSortDir]       = useState<'asc' | 'desc'>('desc')
+  const [selected, setSelected]     = useState<GuestIssue | null>(null)
+
+  // Track inline approve/decline overrides
+  const [refundOverrides, setRefundOverrides] = useState<Record<string, RefundStatus>>({})
+
+  // Log Refund drawer
+  const [showLogRefund, setShowLogRefund] = useState(false)
+  const [logForm, setLogForm] = useState({
+    guest: '', propertyId: '', amount: '', reason: '', ota: 'Airbnb', notes: '',
+  })
+  const [toast, setToast] = useState('')
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   const refundIssues = GUEST_ISSUES.filter(i => i.refund?.requested)
 
   const filtered = refundIssues
     .filter(i => {
-      if (statusFilter !== 'all' && i.refund?.status !== statusFilter) return false
+      const effectiveStatus: RefundStatus = refundOverrides[i.id] ?? i.refund?.status ?? 'pending'
+      if (statusFilter !== 'all' && effectiveStatus !== statusFilter) return false
       if (search) {
         const q = search.toLowerCase()
         return (
@@ -55,10 +72,10 @@ export default function RefundsPage() {
       return sortDir === 'asc' ? cmp : -cmp
     })
 
-  const totalApproved  = refundIssues.reduce((s, i) => s + (i.refund?.approvedAmount ?? 0), 0)
-  const totalPending   = refundIssues.filter(i => i.refund?.status === 'pending').reduce((s, i) => s + (i.refund?.suggestedAmount ?? 0), 0)
-  const totalIssued    = refundIssues.filter(i => i.refund?.status === 'issued').length
-  const pendingCount   = refundIssues.filter(i => i.refund?.status === 'pending').length
+  const totalApproved = refundIssues.reduce((s, i) => s + (i.refund?.approvedAmount ?? 0), 0)
+  const totalPending  = refundIssues.filter(i => (refundOverrides[i.id] ?? i.refund?.status) === 'pending').reduce((s, i) => s + (i.refund?.suggestedAmount ?? 0), 0)
+  const totalIssued   = refundIssues.filter(i => (refundOverrides[i.id] ?? i.refund?.status) === 'issued').length
+  const pendingCount  = refundIssues.filter(i => (refundOverrides[i.id] ?? i.refund?.status) === 'pending').length
 
   // By-property totals
   const byProperty: Record<string, number> = {}
@@ -79,11 +96,51 @@ export default function RefundsPage() {
       ? sortDir === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />
       : <ChevronDown size={12} style={{ opacity: 0.3 }} />
 
+  const handleInlineApprove = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setRefundOverrides(m => ({ ...m, [id]: 'approved' as RefundStatus }))
+    showToast('Refund approved')
+  }
+  const handleInlineDecline = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setRefundOverrides(m => ({ ...m, [id]: 'declined' as RefundStatus }))
+    showToast('Refund declined')
+  }
+
+  const handleLogRefund = () => {
+    if (!logForm.guest || !logForm.amount) return
+    setShowLogRefund(false)
+    setLogForm({ guest: '', propertyId: '', amount: '', reason: '', ota: 'Airbnb', notes: '' })
+    showToast('Refund logged successfully')
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '9px 12px', borderRadius: 8,
+    border: '1px solid var(--border)', background: 'var(--bg-elevated)',
+    color: 'var(--text-primary)', fontSize: 13, outline: 'none',
+  }
+  const labelStyle: React.CSSProperties = {
+    fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block',
+  }
+
   return (
     <div>
       <PageHeader
         title="Refunds"
         subtitle={`${refundIssues.length} refund requests · ${fmtNok(totalApproved)} total approved`}
+        action={
+          <button
+            onClick={() => setShowLogRefund(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 7,
+              padding: '8px 16px', borderRadius: 8, border: 'none',
+              background: accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            }}
+          >
+            <Plus size={15} />
+            Log Refund
+          </button>
+        }
       />
 
       <GuestServicesNav />
@@ -154,6 +211,7 @@ export default function RefundsPage() {
                       ['Amount', 'approvedAmount'],
                       ['Status', 'status'],
                       ['Date', 'issuedAt'],
+                      ['Action', null],
                     ] as [string, SortKey | null][]).map(([label, key]) => (
                       <th
                         key={label}
@@ -176,59 +234,89 @@ export default function RefundsPage() {
                 <tbody>
                   {filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={7} style={{ padding: 32, textAlign: 'center', color: 'var(--text-subtle)', fontSize: 13 }}>
+                      <td colSpan={8} style={{ padding: 32, textAlign: 'center', color: 'var(--text-subtle)', fontSize: 13 }}>
                         No refunds match the current filters.
                       </td>
                     </tr>
-                  ) : filtered.map((issue, i) => (
-                    <tr
-                      key={issue.id}
-                      onClick={() => setSelected(issue)}
-                      style={{
-                        borderBottom: i < filtered.length - 1 ? '1px solid var(--border-subtle)' : 'none',
-                        cursor: 'pointer', transition: 'background 0.1s',
-                      }}
-                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-elevated)')}
-                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                    >
-                      <td style={{ padding: '12px 14px', maxWidth: 200 }}>
-                        <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                          {issue.title}
-                        </span>
-                      </td>
-                      <td style={{ padding: '12px 14px', fontSize: 13, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                        {issue.propertyName}
-                      </td>
-                      <td style={{ padding: '12px 14px', fontSize: 13, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                        {issue.guestName}
-                      </td>
-                      <td style={{ padding: '12px 14px', fontSize: 12, color: 'var(--text-subtle)' }}>
-                        {issue.refund?.refundType?.replace(/_/g, ' ') ?? '—'}
-                      </td>
-                      <td style={{ padding: '12px 14px', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                        {issue.refund?.approvedAmount ? fmtNok(issue.refund.approvedAmount) : '—'}
-                      </td>
-                      <td style={{ padding: '12px 14px' }}>
-                        {issue.refund?.status && (
+                  ) : filtered.map((issue, i) => {
+                    const effectiveStatus: RefundStatus = refundOverrides[issue.id] ?? issue.refund?.status ?? 'pending'
+                    const isPending = effectiveStatus === 'pending'
+                    return (
+                      <tr
+                        key={issue.id}
+                        onClick={() => !isPending && setSelected(issue)}
+                        style={{
+                          borderBottom: i < filtered.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                          cursor: isPending ? 'default' : 'pointer', transition: 'background 0.1s',
+                        }}
+                        onMouseEnter={e => !isPending && (e.currentTarget.style.background = 'var(--bg-elevated)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        <td style={{ padding: '12px 14px', maxWidth: 200 }}>
+                          <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                            {issue.title}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px 14px', fontSize: 13, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                          {issue.propertyName}
+                        </td>
+                        <td style={{ padding: '12px 14px', fontSize: 13, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                          {issue.guestName}
+                        </td>
+                        <td style={{ padding: '12px 14px', fontSize: 12, color: 'var(--text-subtle)' }}>
+                          {issue.refund?.refundType?.replace(/_/g, ' ') ?? '—'}
+                        </td>
+                        <td style={{ padding: '12px 14px', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                          {issue.refund?.approvedAmount ? fmtNok(issue.refund.approvedAmount) : '—'}
+                        </td>
+                        <td style={{ padding: '12px 14px' }}>
                           <span
                             style={{
                               fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20,
-                              background: `${STATUS_COLOR[issue.refund.status]}18`,
-                              color: STATUS_COLOR[issue.refund.status],
+                              background: `${STATUS_COLOR[effectiveStatus]}18`,
+                              color: STATUS_COLOR[effectiveStatus],
                               textTransform: 'capitalize', whiteSpace: 'nowrap',
                             }}
                           >
-                            {issue.refund.status}
+                            {effectiveStatus}
                           </span>
-                        )}
-                      </td>
-                      <td style={{ padding: '12px 14px', fontSize: 12, color: 'var(--text-subtle)', whiteSpace: 'nowrap' }}>
-                        {issue.refund?.issuedAt
-                          ? new Date(issue.refund.issuedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-                          : '—'}
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td style={{ padding: '12px 14px', fontSize: 12, color: 'var(--text-subtle)', whiteSpace: 'nowrap' }}>
+                          {issue.refund?.issuedAt
+                            ? new Date(issue.refund.issuedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                            : '—'}
+                        </td>
+                        <td style={{ padding: '12px 14px' }} onClick={e => e.stopPropagation()}>
+                          {isPending ? (
+                            <div style={{ display: 'flex', gap: 6 }}>
+                              <button
+                                onClick={e => handleInlineApprove(issue.id, e)}
+                                style={{
+                                  padding: '4px 10px', borderRadius: 6, border: 'none',
+                                  background: '#10b98120', color: '#10b981',
+                                  fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                                }}
+                              >
+                                ✓ Approve
+                              </button>
+                              <button
+                                onClick={e => handleInlineDecline(issue.id, e)}
+                                style={{
+                                  padding: '4px 10px', borderRadius: 6,
+                                  border: '1px solid var(--border)', background: 'transparent',
+                                  color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer', whiteSpace: 'nowrap',
+                                }}
+                              >
+                                Decline
+                              </button>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: 12, color: 'var(--text-subtle)' }}>—</span>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
@@ -253,13 +341,7 @@ export default function RefundsPage() {
                     <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', flexShrink: 0 }}>{fmtNok(total)}</span>
                   </div>
                   <div style={{ height: 5, background: 'var(--bg-elevated)', borderRadius: 3 }}>
-                    <div
-                      style={{
-                        height: '100%',
-                        width: `${(total / propMax) * 100}%`,
-                        background: accent, borderRadius: 3,
-                      }}
-                    />
+                    <div style={{ height: '100%', width: `${(total / propMax) * 100}%`, background: accent, borderRadius: 3 }} />
                   </div>
                 </div>
               ))}
@@ -286,6 +368,77 @@ export default function RefundsPage() {
       </div>
 
       {selected && <IssueSheet issue={selected} onClose={() => setSelected(null)} />}
+
+      {/* Log Refund Drawer */}
+      <AppDrawer
+        open={showLogRefund}
+        onClose={() => setShowLogRefund(false)}
+        title="Log Refund"
+        subtitle="Record a manual refund for a guest"
+        footer={
+          <>
+            <button
+              onClick={() => setShowLogRefund(false)}
+              style={{ padding: '9px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleLogRefund}
+              style={{ padding: '9px 24px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+            >
+              Log Refund
+            </button>
+          </>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label style={labelStyle}>Guest Name *</label>
+            <input value={logForm.guest} onChange={e => setLogForm(f => ({ ...f, guest: e.target.value }))} placeholder="Full name" style={inputStyle} />
+          </div>
+          <div>
+            <label style={labelStyle}>Property</label>
+            <select value={logForm.propertyId} onChange={e => setLogForm(f => ({ ...f, propertyId: e.target.value }))} style={inputStyle}>
+              <option value="">Select property…</option>
+              {PROPERTIES.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Amount (NOK) *</label>
+            <input type="number" value={logForm.amount} onChange={e => setLogForm(f => ({ ...f, amount: e.target.value }))} placeholder="0" style={inputStyle} />
+          </div>
+          <div>
+            <label style={labelStyle}>Reason</label>
+            <select value={logForm.reason} onChange={e => setLogForm(f => ({ ...f, reason: e.target.value }))} style={inputStyle}>
+              <option value="">Select reason…</option>
+              {REFUND_REASONS.map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>OTA / Channel</label>
+            <select value={logForm.ota} onChange={e => setLogForm(f => ({ ...f, ota: e.target.value }))} style={inputStyle}>
+              {OTAS.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Notes</label>
+            <textarea
+              value={logForm.notes}
+              onChange={e => setLogForm(f => ({ ...f, notes: e.target.value }))}
+              placeholder="Any additional context…"
+              rows={3}
+              style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.5 }}
+            />
+          </div>
+        </div>
+      </AppDrawer>
+
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#16a34a', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+          {toast}
+        </div>
+      )}
     </div>
   )
 }

@@ -67,7 +67,11 @@ export default function IssuesPage() {
   const [page, setPage]             = useState(1)
   const [selectedIssue, setSelected] = useState<GuestIssue | null>(null)
   const [showNew, setShowNew]       = useState(false)
+  const [assignMap, setAssignMap]   = useState<Record<string, string>>({})
+  const [openAssignId, setOpenAssignId] = useState<string | null>(null)
   const PER_PAGE = 10
+
+  const STAFF_LIST = ['Anna Hansen', 'Lars Eriksen', 'Sofia Berg', 'Magnus Dahl', 'Emma Lindqvist']
 
   const filtered = useMemo(() => {
     return GUEST_ISSUES
@@ -210,6 +214,7 @@ export default function IssuesPage() {
                   ['Status', 'status'],
                   ['Reported', 'reportedAt'],
                   ['Refund', null],
+                  ['Assign', null],
                 ] as [string, SortKey | null][]).map(([label, key]) => (
                   <th
                     key={label}
@@ -233,7 +238,7 @@ export default function IssuesPage() {
             <tbody>
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={8} style={{ padding: 32, textAlign: 'center', color: 'var(--text-subtle)', fontSize: 13 }}>
+                  <td colSpan={9} style={{ padding: 32, textAlign: 'center', color: 'var(--text-subtle)', fontSize: 13 }}>
                     No issues match the current filters.
                   </td>
                 </tr>
@@ -293,6 +298,52 @@ export default function IssuesPage() {
                   </td>
                   <td style={{ padding: '12px 14px', fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                     {issue.refund?.approvedAmount ? fmtNok(issue.refund.approvedAmount) : '—'}
+                  </td>
+                  <td style={{ padding: '12px 14px' }} onClick={e => e.stopPropagation()}>
+                    <div style={{ position: 'relative' }}>
+                      {assignMap[issue.id] ? (
+                        <span style={{ fontSize: 12, color: accent, fontWeight: 500 }}>{assignMap[issue.id]}</span>
+                      ) : (
+                        <button
+                          onClick={() => setOpenAssignId(id => id === issue.id ? null : issue.id)}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 4,
+                            padding: '4px 10px', borderRadius: 6,
+                            border: `1px solid ${accent}`, background: `${accent}12`,
+                            color: accent, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          Assign →
+                        </button>
+                      )}
+                      {openAssignId === issue.id && (
+                        <div style={{
+                          position: 'absolute', right: 0, top: 'calc(100% + 4px)',
+                          background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+                          borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                          zIndex: 50, overflow: 'hidden', minWidth: 160,
+                        }}>
+                          {STAFF_LIST.map(name => (
+                            <button
+                              key={name}
+                              onClick={() => { setAssignMap(m => ({ ...m, [issue.id]: name })); setOpenAssignId(null) }}
+                              style={{
+                                display: 'block', width: '100%', padding: '9px 14px',
+                                background: 'none', border: 'none', cursor: 'pointer',
+                                fontSize: 13, color: 'var(--text-primary)', textAlign: 'left',
+                                borderBottom: '1px solid var(--border-subtle)',
+                                transition: 'background 0.1s',
+                              }}
+                              onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-card)')}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                            >
+                              {name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
