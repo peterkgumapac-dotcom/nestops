@@ -364,7 +364,7 @@ export default function MyTasksPage() {
       })()}
 
       {/* Upsell Approvals Section */}
-      {upsellApprovalRequests.length > 0 && (
+      {isSupervisor && upsellApprovalRequests.length > 0 && (
         <div style={{ marginBottom: 28 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <ShoppingBag size={14} style={{ color: '#d97706' }} />

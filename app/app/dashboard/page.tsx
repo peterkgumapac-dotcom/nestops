@@ -282,7 +282,7 @@ export default function AppDashboard() {
   const effectiveSubRole = currentUser?.subRole ?? ''
   const isStaff = effectiveRole === 'staff'
   const isOperator = effectiveRole === 'operator'
-  const isCleaning = effectiveSubRole.includes('Cleaning')
+  const isCleaning = effectiveSubRole.includes('Cleaning') || effectiveSubRole.includes('Cleaner')
   const isMaintenance = effectiveSubRole.includes('Maintenance')
   const isGuestServices = effectiveSubRole.includes('Guest')
   const isOwner = effectiveRole === 'owner'

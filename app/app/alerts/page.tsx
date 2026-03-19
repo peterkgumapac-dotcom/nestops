@@ -160,7 +160,7 @@ export default function AlertsPage() {
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <PageHeader
-        title="My Alerts"
+        title={isSupervisor ? 'Team Alerts' : 'My Alerts'}
         subtitle={isSupervisor ? 'All field team alerts — tap to mark as read' : 'Your field alerts — tap to mark as read'}
         action={unreadCount > 0 ? (
           <span style={{

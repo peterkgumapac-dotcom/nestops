@@ -24,6 +24,7 @@ export default function ClockStatus() {
   const [clockIn, setClockIn] = useState<ClockIn | null>(null)
   const [elapsed, setElapsed] = useState('')
   const [isStaff, setIsStaff] = useState(false)
+  const [isSupervisor, setIsSupervisor] = useState(false)
 
   useEffect(() => {
     const userStr = localStorage.getItem('nestops_user')
@@ -31,6 +32,7 @@ export default function ClockStatus() {
       try {
         const u = JSON.parse(userStr)
         setIsStaff(u.role === 'staff')
+        setIsSupervisor(u.subRole?.includes('Supervisor') ?? false)
       } catch {}
     }
     const ciStr = localStorage.getItem('nestops_clockin')
@@ -57,6 +59,15 @@ export default function ClockStatus() {
   if (!isStaff) return null
 
   const propertyName = clockIn ? (PROPERTIES.find(p => p.id === clockIn.propertyId)?.name ?? 'Property') : null
+
+  if (isSupervisor) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 12 }}>
+        <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#7c3aed' }} />
+        <Link href="/app/dashboard" style={{ fontSize: 12, color: 'var(--text-muted)', textDecoration: 'none' }}>Team Overview</Link>
+      </div>
+    )
+  }
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 12 }}>

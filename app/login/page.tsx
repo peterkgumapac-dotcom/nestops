@@ -91,7 +91,7 @@ export default function LoginPage() {
     const profile = buildProfile(user)
     localStorage.setItem('nestops_user', JSON.stringify(profile))
     setUser(profile)
-    router.push('/app/my-tasks')
+    router.push(user.subRole?.includes('Supervisor') ? '/app/dashboard' : '/app/my-tasks')
   }
 
   // Email+password login → dashboard directly (power user, skip briefing)
@@ -395,7 +395,7 @@ export default function LoginPage() {
                 <span style={{ fontSize: 16 }}>👷</span>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#f9fafb' }}>Login as Cleaning Supervisor</div>
-                  <div style={{ fontSize: 11, color: '#6b7280' }}>Anna K. · /app/my-tasks</div>
+                  <div style={{ fontSize: 11, color: '#6b7280' }}>Anna K. · /app/dashboard</div>
                 </div>
               </button>
             </motion.div>
