@@ -1,10 +1,16 @@
 'use client'
 import { useState } from 'react'
-import { ShoppingBag, ChevronRight, Tag, Building2, Users, X, Clock } from 'lucide-react'
+import { ShoppingBag, ChevronRight, Tag, Building2, Users, X, Clock, Calendar, CreditCard } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
 import { useRole } from '@/context/RoleContext'
 import { UPSELL_RULES, PROPERTY_GROUPS, type UpsellRule, type UpsellCategory } from '@/lib/data/upsells'
 import { PROPERTIES } from '@/lib/data/properties'
+import { getThreeTierSignal } from '@/lib/utils/upsellCalendar'
+
+const TODAY = '2026-03-19'
+// Default placeholder dates: check-in = today + 3 days, check-out = today + 7 days
+const DEFAULT_CHECKIN  = '2026-03-22'
+const DEFAULT_CHECKOUT = '2026-03-26'
 
 const CATEGORY_COLORS: Record<UpsellCategory, string> = {
   arrival:    '#7c3aed',
@@ -49,6 +55,32 @@ function getTargetingLabel(rule: UpsellRule): string {
   return rule.targetPropertyIds.map(pid => PROPERTIES.find(p => p.id === pid)?.name ?? pid).join(', ')
 }
 
+function isCalendarUpsell(rule: UpsellRule): boolean {
+  return rule.approvalType === 'cleaner_required'
+}
+
+function SignalBadge({ signal }: { signal: 'available' | 'tentative' | 'blocked' }) {
+  if (signal === 'available') {
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: '#05966918', color: '#059669', border: '1px solid #05966930' }}>
+        <span style={{ fontSize: 10 }}>🟢</span> Available
+      </span>
+    )
+  }
+  if (signal === 'tentative') {
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: '#d9770618', color: '#d97706', border: '1px solid #d9770630' }}>
+        <span style={{ fontSize: 10 }}>🟡</span> Tentative — cleaner approval required
+      </span>
+    )
+  }
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: '#ef444418', color: '#ef4444', border: '1px solid #ef444430' }}>
+      <span style={{ fontSize: 10 }}>🔴</span> Unavailable
+    </span>
+  )
+}
+
 export default function AppUpsellsPage() {
   const { accent } = useRole()
   const activeRules = UPSELL_RULES.filter(r => r.enabled)
@@ -61,6 +93,10 @@ export default function AppUpsellsPage() {
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   const handleRequestUpsell = (rule: UpsellRule) => {
+    const signal = isCalendarUpsell(rule)
+      ? getThreeTierSignal(rule.title, 'p1', DEFAULT_CHECKIN, DEFAULT_CHECKOUT, TODAY)
+      : 'available'
+    if (signal === 'blocked') return
     const newRequest: UpsellRequest = {
       id: `req-${Date.now()}`,
       ruleId: rule.id,
@@ -83,6 +119,18 @@ export default function AppUpsellsPage() {
     fontSize: 13, fontWeight: active ? 600 : 400, cursor: 'pointer',
     transition: 'all 0.15s',
   })
+
+  // Compute signal for the selected rule
+  const selectedSignal = selectedRule && isCalendarUpsell(selectedRule)
+    ? getThreeTierSignal(selectedRule.title, 'p1', DEFAULT_CHECKIN, DEFAULT_CHECKOUT, TODAY)
+    : 'available'
+
+  // CTA label based on payment mode + signal
+  function getCtaLabel(rule: UpsellRule, signal: 'available' | 'tentative' | 'blocked'): string {
+    if (signal === 'blocked') return 'Not Available'
+    if (rule.paymentMode === 'auth_hold') return 'Request & Hold Card'
+    return 'Request & Pay Now'
+  }
 
   return (
     <div>
@@ -112,6 +160,10 @@ export default function AppUpsellsPage() {
           {activeRules.map(rule => {
             const catColor = CATEGORY_COLORS[rule.category]
             const targetLabel = getTargetingLabel(rule)
+            const isCalendar = isCalendarUpsell(rule)
+            const signal = isCalendar
+              ? getThreeTierSignal(rule.title, 'p1', DEFAULT_CHECKIN, DEFAULT_CHECKOUT, TODAY)
+              : 'available'
             return (
               <button
                 key={rule.id}
@@ -134,11 +186,12 @@ export default function AppUpsellsPage() {
                     <ShoppingBag size={16} style={{ color: catColor }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{rule.title}</span>
                       <span style={{ fontSize: 11, padding: '2px 7px', borderRadius: 4, background: `${catColor}18`, color: catColor, fontWeight: 500 }}>
                         {CATEGORY_LABELS[rule.category]}
                       </span>
+                      {isCalendar && <SignalBadge signal={signal} />}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
@@ -231,7 +284,7 @@ export default function AppUpsellsPage() {
             style={{
               position: 'absolute', bottom: 0, left: 0, right: 0,
               background: 'var(--bg-surface)', borderRadius: '16px 16px 0 0',
-              padding: '24px', maxHeight: '70vh', overflow: 'auto',
+              padding: '24px', maxHeight: '80vh', overflow: 'auto',
             }}
             onClick={e => e.stopPropagation()}
           >
@@ -270,6 +323,44 @@ export default function AppUpsellsPage() {
               </p>
             )}
 
+            {/* Calendar Availability section — shown for ECO/LCO upsells */}
+            {isCalendarUpsell(selectedRule) && (
+              <div style={{ padding: '14px 16px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                  <Calendar size={13} style={{ color: 'var(--text-muted)' }} />
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Calendar Availability</span>
+                </div>
+                <div style={{ marginBottom: 8 }}>
+                  <SignalBadge signal={selectedSignal} />
+                </div>
+                {selectedSignal === 'tentative' && (
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+                    Your request will be sent to the assigned cleaner for confirmation before your card is held.
+                  </p>
+                )}
+                {selectedSignal === 'blocked' && (
+                  <p style={{ fontSize: 12, color: '#ef4444', margin: 0, lineHeight: 1.5 }}>
+                    This upsell is not available for your dates due to a scheduling conflict.
+                  </p>
+                )}
+                {selectedSignal === 'available' && (
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+                    No scheduling conflicts detected for your dates.
+                  </p>
+                )}
+
+                {/* Payment mode info */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10, padding: '8px 10px', background: 'var(--bg-elevated)', borderRadius: 8 }}>
+                  <CreditCard size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    {selectedRule.paymentMode === 'auth_hold'
+                      ? 'Card will be held (not charged) until cleaner confirms availability'
+                      : 'Card will be charged immediately upon request'}
+                  </span>
+                </div>
+              </div>
+            )}
+
             <div
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -284,16 +375,20 @@ export default function AppUpsellsPage() {
             </div>
 
             <button
-              onClick={() => handleRequestUpsell(selectedRule)}
+              onClick={() => selectedSignal !== 'blocked' && handleRequestUpsell(selectedRule)}
+              disabled={selectedSignal === 'blocked'}
               style={{
                 width: '100%', padding: '14px', borderRadius: 12, border: 'none',
-                background: accent, color: '#fff', fontSize: 15, fontWeight: 700,
-                cursor: 'pointer', transition: 'opacity 0.15s',
+                background: selectedSignal === 'blocked' ? 'var(--border)' : accent,
+                color: selectedSignal === 'blocked' ? 'var(--text-muted)' : '#fff',
+                fontSize: 15, fontWeight: 700,
+                cursor: selectedSignal === 'blocked' ? 'not-allowed' : 'pointer',
+                transition: 'opacity 0.15s',
               }}
-              onMouseEnter={e => (e.currentTarget.style.opacity = '0.9')}
+              onMouseEnter={e => { if (selectedSignal !== 'blocked') e.currentTarget.style.opacity = '0.9' }}
               onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
             >
-              Request Upsell
+              {getCtaLabel(selectedRule, selectedSignal)}
             </button>
           </div>
         </div>

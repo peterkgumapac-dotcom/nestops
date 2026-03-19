@@ -10,6 +10,21 @@ interface ChangeEntry {
 
 const CHANGELOG: ChangeEntry[] = [
   {
+    version: 'v2.3',
+    date: 'Mar 19, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'ECO/LCO calendar signals (3-tier: Available / Tentative / Blocked) in Upsells, Verification, and Guest Services' },
+      { tag: '⚡ Feature', text: 'Cleaner approval workflow — upsell requests routed to cleaners with their day schedule before confirmation' },
+      { tag: '⚡ Feature', text: 'Payment modes — Auth Hold for cleaner-dependent upsells, Auto-Charge for guaranteed upsells' },
+      { tag: '⚡ Feature', text: 'Upsell Approval tasks in My Tasks for cleaning staff' },
+      { tag: '⚡ Feature', text: 'Supervisor escalation — upsell requests with no assigned cleaner automatically route to field supervisor; supervisor receives alert in Alerts > Field Team panel and task in My Tasks' },
+      { tag: '⚡ Feature', text: 'Field Team Alerts panel in Alerts & Integrations — live view of escalated upsell requests for cleaning & maintenance supervisors' },
+      { tag: '⚡ Feature', text: 'Upsell Approvals briefing panel in Guest Services with payment mode badges' },
+      { tag: '⚡ Feature', text: 'PMS Reservations data layer + Reservation detail card in Verification sheet' },
+      { tag: '⚡ Feature', text: 'Verification page: KPI bar, date pills, channel filter, portal activity, document grid' },
+    ],
+  },
+  {
     version: 'v2.2',
     date: 'Mar 19, 2026',
     items: [

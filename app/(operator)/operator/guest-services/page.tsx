@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import {
   Headphones, AlertTriangle, DollarSign, Clock, CheckCircle,
-  TrendingUp, ChevronRight, Plus, ExternalLink,
+  TrendingUp, ChevronRight, Plus, ExternalLink, Package, CalendarClock,
 } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
 import StatCard from '@/components/shared/StatCard'
@@ -25,6 +25,10 @@ import {
   fmtNok,
   type GuestIssue,
 } from '@/lib/data/guestServices'
+import { getTodayUpsellApprovals } from '@/lib/utils/upsellCalendar'
+import { UPSELL_APPROVAL_REQUESTS } from '@/lib/data/upsellApprovals'
+
+const TODAY = '2026-03-19'
 
 const SEVERITY_COLOR: Record<string, string> = {
   low:      '#6b7280',
@@ -91,6 +95,14 @@ export default function GuestServicesPage() {
     : 0
 
   const catMax = Math.max(...Object.values(catBreak))
+  const upsellApprovals = getTodayUpsellApprovals(TODAY)
+  const [approvalStatuses, setApprovalStatuses] = useState<Record<string, string>>(
+    Object.fromEntries(UPSELL_APPROVAL_REQUESTS.map(r => [r.id, r.status]))
+  )
+
+  const handleApproveUpsellRequest = (id: string) => {
+    setApprovalStatuses(prev => ({ ...prev, [id]: 'approved' }))
+  }
 
   const fadeIn = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 } }
 
@@ -146,6 +158,177 @@ export default function GuestServicesPage() {
           </Link>
         </motion.div>
       )}
+
+      {/* Upsell Approval Briefing (legacy — today's calendar-triggered) */}
+      {upsellApprovals.length > 0 && (
+        <motion.div
+          {...fadeIn}
+          transition={{ duration: 0.25, delay: 0.03 }}
+          style={{ marginBottom: 20 }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <CalendarClock size={14} style={{ color: '#d97706' }} />
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Upsell Approvals — Today
+            </span>
+            <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 10, background: '#d9770620', color: '#d97706', fontWeight: 600 }}>
+              {upsellApprovals.length}
+            </span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 10 }}>
+            {upsellApprovals.map(({ guest, upsell, signal, triggerType }) => (
+              <div
+                key={`${guest.id}-${upsell.upsellId}`}
+                style={{
+                  background: 'var(--bg-card)',
+                  border: `1px solid ${signal.possible ? '#05966930' : '#dc262630'}`,
+                  borderRadius: 10,
+                  padding: '12px 14px',
+                  borderLeft: `4px solid ${signal.possible ? '#059669' : '#dc2626'}`,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{guest.guestName}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                      {guest.propertyName} ·{' '}
+                      {triggerType === 'same_day_checkin' ? `Check-in today (${guest.checkInDate})` : `Check-out today (${guest.checkOutDate})`}
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#059669', flexShrink: 0, marginLeft: 8 }}>
+                    ${upsell.price}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                  <Package size={12} style={{ color: 'var(--text-muted)' }} />
+                  <span style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 500 }}>{upsell.title}</span>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>· {upsell.category}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px', borderRadius: 6, background: signal.possible ? '#05966910' : '#dc262610' }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: signal.possible ? '#059669' : '#dc2626', flexShrink: 0 }} />
+                  <span style={{ fontSize: 11, color: signal.possible ? '#059669' : '#dc2626', fontWeight: 500 }}>
+                    {signal.reason}
+                  </span>
+                </div>
+                {!signal.possible && (
+                  <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
+                    <button
+                      style={{ flex: 1, padding: '5px 0', borderRadius: 6, border: '1px solid #d97706', background: '#d9770614', color: '#d97706', fontSize: 11, fontWeight: 500, cursor: 'pointer' }}
+                      onClick={() => {}}
+                    >
+                      Request Override
+                    </button>
+                    <button
+                      style={{ flex: 1, padding: '5px 0', borderRadius: 6, border: '1px solid #dc2626', background: '#dc262614', color: '#dc2626', fontSize: 11, fontWeight: 500, cursor: 'pointer' }}
+                      onClick={() => {}}
+                    >
+                      Decline Upsell
+                    </button>
+                  </div>
+                )}
+                {signal.possible && (
+                  <div style={{ marginTop: 8 }}>
+                    <button
+                      style={{ width: '100%', padding: '5px 0', borderRadius: 6, border: '1px solid #059669', background: '#05966914', color: '#059669', fontSize: 11, fontWeight: 500, cursor: 'pointer' }}
+                      onClick={() => {}}
+                    >
+                      Approve
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Upsell Approvals Briefing Panel (from UPSELL_APPROVAL_REQUESTS) */}
+      <motion.div
+        {...fadeIn}
+        transition={{ duration: 0.25, delay: 0.04 }}
+        style={{ marginBottom: 20 }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <Package size={14} style={{ color: accent }} />
+          <span style={{ fontSize: 12, fontWeight: 600, color: accent, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Upsell Approvals Briefing
+          </span>
+          <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 10, background: `${accent}20`, color: accent, fontWeight: 600 }}>
+            {UPSELL_APPROVAL_REQUESTS.length}
+          </span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 10 }}>
+          {UPSELL_APPROVAL_REQUESTS.map(req => {
+            const currentStatus = approvalStatuses[req.id] ?? req.status
+            const isApproved = currentStatus === 'approved'
+            const isPending  = currentStatus === 'pending_cleaner'
+            return (
+              <div
+                key={req.id}
+                style={{
+                  background: 'var(--bg-card)',
+                  border: `1px solid var(--border)`,
+                  borderRadius: 10,
+                  padding: '12px 14px',
+                  borderLeft: `4px solid ${isApproved ? '#059669' : isPending ? '#d97706' : 'var(--border)'}`,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{req.guestName}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                      {req.propertyName} · {req.checkInDate}
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', flexShrink: 0, marginLeft: 8 }}>
+                    {req.price} {req.currency}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>{req.upsellTitle}</span>
+                  {/* Payment mode badge */}
+                  {req.paymentMode === 'auth_hold' ? (
+                    <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: '#d9770618', color: '#d97706', border: '1px solid #d9770630' }}>
+                      Auth Hold
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: '#2563eb18', color: '#2563eb', border: '1px solid #2563eb30' }}>
+                      Auto-Charge
+                    </span>
+                  )}
+                  {/* Status badge */}
+                  <span style={{
+                    fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10,
+                    background: currentStatus === 'approved' ? '#05966918' : currentStatus === 'pending_cleaner' ? '#d9770618' : currentStatus === 'declined' ? '#ef444418' : currentStatus === 'charged' ? '#6366f118' : '#6b728018',
+                    color: currentStatus === 'approved' ? '#059669' : currentStatus === 'pending_cleaner' ? '#d97706' : currentStatus === 'declined' ? '#ef4444' : currentStatus === 'charged' ? '#6366f1' : '#6b7280',
+                    border: `1px solid ${currentStatus === 'approved' ? '#05966930' : currentStatus === 'pending_cleaner' ? '#d9770630' : currentStatus === 'declined' ? '#ef444430' : currentStatus === 'charged' ? '#6366f130' : '#6b728030'}`,
+                    textTransform: 'capitalize',
+                  }}>
+                    {currentStatus.replace('_', ' ')}
+                  </span>
+                </div>
+
+                {isPending && (
+                  <div style={{ marginTop: 8 }}>
+                    <button
+                      onClick={() => handleApproveUpsellRequest(req.id)}
+                      style={{ width: '100%', padding: '5px 0', borderRadius: 6, border: '1px solid #059669', background: '#05966914', color: '#059669', fontSize: 11, fontWeight: 500, cursor: 'pointer' }}
+                    >
+                      Approve
+                    </button>
+                  </div>
+                )}
+                {isApproved && (
+                  <div style={{ marginTop: 8, padding: '5px 8px', borderRadius: 6, background: '#05966910', textAlign: 'center' }}>
+                    <span style={{ fontSize: 11, color: '#059669', fontWeight: 500 }}>✓ Approved</span>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </motion.div>
 
       {/* Stats row */}
       <motion.div

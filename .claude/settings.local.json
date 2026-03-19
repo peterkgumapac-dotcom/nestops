@@ -7,7 +7,21 @@
       "WebSearch",
       "Bash(node:*)",
       "Bash(npx tsc:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(rm:*)",
+      "Bash(cmd:*)",
+      "Bash(npm run:*)",
+      "Bash(python3:*)",
+      "Bash(head:*)",
+      "Bash(wc:*)",
+      "mcp__magic__21st_magic_component_inspiration",
+      "Bash(netstat:*)",
+      "Bash(tasklist:*)",
+      "Bash(kill 6475:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd.exe:*)",
+      "Bash(powershell.exe:*)",
+      "Bash(curl:*)"
     ]
   }
 }

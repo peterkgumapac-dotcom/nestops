@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, X } from 'lucide-react'
+import { Plus, X, Users, ShoppingBag, AlertTriangle } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
 import { useRole } from '@/context/RoleContext'
@@ -11,6 +11,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose,
 } from '@/components/ui/dialog'
+import { UPSELL_APPROVAL_REQUESTS } from '@/lib/data/upsellApprovals'
 
 interface AlertRule {
   id: string
@@ -32,11 +33,14 @@ interface Integration {
 }
 
 const ALERT_RULES: AlertRule[] = [
-  { id: 'r1', name: 'Urgent Request',    trigger: 'Request priority = Urgent', channel: 'Slack #maintenance',  recipients: 'Operator + Contractors', active: true },
-  { id: 'r2', name: 'Low Stock Critical', trigger: 'Stock level = 0',           channel: 'Email',               recipients: 'Operator',               active: true },
-  { id: 'r3', name: 'SOP Overdue',        trigger: 'SOP unacknowledged 72hrs',  channel: 'In-app',              recipients: 'Assigned staff',         active: true },
-  { id: 'r4', name: 'Compliance Expiry',  trigger: 'Doc expires in 30 days',    channel: 'Email',               recipients: 'Operator + Owner',       active: true },
-  { id: 'r5', name: 'Task Overdue',       trigger: 'Task past due date',        channel: 'Slack + In-app',      recipients: 'Assignee',               active: false },
+  { id: 'r1', name: 'Urgent Request',          trigger: 'Request priority = Urgent',                          channel: 'Slack #maintenance',        recipients: 'Operator + Contractors',  active: true },
+  { id: 'r2', name: 'Low Stock Critical',       trigger: 'Stock level = 0',                                    channel: 'Email',                     recipients: 'Operator',                active: true },
+  { id: 'r3', name: 'SOP Overdue',             trigger: 'SOP unacknowledged 72hrs',                           channel: 'In-app',                    recipients: 'Assigned staff',          active: true },
+  { id: 'r4', name: 'Compliance Expiry',        trigger: 'Doc expires in 30 days',                             channel: 'Email',                     recipients: 'Operator + Owner',        active: true },
+  { id: 'r5', name: 'Task Overdue',            trigger: 'Task past due date',                                 channel: 'Slack + In-app',            recipients: 'Assignee',                active: false },
+  { id: 'r6', name: 'Upsell Approval — ECO',   trigger: 'Early check-in upsell · same-day check-in',          channel: 'In-app · Guest Services',   recipients: 'Operator + Guest Services', active: true },
+  { id: 'r7', name: 'Upsell Approval — LCO',   trigger: 'Late check-out upsell · same-day check-out',         channel: 'In-app · Guest Services',   recipients: 'Operator + Guest Services', active: true },
+  { id: 'r8', name: 'Upsell Escalation — No Cleaner', trigger: 'Upsell approval requested · no cleaner assigned to property', channel: 'In-app · Field Team',       recipients: 'Cleaning & Maintenance Supervisor', active: true },
 ]
 
 const INTEGRATIONS: Integration[] = [
@@ -53,6 +57,8 @@ const TRIGGER_OPTIONS = [
   'Request priority = Urgent', 'Stock level = 0', 'SOP unacknowledged after X hrs',
   'Compliance doc expires in X days', 'Task is overdue', 'Booking is cancelled',
   'Property vacant for X days', 'Guest checks in', 'Guest checks out',
+  'Early check-in upsell purchased · same-day check-in',
+  'Late check-out upsell purchased · same-day check-out',
 ]
 
 const inputStyle: React.CSSProperties = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontSize: 13, outline: 'none' }
@@ -82,6 +88,47 @@ export default function AlertsPage() {
         title="Alerts & Integrations"
         subtitle="Configure how and where NestOps notifies your team"
       />
+
+      {/* ── Field Team Alerts (live panel) ── */}
+      {(() => {
+        const escalated = UPSELL_APPROVAL_REQUESTS.filter(r => r.escalatedToSupervisor && r.status === 'pending_supervisor')
+        if (escalated.length === 0) return null
+        return (
+          <div style={{ marginBottom: 24, background: 'var(--bg-card)', border: '1px solid #7c3aed30', borderLeft: '4px solid #7c3aed', borderRadius: 10, padding: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <Users size={14} style={{ color: '#7c3aed' }} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Field Team — Supervisor Action Required</span>
+              <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 10, background: '#7c3aed20', color: '#7c3aed', fontWeight: 600 }}>{escalated.length}</span>
+              <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-muted)' }}>Cleaning &amp; Maintenance</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {escalated.map(req => (
+                <div key={req.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: 'var(--bg-elevated)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                  <AlertTriangle size={14} style={{ color: '#f59e0b', flexShrink: 0 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>
+                      {req.upsellTitle} — {req.guestName}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                      {req.propertyName} · Check-in {req.checkInDate} · No cleaner assigned
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>${req.price}</span>
+                    <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 10, background: '#f59e0b18', color: '#d97706', border: '1px solid #f59e0b30', fontWeight: 600 }}>
+                      {req.calendarSignal === 'tentative' ? '🟡 Tentative' : req.calendarSignal === 'blocked' ? '🔴 Blocked' : '🟢 Available'}
+                    </span>
+                    <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 10, background: '#7c3aed14', color: '#7c3aed', border: '1px solid #7c3aed30', fontWeight: 600 }}>⬆ Escalated</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 10, fontStyle: 'italic' }}>
+              These requests appear in My Tasks for the assigned field supervisor. Assign a cleaner to re-route to the cleaning team.
+            </p>
+          </div>
+        )
+      })()}
 
       <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 24, alignItems: 'start' }}>
 

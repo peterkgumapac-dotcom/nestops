@@ -23,6 +23,8 @@ export interface UpsellRule {
   conditions: UpsellCondition[]
   imageUrl?: string
   ctaLabel?: string
+  approvalType: 'auto' | 'cleaner_required'
+  paymentMode:  'auto_charge' | 'auth_hold'
 }
 
 export const PROPERTY_GROUPS = [
@@ -45,6 +47,8 @@ export const UPSELL_RULES: UpsellRule[] = [
     targetPropertyIds: [],
     conditions: [],
     ctaLabel: 'Book Now',
+    approvalType: 'cleaner_required',
+    paymentMode:  'auth_hold',
   },
   {
     id: 'ur2',
@@ -59,6 +63,8 @@ export const UPSELL_RULES: UpsellRule[] = [
     targetPropertyIds: [],
     conditions: [],
     ctaLabel: 'Add to Stay',
+    approvalType: 'cleaner_required',
+    paymentMode:  'auth_hold',
   },
   {
     id: 'ur3',
@@ -73,6 +79,8 @@ export const UPSELL_RULES: UpsellRule[] = [
     targetPropertyIds: [],
     conditions: [],
     ctaLabel: 'Book Transfer',
+    approvalType: 'auto',
+    paymentMode:  'auto_charge',
   },
   {
     id: 'ur4',
@@ -89,6 +97,8 @@ export const UPSELL_RULES: UpsellRule[] = [
       { id: 'c1', field: 'stay_length', operator: '>=', value: '3' },
     ],
     ctaLabel: 'Add to Stay',
+    approvalType: 'auto',
+    paymentMode:  'auto_charge',
   },
   {
     id: 'ur5',
@@ -105,6 +115,8 @@ export const UPSELL_RULES: UpsellRule[] = [
       { id: 'c2', field: 'guests', operator: '>=', value: '2' },
     ],
     ctaLabel: 'Book Tour',
+    approvalType: 'auto',
+    paymentMode:  'auto_charge',
   },
   {
     id: 'ur6',
@@ -121,6 +133,8 @@ export const UPSELL_RULES: UpsellRule[] = [
       { id: 'c3', field: 'stay_length', operator: '>', value: '5' },
     ],
     ctaLabel: 'Schedule Refresh',
+    approvalType: 'auto',
+    paymentMode:  'auto_charge',
   },
   {
     id: 'ur7',
@@ -137,6 +151,8 @@ export const UPSELL_RULES: UpsellRule[] = [
       { id: 'c4', field: 'checkin_day', operator: 'is', value: 'Fri' },
     ],
     ctaLabel: 'Reserve Gear',
+    approvalType: 'auto',
+    paymentMode:  'auto_charge',
   },
   {
     id: 'ur8',
@@ -151,5 +167,7 @@ export const UPSELL_RULES: UpsellRule[] = [
     targetPropertyIds: ['p2', 'p3'],
     conditions: [],
     ctaLabel: 'Add Pet',
+    approvalType: 'auto',
+    paymentMode:  'auto_charge',
   },
 ]

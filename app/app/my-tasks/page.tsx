@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Filter, Camera, X, Check } from 'lucide-react'
+import { Filter, Camera, X, Check, ShoppingBag, Calendar, MapPin, CreditCard } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
 import AppDrawer from '@/components/shared/AppDrawer'
@@ -9,6 +9,8 @@ import { useRole } from '@/context/RoleContext'
 import type { UserProfile } from '@/context/RoleContext'
 import { PROPERTIES } from '@/lib/data/properties'
 import { getCleaningChecklist, getMaintenanceChecklist, type ChecklistItem } from '@/lib/data/checklists'
+import { UPSELL_APPROVAL_REQUESTS, type UpsellApprovalRequest } from '@/lib/data/upsellApprovals'
+import CleanerApprovalSheet from '@/components/upsells/CleanerApprovalSheet'
 
 interface PersonalTask {
   id: string
@@ -70,6 +72,29 @@ export default function MyTasksPage() {
   const [qaNotes, setQaNotes] = useState('')
   const [toast, setToast] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Upsell approval state
+  const LOGGED_IN_CLEANER_ID = 's1'    // placeholder for logged-in cleaner
+  const LOGGED_IN_SUPERVISOR_ID = 's2' // placeholder for field supervisor
+  const [upsellApprovalRequests, setUpsellApprovalRequests] = useState<UpsellApprovalRequest[]>(
+    UPSELL_APPROVAL_REQUESTS.filter(r =>
+      (r.status === 'pending_cleaner' && r.assignedCleanerId === LOGGED_IN_CLEANER_ID) ||
+      (r.status === 'pending_supervisor' && r.escalatedToSupervisor && r.supervisorId === LOGGED_IN_SUPERVISOR_ID)
+    )
+  )
+  const [selectedApprovalRequest, setSelectedApprovalRequest] = useState<UpsellApprovalRequest | null>(null)
+
+  const handleUpsellApprove = (id: string) => {
+    setUpsellApprovalRequests(prev => prev.filter(r => r.id !== id))
+    setSelectedApprovalRequest(null)
+    showToast('Upsell approved — guest will be notified')
+  }
+
+  const handleUpsellDecline = (id: string, notes: string) => {
+    setUpsellApprovalRequests(prev => prev.filter(r => r.id !== id))
+    setSelectedApprovalRequest(null)
+    showToast('Upsell declined')
+  }
 
   useEffect(() => {
     const stored = localStorage.getItem('nestops_user')
@@ -221,6 +246,85 @@ export default function MyTasksPage() {
           ))}
         </div>
       </div>
+
+      {/* Upsell Approvals Section */}
+      {upsellApprovalRequests.length > 0 && (
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <ShoppingBag size={14} style={{ color: '#d97706' }} />
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Upsell Approvals
+            </span>
+            <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 10, background: '#d9770620', color: '#d97706', fontWeight: 600 }}>
+              {upsellApprovalRequests.length}
+            </span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {upsellApprovalRequests.map(req => (
+              <motion.div
+                key={req.id}
+                layout
+                onClick={() => setSelectedApprovalRequest(req)}
+                style={{
+                  background: 'var(--bg-card)',
+                  border: req.escalatedToSupervisor ? '1px solid #7c3aed30' : '1px solid #d9770630',
+                  borderLeft: req.escalatedToSupervisor ? '4px solid #7c3aed' : '4px solid #d97706',
+                  borderRadius: 10,
+                  padding: '12px 14px',
+                  cursor: 'pointer',
+                  transition: 'box-shadow 0.15s',
+                }}
+                onHoverStart={e => {}}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                        {req.upsellTitle}
+                      </span>
+                      {req.escalatedToSupervisor && (
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: '#7c3aed18', color: '#7c3aed', border: '1px solid #7c3aed30' }}>
+                          ⬆ Escalated — No Cleaner Assigned
+                        </span>
+                      )}
+                      {req.calendarSignal === 'available' && (
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: '#05966918', color: '#059669', border: '1px solid #05966930' }}>🟢 Available</span>
+                      )}
+                      {req.calendarSignal === 'tentative' && (
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: '#d9770618', color: '#d97706', border: '1px solid #d9770630' }}>🟡 Tentative</span>
+                      )}
+                      {req.calendarSignal === 'blocked' && (
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: '#ef444418', color: '#ef4444', border: '1px solid #ef444430' }}>🔴 Blocked</span>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-muted)' }}>
+                        <MapPin size={11} /> {req.propertyName}
+                      </span>
+                      <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>·</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-muted)' }}>
+                        <Calendar size={11} /> {req.checkInDate}
+                      </span>
+                      <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>·</span>
+                      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{req.guestName}</span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
+                      {req.price} {req.currency}
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-muted)' }}>
+                      <CreditCard size={10} />
+                      {req.paymentMode === 'auth_hold' ? 'Auth Hold' : 'Auto-Charge'}
+                    </span>
+                    <span style={{ fontSize: 11, color: accent, fontWeight: 500 }}>→ Review</span>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Task groups */}
       {filteredTasks.length === 0 ? (
@@ -591,6 +695,17 @@ export default function MyTasksPage() {
           </div>
         )}
       </AppDrawer>
+
+      {/* Cleaner Approval Sheet */}
+      {selectedApprovalRequest && (
+        <CleanerApprovalSheet
+          request={selectedApprovalRequest}
+          open={!!selectedApprovalRequest}
+          onClose={() => setSelectedApprovalRequest(null)}
+          onApprove={handleUpsellApprove}
+          onDecline={handleUpsellDecline}
+        />
+      )}
 
       {toast && (
         <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#10b981', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
