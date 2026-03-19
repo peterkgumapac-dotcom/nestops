@@ -1,8 +1,9 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { CheckCircle, XCircle, Clock, MessageSquare } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, MessageSquare, ShoppingCart } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageHeader from '@/components/shared/PageHeader'
+import { PURCHASE_ORDERS } from '@/lib/data/inventory'
 
 const ACCENT = '#2563eb'
 
@@ -20,7 +21,29 @@ interface Approval {
   requestedDate: string
   status: ApprovalStatus
   resolvedDate?: string
+  isPurchaseApproval?: boolean
+  poNumber?: string
+  vendor?: string
 }
+
+// POs >2000 NOK requiring owner approval surface here
+const OWNER_POS: Approval[] = PURCHASE_ORDERS
+  .filter(po => po.approvalTier === 'owner' && po.approvalStatus !== 'approved')
+  .map(po => ({
+    id: `po-${po.id}`,
+    title: `Purchase Order ${po.poNumber}`,
+    property: po.destination,
+    amount: po.total,
+    currency: po.currency,
+    category: 'Purchase Approval',
+    description: `${po.items.map(i => `${i.qty}× ${i.name}`).join(', ')}. Requested by ${po.requester ?? 'Operator'}.`,
+    requestedBy: po.requester ?? 'Operator',
+    requestedDate: po.date,
+    status: 'pending' as ApprovalStatus,
+    isPurchaseApproval: true,
+    poNumber: po.poNumber,
+    vendor: po.vendor,
+  }))
 
 const ALL_APPROVALS: Approval[] = [
   { id: 'a1', title: 'Emergency Plumbing Repair',    property: 'Sunset Villa',  amount: 4800, currency: 'NOK', category: 'Maintenance', description: 'Burst pipe under kitchen sink. Immediate repair required before next guest arrival on March 20.', requestedBy: 'Lars Plumbing AS', requestedDate: '2026-03-15', status: 'pending' },
@@ -54,7 +77,7 @@ const STATUS_STYLES: Record<ApprovalStatus, React.CSSProperties> = {
 
 export default function ApprovalsPage() {
   const [tab, setTab] = useState<Tab>('pending')
-  const [approvals, setApprovals] = useState(ALL_APPROVALS)
+  const [approvals, setApprovals] = useState([...OWNER_POS, ...ALL_APPROVALS])
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
   const [decliningId, setDecliningId] = useState<string | null>(null)
 
@@ -152,13 +175,18 @@ export default function ApprovalsPage() {
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, flexWrap: 'wrap' }}>
+                  {a.isPurchaseApproval && (
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'rgba(124,58,237,0.1)', color: '#7c3aed', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <ShoppingCart size={10} /> Purchase Order
+                    </span>
+                  )}
                   <span style={{ fontWeight: 600, fontSize: 15, color: '#0f172a' }}>{a.title}</span>
                   <span style={{ ...STATUS_STYLES[a.status], fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 4 }}>
                     {STATUS_ICONS[a.status]} {a.status.charAt(0).toUpperCase() + a.status.slice(1)}
                   </span>
                 </div>
-                <div style={{ fontSize: 12, color: '#64748b' }}>{a.property} · {a.category} · Requested by {a.requestedBy}</div>
+                <div style={{ fontSize: 12, color: '#64748b' }}>{a.property} · {a.vendor ? `Vendor: ${a.vendor} · ` : ''}{a.category} · Requested by {a.requestedBy}</div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
                 <div style={{ fontSize: 20, fontWeight: 700, color: '#0f172a' }}>{a.amount.toLocaleString()}</div>

@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Building2, Users, Ticket, Package, AlertTriangle, Headphones, ChevronRight, CheckCircle, ShieldAlert, Wrench, ClipboardList, FileText, Star, ChevronDown, ChevronUp, Activity } from 'lucide-react'
+import { Building2, Users, Ticket, Package, AlertTriangle, Headphones, ChevronRight, CheckCircle, ShieldAlert, Wrench, ClipboardList, FileText, Star, ChevronDown, ChevronUp, Activity, ShoppingCart } from 'lucide-react'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
 } from '@/components/ui/sheet'
@@ -13,7 +13,7 @@ import type { Column } from '@/components/shared/DataTable'
 import { REQUESTS } from '@/lib/data/requests'
 import { OWNERS } from '@/lib/data/owners'
 import { PROPERTIES } from '@/lib/data/properties'
-import { STOCK_ITEMS } from '@/lib/data/inventory'
+import { STOCK_ITEMS, PURCHASE_ORDERS, PROPERTY_CHECKINS } from '@/lib/data/inventory'
 import { GUEST_ISSUES, getActiveIssues, getTotalRefunds, getRedFlagProperties, fmtNok } from '@/lib/data/guestServices'
 import { APPROVALS, type Approval } from '@/lib/data/approvals'
 import { COMPLIANCE_DOCS } from '@/lib/data/compliance'
@@ -61,6 +61,9 @@ export default function OperatorDashboard() {
   const [qaReviewItem, setQaReviewItem] = useState<QaPendingItem | null>(null)
   const [toast, setToast] = useState('')
   const [activityOpen, setActivityOpen] = useState(true)
+  const [pendingPOApprovals, setPendingPOApprovals] = useState(
+    PURCHASE_ORDERS.filter(po => po.approvalTier === 'manager' && po.approvalStatus === 'pending')
+  )
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   // Read field reports, owner work orders, and QA pending from localStorage
@@ -152,6 +155,39 @@ export default function OperatorDashboard() {
           </Link>
         ))}
       </div>
+
+      {/* Pre-check-in Alert */}
+      {(() => {
+        const today = new Date('2026-03-19')
+        const urgentCheckins = PROPERTY_CHECKINS.filter(ci => {
+          const checkin = new Date(ci.date)
+          const hours = (checkin.getTime() - today.getTime()) / 3600000
+          return hours <= 72 && ci.stockItemIds.some(id => {
+            const item = STOCK_ITEMS.find(s => s.id === id)
+            return item && (item.status === 'low' || item.status === 'critical' || item.status === 'out')
+          })
+        })
+        if (!urgentCheckins.length) return null
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, marginBottom: 20 }}>
+            <AlertTriangle size={16} color="#ef4444" style={{ flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#ef4444' }}>Pre-check-in Stock Alert — </span>
+              <span style={{ fontSize: 13, color: '#ef4444' }}>
+                {urgentCheckins.map(ci => {
+                  const lowItems = ci.stockItemIds.map(id => STOCK_ITEMS.find(s => s.id === id)).filter(i => i && i.status !== 'ok').map(i => i!.name)
+                  const checkin = new Date(ci.date)
+                  const hours = Math.round((checkin.getTime() - today.getTime()) / 3600000)
+                  return `${ci.property} check-in in ${hours}h — low: ${lowItems.join(', ')}`
+                }).join(' · ')}
+              </span>
+            </div>
+            <Link href="/operator/inventory?tab=alerts" style={{ fontSize: 12, color: '#ef4444', textDecoration: 'none', fontWeight: 600, flexShrink: 0, whiteSpace: 'nowrap' }}>
+              Restock →
+            </Link>
+          </div>
+        )
+      })()}
 
       {/* Stat cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 32 }}>
@@ -390,6 +426,45 @@ export default function OperatorDashboard() {
               </div>
             )}
           </div>
+
+          {/* Pending POs widget */}
+          {pendingPOApprovals.length > 0 && (
+            <div style={{ background: 'var(--bg-card)', border: `1px solid ${accent}28`, borderRadius: 10, padding: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <ShoppingCart size={14} style={{ color: accent }} />
+                  <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+                    Pending POs
+                    <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 700, padding: '1px 6px', borderRadius: 10, background: accent, color: '#fff' }}>{pendingPOApprovals.length}</span>
+                  </h3>
+                </div>
+                <Link href="/operator/inventory" style={{ fontSize: 12, color: accent, textDecoration: 'none' }}>View all →</Link>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {pendingPOApprovals.map(po => (
+                  <div key={po.id} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 8, padding: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--text-primary)', fontFamily: 'monospace' }}>{po.poNumber}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{po.vendor} · {po.requester}</div>
+                      </div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{po.total.toLocaleString()} {po.currency}</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={() => {
+                        setPendingPOApprovals(prev => prev.filter(p => p.id !== po.id))
+                        showToast(`PO ${po.poNumber} approved`)
+                      }} style={{ flex: 1, padding: '5px', borderRadius: 6, border: 'none', background: '#16a34a1a', color: '#34d399', fontSize: 11, fontWeight: 500, cursor: 'pointer' }}>Approve</button>
+                      <button onClick={() => {
+                        setPendingPOApprovals(prev => prev.filter(p => p.id !== po.id))
+                        showToast('Changes requested')
+                      }} style={{ flex: 1, padding: '5px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer' }}>Request Changes</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Low stock */}
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
