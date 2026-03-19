@@ -30,7 +30,7 @@ const NEXT_CHECKIN: Record<string, string> = {
 function getCountdownBadge(property: string): { label: string; color: string; bg: string } | null {
   const dateStr = NEXT_CHECKIN[property]
   if (!dateStr) return null
-  const today = new Date('2026-03-18')
+  const today = new Date()
   const checkin = new Date(dateStr)
   const days = Math.round((checkin.getTime() - today.getTime()) / 86400000)
   if (days < 0) return null

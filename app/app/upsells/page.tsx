@@ -99,7 +99,7 @@ export default function AppUpsellsPage() {
         <button style={TAB_STYLE(activeTab === 'requests')} onClick={() => setActiveTab('requests')}>
           My Requests
           {requests.length > 0 && (
-            <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: '1px 5px', borderRadius: 10, background: activeTab === 'requests' ? 'rgba(255,255,255,0.25)' : accent, color: activeTab === 'requests' ? '#fff' : '#fff' }}>
+            <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: '1px 5px', borderRadius: 10, background: activeTab === 'requests' ? 'rgba(255,255,255,0.85)' : accent, color: activeTab === 'requests' ? accent : '#fff' }}>
               {requests.length}
             </span>
           )}

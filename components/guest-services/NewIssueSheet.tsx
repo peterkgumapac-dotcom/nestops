@@ -67,6 +67,16 @@ export default function NewIssueSheet({ onClose }: Props) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved]   = useState(false)
   const [aiCategoryAccepted, setAiCategoryAccepted] = useState(false)
+  const [photoToast, setPhotoToast] = useState(false)
+
+  const handleClose = () => {
+    setForm({ property: '', category: '', severity: 'medium', channel: 'airbnb', guestName: '', reservationId: '', title: '', description: '', internalNotes: '' })
+    setPhotos([])
+    setSaving(false)
+    setSaved(false)
+    setAiCategoryAccepted(false)
+    onClose()
+  }
 
   const set = (k: string, v: string) => {
     setForm(f => ({ ...f, [k]: v }))
@@ -79,6 +89,12 @@ export default function NewIssueSheet({ onClose }: Props) {
   const aiCategory = hasAnalysis ? getAiCategory(analysisText) : null
 
   const handlePhotoAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (photos.length >= 5) {
+      setPhotoToast(true)
+      setTimeout(() => setPhotoToast(false), 2500)
+      e.target.value = ''
+      return
+    }
     const files = Array.from(e.target.files ?? [])
     const remaining = 5 - photos.length
     files.slice(0, remaining).forEach(file => {
@@ -110,7 +126,7 @@ export default function NewIssueSheet({ onClose }: Props) {
   }
 
   return (
-    <Sheet open onOpenChange={open => !open && onClose()}>
+    <Sheet open onOpenChange={open => !open && handleClose()}>
       <SheetContent
         side="right"
         showCloseButton={false}
@@ -398,7 +414,7 @@ export default function NewIssueSheet({ onClose }: Props) {
           }}
         >
           <button
-            onClick={onClose}
+            onClick={handleClose}
             style={{
               flex: 1, padding: '10px 0', borderRadius: 8,
               border: '1px solid var(--border)', background: 'var(--bg-elevated)',
@@ -422,6 +438,12 @@ export default function NewIssueSheet({ onClose }: Props) {
           </button>
         </div>
       </SheetContent>
+
+      {photoToast && (
+        <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#d97706', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+          Max 5 photos reached
+        </div>
+      )}
     </Sheet>
   )
 }

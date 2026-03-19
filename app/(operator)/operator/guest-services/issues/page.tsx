@@ -318,6 +318,8 @@ export default function IssuesPage() {
                         </button>
                       )}
                       {openAssignId === issue.id && (
+                        <>
+                        <div style={{ position: 'fixed', inset: 0, zIndex: 49 }} onClick={() => setOpenAssignId(null)} />
                         <div style={{
                           position: 'absolute', right: 0, top: 'calc(100% + 4px)',
                           background: 'var(--bg-elevated)', border: '1px solid var(--border)',
@@ -342,6 +344,7 @@ export default function IssuesPage() {
                             </button>
                           ))}
                         </div>
+                        </>
                       )}
                     </div>
                   </td>

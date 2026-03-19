@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose,
 } from '@/components/ui/sheet'
@@ -58,6 +58,23 @@ export default function IssueSheet({ issue, onClose, readOnly = false }: Props) 
   const [convertDone, setConvertDone] = useState(false)
   const [showLinkDropdown, setShowLinkDropdown] = useState(false)
   const [linkedTask, setLinkedTask] = useState<typeof OPEN_TASKS[0] | null>(null)
+
+  // Reset per-issue state when the issue changes
+  useEffect(() => {
+    setRefundNights(issue.affectedNights)
+    setShowConvertModal(false)
+    setConvertDone(false)
+    setShowLinkDropdown(false)
+    setLinkedTask(null)
+  }, [issue.id])
+
+  // Close confirm modal on Escape
+  useEffect(() => {
+    if (!showConvertModal) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowConvertModal(false) }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [showConvertModal])
 
   const suggested50 = issue.nightlyRate * refundNights * 0.5
   const suggested25 = issue.nightlyRate * refundNights * 0.25
@@ -461,7 +478,7 @@ export default function IssueSheet({ issue, onClose, readOnly = false }: Props) 
             style={{
               position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              zIndex: 100, padding: 24,
+              zIndex: 300, padding: 24,
             }}
           >
             <div style={{

@@ -79,7 +79,9 @@ export default function InventoryPage() {
 
   const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)' as const, fontSize: 14, outline: 'none', boxSizing: 'border-box' as const }
   const restockAlerts = STOCK_ITEMS.filter(i => i.status !== 'ok')
-  const visibleItems = selectedLoc === 'all' ? STOCK_ITEMS : STOCK_ITEMS.filter((_, i) => i % 3 === locations.findIndex(l => l.id === selectedLoc) % 3)
+  const locIdx = locations.findIndex(l => l.id === selectedLoc)
+  const chunkSize = Math.ceil(STOCK_ITEMS.length / Math.max(locations.length, 1))
+  const visibleItems = selectedLoc === 'all' ? STOCK_ITEMS : STOCK_ITEMS.slice(locIdx * chunkSize, (locIdx + 1) * chunkSize)
   const pendingPOs = orders.filter(p => p.approvalStatus === 'pending')
 
   const addToCart = (item: StockItem) => {
@@ -299,7 +301,7 @@ export default function InventoryPage() {
       {activeTab === 'orders' && (
         <div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-            <button style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Create PO</button>
+            <button onClick={() => setCartOpen(true)} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Create PO</button>
           </div>
 
           <div style={{ border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
@@ -747,12 +749,14 @@ export default function InventoryPage() {
                 <button onClick={() => {
                   if (selectedPO) {
                     setPoApprovals(p => ({ ...p, [selectedPO.id]: 'changes_requested' }))
+                    setOrders(prev => prev.map(o => o.id === selectedPO.id ? { ...o, approvalStatus: 'changes_requested' } : o))
                     showToast('Changes requested')
                   }
                 }} style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid #d97706', background: 'transparent', color: '#d97706', fontSize: 13, cursor: 'pointer' }}>Request Changes</button>
                 <button onClick={() => {
                   if (selectedPO) {
                     setPoApprovals(p => ({ ...p, [selectedPO.id]: 'approved' }))
+                    setOrders(prev => prev.map(o => o.id === selectedPO.id ? { ...o, approvalStatus: 'approved' } : o))
                     showToast('PO approved')
                   }
                 }} style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Approve</button>
@@ -956,6 +960,7 @@ export default function InventoryPage() {
               <button onClick={() => setSendModal(false)} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
               <button onClick={() => {
                 setPoApprovals(p => ({ ...p, [selectedPO.id]: 'sent' }))
+                setOrders(prev => prev.map(o => o.id === selectedPO.id ? { ...o, approvalStatus: 'sent', sentAt: new Date().toISOString() } : o))
                 setSendModal(false)
                 setPoDrawer(false)
                 showToast(`PO ${selectedPO.poNumber} sent to ${selectedPO.vendor}`)

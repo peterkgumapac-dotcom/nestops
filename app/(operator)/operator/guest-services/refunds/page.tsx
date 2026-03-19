@@ -378,7 +378,7 @@ export default function RefundsPage() {
         footer={
           <>
             <button
-              onClick={() => setShowLogRefund(false)}
+              onClick={() => { setShowLogRefund(false); setLogForm({ guest: '', propertyId: '', amount: '', reason: '', ota: 'Airbnb', notes: '' }) }}
               style={{ padding: '9px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}
             >
               Cancel
