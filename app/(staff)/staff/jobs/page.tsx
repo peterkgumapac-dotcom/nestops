@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
-import { Wrench, CheckSquare, ClipboardList, Search } from 'lucide-react'
+import React from 'react'
+import { Wrench, CheckSquare, ClipboardList, Search, Headphones } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
 import AppDrawer from '@/components/shared/AppDrawer'
@@ -11,7 +12,7 @@ import { useRole } from '@/context/RoleContext'
 const CURRENT_STAFF = STAFF_MEMBERS[0]
 const MY_JOBS = JOBS.filter(j => CURRENT_STAFF.jobIds.includes(j.id))
 
-const TYPE_ICONS = { cleaning: CheckSquare, maintenance: Wrench, inspection: Search, intake: ClipboardList }
+const TYPE_ICONS: Record<string, React.ElementType> = { cleaning: CheckSquare, maintenance: Wrench, inspection: Search, intake: ClipboardList, guest_services: Headphones }
 
 export default function JobsPage() {
   const { accent } = useRole()
