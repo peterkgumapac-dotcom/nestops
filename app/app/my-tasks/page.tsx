@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Filter, Camera, X, Check, ShoppingBag, Calendar, MapPin, CreditCard } from 'lucide-react'
+import { Filter, Camera, X, Check, ShoppingBag, Calendar, MapPin, Zap } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
 import AppDrawer from '@/components/shared/AppDrawer'
@@ -11,6 +11,46 @@ import { PROPERTIES } from '@/lib/data/properties'
 import { getCleaningChecklist, getMaintenanceChecklist, type ChecklistItem } from '@/lib/data/checklists'
 import { UPSELL_APPROVAL_REQUESTS, type UpsellApprovalRequest } from '@/lib/data/upsellApprovals'
 import CleanerApprovalSheet from '@/components/upsells/CleanerApprovalSheet'
+
+// ─── Today's Cleanings ────────────────────────────────────────────────────────
+
+interface CleaningJob {
+  id: string
+  type: 'Turnover' | 'Deep Clean' | 'Same-day' | 'Inspection'
+  property: string
+  timeWindow: string
+  status: 'pending' | 'in-progress' | 'done'
+  assignedTo: string
+  checkoutTime: string
+  checkinTime: string
+}
+
+const TODAYS_CLEANINGS: CleaningJob[] = [
+  { id: 'cl-001', type: 'Turnover',   property: 'Harbor Studio',  timeWindow: '10:00–12:00', status: 'in-progress', assignedTo: 'Maria S.',  checkoutTime: '10:00', checkinTime: '15:00' },
+  { id: 'cl-002', type: 'Deep Clean', property: 'Sunset Villa',   timeWindow: '13:00–16:00', status: 'pending',     assignedTo: 'Maria S.',  checkoutTime: '12:00', checkinTime: '17:00' },
+  { id: 'cl-003', type: 'Turnover',   property: 'Downtown Loft',  timeWindow: '09:00–11:00', status: 'done',        assignedTo: 'Anna K.',   checkoutTime: '09:00', checkinTime: '14:00' },
+  { id: 'cl-004', type: 'Same-day',   property: 'Ocean View Apt', timeWindow: '15:00–17:00', status: 'pending',     assignedTo: 'Anna K.',   checkoutTime: '15:00', checkinTime: '16:30' },
+]
+
+const CLEANING_TYPE_COLOR: Record<CleaningJob['type'], string> = {
+  Turnover:   '#7c3aed',
+  'Deep Clean': '#3b82f6',
+  'Same-day': '#f97316',
+  Inspection: '#06b6d4',
+}
+
+const CLEANING_STATUS_COLOR: Record<CleaningJob['status'], string> = {
+  pending:     '#6b7280',
+  'in-progress': '#10b981',
+  done:        '#374151',
+}
+
+function hasTightGap(checkoutTime: string, windowStart: string): boolean {
+  const [ch, cm] = checkoutTime.split(':').map(Number)
+  const [wh, wm] = windowStart.split(':').map(Number)
+  const gapMins = (wh * 60 + wm) - (ch * 60 + cm)
+  return gapMins < 90
+}
 
 interface PersonalTask {
   id: string
@@ -270,6 +310,59 @@ export default function MyTasksPage() {
         </div>
       </div>
 
+      {/* Today's Cleanings Section */}
+      {(subRole.includes('Cleaning') || subRole.includes('Cleaner') || isSupervisor) && (() => {
+        const myCleanings = isSupervisor
+          ? (statusFilter === 'today' || statusFilter === 'all' ? TODAYS_CLEANINGS : TODAYS_CLEANINGS)
+          : TODAYS_CLEANINGS.filter(c => c.assignedTo === assigneeName)
+        if (myCleanings.length === 0) return null
+        return (
+          <div style={{ marginBottom: 28 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <Zap size={14} style={{ color: '#7c3aed' }} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Today&apos;s Cleanings
+              </span>
+              <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 10, background: '#7c3aed20', color: '#7c3aed', fontWeight: 600 }}>
+                {myCleanings.length}
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {myCleanings.map(job => {
+                const [windowStart] = job.timeWindow.split('–')
+                const tight = hasTightGap(job.checkoutTime, windowStart)
+                const typeColor = CLEANING_TYPE_COLOR[job.type]
+                const statusColor = CLEANING_STATUS_COLOR[job.status]
+                return (
+                  <div key={job.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderLeft: `4px solid ${typeColor}`, borderRadius: 10, padding: '12px 14px', opacity: job.status === 'done' ? 0.6 : 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: `${typeColor}18`, color: typeColor, border: `1px solid ${typeColor}30` }}>{job.type}</span>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{job.property}</span>
+                          {tight && job.status !== 'done' && (
+                            <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: '#d9770618', color: '#d97706', border: '1px solid #d9770630' }}>⚡ Tight gap</span>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>🕐 {job.timeWindow}</span>
+                          <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>·</span>
+                          <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Out {job.checkoutTime} → In {job.checkinTime}</span>
+                          {isSupervisor && <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>· {job.assignedTo}</span>}
+                        </div>
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 10, background: `${statusColor}18`, color: statusColor, border: `1px solid ${statusColor}30`, flexShrink: 0, marginTop: 2 }}>
+                        {job.status === 'in-progress' ? 'In progress' : job.status === 'done' ? '✓ Done' : 'Pending'}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Upsell Approvals Section */}
       {upsellApprovalRequests.length > 0 && (
         <div style={{ marginBottom: 28 }}>
@@ -333,13 +426,6 @@ export default function MyTasksPage() {
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
-                      {req.price} {req.currency}
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-muted)' }}>
-                      <CreditCard size={10} />
-                      {req.paymentMode === 'auth_hold' ? 'Auth Hold' : 'Auto-Charge'}
-                    </span>
                     <span style={{ fontSize: 11, color: accent, fontWeight: 500 }}>→ Review</span>
                   </div>
                 </div>

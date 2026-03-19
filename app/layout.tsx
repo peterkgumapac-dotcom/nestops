@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { RoleProvider } from '@/context/RoleContext'
 import { ThemeProvider } from '@/context/ThemeContext'
+import { AlertsProvider } from '@/context/AlertsContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -17,7 +18,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         <ThemeProvider>
           <RoleProvider>
-            {children}
+            <AlertsProvider>
+              {children}
+            </AlertsProvider>
           </RoleProvider>
         </ThemeProvider>
       </body>

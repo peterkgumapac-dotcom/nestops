@@ -5,7 +5,19 @@ import PageHeader from '@/components/shared/PageHeader'
 import PropertyCard from '@/components/shared/PropertyCard'
 import { PROPERTIES } from '@/lib/data/properties'
 import { OWNERS } from '@/lib/data/owners'
+import { COMPLIANCE_DOCS } from '@/lib/data/compliance'
 import { useRole } from '@/context/RoleContext'
+
+function getComplianceDot(propertyId: string): { color: string; title: string } {
+  const docs = COMPLIANCE_DOCS.filter(d => d.propertyId === propertyId)
+  if (docs.some(d => d.status === 'expired' || d.status === 'missing')) {
+    return { color: '#ef4444', title: 'Expired or missing compliance documents' }
+  }
+  if (docs.some(d => d.status === 'expiring')) {
+    return { color: '#d97706', title: 'Compliance documents expiring soon' }
+  }
+  return { color: '#10b981', title: 'All compliance documents valid' }
+}
 
 export default function PropertiesPage() {
   const { accent } = useRole()
@@ -38,8 +50,9 @@ export default function PropertiesPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
           {PROPERTIES.map(prop => {
             const owner = OWNERS.find(o => o.id === prop.ownerId)
+            const dot = getComplianceDot(prop.id)
             return (
-              <div key={prop.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+              <div key={prop.id} style={{ position: 'relative', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
                 <PropertyCard
                   property={{
                     id: prop.id,
@@ -60,6 +73,17 @@ export default function PropertiesPage() {
                     Owner: {owner.name}
                   </div>
                 )}
+                {/* Compliance status dot */}
+                <div
+                  title={dot.title}
+                  style={{
+                    position: 'absolute', bottom: 12, right: 12,
+                    width: 10, height: 10, borderRadius: '50%',
+                    background: dot.color,
+                    border: '2px solid var(--bg-card)',
+                    boxShadow: `0 0 0 1px ${dot.color}40`,
+                  }}
+                />
               </div>
             )
           })}

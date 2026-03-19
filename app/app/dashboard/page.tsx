@@ -5,6 +5,7 @@ import { ChevronRight, Plus, Check } from 'lucide-react'
 import Link from 'next/link'
 import { useRole } from '@/context/RoleContext'
 import type { UserProfile } from '@/context/RoleContext'
+import { useAlerts } from '@/context/AlertsContext'
 import CountdownTimer from '@/components/shared/CountdownTimer'
 import AppDrawer from '@/components/shared/AppDrawer'
 import { OVERNIGHT_REPORTS } from '@/lib/data/guestServices'
@@ -219,6 +220,7 @@ function ActionBtn({ label, onClick }: { label: string; onClick?: () => void }) 
 
 export default function AppDashboard() {
   const { role, user, accent } = useRole()
+  const { getAlertsForRole, dismissAlert } = useAlerts()
   const [mounted, setMounted] = useState(false)
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
   const [clockIn, setClockIn] = useState<ClockInRecord | null>(null)
@@ -385,6 +387,21 @@ export default function AppDashboard() {
           {new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
       </div>
+
+      {/* Urgent alerts banner */}
+      {isStaff && getAlertsForRole('cleaner').filter(a => a.type === 'urgent' && !a.dismissed).map(a => (
+        <div key={a.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', marginBottom: 10, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderLeft: '4px solid #ef4444', borderRadius: 8 }}>
+          <span style={{ fontSize: 15, flexShrink: 0 }}>🔴</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 2 }}>{a.title}</div>
+            <div style={{ fontSize: 12, color: C.muted }}>{a.body}</div>
+            {a.actionLabel && a.actionRoute && (
+              <a href={a.actionRoute} style={{ fontSize: 12, color: '#ef4444', fontWeight: 600, textDecoration: 'none', marginTop: 4, display: 'inline-block' }}>{a.actionLabel} →</a>
+            )}
+          </div>
+          <button onClick={() => dismissAlert(a.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 2, display: 'flex', flexShrink: 0 }}>✕</button>
+        </div>
+      ))}
 
       {/* ── CLOCK STATUS BAR (staff only) ────────────────────────────────────── */}
       {isStaff && (

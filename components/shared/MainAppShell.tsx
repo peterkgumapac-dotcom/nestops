@@ -1,22 +1,36 @@
 'use client'
-import { useState, useRef } from 'react'
-import { Menu, Bell } from 'lucide-react'
+import { useState } from 'react'
+import { Menu, Bell, X } from 'lucide-react'
 import Link from 'next/link'
 import MainAppSidebar from './MainAppSidebar'
 import ClockStatus from './ClockStatus'
 import CommandPalette from '@/components/command-palette'
 import { useRole } from '@/context/RoleContext'
+import { useAlerts } from '@/context/AlertsContext'
 
-const RECENT_ALERTS = [
-  { id: 'al1', icon: '📦', title: 'Low stock: Toilet paper', time: '14 min ago' },
-  { id: 'al2', icon: '⚠️', title: 'Noise complaint — Downtown Loft', time: '1h ago' },
-  { id: 'al3', icon: '🔧', title: 'Urgent maintenance — Bjorn L.', time: '2h ago' },
-]
+function fmtAlertTime(date: Date): string {
+  const mins = Math.floor((Date.now() - date.getTime()) / 60000)
+  if (mins < 60) return `${mins}m ago`
+  return `${Math.floor(mins / 60)}h ago`
+}
+
+function alertTypeIcon(type: string): string {
+  if (type === 'urgent') return '🔴'
+  if (type === 'warning') return '🟡'
+  return '🔵'
+}
 
 export default function MainAppShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [alertsOpen, setAlertsOpen] = useState(false)
   const { meshClass, accent } = useRole()
+  const { getAlertsForRole, dismissAlert, dismissAll } = useAlerts()
+
+  const activeAlerts = getAlertsForRole('cleaner').filter(a => !a.dismissed)
+  const urgentCount = activeAlerts.filter(a => a.type === 'urgent').length
+  const warningCount = activeAlerts.filter(a => a.type === 'warning').length
+  const badgeCount = urgentCount + warningCount
+  const badgeColor = urgentCount > 0 ? '#ef4444' : warningCount > 0 ? '#d97706' : accent
 
   return (
     <div className={meshClass} style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--bg-page)' }}>
@@ -52,23 +66,45 @@ export default function MainAppShell({ children }: { children: React.ReactNode }
               style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 6, borderRadius: 8, display: 'flex', alignItems: 'center' }}
             >
               <Bell size={18} strokeWidth={1.6} />
-              <span style={{ position: 'absolute', top: 2, right: 2, width: 16, height: 16, borderRadius: '50%', background: accent, color: '#fff', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>3</span>
+              {badgeCount > 0 && (
+                <span style={{ position: 'absolute', top: 2, right: 2, width: 16, height: 16, borderRadius: '50%', background: badgeColor, color: '#fff', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {badgeCount}
+                </span>
+              )}
             </button>
             {alertsOpen && (
               <>
                 <div style={{ position: 'fixed', inset: 0, zIndex: 199 }} onClick={() => setAlertsOpen(false)} />
-                <div style={{ position: 'absolute', top: 40, right: 0, width: 300, background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.2)', zIndex: 200, overflow: 'hidden' }}>
-                  <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Recent Alerts</div>
-                  {RECENT_ALERTS.map((a, i) => (
-                    <div key={a.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 16px', borderBottom: i < RECENT_ALERTS.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
-                      <span style={{ fontSize: 16, flexShrink: 0 }}>{a.icon}</span>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, color: 'var(--text-primary)' }}>{a.title}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginTop: 2 }}>{a.time}</div>
+                <div style={{ position: 'absolute', top: 40, right: 0, width: 320, background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.2)', zIndex: 200, overflow: 'hidden' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Alerts</span>
+                    {activeAlerts.length > 0 && (
+                      <button onClick={dismissAll} style={{ fontSize: 11, color: accent, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Mark all read</button>
+                    )}
+                  </div>
+                  {activeAlerts.length === 0 ? (
+                    <div style={{ padding: '20px 16px', textAlign: 'center', fontSize: 13, color: 'var(--text-subtle)' }}>No active alerts</div>
+                  ) : (
+                    activeAlerts.map((a, i) => (
+                      <div key={a.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 16px', borderBottom: i < activeAlerts.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                        <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>{alertTypeIcon(a.type)}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{a.title}</div>
+                          <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.4 }}>{a.body}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                            <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{fmtAlertTime(a.createdAt)}</span>
+                            {a.actionLabel && a.actionRoute && (
+                              <Link href={a.actionRoute} onClick={() => setAlertsOpen(false)} style={{ fontSize: 11, color: accent, fontWeight: 600, textDecoration: 'none' }}>{a.actionLabel} →</Link>
+                            )}
+                          </div>
+                        </div>
+                        <button onClick={() => dismissAlert(a.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-subtle)', padding: 2, display: 'flex', flexShrink: 0 }}>
+                          <X size={12} />
+                        </button>
                       </div>
-                    </div>
-                  ))}
-                  <div style={{ padding: '10px 16px' }}>
+                    ))
+                  )}
+                  <div style={{ padding: '10px 16px', borderTop: activeAlerts.length > 0 ? '1px solid var(--border)' : 'none' }}>
                     <Link href="/app/alerts" onClick={() => setAlertsOpen(false)} style={{ fontSize: 12, fontWeight: 600, color: accent, textDecoration: 'none' }}>View all alerts →</Link>
                   </div>
                 </div>

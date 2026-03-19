@@ -34,7 +34,6 @@ export const OPERATOR_NAV: NavSection[] = [
     items: [
       { label: 'Properties',   href: '/operator/properties',   icon: Building2 },
       { label: 'Schedules',    href: '/operator/cleaning',     icon: CalendarCheck },
-      { label: 'Compliance',   href: '/operator/compliance',   icon: ShieldCheck },
       { label: 'Contractors',  href: '/operator/contractors',  icon: HardHat },
     ],
   },

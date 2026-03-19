@@ -1,54 +1,73 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Building2, Users, Ticket, Package, AlertTriangle, Headphones, ChevronRight, CheckCircle, ShieldAlert, Wrench, ClipboardList, FileText, Star, ChevronDown, ChevronUp, Activity, ShoppingCart } from 'lucide-react'
+import {
+  AlertTriangle, ChevronDown, ChevronUp, ChevronRight,
+  Star, ShoppingCart, X,
+} from 'lucide-react'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
 } from '@/components/ui/sheet'
 import PageHeader from '@/components/shared/PageHeader'
-import StatCard from '@/components/shared/StatCard'
 import StatusBadge from '@/components/shared/StatusBadge'
-import DataTable from '@/components/shared/DataTable'
-import type { Column } from '@/components/shared/DataTable'
 import { REQUESTS } from '@/lib/data/requests'
-import { OWNERS } from '@/lib/data/owners'
 import { PROPERTIES } from '@/lib/data/properties'
 import { STOCK_ITEMS, PURCHASE_ORDERS, PROPERTY_CHECKINS } from '@/lib/data/inventory'
 import { GUEST_ISSUES, getActiveIssues, getTotalRefunds, getRedFlagProperties, fmtNok } from '@/lib/data/guestServices'
 import { APPROVALS, type Approval } from '@/lib/data/approvals'
-import { COMPLIANCE_DOCS } from '@/lib/data/compliance'
 import { JOBS, STAFF_MEMBERS } from '@/lib/data/staff'
+import { UPSELL_APPROVAL_REQUESTS } from '@/lib/data/upsellApprovals'
 import { useRole } from '@/context/RoleContext'
 
-const recentRequests = REQUESTS.slice(0, 5).map(r => ({
-  ...r,
-  propertyName: PROPERTIES.find(p => p.id === r.propertyId)?.name ?? r.propertyId,
-  ownerName: OWNERS.find(o => o.id === r.ownerId)?.name ?? r.ownerId,
-}))
+// ─── Team clock status (same as staff dashboard) ────────────────────────────
+const TEAM_CLOCK_STATUS = [
+  { id: 'ms', name: 'Maria S.',  initials: 'MS', avatarBg: '#d97706', role: 'Cleaning',       property: 'Ocean View Apt', clockedIn: true,  late: false },
+  { id: 'bl', name: 'Bjorn L.', initials: 'BL', avatarBg: '#0ea5e9', role: 'Maintenance',    property: 'Sunset Villa',   clockedIn: false, late: true  },
+  { id: 'fn', name: 'Fatima N.',initials: 'FN', avatarBg: '#ec4899', role: 'Guest Services',  property: 'Remote',         clockedIn: true,  late: false },
+  { id: 'jl', name: 'Johan L.', initials: 'JL', avatarBg: '#6b7280', role: 'Cleaning',       property: 'Harbor Studio',  clockedIn: false, late: false },
+]
 
-type RequestRow = typeof recentRequests[0]
+// ─── Activity feed data ──────────────────────────────────────────────────────
+const ACTIVITY_ITEMS = [
+  { time: '2 min ago', actor: 'Anna Hansen', action: 'marked task complete', detail: 'Cleaning — Sunset Villa', color: '#10b981' },
+  { time: '14 min ago', actor: 'Lars Eriksen', action: 'logged a guest issue', detail: 'Noise complaint — Harbor Studio', color: '#ef4444' },
+  { time: '31 min ago', actor: 'Sofia Berg', action: 'submitted field report', detail: 'Broken window latch — Ocean View Apt', color: '#d97706' },
+  { time: '1h ago', actor: 'Operator', action: 'approved refund', detail: '750 NOK — Downtown Loft', color: '#6366f1' },
+  { time: '2h ago', actor: 'Magnus Dahl', action: 'clocked in', detail: 'Staff portal', color: '#7c3aed' },
+]
 
 interface FieldReport {
-  id: string
-  property: string
-  issueType: string
-  urgency: 'Urgent' | 'Standard'
-  description: string
-  reporter: string
-  time: string
+  id: string; property: string; issueType: string; urgency: 'Urgent' | 'Standard'; description: string; reporter: string; time: string
+}
+interface QaPendingItem {
+  id: string; taskId: string; property: string; propertyId: string; cleaner: string; rating: number; notes: string; photos: string[]; submittedAt: string; qaStatus: 'pending' | 'approved' | 'redo'
 }
 
-interface QaPendingItem {
-  id: string
-  taskId: string
-  property: string
-  propertyId: string
-  cleaner: string
-  rating: number
-  notes: string
-  photos: string[]
-  submittedAt: string
-  qaStatus: 'pending' | 'approved' | 'redo'
+// ─── Accordion section ───────────────────────────────────────────────────────
+function AccordionSection({ id, title, count, open, onToggle, children }: {
+  id: string; title: string; count: number; open: boolean; onToggle: () => void; children: React.ReactNode
+}) {
+  return (
+    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', marginBottom: 8 }}>
+      <button
+        onClick={onToggle}
+        style={{
+          width: '100%', height: 40, display: 'flex', alignItems: 'center', gap: 8,
+          padding: '0 16px', background: 'none', border: 'none', cursor: 'pointer',
+          borderBottom: open ? '1px solid var(--border)' : 'none',
+        }}
+      >
+        {open ? <ChevronUp size={14} style={{ color: 'var(--text-subtle)', flexShrink: 0 }} /> : <ChevronDown size={14} style={{ color: 'var(--text-subtle)', flexShrink: 0 }} />}
+        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{title}</span>
+        {count > 0 && (
+          <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 10, background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+            {count}
+          </span>
+        )}
+      </button>
+      {open && <div style={{ padding: '12px 16px' }}>{children}</div>}
+    </div>
+  )
 }
 
 export default function OperatorDashboard() {
@@ -56,30 +75,21 @@ export default function OperatorDashboard() {
   const [mounted, setMounted] = useState(false)
   const [pendingApprovals, setPendingApprovals] = useState<Approval[]>(APPROVALS)
   const [fieldReports, setFieldReports] = useState<FieldReport[]>([])
-  const [ownerWorkOrders, setOwnerWorkOrders] = useState<{id:string; title:string; property:string; requestedBy:string; requestedDate:string}[]>([])
+  const [ownerWorkOrders, setOwnerWorkOrders] = useState<{ id: string; title: string; property: string; requestedBy: string }[]>([])
   const [qaPending, setQaPending] = useState<QaPendingItem[]>([])
   const [qaReviewItem, setQaReviewItem] = useState<QaPendingItem | null>(null)
   const [toast, setToast] = useState('')
-  const [activityOpen, setActivityOpen] = useState(true)
+  const [openSection, setOpenSection] = useState<string | null>(null)
   const [pendingPOApprovals, setPendingPOApprovals] = useState(
     PURCHASE_ORDERS.filter(po => po.approvalTier === 'manager' && po.approvalStatus === 'pending')
   )
+
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
-  // Read field reports, owner work orders, and QA pending from localStorage
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('nestops_field_reports')
-      if (stored) setFieldReports(JSON.parse(stored))
-    } catch {}
-    try {
-      const wo = localStorage.getItem('nestops_owner_work_orders')
-      if (wo) setOwnerWorkOrders(JSON.parse(wo))
-    } catch {}
-    try {
-      const qa = localStorage.getItem('nestops_qa_pending')
-      if (qa) setQaPending(JSON.parse(qa))
-    } catch {}
+    try { const s = localStorage.getItem('nestops_field_reports'); if (s) setFieldReports(JSON.parse(s)) } catch {}
+    try { const s = localStorage.getItem('nestops_owner_work_orders'); if (s) setOwnerWorkOrders(JSON.parse(s)) } catch {}
+    try { const s = localStorage.getItem('nestops_qa_pending'); if (s) setQaPending(JSON.parse(s)) } catch {}
     setMounted(true)
   }, [])
 
@@ -91,72 +101,65 @@ export default function OperatorDashboard() {
     showToast(action === 'approved' ? '✓ Cleaning approved' : 'Flag sent — cleaner notified to redo')
   }
 
-  const columns: Column<RequestRow>[] = [
-    { key: 'title', label: 'Title', sortable: true },
-    { key: 'type', label: 'Type', render: r => <span style={{ textTransform: 'capitalize', color: 'var(--text-muted)', fontSize: 13 }}>{r.type}</span> },
-    { key: 'propertyName', label: 'Property', sortable: true },
-    { key: 'ownerName', label: 'Owner', sortable: true },
-    { key: 'date', label: 'Date', sortable: true, render: r => <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{r.date}</span> },
-    { key: 'status', label: 'Status', render: r => <StatusBadge status={r.status} /> },
-    { key: 'priority', label: 'Priority', render: r => <StatusBadge status={r.priority} /> },
-  ]
-
-  const lowStock   = STOCK_ITEMS.filter(i => i.status === 'low' || i.status === 'critical' || i.status === 'out')
+  // ─── Derived counts ────────────────────────────────────────────────────────
   const activeIssues = getActiveIssues(GUEST_ISSUES)
   const totalRefunds = getTotalRefunds(GUEST_ISSUES)
-  const redFlags     = getRedFlagProperties(GUEST_ISSUES)
-  const complianceAlerts = COMPLIANCE_DOCS.filter(d => d.status === 'expired' || d.status === 'expiring' || d.status === 'missing')
-  const todayJobs = JOBS.filter(j => j.status !== 'done').slice(0, 5)
+  const redFlags = getRedFlagProperties(GUEST_ISSUES)
+  const lowStock = STOCK_ITEMS.filter(i => i.status === 'low' || i.status === 'critical' || i.status === 'out')
+  const pendingUpsells = UPSELL_APPROVAL_REQUESTS.filter(r => r.status === 'pending_cleaner' || r.status === 'pending_supervisor')
 
-  const handleDismissApproval = (id: string) => {
-    setPendingApprovals(prev => prev.filter(a => a.id !== id))
-    showToast('Approval dismissed')
-  }
-
-  const handleApproveApproval = (id: string) => {
-    setPendingApprovals(prev => prev.filter(a => a.id !== id))
-    showToast('Approved — owner notified')
-  }
+  // Check-ins / check-outs from JOBS
+  const checkInJobs = JOBS.filter(j => j.checkinTime)
+  const checkOutJobs = JOBS.filter(j => j.checkoutTime)
+  const checkInNames = [...new Set(checkInJobs.map(j => j.propertyName))].join(', ')
+  const checkOutNames = [...new Set(checkOutJobs.map(j => j.propertyName))].join(', ')
 
   if (!mounted) return (
     <div style={{ padding: 24 }}>
-      {[1,2,3].map(i => (
-        <div key={i} style={{ height: 80, borderRadius: 10, background: 'var(--bg-card)', marginBottom: 12, animation: 'pulse 1.5s ease-in-out infinite' }} />
+      {[1, 2, 3].map(i => (
+        <div key={i} style={{ height: 48, borderRadius: 8, background: 'var(--bg-card)', marginBottom: 10, animation: 'pulse 1.5s ease-in-out infinite' }} />
       ))}
     </div>
   )
+
+  // ─── KPI chips ─────────────────────────────────────────────────────────────
+  const KPI_CHIPS = [
+    { label: 'Open Issues',       value: activeIssues.length,       dot: activeIssues.length > 0 ? '#ef4444' : '#10b981',  href: '/operator/guest-services/issues' },
+    { label: 'Owner Approvals',   value: pendingApprovals.length,   dot: pendingApprovals.length > 0 ? '#d97706' : '#10b981', href: '/owner/approvals' },
+    { label: 'Check-ins Today',   value: checkInJobs.length,        dot: '#10b981',                                          href: '/operator/team' },
+    { label: 'Check-outs Today',  value: checkOutJobs.length,       dot: '#d97706',                                          href: '/operator/team' },
+    { label: 'Upsell Requests',   value: pendingUpsells.length,     dot: pendingUpsells.length > 0 ? '#d97706' : '#10b981', href: '/operator/upsells' },
+    { label: 'Pending POs',       value: pendingPOApprovals.length, dot: pendingPOApprovals.length > 0 ? '#d97706' : '#10b981', href: '/operator/inventory' },
+  ]
 
   return (
     <div>
       <PageHeader title="Dashboard" subtitle="Operations overview" />
 
-      {/* Quick Stats Bar */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
-        {[
-          { label: 'Open Issues', value: activeIssues.length, href: '/operator/guest-services/issues', color: activeIssues.length > 3 ? '#ef4444' : accent },
-          { label: 'Pending Approvals', value: pendingApprovals.length, href: '/operator/approvals', color: pendingApprovals.length > 0 ? '#d97706' : accent },
-          { label: 'Cleanings Today', value: todayJobs.length, href: '/operator/team', color: accent },
-          { label: 'Low Stock', value: lowStock.length, href: '/operator/inventory', color: lowStock.length > 0 ? '#f97316' : accent },
-        ].map(({ label, value, href, color }) => (
+      {/* ─── KPI Chips ─────────────────────────────────────────────────────── */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16, marginTop: 4 }}>
+        {KPI_CHIPS.map(chip => (
           <Link
-            key={label}
-            href={href}
+            key={chip.label}
+            href={chip.href}
             style={{
-              display: 'flex', flexDirection: 'column', gap: 4,
-              padding: '12px 14px', borderRadius: 10,
+              display: 'flex', alignItems: 'center', gap: 8,
+              height: 48, padding: '10px 16px', borderRadius: 8,
               background: 'var(--bg-card)', border: '1px solid var(--border)',
-              textDecoration: 'none', transition: 'border-color 0.15s',
+              textDecoration: 'none', flex: '1 1 130px', minWidth: 120,
+              transition: 'border-color 0.15s',
             }}
-            onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = color)}
+            onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = chip.dot)}
             onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--border)')}
           >
-            <span style={{ fontSize: 22, fontWeight: 700, color, lineHeight: 1 }}>{value}</span>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{label}</span>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: chip.dot, flexShrink: 0 }} />
+            <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1 }}>{chip.value}</span>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', lineHeight: 1.2 }}>{chip.label}</span>
           </Link>
         ))}
       </div>
 
-      {/* Pre-check-in Alert */}
+      {/* ─── Pre-check-in Stock Alert ──────────────────────────────────────── */}
       {(() => {
         const today = new Date('2026-03-19')
         const urgentCheckins = PROPERTY_CHECKINS.filter(ci => {
@@ -189,430 +192,359 @@ export default function OperatorDashboard() {
         )
       })()}
 
-      {/* Stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 32 }}>
-        <StatCard label="Total Properties" value={PROPERTIES.length} icon={Building2} subtitle="Across all owners" />
-        <StatCard label="Active Owners" value={OWNERS.filter(o => o.status === 'active').length} icon={Users} subtitle="Currently managing" />
-        <StatCard label="Open Requests" value={REQUESTS.filter(r => r.status === 'open').length} icon={Ticket} subtitle="Awaiting action" />
-        <StatCard label="Low Stock Items" value={lowStock.length} icon={Package} subtitle="Needs restocking" />
-        <StatCard label="Active Issues" value={activeIssues.length} icon={Headphones} subtitle="Guest issues open" />
-        <StatCard label="Pending Approvals" value={pendingApprovals.length} icon={CheckCircle} subtitle="Owner decisions" />
-        <StatCard label="Compliance Alerts" value={complianceAlerts.length} icon={ShieldAlert} subtitle="Docs expiring/missing" />
-      </div>
+      {/* ─── Outer layout: main + activity sidebar ─────────────────────────── */}
+      <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20 }}>
-        {/* Left column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, flex: 1, minWidth: 280 }}>
-          {/* Recent requests table */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>Recent Requests</h2>
-              <a href="/operator/tickets" style={{ fontSize: 13, color: accent, textDecoration: 'none' }}>View all →</a>
-            </div>
-            <DataTable columns={columns} data={recentRequests} />
-          </div>
+        {/* ── MAIN CONTENT ─────────────────────────────────────────────────── */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-          {/* Owner Approvals Panel */}
-          <div style={{ background: `${accent}08`, border: `1px solid ${accent}28`, borderRadius: 10, padding: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <CheckCircle size={15} style={{ color: accent }} />
-                <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
-                  Owner Approvals
+          {/* ── Main 2-col grid ────────────────────────────────────────────── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+
+            {/* Owner Approvals compact list */}
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Owner Approvals</span>
                   {pendingApprovals.length > 0 && (
-                    <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 700, padding: '1px 6px', borderRadius: 10, background: accent, color: '#fff' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 10, background: accent, color: '#fff' }}>
                       {pendingApprovals.length}
                     </span>
                   )}
-                </h3>
-              </div>
-              <a href="/owner/approvals" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: accent, textDecoration: 'none' }}>
-                Owner portal <ChevronRight size={12} />
-              </a>
-            </div>
-            {pendingApprovals.length === 0 ? (
-              <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-                ✓ No pending owner approvals
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {pendingApprovals.map(a => (
-                  <div key={a.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: 12 }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)' }}>{a.title}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{a.property} · {a.category}</div>
-                      </div>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{a.amount.toLocaleString()} {a.currency}</div>
-                    </div>
-                    <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.4, margin: '0 0 8px' }}>{a.description}</p>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button onClick={() => handleApproveApproval(a.id)} style={{ flex: 1, padding: '6px', borderRadius: 6, border: 'none', background: '#16a34a1a', color: '#34d399', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>Approve</button>
-                      <button onClick={() => handleDismissApproval(a.id)} style={{ flex: 1, padding: '6px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer' }}>Dismiss</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, flexShrink: 0, width: 320, minWidth: 0 }}>
-          {/* Owners summary */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>Owners</h3>
-            {OWNERS.map(owner => (
-              <div key={owner.id} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                <div style={{ width: 32, height: 32, borderRadius: '50%', background: `${accent}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: accent, flexShrink: 0 }}>
-                  {owner.name.split(' ').map(n => n[0]).join('')}
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{owner.name}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{owner.propertyIds.length} {owner.propertyIds.length === 1 ? 'property' : 'properties'}</div>
-                </div>
-                <StatusBadge status={owner.status} />
+                <Link href="/owner/approvals" style={{ fontSize: 12, color: accent, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3 }}>
+                  Owner portal <ChevronRight size={12} />
+                </Link>
               </div>
-            ))}
-          </div>
 
-          {/* Today's Jobs */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Wrench size={14} style={{ color: accent }} />
-                <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Today&apos;s Jobs</h3>
-              </div>
-              <Link href="/operator/team" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: accent, textDecoration: 'none' }}>
-                View all <ChevronRight size={12} />
-              </Link>
-            </div>
-            {todayJobs.length === 0 ? (
-              <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: '16px 0' }}>✓ All jobs complete</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {todayJobs.map(job => {
-                  const staff = STAFF_MEMBERS.find(s => s.id === job.staffId)
-                  const priorityColors: Record<string, string> = { urgent: '#ef4444', high: '#f97316', medium: '#3b82f6', low: '#6b7280' }
-                  return (
-                    <div key={job.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+              {pendingApprovals.length === 0 ? (
+                <div style={{ padding: '16px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+                  ✓ No pending owner approvals
+                </div>
+              ) : (
+                <div>
+                  {pendingApprovals.slice(0, 5).map((a, i) => (
+                    <div
+                      key={a.id}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        height: 44, borderTop: i > 0 ? '1px solid var(--border-subtle)' : 'none',
+                      }}
+                    >
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job.title}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{job.propertyName} · {job.dueTime}</div>
-                        {staff && <div style={{ fontSize: 10, color: 'var(--text-subtle)', marginTop: 1 }}>{staff.name}</div>}
+                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.title}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{a.property} · {a.category}</div>
                       </div>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 5px', borderRadius: 3, background: `${priorityColors[job.priority]}18`, color: priorityColors[job.priority], textTransform: 'capitalize', flexShrink: 0 }}>
-                        {job.priority}
+                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                        {a.amount.toLocaleString()} {a.currency}
                       </span>
+                      <button
+                        onClick={() => { setPendingApprovals(p => p.filter(x => x.id !== a.id)); showToast('Approved — owner notified') }}
+                        style={{ height: 28, width: 60, borderRadius: 6, border: 'none', background: '#16a34a1a', color: '#34d399', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
+                      >✓</button>
+                      <button
+                        onClick={() => { setPendingApprovals(p => p.filter(x => x.id !== a.id)); showToast('Dismissed') }}
+                        style={{ height: 28, width: 28, borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      ><X size={12} /></button>
                     </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Team Today */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Users size={14} style={{ color: accent }} />
-                <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Team Today</h3>
-              </div>
-              <Link href="/operator/team?tab=daily" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: accent, textDecoration: 'none' }}>
-                Full view <ChevronRight size={12} />
-              </Link>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              {STAFF_MEMBERS.map(member => {
-                const myJobs = JOBS.filter(j => member.jobIds.includes(j.id))
-                const pendingJobs = myJobs.filter(j => j.status !== 'done')
-                const hasPte = myJobs.some(j => (j as { pteStatus?: string }).pteStatus === 'pending')
-                const roleColor: Record<string, string> = { cleaning: '#7c3aed', maintenance: '#d97706', inspection: '#06b6d4', 'guest_services': '#ec4899' }
-                const memberType = myJobs[0]?.type ?? 'cleaning'
-                return (
-                  <div key={member.id} style={{ padding: '10px 12px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 9 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 7, background: `${roleColor[memberType] ?? accent}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11, color: roleColor[memberType] ?? accent, flexShrink: 0 }}>
-                        {member.initials}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name.split(' ')[0]}</div>
-                        <div style={{ fontSize: 10, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.role}</div>
-                      </div>
-                      {hasPte && <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 4, background: '#d9770620', color: '#d97706', fontWeight: 700, flexShrink: 0 }}>🔒 PTE</span>}
+                  ))}
+                  {pendingApprovals.length > 5 && (
+                    <div style={{ paddingTop: 8, borderTop: '1px solid var(--border-subtle)' }}>
+                      <Link href="/owner/approvals" style={{ fontSize: 12, color: accent, textDecoration: 'none' }}>
+                        View all {pendingApprovals.length} →
+                      </Link>
                     </div>
-                    {pendingJobs.length === 0 ? (
-                      <div style={{ fontSize: 11, color: '#059669' }}>✓ All done</div>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        {pendingJobs.slice(0, 2).map(j => (
-                          <div key={j.id} style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>· {j.title}</div>
-                        ))}
-                        {pendingJobs.length > 2 && <div style={{ fontSize: 10, color: 'var(--text-subtle)' }}>+{pendingJobs.length - 2} more</div>}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Work Orders */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <FileText size={14} style={{ color: accent }} />
-                <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Work Orders</h3>
-              </div>
-              <Link href="/app/work-orders" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: accent, textDecoration: 'none' }}>
-                View all <ChevronRight size={12} />
-              </Link>
-            </div>
-            {REQUESTS.filter(r => r.status !== 'resolved').length === 0 && ownerWorkOrders.length === 0 ? (
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>No open work orders</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {ownerWorkOrders.slice(0, 3).map(wo => (
-                  <div key={wo.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-                      <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: 8 }}>{wo.title}</span>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(239,68,68,0.12)', color: '#ef4444', whiteSpace: 'nowrap', flexShrink: 0 }}>Owner Approval</span>
-                    </div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{wo.property} · {wo.requestedBy}</div>
-                  </div>
-                ))}
-                {REQUESTS.filter(r => r.status !== 'resolved').slice(0, 3).map(r => {
-                  const prop = PROPERTIES.find(p => p.id === r.propertyId)
-                  return (
-                    <div key={r.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-                        <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: 8 }}>{r.title}</span>
-                        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: r.requiresOwnerApproval ? 'rgba(239,68,68,0.12)' : 'rgba(124,58,237,0.12)', color: r.requiresOwnerApproval ? '#ef4444' : accent, whiteSpace: 'nowrap', flexShrink: 0 }}>
-                          {r.requiresOwnerApproval ? 'Owner Approval' : 'Operator'}
-                        </span>
-                      </div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{prop?.name ?? r.propertyId} · {r.type}</div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Field Reports */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <ClipboardList size={14} style={{ color: accent }} />
-                <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Field Reports</h3>
-              </div>
-              {fieldReports.length > 0 && (
-                <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 6px', borderRadius: 10, background: '#ef444420', color: '#ef4444' }}>
-                  {fieldReports.length} today
-                </span>
+                  )}
+                </div>
               )}
             </div>
-            {fieldReports.length === 0 ? (
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>
-                No field reports submitted today
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {fieldReports.map(r => (
-                  <div key={r.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-                      <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>{r.issueType}</span>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 5px', borderRadius: 3, background: r.urgency === 'Urgent' ? '#ef444418' : '#6b728018', color: r.urgency === 'Urgent' ? '#ef4444' : '#6b7280' }}>
-                        {r.urgency}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{r.property} · {r.reporter} · {r.time}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
 
-          {/* QA Pending */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Star size={14} style={{ color: '#f59e0b' }} />
-                <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
-                  QA Pending
-                  {qaPending.length > 0 && (
-                    <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 700, padding: '1px 6px', borderRadius: 10, background: '#f59e0b20', color: '#f59e0b' }}>
-                      {qaPending.length}
-                    </span>
+            {/* Today's Operations card */}
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+
+              {/* Sub-section A: Today's Schedule */}
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 8 }}>Today&apos;s Schedule</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, height: 32 }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-subtle)', width: 76, flexShrink: 0 }}>Check-ins</span>
+                  <span style={{ fontSize: 16, fontWeight: 700, color: '#10b981', flexShrink: 0 }}>{checkInJobs.length}</span>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{checkInNames || '—'}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, height: 32 }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-subtle)', width: 76, flexShrink: 0 }}>Check-outs</span>
+                  <span style={{ fontSize: 16, fontWeight: 700, color: '#d97706', flexShrink: 0 }}>{checkOutJobs.length}</span>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{checkOutNames || '—'}</span>
+                </div>
+              </div>
+
+              {/* Sub-section B: Upsell Requests */}
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>Upsell Requests</span>
+                  {pendingUpsells.length > 3 && (
+                    <Link href="/operator/upsells" style={{ fontSize: 11, color: accent, textDecoration: 'none' }}>View all →</Link>
                   )}
-                </h3>
-              </div>
-            </div>
-            {qaPending.length === 0 ? (
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>No cleaning reviews pending</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {qaPending.map(item => (
-                  <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
-                      <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: 8 }}>{item.property}</span>
-                      <span style={{ fontSize: 12, color: '#f59e0b', fontWeight: 700, flexShrink: 0 }}>{'★'.repeat(item.rating)}{'☆'.repeat(5 - item.rating)}</span>
+                </div>
+                {pendingUpsells.length === 0 ? (
+                  <div style={{ fontSize: 12, color: 'var(--text-subtle)', padding: '4px 0' }}>No pending upsell requests</div>
+                ) : (
+                  pendingUpsells.slice(0, 3).map(req => (
+                    <div key={req.id} style={{ display: 'flex', alignItems: 'center', gap: 8, height: 40, borderBottom: '1px solid var(--border-subtle)' }}>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', flex: '0 0 auto', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{req.upsellTitle}</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{req.propertyName}</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-subtle)', flexShrink: 0, maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{req.guestName}</span>
+                      <Link href="/operator/upsells" style={{ fontSize: 11, color: '#d97706', textDecoration: 'none', fontWeight: 600, flexShrink: 0 }}>Review →</Link>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.cleaner}</span>
+                  ))
+                )}
+              </div>
+
+              {/* Sub-section C: Pending POs */}
+              <div style={{ padding: '12px 16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>Pending POs</span>
+                  {pendingPOApprovals.length > 3 && (
+                    <Link href="/operator/inventory" style={{ fontSize: 11, color: accent, textDecoration: 'none' }}>View all →</Link>
+                  )}
+                </div>
+                {pendingPOApprovals.length === 0 ? (
+                  <div style={{ fontSize: 12, color: 'var(--text-subtle)', padding: '4px 0' }}>No pending POs</div>
+                ) : (
+                  pendingPOApprovals.slice(0, 3).map(po => (
+                    <div key={po.id} style={{ display: 'flex', alignItems: 'center', gap: 8, height: 40, borderBottom: '1px solid var(--border-subtle)' }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'monospace', flexShrink: 0 }}>{po.poNumber}</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{po.vendor}{po.requester ? ` · ${po.requester}` : ''}</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', flexShrink: 0 }}>{po.total.toLocaleString()} {po.currency}</span>
                       <button
-                        onClick={() => setQaReviewItem(item)}
-                        style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, cursor: 'pointer', fontWeight: 500 }}
-                      >
-                        Review
-                      </button>
+                        onClick={() => { setPendingPOApprovals(p => p.filter(x => x.id !== po.id)); showToast(`PO ${po.poNumber} approved`) }}
+                        style={{ height: 26, padding: '0 10px', borderRadius: 5, border: 'none', background: '#16a34a1a', color: '#34d399', fontSize: 11, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
+                      >Approve</button>
+                      <button
+                        onClick={() => { setPendingPOApprovals(p => p.filter(x => x.id !== po.id)); showToast('Changes requested') }}
+                        style={{ height: 26, padding: '0 10px', borderRadius: 5, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer', flexShrink: 0 }}
+                      >Changes</button>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Pending POs widget */}
-          {pendingPOApprovals.length > 0 && (
-            <div style={{ background: 'var(--bg-card)', border: `1px solid ${accent}28`, borderRadius: 10, padding: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <ShoppingCart size={14} style={{ color: accent }} />
-                  <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
-                    Pending POs
-                    <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 700, padding: '1px 6px', borderRadius: 10, background: accent, color: '#fff' }}>{pendingPOApprovals.length}</span>
-                  </h3>
-                </div>
-                <Link href="/operator/inventory" style={{ fontSize: 12, color: accent, textDecoration: 'none' }}>View all →</Link>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {pendingPOApprovals.map(po => (
-                  <div key={po.id} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 8, padding: 12 }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--text-primary)', fontFamily: 'monospace' }}>{po.poNumber}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{po.vendor} · {po.requester}</div>
-                      </div>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{po.total.toLocaleString()} {po.currency}</div>
+          {/* ── Who's Online — Staff Strip ──────────────────────────────────── */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 16,
+            height: 56, background: 'var(--bg-card)', border: '1px solid var(--border)',
+            borderRadius: 8, padding: '0 16px',
+          }}>
+            <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', flexShrink: 0 }}>On Duty</span>
+            <div style={{ display: 'flex', gap: 16, flex: 1, overflowX: 'auto' }}>
+              {TEAM_CLOCK_STATUS.slice(0, 6).map(member => (
+                <div key={member.id} style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                  <div style={{ position: 'relative' }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: '50%', background: member.avatarBg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0,
+                    }}>
+                      {member.initials}
                     </div>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button onClick={() => {
-                        setPendingPOApprovals(prev => prev.filter(p => p.id !== po.id))
-                        showToast(`PO ${po.poNumber} approved`)
-                      }} style={{ flex: 1, padding: '5px', borderRadius: 6, border: 'none', background: '#16a34a1a', color: '#34d399', fontSize: 11, fontWeight: 500, cursor: 'pointer' }}>Approve</button>
-                      <button onClick={() => {
-                        setPendingPOApprovals(prev => prev.filter(p => p.id !== po.id))
-                        showToast('Changes requested')
-                      }} style={{ flex: 1, padding: '5px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer' }}>Request Changes</button>
-                    </div>
+                    <div style={{
+                      position: 'absolute', bottom: 0, right: 0,
+                      width: 8, height: 8, borderRadius: '50%',
+                      background: member.clockedIn ? '#10b981' : member.late ? '#ef4444' : '#6b7280',
+                      border: '1px solid var(--bg-card)',
+                    }} />
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Low stock */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-              <AlertTriangle size={14} style={{ color: '#f87171' }} />
-              <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Low Stock</h3>
-            </div>
-            {lowStock.map(item => (
-              <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, gap: 8 }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.inStock} / {item.minLevel} {item.unit}</div>
-                </div>
-                <StatusBadge status={item.status} />
-              </div>
-            ))}
-          </div>
-
-          {/* Guest Services widget */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Headphones size={14} style={{ color: accent }} />
-                <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Guest Issues</h3>
-              </div>
-              <Link href="/operator/guest-services" style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: accent, textDecoration: 'none' }}>
-                View <ChevronRight size={12} />
-              </Link>
-            </div>
-
-            {redFlags.length > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: '#ef444412', border: '1px solid #ef444430', borderRadius: 7, marginBottom: 10 }}>
-                <AlertTriangle size={13} color="#ef4444" />
-                <span style={{ fontSize: 12, color: '#ef4444', fontWeight: 600 }}>
-                  {redFlags.length} {redFlags.length === 1 ? 'property' : 'properties'} flagged
-                </span>
-              </div>
-            )}
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {[
-                { label: 'Active issues', value: activeIssues.length, color: activeIssues.length > 3 ? '#ef4444' : 'var(--text-primary)' },
-                { label: 'Total refunded', value: fmtNok(totalRefunds), color: 'var(--text-primary)' },
-                { label: 'Flagged properties', value: redFlags.length, color: redFlags.length > 0 ? '#ef4444' : '#10b981' },
-              ].map(({ label, value, color }) => (
-                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 12, color: 'var(--text-subtle)' }}>{label}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color }}>{value}</span>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: member.late ? '#d97706' : 'var(--text-primary)', whiteSpace: 'nowrap' }}>{member.name}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{member.role}</div>
+                  </div>
                 </div>
               ))}
+              {TEAM_CLOCK_STATUS.length > 6 && (
+                <div style={{ display: 'flex', alignItems: 'center', fontSize: 12, color: 'var(--text-muted)', flexShrink: 0 }}>+{TEAM_CLOCK_STATUS.length - 6} more</div>
+              )}
             </div>
+            <Link href="/operator/team?tab=daily" style={{ fontSize: 12, color: accent, textDecoration: 'none', flexShrink: 0, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 3 }}>
+              Full view <ChevronRight size={12} />
+            </Link>
+          </div>
+
+          {/* ── Secondary Accordions (below fold) ──────────────────────────── */}
+          <div>
+            {/* Open Issues */}
+            <AccordionSection id="issues" title="Open Issues" count={activeIssues.length} open={openSection === 'issues'} onToggle={() => setOpenSection(s => s === 'issues' ? null : 'issues')}>
+              {activeIssues.length === 0 ? (
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>No open issues</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  {activeIssues.slice(0, 8).map((issue, i) => (
+                    <div key={issue.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: i < activeIssues.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{issue.title}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{issue.propertyName} · {issue.assignedTo ?? 'Unassigned'}</div>
+                      </div>
+                      <StatusBadge status={issue.severity} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </AccordionSection>
+
+            {/* Low Stock */}
+            <AccordionSection id="stock" title="Low Stock" count={lowStock.length} open={openSection === 'stock'} onToggle={() => setOpenSection(s => s === 'stock' ? null : 'stock')}>
+              {lowStock.length === 0 ? (
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>All stock levels OK</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  {lowStock.map((item, i) => (
+                    <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '8px 0', borderBottom: i < lowStock.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 13, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.inStock} / {item.minLevel} {item.unit}</div>
+                      </div>
+                      <StatusBadge status={item.status} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </AccordionSection>
+
+            {/* Guest Issues */}
+            <AccordionSection id="guest" title="Guest Issues" count={activeIssues.length} open={openSection === 'guest'} onToggle={() => setOpenSection(s => s === 'guest' ? null : 'guest')}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {[
+                  { label: 'Active issues', value: activeIssues.length, color: activeIssues.length > 3 ? '#ef4444' : 'var(--text-primary)' },
+                  { label: 'Total refunded', value: fmtNok(totalRefunds), color: 'var(--text-primary)' },
+                  { label: 'Flagged properties', value: redFlags.length, color: redFlags.length > 0 ? '#ef4444' : '#10b981' },
+                ].map(({ label, value, color }) => (
+                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 12, color: 'var(--text-subtle)' }}>{label}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color }}>{value}</span>
+                  </div>
+                ))}
+                <Link href="/operator/guest-services" style={{ fontSize: 12, color: accent, textDecoration: 'none', marginTop: 4 }}>View guest services →</Link>
+              </div>
+            </AccordionSection>
+
+            {/* Work Orders */}
+            <AccordionSection
+              id="workorders"
+              title="Work Orders"
+              count={REQUESTS.filter(r => r.status !== 'resolved').length + ownerWorkOrders.length}
+              open={openSection === 'workorders'}
+              onToggle={() => setOpenSection(s => s === 'workorders' ? null : 'workorders')}
+            >
+              {REQUESTS.filter(r => r.status !== 'resolved').length === 0 && ownerWorkOrders.length === 0 ? (
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>No open work orders</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  {[...ownerWorkOrders.slice(0, 3).map(wo => ({ title: wo.title, sub: `${wo.property} · ${wo.requestedBy}`, tag: 'Owner Approval', tagColor: '#ef4444' })),
+                    ...REQUESTS.filter(r => r.status !== 'resolved').slice(0, 3).map(r => {
+                      const prop = PROPERTIES.find(p => p.id === r.propertyId)
+                      return { title: r.title, sub: `${prop?.name ?? r.propertyId} · ${r.type}`, tag: r.requiresOwnerApproval ? 'Owner Approval' : 'Operator', tagColor: r.requiresOwnerApproval ? '#ef4444' : accent }
+                    }),
+                  ].map((wo, i, arr) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: i < arr.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{wo.title}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{wo.sub}</div>
+                      </div>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: `${wo.tagColor}18`, color: wo.tagColor, flexShrink: 0 }}>{wo.tag}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </AccordionSection>
+
+            {/* Field Reports — only when data exists */}
+            {fieldReports.length > 0 && (
+              <AccordionSection id="field" title="Field Reports" count={fieldReports.length} open={openSection === 'field'} onToggle={() => setOpenSection(s => s === 'field' ? null : 'field')}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  {fieldReports.map((r, i) => (
+                    <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: i < fieldReports.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{r.issueType}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{r.property} · {r.reporter}</div>
+                      </div>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 5px', borderRadius: 3, background: r.urgency === 'Urgent' ? '#ef444418' : '#6b728018', color: r.urgency === 'Urgent' ? '#ef4444' : '#6b7280' }}>{r.urgency}</span>
+                    </div>
+                  ))}
+                </div>
+              </AccordionSection>
+            )}
+
+            {/* QA Pending — only when data exists */}
+            {qaPending.length > 0 && (
+              <AccordionSection id="qa" title="QA Pending" count={qaPending.length} open={openSection === 'qa'} onToggle={() => setOpenSection(s => s === 'qa' ? null : 'qa')}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  {qaPending.map((item, i) => (
+                    <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: i < qaPending.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{item.property}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.cleaner}</div>
+                      </div>
+                      <span style={{ fontSize: 12, color: '#f59e0b' }}>{'★'.repeat(item.rating)}{'☆'.repeat(5 - item.rating)}</span>
+                      <button
+                        onClick={() => setQaReviewItem(item)}
+                        style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, cursor: 'pointer', fontWeight: 500, flexShrink: 0 }}
+                      >Review</button>
+                    </div>
+                  ))}
+                </div>
+              </AccordionSection>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* Collapsible Activity Feed */}
-      <div style={{ marginTop: 24, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
-        <button
-          onClick={() => setActivityOpen(o => !o)}
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            width: '100%', padding: '14px 16px',
-            background: 'none', border: 'none', cursor: 'pointer',
-            borderBottom: activityOpen ? '1px solid var(--border)' : 'none',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Activity size={14} style={{ color: accent }} />
-            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Activity Feed</span>
-            <span style={{ fontSize: 11, padding: '1px 6px', borderRadius: 10, background: `${accent}20`, color: accent, fontWeight: 600 }}>Live</span>
+        {/* ── ACTIVITY SIDEBAR ─────────────────────────────────────────────── */}
+        <div style={{
+          width: 280, flexShrink: 0,
+          position: 'sticky', top: 0,
+          height: 'calc(100vh - 52px)',
+          overflowY: 'auto',
+          background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10,
+        }}>
+          {/* Header */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '14px 16px',
+            borderBottom: '1px solid var(--border)',
+            position: 'sticky', top: 0,
+            background: 'var(--bg-card)',
+          }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Activity</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, padding: '2px 7px', borderRadius: 10, background: '#10b98118', color: '#10b981', border: '1px solid #10b98130' }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+              Live
+            </span>
           </div>
-          {activityOpen ? <ChevronUp size={15} style={{ color: 'var(--text-subtle)' }} /> : <ChevronDown size={15} style={{ color: 'var(--text-subtle)' }} />}
-        </button>
 
-        {activityOpen && (
-          <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 0 }}>
-            {[
-              { time: '2 min ago', actor: 'Anna Hansen', action: 'marked task complete', detail: 'Cleaning — Sunset Villa', color: '#10b981' },
-              { time: '14 min ago', actor: 'Lars Eriksen', action: 'logged a guest issue', detail: 'Noise complaint — Harbor Studio', color: '#ef4444' },
-              { time: '31 min ago', actor: 'Sofia Berg', action: 'submitted field report', detail: 'Broken window latch — Ocean View Apt', color: '#d97706' },
-              { time: '1h ago', actor: 'Operator', action: 'approved refund', detail: '750 NOK — Downtown Loft', color: '#6366f1' },
-              { time: '2h ago', actor: 'Magnus Dahl', action: 'clocked in', detail: 'Staff portal', color: accent },
-            ].map((item, i) => (
+          {/* Feed items */}
+          <div style={{ padding: '4px 0' }}>
+            {ACTIVITY_ITEMS.map((item, i) => (
               <div
                 key={i}
                 style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 12,
-                  padding: '10px 0',
-                  borderBottom: i < 4 ? '1px solid var(--border-subtle)' : 'none',
+                  display: 'flex', alignItems: 'flex-start', gap: 10,
+                  padding: '12px 16px',
+                  borderBottom: i < ACTIVITY_ITEMS.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                  minHeight: 48,
                 }}
               >
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: item.color, flexShrink: 0, marginTop: 6 }} />
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: item.color, flexShrink: 0, marginTop: 5 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500 }}>{item.actor}</span>
-                  <span style={{ fontSize: 13, color: 'var(--text-muted)' }}> {item.action} </span>
-                  <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>— {item.detail}</span>
+                  <div style={{ fontSize: 12, lineHeight: 1.4 }}>
+                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.actor}</span>
+                    <span style={{ color: 'var(--text-muted)' }}> {item.action}</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>— {item.detail}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginTop: 2 }}>{item.time}</div>
                 </div>
-                <span style={{ fontSize: 11, color: 'var(--text-subtle)', flexShrink: 0 }}>{item.time}</span>
               </div>
             ))}
           </div>
-        )}
+        </div>
       </div>
 
       {/* QA Review Sheet */}
@@ -629,8 +561,7 @@ export default function OperatorDashboard() {
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Rating</div>
                   <div style={{ fontSize: 18, color: '#f59e0b', lineHeight: 1 }}>
-                    {'★'.repeat(qaReviewItem.rating)}
-                    <span style={{ color: 'var(--border)' }}>{'★'.repeat(5 - qaReviewItem.rating)}</span>
+                    {'★'.repeat(qaReviewItem.rating)}<span style={{ color: 'var(--border)' }}>{'★'.repeat(5 - qaReviewItem.rating)}</span>
                   </div>
                 </div>
               </div>
@@ -639,7 +570,7 @@ export default function OperatorDashboard() {
                   <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Photos</div>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {qaReviewItem.photos.map((url, i) => (
-                      <img key={i} src={url} style={{ width: 90, height: 68, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--border)' }} alt="qa photo" />
+                      <img key={i} src={url} style={{ width: 90, height: 68, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--border)' }} alt="qa" />
                     ))}
                   </div>
                 </div>
@@ -654,18 +585,8 @@ export default function OperatorDashboard() {
             </div>
           )}
           <SheetFooter>
-            <button
-              onClick={() => qaReviewItem && handleQaAction(qaReviewItem.id, 'redo')}
-              style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: '1px solid #ef4444', background: 'transparent', color: '#ef4444', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
-            >
-              Flag for Redo
-            </button>
-            <button
-              onClick={() => qaReviewItem && handleQaAction(qaReviewItem.id, 'approved')}
-              style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
-            >
-              Approve
-            </button>
+            <button onClick={() => qaReviewItem && handleQaAction(qaReviewItem.id, 'redo')} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: '1px solid #ef4444', background: 'transparent', color: '#ef4444', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Flag for Redo</button>
+            <button onClick={() => qaReviewItem && handleQaAction(qaReviewItem.id, 'approved')} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Approve</button>
           </SheetFooter>
         </SheetContent>
       </Sheet>
