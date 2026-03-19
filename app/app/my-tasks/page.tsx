@@ -28,18 +28,27 @@ interface PersonalTask {
 }
 
 const ALL_TASKS: PersonalTask[] = [
-  { id: 't1', title: 'Deep clean — Harbor Studio',             type: 'Cleaning',    priority: 'high',   status: 'today',     assignee: 'Maria S.',  propertyId: 'p2', propertyName: 'Harbor Studio',  propertyImage: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=100&q=80', due: '2026-03-17', dueDisplay: 'Today 13:00' },
-  { id: 't2', title: 'Update guest welcome pack',               type: 'Content',     priority: 'medium', status: 'this_week', assignee: 'Maria S.',  propertyId: 'p1', propertyName: 'Sunset Villa',    propertyImage: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=100&q=80', due: '2026-03-20', dueDisplay: 'Thu 11:00' },
-  { id: 't3', title: 'Annual fire safety check',                type: 'Compliance',  priority: 'urgent', status: 'overdue',   assignee: 'Bjorn L.',  propertyId: 'p3', propertyName: 'Ocean View Apt',  propertyImage: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=100&q=80', due: '2026-03-14', dueDisplay: '3 days overdue' },
-  { id: 't4', title: 'Fix bathroom extractor fan',              type: 'Maintenance', priority: 'high',   status: 'today',     assignee: 'Bjorn L.',  propertyId: 'p2', propertyName: 'Harbor Studio',  propertyImage: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=100&q=80', due: '2026-03-17', dueDisplay: 'Today 14:00' },
-  { id: 't5', title: 'Inspect heating system',                  type: 'Maintenance', priority: 'high',   status: 'today',     assignee: 'Bjorn L.',  propertyId: 'p4', propertyName: 'Downtown Loft',   propertyImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=100&q=80', due: '2026-03-17', dueDisplay: 'Today 12:00' },
-  { id: 't6', title: 'Restock toiletry kits',                   type: 'Inventory',   priority: 'low',    status: 'completed', assignee: 'Maria S.',  propertyId: 'p1', propertyName: 'Sunset Villa',    propertyImage: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=100&q=80', due: '2026-03-15', dueDisplay: 'Completed Mar 15' },
-  { id: 't7', title: 'Guest issue follow-up — Camilla Dahl',   type: 'Compliance',  priority: 'medium', status: 'today',     assignee: 'Fatima N.', propertyId: 'p4', propertyName: 'Downtown Loft',   propertyImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=100&q=80', due: '2026-03-17', dueDisplay: 'Today 17:00' },
-  { id: 't8', title: 'Quarterly inspection — Ocean View',       type: 'Inspection',  priority: 'medium', status: 'this_week', assignee: 'Maria S.',  propertyId: 'p3', propertyName: 'Ocean View Apt',  propertyImage: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=100&q=80', due: '2026-03-19', dueDisplay: 'Thu 10:00' },
+  // Maria S. — Cleaner (s1)
+  { id: 't1',  title: 'Turnover clean — Harbor Studio',           type: 'Cleaning',    priority: 'high',   status: 'today',     assignee: 'Maria S.',  propertyId: 'p2', propertyName: 'Harbor Studio',  propertyImage: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=100&q=80', due: '2026-03-19', dueDisplay: 'Today 10:00' },
+  { id: 't9',  title: 'Turnover clean — Sunset Villa',            type: 'Cleaning',    priority: 'high',   status: 'today',     assignee: 'Maria S.',  propertyId: 'p1', propertyName: 'Sunset Villa',    propertyImage: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=100&q=80',  due: '2026-03-19', dueDisplay: 'Today 13:00' },
+  { id: 't10', title: 'Deep clean — Ocean View Apt',              type: 'Cleaning',    priority: 'high',   status: 'today',     assignee: 'Maria S.',  propertyId: 'p3', propertyName: 'Ocean View Apt',  propertyImage: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=100&q=80',  due: '2026-03-19', dueDisplay: 'Today 15:00' },
+  { id: 't8',  title: 'Quarterly inspection — Ocean View',        type: 'Inspection',  priority: 'medium', status: 'this_week', assignee: 'Maria S.',  propertyId: 'p3', propertyName: 'Ocean View Apt',  propertyImage: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=100&q=80',  due: '2026-03-20', dueDisplay: 'Fri 10:00' },
+  { id: 't11', title: 'Turnover clean — Downtown Loft',           type: 'Cleaning',    priority: 'medium', status: 'this_week', assignee: 'Maria S.',  propertyId: 'p4', propertyName: 'Downtown Loft',   propertyImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=100&q=80',     due: '2026-03-21', dueDisplay: 'Sat 11:00' },
+  { id: 't6',  title: 'Restock toiletry kits — Sunset Villa',     type: 'Inventory',   priority: 'low',    status: 'completed', assignee: 'Maria S.',  propertyId: 'p1', propertyName: 'Sunset Villa',    propertyImage: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=100&q=80',  due: '2026-03-18', dueDisplay: 'Completed Mar 18' },
+  // Anna K. — Cleaning Supervisor (s2) — team tasks
+  { id: 't12', title: 'Turnover clean — Downtown Loft',           type: 'Cleaning',    priority: 'high',   status: 'today',     assignee: 'Anna K.',   propertyId: 'p4', propertyName: 'Downtown Loft',   propertyImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=100&q=80',     due: '2026-03-19', dueDisplay: 'Today 09:00' },
+  { id: 't13', title: 'Pre-arrival inspection — Harbor Studio',   type: 'Inspection',  priority: 'high',   status: 'today',     assignee: 'Anna K.',   propertyId: 'p2', propertyName: 'Harbor Studio',   propertyImage: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=100&q=80', due: '2026-03-19', dueDisplay: 'Today 16:00' },
+  // Bjorn L. — Maintenance
+  { id: 't4',  title: 'Fix bathroom extractor fan',               type: 'Maintenance', priority: 'high',   status: 'today',     assignee: 'Bjorn L.',  propertyId: 'p2', propertyName: 'Harbor Studio',   propertyImage: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=100&q=80', due: '2026-03-19', dueDisplay: 'Today 14:00' },
+  { id: 't5',  title: 'Inspect heating system',                   type: 'Maintenance', priority: 'high',   status: 'today',     assignee: 'Bjorn L.',  propertyId: 'p4', propertyName: 'Downtown Loft',   propertyImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=100&q=80',     due: '2026-03-19', dueDisplay: 'Today 12:00' },
+  { id: 't3',  title: 'Annual fire safety check',                 type: 'Compliance',  priority: 'urgent', status: 'overdue',   assignee: 'Bjorn L.',  propertyId: 'p3', propertyName: 'Ocean View Apt',  propertyImage: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=100&q=80',  due: '2026-03-14', dueDisplay: '5 days overdue' },
+  // Fatima N. — Guest Services
+  { id: 't7',  title: 'Guest issue follow-up — Camilla Dahl',    type: 'Compliance',  priority: 'medium', status: 'today',     assignee: 'Fatima N.', propertyId: 'p4', propertyName: 'Downtown Loft',   propertyImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=100&q=80',     due: '2026-03-19', dueDisplay: 'Today 17:00' },
+  { id: 't2',  title: 'Update guest welcome pack',                type: 'Content',     priority: 'medium', status: 'this_week', assignee: 'Fatima N.', propertyId: 'p1', propertyName: 'Sunset Villa',    propertyImage: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=100&q=80',  due: '2026-03-20', dueDisplay: 'Fri 11:00' },
 ]
 
 const USER_ASSIGNEE_MAP: Record<string, string> = {
-  'Maria S.': 'Maria S.', 'Bjorn L.': 'Bjorn L.', 'Fatima N.': 'Fatima N.', 'Peter K.': 'Peter K.',
+  'Maria S.': 'Maria S.', 'Bjorn L.': 'Bjorn L.', 'Fatima N.': 'Fatima N.', 'Peter K.': 'Peter K.', 'Anna K.': 'Anna K.',
 }
 
 const PRIORITY_BORDER: Record<string, string> = {
@@ -132,7 +141,7 @@ export default function MyTasksPage() {
       const matchesAssignee = isSupervisor ? true : (!assigneeName || task.assignee === assigneeName)
       let matchesType = true
       if (subRole.includes('Maintenance')) matchesType = task.type === 'Maintenance'
-      else if (subRole.includes('Cleaning') || isSupervisor) matchesType = task.type === 'Cleaning' || task.type === 'Inspection'
+      else if (subRole.includes('Cleaning') || subRole.includes('Cleaner') || isSupervisor) matchesType = task.type === 'Cleaning' || task.type === 'Inspection'
       const effectiveStatus = completedIds.has(task.id) ? 'completed' : task.status
       const matchesStatus = statusFilter === 'all' || effectiveStatus === statusFilter
       const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter
