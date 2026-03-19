@@ -8,15 +8,15 @@ import { useRole } from '@/context/RoleContext'
 import { useTheme } from '@/context/ThemeContext'
 import { NAV_BY_ROLE, getStaffNav } from '@/lib/nav'
 
-const APP_VERSION = 'v1.8'
-const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v1.8'
+const APP_VERSION = 'v1.9'
+const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v1.9'
 
 const WHATS_NEW_ITEMS = [
-  'Guest Experience Engine — Guidebooks, Upsells & Verification',
-  'App-side upsell request flow with status tracking',
-  'Owner portal maintenance cross-portal approval sharing',
-  'Guest issue AI triage (priority + category suggestions)',
-  'Cmd+K command palette for quick navigation',
+  'Inventory v2 — Warehouse, Templates, PO Approval Chain, Cost Analytics & Waste Tracking',
+  'Purchase Order approval tiers (auto / manager / owner) with full approval flow',
+  'Multi-vendor price comparison on restock alerts and shopping cart',
+  'Pre-check-in stock alert banner on operator dashboard',
+  'Sprint 10 & 11 UI/UX audit — 13 bugs fixed across 7 files',
 ]
 
 interface AppSidebarProps {

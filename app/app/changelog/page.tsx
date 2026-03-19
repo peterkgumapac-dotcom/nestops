@@ -10,6 +10,33 @@ interface ChangeEntry {
 
 const CHANGELOG: ChangeEntry[] = [
   {
+    version: 'v1.9',
+    date: 'Mar 19, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'Inventory v2 — full rewrite with 7 tabs: Warehouse, Templates, Purchase Orders, Vendors, Restock Alerts, Cost Analytics, and Waste Tracking' },
+      { tag: '⚡ Feature', text: 'Storage location filter — partitions stock items by location (central warehouse, group storage, property closet) with Add Location drawer' },
+      { tag: '⚡ Feature', text: 'Consumption Templates — create/assign per-property-type turnover templates; Mark Cleaning Done deducts stock with toast confirmation' },
+      { tag: '⚡ Feature', text: 'Purchase Order approval tiers — auto (<500 NOK), manager (<2000 NOK), owner (2000+ NOK); full approval chain shown in PO detail drawer' },
+      { tag: '⚡ Feature', text: 'Multi-vendor price comparison — cheapest vendor highlighted on restock alerts and shopping cart with per-item vendor switcher' },
+      { tag: '⚡ Feature', text: 'Shopping cart — grouped by vendor with editable qty, tier badge, and Create POs button (auto-splits by vendor)' },
+      { tag: '⚡ Feature', text: 'Plan Restock Run modal — select properties, view combined shopping list by vendor, add all alerts to cart in one click' },
+      { tag: '⚡ Feature', text: 'Cost Analytics tab — month-over-month spend bars, spend by category, and spend by property for current month' },
+      { tag: '⚡ Feature', text: 'Staff Waste Leaderboard — actual vs expected consumption per staff member with Δ% badge and 4-week sparkline bars' },
+      { tag: '⚡ Feature', text: 'Pre-check-in stock alert banner on operator dashboard — warns when a check-in within 72h has low/critical/out stock items assigned' },
+      { tag: '⚡ Feature', text: 'Pending POs widget on operator dashboard — manager-tier POs with inline Approve / Request Changes actions' },
+      { tag: '⚡ Feature', text: 'Purchase Approval cards in owner approvals portal — owner-tier POs surface automatically with vendor, amount, and tier badge' },
+      { tag: '🐛 Fix', text: "What's New modal z-index — moved outside sidebar stacking context and raised to z-index 600 so it overlays all content correctly" },
+      { tag: '🐛 Fix', text: 'IssueSheet stale state — convertDone, linkedTask, refundNights now reset via useEffect when switching between issues' },
+      { tag: '🐛 Fix', text: 'IssueSheet confirm modal — Escape key closes it; z-index raised to 300 (above command palette)' },
+      { tag: '🐛 Fix', text: 'NewIssueSheet — Cancel button resets all form fields; max-5 photo limit now shows a toast instead of silently failing' },
+      { tag: '🐛 Fix', text: 'Issues page assign popover — closes on outside click via transparent backdrop div' },
+      { tag: '🐛 Fix', text: 'Refunds Log Refund drawer — Cancel button now resets all form fields on close' },
+      { tag: '🐛 Fix', text: 'Maintenance countdown badge — uses actual current date instead of hardcoded 2026-03-18' },
+      { tag: '🐛 Fix', text: 'Upsells tab badge — now visible when "My Requests" tab is active (was invisible due to low-contrast background)' },
+      { tag: '🐛 Fix', text: 'Inventory PO status — Approve / Request Changes / Send now persists to orders state, not just the display override map' },
+    ],
+  },
+  {
     version: 'v1.8',
     date: 'Mar 18, 2026',
     items: [
