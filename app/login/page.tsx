@@ -155,7 +155,7 @@ export default function LoginPage() {
           <span style={{
             fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
             background: 'rgba(124,58,237,0.2)', color: '#a78bfa', letterSpacing: '0.04em', marginLeft: 4,
-          }}>v2.0</span>
+          }}>v2.6</span>
         </div>
 
         <h2 style={{ fontSize: 20, fontWeight: 700, color: '#f9fafb', marginBottom: 4 }}>{greeting}</h2>

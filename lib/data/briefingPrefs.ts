@@ -21,6 +21,7 @@ export interface BriefingToggles {
   needsaction: boolean
   firstcheckin: boolean
   meetings: boolean
+  supplyreminders: boolean
 }
 
 export interface BriefingPrefs {
@@ -53,6 +54,7 @@ export const DEFAULT_PREFS: Record<string, Partial<BriefingToggles>> = {
     needsaction: false,
     firstcheckin: false,
     meetings: false,
+    supplyreminders: true,
   },
   'Maintenance': {
     countdown: true,
@@ -75,6 +77,7 @@ export const DEFAULT_PREFS: Record<string, Partial<BriefingToggles>> = {
     needsaction: false,
     firstcheckin: false,
     meetings: false,
+    supplyreminders: false,
   },
   'Guest Services': {
     countdown: true,
@@ -94,9 +97,10 @@ export const DEFAULT_PREFS: Record<string, Partial<BriefingToggles>> = {
     activeissues: true,
     pterequest: true,
     teamstatus: false,
-    needsaction: false,
+    needsaction: true,
     firstcheckin: false,
     meetings: false,
+    supplyreminders: false,
   },
   'operator': {
     countdown: false,
@@ -119,6 +123,7 @@ export const DEFAULT_PREFS: Record<string, Partial<BriefingToggles>> = {
     needsaction: true,
     firstcheckin: true,
     meetings: true,
+    supplyreminders: false,
   },
 }
 
@@ -189,7 +194,7 @@ export const TOGGLE_LABELS: Record<
   { label: string; description: string; roles: string[] }
 > = {
   countdown:         { label: 'Countdown to shift',      description: 'Live timer before your shift starts',        roles: ['all'] },
-  weather:           { label: 'Weather',                  description: 'Conditions at your first shift property',    roles: ['Cleaning Team', 'Maintenance'] },
+  weather:           { label: 'Weather',                  description: 'Conditions at your first shift property',    roles: ['Cleaning Team', 'Maintenance', 'Guest Services', 'operator'] },
   propertiestoday:   { label: 'Properties today',         description: 'All cleanings or jobs scheduled today',      roles: ['Cleaning Team', 'Maintenance'] },
   taskcount:         { label: 'Task count',               description: 'Number of tasks per property',               roles: ['Cleaning Team'] },
   taskpreview:       { label: 'Task preview',             description: 'First 3 tasks listed before you start',      roles: ['Cleaning Team'] },
@@ -205,9 +210,10 @@ export const TOGGLE_LABELS: Record<
   activeissues:      { label: 'Active issues count',      description: 'Urgent / open / unresolved issue summary',   roles: ['Guest Services'] },
   pterequest:        { label: 'PTE requests',             description: 'Pending permissions needing guest contact',  roles: ['Guest Services'] },
   teamstatus:        { label: 'Team clock-in status',     description: 'Who has clocked in and who has not',         roles: ['operator'] },
-  needsaction:       { label: 'Needs action',             description: 'Unassigned tasks and late staff alerts',     roles: ['operator'] },
+  needsaction:       { label: 'Needs action',             description: 'Unassigned tasks and late staff alerts',     roles: ['Guest Services', 'operator'] },
   firstcheckin:      { label: 'First check-in countdown', description: 'Countdown to earliest arrival today',        roles: ['operator'] },
   meetings:          { label: 'Meetings today',           description: 'Scheduled meetings for the day',             roles: ['operator'] },
+  supplyreminders:   { label: 'Supply reminders',         description: 'Linen and consumable delivery tasks',        roles: ['Cleaning Team'] },
 }
 
 export const ALWAYS_ON: Array<keyof BriefingToggles> = ['countdown']

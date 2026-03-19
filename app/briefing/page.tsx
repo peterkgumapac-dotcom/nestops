@@ -9,7 +9,7 @@ import type { Shift } from '@/lib/data/staffScheduling'
 import { PROPERTY_WEATHER } from '@/lib/data/weather'
 import { OVERNIGHT_REPORTS, GUEST_ISSUES, getActiveIssues } from '@/lib/data/guestServices'
 import { PROPERTIES } from '@/lib/data/properties'
-import { JOBS } from '@/lib/data/staff'
+import { JOBS, STAFF_MEMBERS } from '@/lib/data/staff'
 import CountdownTimer from '@/components/shared/CountdownTimer'
 import WeatherWidget from '@/components/shared/WeatherWidget'
 import { getPTEBadge, sortJobsByAccessibility } from '@/lib/utils/pteUtils'
@@ -64,6 +64,8 @@ export default function BriefingPage() {
   const [mounted, setMounted] = useState(false)
   const [prefs, setPrefs] = useState<BriefingPrefs | null>(null)
   const [showToggles, setShowToggles] = useState(false)
+  const [accessCodeVisible, setAccessCodeVisible] = useState<Record<string, boolean>>({})
+  const [clockInRecord, setClockInRecord] = useState<{ staffId: string; shiftId: string; clockInTime: string; status: string } | null>(null)
 
   useEffect(() => {
     const t = new Date().toISOString().split('T')[0]
@@ -79,6 +81,10 @@ export default function BriefingPage() {
         setCurrentUser(user)
         const loaded = getPrefs(user.id, user.subRole ?? '', user.role)
         setPrefs(loaded)
+        try {
+          const clockInStored = localStorage.getItem('nestops_clockin')
+          if (clockInStored) setClockInRecord(JSON.parse(clockInStored))
+        } catch { /* ignore */ }
       } catch {
         // ignore parse errors
       }
@@ -182,7 +188,10 @@ export default function BriefingPage() {
       })()
     : Infinity
 
-  const todayReport = today ? OVERNIGHT_REPORTS.find(r => r.date === today) : undefined
+  const todayReport = today
+    ? (OVERNIGHT_REPORTS.find(r => r.date === today)
+        ?? [...OVERNIGHT_REPORTS].sort((a, b) => b.date.localeCompare(a.date))[0])
+    : undefined
   const activeIssues = getActiveIssues(GUEST_ISSUES)
   const urgentIssues = activeIssues.filter(i => i.severity === 'critical' || i.severity === 'high')
   const openIssues = activeIssues.filter(i => i.severity === 'medium' || i.severity === 'low')
@@ -238,7 +247,7 @@ export default function BriefingPage() {
         </Link>
       )
     }
-    const canClockIn = minutesUntilShift <= 30
+    const canClockIn = minutesUntilShift <= 15
     const accentColor = currentUser.subRole?.includes('Cleaning') ? '#d97706'
       : currentUser.subRole?.includes('Maintenance') ? '#0ea5e9'
       : '#ec4899'
@@ -380,7 +389,7 @@ export default function BriefingPage() {
                       <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', minWidth: 40 }}>{issue.time}</span>
                       <span style={{ fontSize: 13, color: '#fff', flex: 1 }}>{issue.title}</span>
                       <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{issue.property}</span>
-                      <span style={{ fontSize: 11, color: issue.assignedTo ? 'rgba(255,255,255,0.5)' : '#f87171', fontWeight: issue.assignedTo ? 400 : 600 }}>
+                      <span style={{ fontSize: 11, color: issue.assignedTo ? 'rgba(255,255,255,0.5)' : '#f87171', fontWeight: issue.assignedTo ? 400 : 700 }}>
                         {issue.assignedTo ?? '⚠️ Unassigned'}
                       </span>
                     </div>
@@ -388,25 +397,69 @@ export default function BriefingPage() {
                 </div>
               )}
 
-              {/* PORTFOLIO TODAY — toggle: checkins */}
+              {/* TEAM STATUS — toggle: teamstatus */}
+              {prefs?.toggles.teamstatus && (
+                <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '20px', marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 14 }}>
+                    Team Status
+                  </div>
+                  {(() => {
+                    const todayShifts = today ? SHIFTS.filter(s => s.date === today) : []
+                    const staffShiftMap = new Map<string, typeof todayShifts[0]>()
+                    todayShifts.forEach(s => { if (!staffShiftMap.has(s.staffId)) staffShiftMap.set(s.staffId, s) })
+                    const DEMO_STATUS: Record<string, { clockedIn: boolean; time?: string; note?: string }> = {
+                      's1': { clockedIn: true, time: '08:55' },
+                      's3': { clockedIn: true, time: '07:50' },
+                      's4': { clockedIn: true, note: 'Remote' },
+                      's2': { clockedIn: false },
+                    }
+                    return STAFF_MEMBERS
+                      .filter(sm => staffShiftMap.has(sm.id))
+                      .map(sm => {
+                        const shift = staffShiftMap.get(sm.id)!
+                        const prop = PROPERTIES.find(p => p.id === shift.propertyId)
+                        const isActuallyClockedIn = clockInRecord?.staffId === sm.id
+                        const demo = DEMO_STATUS[sm.id]
+                        const isClockedIn = isActuallyClockedIn || demo?.clockedIn
+                        const clockTime = isActuallyClockedIn ? clockInRecord!.clockInTime : demo?.time
+                        const statusNote = demo?.note
+                        return (
+                          <div key={sm.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div style={{ flex: 1 }}>
+                              <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{sm.name}</span>
+                              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginLeft: 8 }}>· {prop?.name ?? shift.propertyId}</span>
+                            </div>
+                            <span style={{ fontSize: 12, color: isClockedIn ? '#4ade80' : 'rgba(255,255,255,0.35)', fontWeight: isClockedIn ? 600 : 400 }}>
+                              {isClockedIn
+                                ? (statusNote ? `✓ ${statusNote}` : clockTime ? `✓ Clocked in ${clockTime}` : '✓ On shift')
+                                : '○ Not yet clocked in'}
+                            </span>
+                          </div>
+                        )
+                      })
+                  })()}
+                </div>
+              )}
+
+              {/* CHECK-IN READINESS — toggle: checkins */}
               {prefs?.toggles.checkins && (
                 <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '20px', marginBottom: 16 }}>
                   <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 14 }}>
-                    Portfolio Today
+                    Check-in Readiness
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    {[
-                      { label: 'Properties', value: PROPERTIES.length.toString() },
-                      { label: 'Check-ins today', value: PROPERTIES.filter(p => p.status === 'live').length.toString() },
-                      { label: 'Staff on shift', value: staffOnShift.toString() },
-                      { label: 'Overnight issues', value: (todayReport?.issues.length ?? 0).toString(), alert: (todayReport?.issues.length ?? 0) > 0 },
-                    ].map(item => (
-                      <div key={item.label} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: '12px 14px' }}>
-                        <div style={{ fontSize: 22, fontWeight: 700, color: item.alert ? '#f87171' : '#fff', marginBottom: 2 }}>{item.value}</div>
-                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{item.label}</div>
-                      </div>
-                    ))}
-                  </div>
+                  {[
+                    { name: 'Sunset Villa',   time: '15:00', status: 'ok',   note: '✓ Cleaning scheduled' },
+                    { name: 'Ocean View Apt', time: '17:00', status: 'warn', note: '⚠️ Tight turnaround' },
+                    { name: 'Downtown Loft',  time: '—',     status: 'none', note: 'No arrivals today' },
+                  ].map((row, i, arr) => (
+                    <div key={row.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: '#fff', flex: 1 }}>{row.name}</span>
+                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', minWidth: 44, textAlign: 'right' }}>{row.time}</span>
+                      <span style={{ fontSize: 12, color: row.status === 'ok' ? '#4ade80' : row.status === 'warn' ? '#fbbf24' : 'rgba(255,255,255,0.3)', minWidth: 140, textAlign: 'right' }}>
+                        {row.note}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               )}
 
@@ -418,6 +471,14 @@ export default function BriefingPage() {
                     label="FIRST CHECK-IN IN"
                     context="15:00 · First guest arrival"
                   />
+                </div>
+              )}
+
+              {/* POSITIVE EMPTY STATE */}
+              {urgentIssues.length === 0 && unassignedOvernightCount === 0 && (
+                <div style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 16, padding: '16px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 16 }}>✅</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: '#4ade80' }}>Zero messages needed. Team is running.</span>
                 </div>
               )}
 
@@ -467,36 +528,69 @@ export default function BriefingPage() {
                 ) : (
                   myShiftsToday.map((shift, idx) => {
                     const prop = PROPERTIES.find(p => p.id === shift.propertyId)
-                    const [sh, sm] = shift.startTime.split(':').map(Number)
-                    const [eh, em] = shift.endTime.split(':').map(Number)
-                    const duration = ((eh * 60 + em) - (sh * 60 + sm)) / 60
+                    const [startH, startM] = shift.startTime.split(':').map(Number)
+                    const [endH, endM] = shift.endTime.split(':').map(Number)
+                    const durationMins = (endH * 60 + endM) - (startH * 60 + startM)
+                    const durationStr = durationMins % 60 === 0 ? `${durationMins / 60}h` : `${Math.floor(durationMins / 60)}h ${durationMins % 60}m`
+                    const taskCount = shift.jobIds.length
                     const isFirst = idx === 0
+                    const cleanType = shift.notes?.toLowerCase().includes('deep') ? 'DEEP CLEAN' : 'TURNOVER CLEAN'
+                    // Tight turnaround: only when linked job has checkinTime and gap < 4h
+                    const linkedJobs = JOBS.filter(j => shift.jobIds.includes(j.id))
+                    const jobWithCheckin = linkedJobs.find(j => j.checkinTime && j.checkoutTime)
+                    let tightTurnaround = false
+                    if (jobWithCheckin?.checkinTime && jobWithCheckin?.checkoutTime) {
+                      const [coh, com] = jobWithCheckin.checkoutTime.split(':').map(Number)
+                      const [cih, cim] = jobWithCheckin.checkinTime.split(':').map(Number)
+                      tightTurnaround = (cih * 60 + cim) - (coh * 60 + com) < 240
+                    }
                     return (
                       <div key={shift.id} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '16px', marginBottom: 12, overflow: 'hidden' }}>
                         {prop?.imageUrl && (
                           <img src={prop.imageUrl} alt={prop.name ?? shift.propertyId} style={{ width: '100%', height: 96, borderRadius: 8, objectFit: 'cover', marginBottom: 12 }} />
                         )}
-                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4 }}>
-                          <div style={{ fontSize: 15, fontWeight: 600, color: '#fff' }}>{prop?.name ?? shift.propertyId}</div>
+                        {/* Clean type as primary heading + badge */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                          <span style={{ fontSize: 22, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>{cleanType}</span>
                           <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20, background: isFirst ? '#3b82f620' : '#d9770620', color: isFirst ? '#60a5fa' : '#fbbf24', flexShrink: 0, marginLeft: 8 }}>
                             {isFirst ? 'NEXT UP 🔵' : 'LATER ⏰'}
                           </span>
                         </div>
-                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>
-                          {SHIFT_TYPE_LABEL[shift.type] ?? shift.type} · {shift.startTime} – {shift.endTime}
+                        {/* Property + time */}
+                        <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', marginBottom: 4 }}>
+                          {prop?.name ?? shift.propertyId} · {shift.startTime} – {shift.endTime}
                         </div>
+                        {/* Duration + task count */}
                         {prefs?.toggles.taskcount && (
-                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>
-                            5 tasks · {duration}h window
+                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 4 }}>
+                            {durationStr} window · {taskCount} task{taskCount !== 1 ? 's' : ''}
                           </div>
                         )}
-                        {prefs?.toggles.turnaroundwarning && duration < 4 && (
-                          <div style={{ fontSize: 12, color: '#fbbf24' }}>⚠️ Tight turnaround</div>
+                        {/* Check-in time from linked job */}
+                        {jobWithCheckin?.checkinTime && (
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>
+                            Check-in: {jobWithCheckin.checkinTime}
+                          </div>
+                        )}
+                        {/* Tight turnaround strip — only when gap constraint exists */}
+                        {prefs?.toggles.turnaroundwarning && tightTurnaround && jobWithCheckin && (
+                          <div style={{ marginTop: 8, padding: '6px 10px', background: '#fbbf2415', borderRadius: 8, fontSize: 12, color: '#fbbf24' }}>
+                            ⚠️ Tight turnaround — {prop?.name ?? shift.propertyId}, next check-in {jobWithCheckin.checkinTime}
+                          </div>
                         )}
                       </div>
                     )
                   })
                 )
+              )}
+
+              {/* SUPPLY REMINDERS — toggle: supplyreminders */}
+              {prefs?.toggles.supplyreminders && (
+                <div style={{ background: 'rgba(217,119,6,0.08)', border: '1px solid rgba(217,119,6,0.25)', borderRadius: 12, padding: '12px 16px', marginBottom: 12 }}>
+                  <span style={{ fontSize: 13, color: '#fbbf24' }}>
+                    🧴 SUPPLIES: Linen set (Harbor Studio) · Toiletry kit (Ocean View)
+                  </span>
+                </div>
               )}
 
               {/* OTHER TASKS TODAY — toggle: othertasks */}
@@ -527,8 +621,8 @@ export default function BriefingPage() {
                     {[
                       { day: 'Mon', state: 'done' },
                       { day: 'Tue', state: 'done' },
-                      { day: 'Wed', state: 'today' },
-                      { day: 'Thu', state: 'upcoming' },
+                      { day: 'Wed', state: 'done' },
+                      { day: 'Thu', state: 'today' },
                       { day: 'Fri', state: 'upcoming' },
                     ].map(d => (
                       <div key={d.day} style={{ flex: 1, textAlign: 'center', padding: '8px 4px', borderRadius: 8, background: d.state === 'today' ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.04)', border: d.state === 'today' ? '1px solid rgba(124,58,237,0.4)' : '1px solid transparent' }}>
@@ -560,43 +654,77 @@ export default function BriefingPage() {
                     </div>
                   ) : (
                     myJobs.map(job => {
-                      const pteBadge = getPTEBadge(job.pteStatus ?? 'not_required')
-                      const priorityEmoji = job.priority === 'urgent' ? '🔴' : job.priority === 'high' ? '🟡' : '⚪'
                       const isAutoGranted = job.pteStatus === 'auto_granted'
+                      const isGranted = job.pteStatus === 'granted'
                       const isPending = job.pteStatus === 'pending'
+                      const isDenied = job.pteStatus === 'denied' || job.pteStatus === 'expired'
+                      const isNotRequired = job.pteStatus === 'not_required'
+                      const canShowCode = isAutoGranted || isGranted || isNotRequired
                       const showHint = isPending && firstAutoGrantedJob !== undefined && firstAutoGrantedJob.id !== job.id
+                      const priorityLabel = job.priority === 'urgent' ? '🔴 URGENT' : job.priority === 'high' ? '🟡 HIGH' : '⚪ NORMAL'
+                      const pteDescription = isAutoGranted ? '✓ Auto-granted · No guest · Enter any time'
+                        : isGranted ? '✓ Granted · Access confirmed'
+                        : isPending ? '⏳ PTE Pending · Fatima contacting guest'
+                        : isNotRequired ? '○ No PTE required'
+                        : '✗ Access denied — contact Fatima'
+                      const codeVisible = accessCodeVisible[job.id] ?? false
+                      const propData = PROPERTIES.find(p => p.id === job.propertyId)
+                      const accessCode = propData?.accessCodes?.[0]?.code ?? 'Check SuiteOp'
+                      void isDenied
                       return (
                         <div key={job.id} style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${isAutoGranted ? 'rgba(22,163,74,0.4)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 16, overflow: 'hidden', marginBottom: 10 }}>
-                          {/* routingHint: Go Here First banner */}
+                          {/* GO HERE FIRST banner */}
                           {prefs?.toggles.routingHint && isAutoGranted && (
                             <div style={{ background: '#16a34a', padding: '6px 16px', fontSize: 11, fontWeight: 700, color: '#fff', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                              🟢 Vacant — Go Now
+                              🟢 GO HERE FIRST — PROPERTY VACANT
                             </div>
                           )}
                           <div style={{ padding: '14px 16px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                              <span style={{ fontSize: 14 }}>{priorityEmoji}</span>
-                              <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>
-                                {job.priority.toUpperCase()}
+                            {/* Priority badge with text */}
+                            <div style={{ marginBottom: 6 }}>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: job.priority === 'urgent' ? '#f87171' : job.priority === 'high' ? '#fbbf24' : 'rgba(255,255,255,0.5)' }}>
+                                {priorityLabel}
                               </span>
                             </div>
                             <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 4 }}>{job.title}</div>
                             {/* jobLocation: property name */}
                             {prefs?.toggles.jobLocation && (
-                              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>{job.propertyName}</div>
+                              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>{job.propertyName}</div>
                             )}
-                            {/* pteStatus: PTE badge */}
+                            {/* pteStatus: PTE description line */}
                             {prefs?.toggles.pteStatus && (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: pteBadge.color + '20', color: pteBadge.color }}>
-                                  {pteBadge.icon} {pteBadge.label}
-                                </span>
+                              <div style={{ fontSize: 12, color: canShowCode ? '#4ade80' : isPending ? '#fbbf24' : '#f87171', marginBottom: 6 }}>
+                                {pteDescription}
                               </div>
                             )}
-                            {/* routingHint: pending hint */}
+                            {/* Access code button — toggle: accesstype */}
+                            {prefs?.toggles.accesstype && (
+                              canShowCode ? (
+                                codeVisible ? (
+                                  <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', background: 'rgba(255,255,255,0.08)', padding: '6px 12px', borderRadius: 8, display: 'inline-block', marginBottom: 4 }}>
+                                    🔑 {accessCode}
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => setAccessCodeVisible(prev => ({ ...prev, [job.id]: true }))}
+                                    style={{ fontSize: 12, fontWeight: 600, color: '#60a5fa', background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.3)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', marginBottom: 4 }}
+                                  >
+                                    Show Code 👁
+                                  </button>
+                                )
+                              ) : (
+                                <button
+                                  disabled
+                                  style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '4px 10px', cursor: 'not-allowed', marginBottom: 4 }}
+                                >
+                                  🔒 Locked — awaiting PTE
+                                </button>
+                              )
+                            )}
+                            {/* Routing hint: pending cross-ref */}
                             {prefs?.toggles.routingHint && showHint && (
                               <div style={{ marginTop: 8, fontSize: 12, color: '#fbbf24' }}>
-                                💡 Do the {firstAutoGrantedJob!.propertyName} job first while waiting
+                                💡 Do {firstAutoGrantedJob!.propertyName} first while waiting for PTE approval
                               </div>
                             )}
                           </div>
@@ -615,37 +743,95 @@ export default function BriefingPage() {
           {currentUser.role === 'staff' && currentUser.subRole?.includes('Guest') && (
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
 
+              {/* NEEDS YOUR ACTION — toggle: needsaction */}
+              {prefs?.toggles.needsaction && (
+                <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 16, padding: '16px', marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>
+                    Needs Your Action
+                  </div>
+                  {(() => {
+                    const unassignedIssues = todayReport?.issues.filter(i => i.status === 'unassigned') ?? []
+                    type ActionItem = { icon: string; text: string; severity: 'high' | 'medium' }
+                    const actionItems: ActionItem[] = [
+                      ...unassignedIssues.map(i => ({
+                        icon: '🌙',
+                        text: `${i.title} · ${i.property} · ⚠️ UNASSIGNED`,
+                        severity: 'high' as const,
+                      })),
+                      ...pendingPTEJobs.map(j => ({
+                        icon: '⏳',
+                        text: `PTE needed — ${j.staffId ? (STAFF_MEMBERS.find(s => s.id === j.staffId)?.name.split(' ')[0] ?? 'Staff') : 'Staff'} at ${j.propertyName} · Contact guest`,
+                        severity: 'medium' as const,
+                      })),
+                      { icon: '⏱️', text: 'Ocean View 17:00 — tight turnaround window', severity: 'medium' as const },
+                    ]
+                    if (actionItems.length === 0) {
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontSize: 14 }}>✅</span>
+                          <span style={{ fontSize: 14, color: '#4ade80', fontWeight: 600 }}>Nothing needs your action right now</span>
+                        </div>
+                      )
+                    }
+                    return actionItems.map((item, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '7px 0', borderBottom: i < actionItems.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+                        <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>{item.icon}</span>
+                        <span style={{ fontSize: 13, color: item.severity === 'high' ? '#f87171' : 'rgba(255,255,255,0.75)', fontWeight: item.severity === 'high' ? 600 : 400 }}>{item.text}</span>
+                      </div>
+                    ))
+                  })()}
+                </div>
+              )}
+
+              {/* OVERNIGHT ISSUES — toggle: overnightissues */}
+              {prefs?.toggles.overnightissues && todayReport && todayReport.issues.length > 0 && (
+                <div style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.25)', borderRadius: 16, padding: '16px', marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>
+                    Overnight Issues
+                  </div>
+                  {todayReport.issues.map((issue, i) => (
+                    <div key={issue.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', borderBottom: i < todayReport.issues.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+                      <span style={{ fontSize: 14, flexShrink: 0 }}>🌙</span>
+                      <span style={{ fontSize: 13, flex: 1, color: issue.assignedTo ? 'rgba(255,255,255,0.5)' : '#f87171', fontWeight: issue.assignedTo ? 400 : 700 }}>
+                        {issue.title} · {issue.property}
+                      </span>
+                      <span style={{ fontSize: 12, color: issue.assignedTo ? 'rgba(255,255,255,0.4)' : '#f87171', fontWeight: issue.assignedTo ? 400 : 700 }}>
+                        {issue.assignedTo ? `${issue.assignedTo} ✓` : '⚠️ UNASSIGNED'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* ARRIVAL READINESS — toggle: checkins */}
+              {prefs?.toggles.checkins && (
+                <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '16px', marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>
+                    Arrival Readiness
+                  </div>
+                  {[
+                    { name: 'Sunset Villa',   time: '15:00', status: 'ok',   note: '✓ Cleaning on track' },
+                    { name: 'Ocean View Apt', time: '17:00', status: 'warn', note: '⚠️ Tight turnaround' },
+                  ].map((row, i, arr) => (
+                    <div key={row.name} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: '#fff', flex: 1 }}>{row.name}</span>
+                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>{row.time}</span>
+                      <span style={{ fontSize: 12, color: row.status === 'ok' ? '#4ade80' : '#fbbf24', minWidth: 130, textAlign: 'right' }}>{row.note}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* ACTIVE ISSUES — toggle: activeissues */}
               {prefs?.toggles.activeissues && (
                 <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '16px', marginBottom: 12 }}>
                   <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>
                     Active Issues
                   </div>
-                  <div style={{ display: 'flex', gap: 10, marginBottom: unassignedOvernightCount > 0 ? 10 : 0 }}>
+                  <div style={{ display: 'flex', gap: 10 }}>
                     <span style={{ fontSize: 13, color: '#f87171' }}>🔴 {urgentIssues.length} urgent</span>
                     <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>·</span>
                     <span style={{ fontSize: 13, color: '#fbbf24' }}>🟡 {openIssues.length} open</span>
-                  </div>
-                  {unassignedOvernightCount > 0 && (
-                    <div style={{ fontSize: 12, color: '#f87171' }}>
-                      {unassignedOvernightCount} unassigned overnight issue{unassignedOvernightCount !== 1 ? 's' : ''}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* TODAY'S CHECK-INS — toggle: checkins */}
-              {prefs?.toggles.checkins && (
-                <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '16px', marginBottom: 12 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>
-                    {`Today's Check-ins`}
-                  </div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 4 }}>
-                    {activeIssues.length > 0 ? `${activeIssues.length} active issue${activeIssues.length !== 1 ? 's' : ''}` : 'No active guest issues'}
-                    {urgentIssues.length > 0 && ` · ${urgentIssues.length} urgent`}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
-                    {openIssues.length > 0 ? `${openIssues.length} medium/low priority open` : 'All clear on routine issues'}
                   </div>
                 </div>
               )}
@@ -656,8 +842,27 @@ export default function BriefingPage() {
                   <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>
                     PTE Requests
                   </div>
-                  <div style={{ fontSize: 14, color: '#fff', marginBottom: 4 }}>⏳ {pendingPTEJobs.length} pending — {pendingPTEJobs[0]?.propertyName ?? 'Property'}</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Requires guest contact</div>
+                  {pendingPTEJobs.map((job, i) => {
+                    const staffName = STAFF_MEMBERS.find(s => s.id === job.staffId)?.name ?? 'Staff'
+                    return (
+                      <div key={job.id} style={{ padding: '8px 0', borderBottom: i < pendingPTEJobs.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                          <span style={{ fontSize: 13, color: '#fbbf24' }}>⏳</span>
+                          <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{staffName}</span>
+                          <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>· {job.propertyName}</span>
+                        </div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>{job.title}</div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button style={{ fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 8, background: 'rgba(236,72,153,0.15)', border: '1px solid rgba(236,72,153,0.3)', color: '#ec4899', cursor: 'pointer' }}>
+                            Contact Guest
+                          </button>
+                          <button style={{ fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}>
+                            View Job
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
 

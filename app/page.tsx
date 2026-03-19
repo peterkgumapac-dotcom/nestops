@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import RootRedirect from './_components/RootRedirect'
 import { motion, useInView, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import {
   ArrowRight, CheckCircle, Zap, Users, Building2, ClipboardList,
@@ -976,7 +975,7 @@ function Footer() {
 export default function MarketingPage() {
   return (
     <>
-      <RootRedirect />
+      
       <style>{`
         .hide-mobile { display: flex !important; }
         .show-mobile { display: none !important; }

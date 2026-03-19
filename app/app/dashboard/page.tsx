@@ -13,6 +13,7 @@ import { PROPERTIES } from '@/lib/data/properties'
 import { PROPERTY_WEATHER } from '@/lib/data/weather'
 import { JOBS } from '@/lib/data/staff'
 import { sortJobsByAccessibility } from '@/lib/utils/pteUtils'
+import { FEED_ITEMS, filterFeed, type FeedTab } from '@/lib/data/activityFeed'
 
 // ─── Cleaning Templates ───────────────────────────────────────────────────────
 
@@ -242,6 +243,7 @@ export default function AppDashboard() {
   const [newCleaningDate, setNewCleaningDate] = useState(new Date().toISOString().split('T')[0])
   const [newCleaningNotes, setNewCleaningNotes] = useState('')
   const [addedCleanings, setAddedCleanings] = useState<{id:string, templateName:string, property:string, date:string}[]>([])
+  const [feedTab2, setFeedTab2] = useState<FeedTab>('all')
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -1348,6 +1350,76 @@ export default function AppDashboard() {
                 />
               </div>
               <div style={{ fontSize: 12, color: C.muted, marginTop: 6 }}>Lars Eriksen · Sunset Villa · 15:00</div>
+            </Card>
+
+            {/* Activity Feed */}
+            <SectionLabel label="Activity Feed" />
+            <Card style={{ padding: 0, overflow: 'hidden' }}>
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', borderBottom: `1px solid ${C.border}` }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Activity</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, padding: '2px 7px', borderRadius: 10, background: '#10b98118', color: '#10b981', border: '1px solid #10b98130' }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+                  Live
+                </span>
+              </div>
+              {/* Tab bar */}
+              <div style={{ display: 'flex', gap: 2, padding: '8px 10px', borderBottom: `1px solid ${C.border}` }}>
+                {(['all', 'in_progress', 'issues'] as FeedTab[]).map(tab => (
+                  <button key={tab} onClick={() => setFeedTab2(tab)} style={{
+                    flex: 1, padding: '4px 0', fontSize: 11, fontWeight: feedTab2 === tab ? 600 : 400,
+                    borderRadius: 5, border: 'none', cursor: 'pointer',
+                    background: feedTab2 === tab ? `${accent}18` : 'transparent',
+                    color: feedTab2 === tab ? accent : C.muted,
+                  }}>
+                    {tab === 'all' ? 'All' : tab === 'in_progress' ? 'In progress' : 'Issues'}
+                  </button>
+                ))}
+              </div>
+              {/* Feed items */}
+              <div>
+                {filterFeed(FEED_ITEMS, feedTab2).slice(0, 6).map((item, i, arr) => {
+                  const isRich = item.type === 'in_progress' || item.type === 'blocked' || item.type === 'en_route'
+                  return (
+                    <div key={item.id} style={{
+                      display: 'flex', alignItems: 'flex-start', gap: 10,
+                      padding: '10px 14px',
+                      borderBottom: i < arr.length - 1 ? `1px solid ${C.border}` : 'none',
+                    }}>
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: item.color, flexShrink: 0, marginTop: 5 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        {isRich ? (
+                          <>
+                            <div style={{ fontSize: 12, lineHeight: 1.4 }}>
+                              <span style={{ fontWeight: 600, color: C.text }}>{item.actor}</span>
+                              <span style={{ color: C.muted }}> — {item.action} {item.property}</span>
+                              {item.detail && <span style={{ color: C.muted }}> · {item.detail}</span>}
+                            </div>
+                            {item.statusLabel && (
+                              <div style={{ fontSize: 11, fontWeight: 600, color: item.color, marginTop: 3 }}>{item.statusLabel}</div>
+                            )}
+                            {item.type === 'in_progress' && item.progress !== undefined && (
+                              <div style={{ marginTop: 5, height: 4, borderRadius: 2, background: C.border, overflow: 'hidden' }}>
+                                <div style={{ height: '100%', width: `${item.progress}%`, background: item.color, borderRadius: 2 }} />
+                              </div>
+                            )}
+                            <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>{item.time}</div>
+                          </>
+                        ) : (
+                          <>
+                            <div style={{ fontSize: 12, lineHeight: 1.4 }}>
+                              <span style={{ fontWeight: 600, color: C.text }}>{item.actor}</span>
+                              <span style={{ color: C.muted }}> {item.action}</span>
+                              {item.detail && <span style={{ color: C.muted }}> — {item.detail} · {item.property}</span>}
+                            </div>
+                            <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{item.time}</div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </Card>
 
             {/* Quick Links */}

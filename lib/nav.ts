@@ -6,7 +6,7 @@ import {
   Zap, Bell, ShoppingBag,
   Settings, History,
   Home, Inbox, PlusCircle, FileText, CheckSquare,
-  Wrench, Users, CreditCard,
+  Wrench, Users, CreditCard, UserCircle,
   LucideIcon,
 } from 'lucide-react'
 
@@ -122,6 +122,12 @@ export const STAFF_CLEANING_NAV: NavSection[] = [
       { label: 'Cleaning SOPs', href: '/app/operations', icon: FileText },
     ],
   },
+  {
+    label: 'Account',
+    items: [
+      { label: 'My Account', href: '/app/my-account', icon: UserCircle },
+    ],
+  },
 ]
 
 export const STAFF_CLEANING_SUPERVISOR_NAV: NavSection[] = [
@@ -141,6 +147,12 @@ export const STAFF_CLEANING_SUPERVISOR_NAV: NavSection[] = [
       { label: 'Cleaning SOPs', href: '/app/operations', icon: FileText },
     ],
   },
+  {
+    label: 'Account',
+    items: [
+      { label: 'My Account', href: '/app/my-account', icon: UserCircle },
+    ],
+  },
 ]
 
 export const STAFF_MAINTENANCE_NAV: NavSection[] = [
@@ -157,6 +169,12 @@ export const STAFF_MAINTENANCE_NAV: NavSection[] = [
     label: 'Reference',
     items: [
       { label: 'Maintenance SOPs', href: '/app/operations', icon: FileText },
+    ],
+  },
+  {
+    label: 'Account',
+    items: [
+      { label: 'My Account', href: '/app/my-account', icon: UserCircle },
     ],
   },
 ]
@@ -191,6 +209,12 @@ export const STAFF_GUEST_SERVICES_NAV: NavSection[] = [
       { label: 'Guest SOPs', href: '/app/operations', icon: FileText },
     ],
   },
+  {
+    label: 'Account',
+    items: [
+      { label: 'My Account', href: '/app/my-account', icon: UserCircle },
+    ],
+  },
 ]
 
 export const STAFF_INSPECTOR_NAV: NavSection[] = [
@@ -207,6 +231,12 @@ export const STAFF_INSPECTOR_NAV: NavSection[] = [
     label: 'Reference',
     items: [
       { label: 'Inspection SOPs', href: '/app/operations', icon: FileText },
+    ],
+  },
+  {
+    label: 'Account',
+    items: [
+      { label: 'My Account', href: '/app/my-account', icon: UserCircle },
     ],
   },
 ]

@@ -1,27 +1,136 @@
 'use client'
-import { Building2 } from 'lucide-react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
+import { Building2, Search, LayoutGrid, List, ChevronRight, X, MapPin, Bed, Bath } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import PageHeader from '@/components/shared/PageHeader'
-import PropertyCard from '@/components/shared/PropertyCard'
-import { PROPERTIES } from '@/lib/data/properties'
+import StatusBadge from '@/components/shared/StatusBadge'
+import { PROPERTIES, PropertyStatus } from '@/lib/data/properties'
 import { OWNERS } from '@/lib/data/owners'
 import { COMPLIANCE_DOCS } from '@/lib/data/compliance'
 import { useRole } from '@/context/RoleContext'
+import { getLibrary } from '@/lib/data/propertyLibrary'
 
-function getComplianceDot(propertyId: string): { color: string; title: string } {
+function getComplianceDot(propertyId: string): { color: string; title: string; label: string } {
   const docs = COMPLIANCE_DOCS.filter(d => d.propertyId === propertyId)
   if (docs.some(d => d.status === 'expired' || d.status === 'missing')) {
-    return { color: '#ef4444', title: 'Expired or missing compliance documents' }
+    return { color: '#ef4444', title: 'Expired or missing compliance documents', label: 'Action needed' }
   }
   if (docs.some(d => d.status === 'expiring')) {
-    return { color: '#d97706', title: 'Compliance documents expiring soon' }
+    return { color: '#d97706', title: 'Compliance documents expiring soon', label: 'Expiring soon' }
   }
-  return { color: '#10b981', title: 'All compliance documents valid' }
+  return { color: '#10b981', title: 'All compliance documents valid', label: 'Compliant' }
+}
+
+const PAGE_SIZE = 25
+
+const selectStyle: React.CSSProperties = {
+  padding: '7px 10px',
+  borderRadius: 8,
+  border: '1px solid var(--border)',
+  background: 'var(--bg-card)',
+  color: 'var(--text-primary)',
+  fontSize: 13,
+  cursor: 'pointer',
+  outline: 'none',
 }
 
 export default function PropertiesPage() {
   const { accent } = useRole()
   const router = useRouter()
+
+  // View
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+
+  // Filters
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | PropertyStatus>('all')
+  const [ownerFilter, setOwnerFilter] = useState('all')
+  const [cityFilter, setCityFilter] = useState('all')
+  const [sortBy, setSortBy] = useState<'name_asc' | 'name_desc' | 'status' | 'beds_asc' | 'beds_desc'>('name_asc')
+
+  // Pagination
+  const [page, setPage] = useState(1)
+
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 250)
+    return () => clearTimeout(t)
+  }, [search])
+
+  // Reset page on any filter/sort change
+  useEffect(() => { setPage(1) }, [debouncedSearch, statusFilter, ownerFilter, cityFilter, sortBy])
+
+  // Compliance map
+  const complianceMap = useMemo(() =>
+    Object.fromEntries(PROPERTIES.map(p => [p.id, getComplianceDot(p.id)])),
+  [])
+
+  // Unique filter options
+  const uniqueCities = useMemo(() => [...new Set(PROPERTIES.map(p => p.city))].sort(), [])
+  const uniqueOwners = useMemo(() => OWNERS.filter(o => PROPERTIES.some(p => p.ownerId === o.id)), [])
+
+  // Filter + sort pipeline
+  const filtered = useMemo(() => {
+    let list = PROPERTIES
+    if (debouncedSearch) {
+      const q = debouncedSearch.toLowerCase()
+      list = list.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.address.toLowerCase().includes(q) ||
+        p.city.toLowerCase().includes(q) ||
+        OWNERS.find(o => o.id === p.ownerId)?.name.toLowerCase().includes(q)
+      )
+    }
+    if (statusFilter !== 'all') list = list.filter(p => p.status === statusFilter)
+    if (ownerFilter !== 'all') list = list.filter(p => p.ownerId === ownerFilter)
+    if (cityFilter !== 'all') list = list.filter(p => p.city === cityFilter)
+
+    list = [...list].sort((a, b) => {
+      if (sortBy === 'name_asc') return a.name.localeCompare(b.name)
+      if (sortBy === 'name_desc') return b.name.localeCompare(a.name)
+      if (sortBy === 'status') return a.status.localeCompare(b.status)
+      if (sortBy === 'beds_asc') return a.beds - b.beds
+      if (sortBy === 'beds_desc') return b.beds - a.beds
+      return 0
+    })
+    return list
+  }, [debouncedSearch, statusFilter, ownerFilter, cityFilter, sortBy])
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  const clearAllFilters = useCallback(() => {
+    setSearch('')
+    setStatusFilter('all')
+    setOwnerFilter('all')
+    setCityFilter('all')
+    setSortBy('name_asc')
+    setPage(1)
+  }, [])
+
+  const hasActiveFilters = debouncedSearch || statusFilter !== 'all' || ownerFilter !== 'all' || cityFilter !== 'all'
+
+  // Active filter pills
+  const filterPills: { label: string; onRemove: () => void }[] = []
+  if (statusFilter !== 'all') filterPills.push({ label: `Status: ${statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}`, onRemove: () => setStatusFilter('all') })
+  if (ownerFilter !== 'all') {
+    const owner = OWNERS.find(o => o.id === ownerFilter)
+    filterPills.push({ label: `Owner: ${owner?.name ?? ownerFilter}`, onRemove: () => setOwnerFilter('all') })
+  }
+  if (cityFilter !== 'all') filterPills.push({ label: `City: ${cityFilter}`, onRemove: () => setCityFilter('all') })
+
+  const iconBtnStyle = (active: boolean): React.CSSProperties => ({
+    padding: '7px 9px',
+    borderRadius: 8,
+    border: `1px solid ${active ? accent : 'var(--border)'}`,
+    background: active ? `${accent}18` : 'var(--bg-card)',
+    color: active ? accent : 'var(--text-muted)',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    lineHeight: 1,
+  })
 
   return (
     <div>
@@ -36,57 +145,300 @@ export default function PropertiesPage() {
             >
               Onboard Property
             </button>
-            <button onClick={() => router.push('/operator/properties/onboard')} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Add Property</button>
+            <button
+              onClick={() => router.push('/operator/properties/onboard')}
+              style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+            >
+              Add Property
+            </button>
           </div>
         }
       />
+
+      {/* Toolbar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+        {/* Search */}
+        <div style={{ position: 'relative', flex: '1 1 200px', minWidth: 160 }}>
+          <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+          <input
+            type="text"
+            placeholder="Search properties..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{ ...selectStyle, width: '100%', paddingLeft: 30, boxSizing: 'border-box' }}
+          />
+        </div>
+
+        {/* Status */}
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as 'all' | PropertyStatus)} style={selectStyle}>
+          <option value="all">All Statuses</option>
+          <option value="live">Live</option>
+          <option value="onboarding">Onboarding</option>
+          <option value="offboarding">Offboarding</option>
+          <option value="inactive">Inactive</option>
+        </select>
+
+        {/* Owner */}
+        <select value={ownerFilter} onChange={e => setOwnerFilter(e.target.value)} style={selectStyle}>
+          <option value="all">All Owners</option>
+          {uniqueOwners.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+        </select>
+
+        {/* City */}
+        <select value={cityFilter} onChange={e => setCityFilter(e.target.value)} style={selectStyle}>
+          <option value="all">All Cities</option>
+          {uniqueCities.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+
+        {/* Sort */}
+        <select value={sortBy} onChange={e => setSortBy(e.target.value as typeof sortBy)} style={selectStyle}>
+          <option value="name_asc">Name A–Z</option>
+          <option value="name_desc">Name Z–A</option>
+          <option value="status">Status</option>
+          <option value="beds_asc">Beds ↑</option>
+          <option value="beds_desc">Beds ↓</option>
+        </select>
+
+        {/* Divider */}
+        <div style={{ width: 1, height: 28, background: 'var(--border)', margin: '0 2px' }} />
+
+        {/* View toggle */}
+        <button style={iconBtnStyle(viewMode === 'grid')} onClick={() => setViewMode('grid')} title="Grid view">
+          <LayoutGrid size={15} />
+        </button>
+        <button style={iconBtnStyle(viewMode === 'list')} onClick={() => setViewMode('list')} title="List view">
+          <List size={15} />
+        </button>
+      </div>
+
+      {/* Results bar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, minHeight: 24, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+          Showing {filtered.length} of {PROPERTIES.length} {PROPERTIES.length === 1 ? 'property' : 'properties'}
+        </span>
+        {filterPills.map(pill => (
+          <span
+            key={pill.label}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 20, background: `${accent}18`, color: accent, border: `1px solid ${accent}40` }}
+          >
+            {pill.label}
+            <button onClick={pill.onRemove} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: accent, display: 'flex', alignItems: 'center', lineHeight: 1 }}>
+              <X size={10} />
+            </button>
+          </span>
+        ))}
+        {hasActiveFilters && (
+          <button onClick={clearAllFilters} style={{ fontSize: 11, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+            Clear all filters
+          </button>
+        )}
+      </div>
+
+      {/* Empty state — no properties at all */}
       {PROPERTIES.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
           <Building2 size={48} style={{ opacity: 0.3, marginBottom: 16 }} />
           <div style={{ fontSize: 16, fontWeight: 600 }}>No properties yet</div>
           <div style={{ fontSize: 14, marginTop: 8 }}>Add your first property to get started</div>
         </div>
-      ) : (
+
+      /* Empty state — filters returned nothing */
+      ) : filtered.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
+          <Search size={40} style={{ opacity: 0.3, marginBottom: 16 }} />
+          <div style={{ fontSize: 16, fontWeight: 600 }}>No properties match your filters</div>
+          <div style={{ fontSize: 14, marginTop: 8 }}>
+            <button onClick={clearAllFilters} style={{ color: accent, background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, textDecoration: 'underline' }}>
+              Clear filters
+            </button>
+          </div>
+        </div>
+
+      /* Grid view */
+      ) : viewMode === 'grid' ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
-          {PROPERTIES.map(prop => {
+          {paginated.map(prop => {
             const owner = OWNERS.find(o => o.id === prop.ownerId)
-            const dot = getComplianceDot(prop.id)
             return (
-              <div key={prop.id} style={{ position: 'relative', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
-                <PropertyCard
-                  property={{
-                    id: prop.id,
-                    name: prop.name,
-                    location: `${prop.address}, ${prop.city}`,
-                    bedrooms: prop.beds,
-                    baths: prop.baths,
-                    imageUrl: prop.imageUrl,
-                    status: prop.status,
-                  }}
-                  accent={accent}
-                  href={`/operator/properties/${prop.id}`}
-                  onClick={() => router.push(`/operator/properties/${prop.id}`)}
-                  noShell
-                />
-                {owner && (
-                  <div style={{ padding: '0 16px 12px', fontSize: 12, color: 'var(--text-subtle)' }}>
-                    Owner: {owner.name}
+              <div
+                key={prop.id}
+                style={{
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 10,
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s',
+                }}
+                onClick={() => router.push(`/operator/properties/${prop.id}`)}
+                onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
+                onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
+              >
+                {/* Image + overlaid status badge */}
+                <div style={{ position: 'relative' }}>
+                  {prop.imageUrl ? (
+                    <img src={prop.imageUrl} alt={prop.name}
+                      style={{ width: '100%', height: 180, objectFit: 'cover', display: 'block' }} />
+                  ) : (
+                    <div style={{ height: 180, background: `linear-gradient(135deg, ${accent}22, ${accent}08)`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Building2 size={40} style={{ color: accent, opacity: 0.5 }} strokeWidth={1} />
+                    </div>
+                  )}
+                  <div style={{ position: 'absolute', top: 10, right: 10 }}>
+                    <StatusBadge status={prop.status as Parameters<typeof StatusBadge>[0]['status']} />
                   </div>
-                )}
-                {/* Compliance status dot */}
-                <div
-                  title={dot.title}
-                  style={{
-                    position: 'absolute', bottom: 12, right: 12,
-                    width: 10, height: 10, borderRadius: '50%',
-                    background: dot.color,
-                    border: '2px solid var(--bg-card)',
-                    boxShadow: `0 0 0 1px ${dot.color}40`,
-                  }}
-                />
+                </div>
+
+                {/* Card body */}
+                <div style={{ padding: 16 }}>
+                  <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary)', marginBottom: 4 }}>
+                    {prop.name}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12,
+                    color: 'var(--text-muted)', marginBottom: 8 }}>
+                    <MapPin size={11} /> {prop.address}, {prop.city}
+                  </div>
+                  <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Bed size={12} /> {prop.beds} beds</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Bath size={12} /> {prop.baths} baths</span>
+                  </div>
+                  {owner && (
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>
+                      Owner: {owner.name}
+                    </div>
+                  )}
+
+                  {/* Library completion bar */}
+                  {(() => {
+                    const lib = getLibrary(prop.id)
+                    const pct = lib?.completionScore ?? 0
+                    return (
+                      <div style={{ marginBottom: 12 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11,
+                          color: 'var(--text-muted)', marginBottom: 4 }}>
+                          <span>Library completion</span>
+                          <span style={{ fontWeight: 600, color: accent }}>{pct}%</span>
+                        </div>
+                        <div style={{ height: 4, borderRadius: 2, background: 'var(--border)' }}>
+                          <div style={{ height: '100%', borderRadius: 2, background: accent, width: `${pct}%` }} />
+                        </div>
+                      </div>
+                    )
+                  })()}
+
+                  {/* View Library button */}
+                  <button
+                    onClick={e => { e.stopPropagation(); router.push(`/operator/properties/${prop.id}`) }}
+                    style={{
+                      width: '100%', padding: '8px 0', borderRadius: 6,
+                      border: `1px solid ${accent}40`, background: `${accent}14`,
+                      color: accent, fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                    }}
+                  >
+                    View Library <ChevronRight size={13} />
+                  </button>
+                </div>
               </div>
             )
           })}
+        </div>
+
+      /* List view */
+      ) : (
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+          {/* Header */}
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 100px 100px 140px 90px 110px 32px', gap: 12, padding: '10px 16px', background: 'var(--bg-subtle, var(--bg-card))', borderBottom: '1px solid var(--border)', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span>Name</span>
+            <span>Status</span>
+            <span>City</span>
+            <span>Owner</span>
+            <span>Beds/Baths</span>
+            <span>Compliance</span>
+            <span />
+          </div>
+
+          {/* Rows */}
+          {paginated.map((prop, i) => {
+            const owner = OWNERS.find(o => o.id === prop.ownerId)
+            const dot = complianceMap[prop.id]
+            return (
+              <div
+                key={prop.id}
+                onClick={() => router.push(`/operator/properties/${prop.id}`)}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '2fr 100px 100px 140px 90px 110px 32px',
+                  gap: 12,
+                  padding: '10px 16px',
+                  alignItems: 'center',
+                  borderBottom: i < paginated.length - 1 ? '1px solid var(--border)' : 'none',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover, rgba(0,0,0,0.03))')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                {/* Name + address */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                  {prop.imageUrl ? (
+                    <img src={prop.imageUrl} alt={prop.name} style={{ width: 48, height: 48, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }} />
+                  ) : (
+                    <div style={{ width: 48, height: 48, borderRadius: 6, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Building2 size={20} style={{ color: accent, opacity: 0.5 }} />
+                    </div>
+                  )}
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{prop.name}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{prop.address}</div>
+                  </div>
+                </div>
+
+                {/* Status */}
+                <div><StatusBadge status={prop.status as Parameters<typeof StatusBadge>[0]['status']} /></div>
+
+                {/* City */}
+                <div style={{ fontSize: 13, color: 'var(--text-primary)' }}>{prop.city}</div>
+
+                {/* Owner */}
+                <div style={{ fontSize: 13, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{owner?.name ?? '—'}</div>
+
+                {/* Beds/Baths */}
+                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{prop.beds}bd / {prop.baths}ba</div>
+
+                {/* Compliance */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: dot.color, flexShrink: 0, display: 'inline-block' }} />
+                  <span style={{ fontSize: 12, color: dot.color, fontWeight: 500 }}>{dot.label}</span>
+                </div>
+
+                {/* Chevron */}
+                <ChevronRight size={14} style={{ color: 'var(--text-muted)' }} />
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 24 }}>
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+            style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: page === 1 ? 'var(--text-muted)' : 'var(--text-primary)', fontSize: 13, cursor: page === 1 ? 'default' : 'pointer', opacity: page === 1 ? 0.5 : 1 }}
+          >
+            ← Previous
+          </button>
+          <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Page {page} of {totalPages}</span>
+          <button
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: page === totalPages ? 'var(--text-muted)' : 'var(--text-primary)', fontSize: 13, cursor: page === totalPages ? 'default' : 'pointer', opacity: page === totalPages ? 0.5 : 1 }}
+          >
+            Next →
+          </button>
         </div>
       )}
     </div>

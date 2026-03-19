@@ -10,6 +10,32 @@ interface ChangeEntry {
 
 const CHANGELOG: ChangeEntry[] = [
   {
+    version: 'v2.6',
+    date: 'Mar 19, 2026',
+    items: [
+      { tag: '🐛 Fix', text: 'Alerts page title is now role-aware: "Team Alerts" for supervisors, "My Alerts" for cleaners' },
+      { tag: '🐛 Fix', text: 'Demo Personas: Cleaning Supervisor (Anna K.) now lands on /app/dashboard instead of My Tasks' },
+      { tag: '🐛 Fix', text: "Fixed Cleaner home dashboard: Maria's subRole \"Cleaner\" now correctly triggers the Today's Schedule section" },
+      { tag: '🐛 Fix', text: 'Upsell Approvals section on My Tasks is now gated to supervisors only' },
+      { tag: '🐛 Fix', text: 'ClockStatus header: supervisors see "Team Overview" link instead of individual "Start Shift" button' },
+      { tag: '🐛 Fix', text: 'Floating demo panel subtitle updated to show correct destination route per persona' },
+    ],
+  },
+  {
+    version: 'v2.5',
+    date: 'Mar 19, 2026',
+    items: [
+      { tag: '⚡ Feature', text: "Operator dashboard full rewrite: 6 KPI chips, 2-column layout (Owner Approvals + Today's Operations), Who's Online staff strip, secondary accordions, 280px sticky activity sidebar" },
+      { tag: '⚡ Feature', text: 'Compliance removed from sidebar nav; /operator/compliance redirects to properties with 5-second toast' },
+      { tag: '⚡ Feature', text: 'Property cards show compliance status dot (green/amber/red) from compliance documents' },
+      { tag: '⚡ Feature', text: 'AlertsContext: new React context with seeded alerts (urgent/warning/info) + dismiss/dismissAll' },
+      { tag: '⚡ Feature', text: 'Bell dropdown wired to AlertsContext: live badge, per-alert dismiss, Mark all read' },
+      { tag: '⚡ Feature', text: 'Staff dashboard shows dismissible urgent alert banners below greeting' },
+      { tag: '⚡ Feature', text: "My Tasks: Today's Cleanings section with tight-gap indicator above upsell approvals" },
+      { tag: '🐛 Fix', text: 'Upsell approval cards on staff portal no longer show price, currency, or payment mode' },
+    ],
+  },
+  {
     version: 'v2.4',
     date: 'Mar 19, 2026',
     items: [

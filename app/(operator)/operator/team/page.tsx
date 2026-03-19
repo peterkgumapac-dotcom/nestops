@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users, Calendar, BarChart2, Plus, Clock, Home,
   CheckCircle, X, ChevronDown, ChevronRight, DollarSign, Wrench, Phone, Star,
+  FileText, ClipboardCheck,
 } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
@@ -17,8 +18,10 @@ import {
   getShiftDuration,
   type Shift, type DayOfWeek, type ShiftType,
 } from '@/lib/data/staffScheduling'
+import { LEAVE_REQUESTS, type LeaveRequest, type LeaveStatus } from '@/lib/data/leave'
+import { STAFF_CONTRACTS } from '@/lib/data/contracts'
 
-type Tab = 'roster' | 'schedule' | 'workload' | 'payroll' | 'contractors' | 'daily'
+type Tab = 'roster' | 'schedule' | 'workload' | 'payroll' | 'contractors' | 'daily' | 'leave' | 'contracts'
 
 interface Contractor {
   id: string; name: string; specialty: string; phone: string; email: string; rating: number; status: 'active' | 'inactive'
@@ -198,6 +201,8 @@ export default function TeamPage() {
   const [selectedDailyJob, setSelectedDailyJob] = useState<typeof JOBS[0] | null>(null)
 
   const workload = getWorkloadSummary()
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(LEAVE_REQUESTS)
+  const [contracts] = useState(STAFF_CONTRACTS)
   const [contractors, setContractors] = useState<Contractor[]>(INITIAL_CONTRACTORS)
   const [addDrawer, setAddDrawer] = useState(false)
   const [newName, setNewName] = useState('')
@@ -236,6 +241,8 @@ export default function TeamPage() {
         <button style={tabStyle('payroll')}     onClick={() => setTab('payroll')}>     <DollarSign size={14} /> Payroll     </button>
         <button style={tabStyle('contractors')} onClick={() => setTab('contractors')}> <Wrench size={14} /> Contractors </button>
         <button style={tabStyle('daily')}       onClick={() => setTab('daily')}>       <Calendar size={14} /> Daily       </button>
+        <button style={tabStyle('leave')}       onClick={() => setTab('leave')}>       <ClipboardCheck size={14} /> Leave{leaveRequests.filter(r => r.status === 'pending').length > 0 && <span style={{ marginLeft: 4, fontSize: 10, fontWeight: 700, padding: '1px 5px', borderRadius: 10, background: '#d9770630', color: '#d97706' }}>{leaveRequests.filter(r => r.status === 'pending').length}</span>} </button>
+        <button style={tabStyle('contracts')}   onClick={() => setTab('contracts')}>   <FileText size={14} /> Contracts   </button>
       </div>
 
       <AnimatePresence mode="wait">
@@ -843,6 +850,155 @@ export default function TeamPage() {
                 </div>
               </div>
             )}
+          </motion.div>
+        )}
+
+        {/* ── LEAVE ── */}
+        {tab === 'leave' && (
+          <motion.div key="leave" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+            {/* Summary */}
+            {(() => {
+              const pending = leaveRequests.filter(r => r.status === 'pending').length
+              const approved = leaveRequests.filter(r => r.status === 'approved').length
+              const denied = leaveRequests.filter(r => r.status === 'denied').length
+              return (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+                  {[
+                    { label: 'Pending Requests', value: pending,  color: '#d97706' },
+                    { label: 'Approved',          value: approved, color: '#16a34a' },
+                    { label: 'Denied',            value: denied,   color: '#dc2626' },
+                  ].map(({ label, value, color }) => (
+                    <div key={label} style={{ padding: '16px 18px', background: 'var(--bg-card)', border: `1px solid ${color}30`, borderRadius: 10 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-subtle)', textTransform: 'uppercase', marginBottom: 6 }}>{label}</div>
+                      <div style={{ fontSize: 24, fontWeight: 700, color, letterSpacing: '-0.02em' }}>{value}</div>
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
+
+            {/* Leave requests table */}
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+              <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
+                <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Leave Requests</h2>
+              </div>
+
+              {/* Table header */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 1fr 50px 1fr 100px 130px', gap: 0, padding: '8px 20px', background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
+                {['Staff', 'Type', 'Dates', 'Days', 'Reason', 'Status', ''].map(h => (
+                  <div key={h} style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-subtle)', textTransform: 'uppercase' }}>{h}</div>
+                ))}
+              </div>
+
+              {leaveRequests.map((req, i) => {
+                const statusMap: Record<LeaveStatus, { bg: string; color: string; label: string }> = {
+                  pending:  { bg: '#d9770618', color: '#d97706', label: 'Pending' },
+                  approved: { bg: '#16a34a18', color: '#16a34a', label: 'Approved' },
+                  denied:   { bg: '#dc262618', color: '#dc2626', label: 'Denied' },
+                }
+                const s = statusMap[req.status]
+                return (
+                  <div key={req.id} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 1fr 50px 1fr 100px 130px', gap: 0, padding: '13px 20px', borderBottom: i < leaveRequests.length - 1 ? '1px solid var(--border)' : 'none', alignItems: 'center', background: req.status === 'pending' ? '#d9770606' : 'transparent' }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{req.staffName}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', textTransform: 'capitalize' }}>{req.type}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{req.from} – {req.to}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{req.days}d</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-subtle)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{req.reason ?? req.reviewNote ?? '—'}</div>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: s.bg, color: s.color, width: 'fit-content' }}>{s.label}</span>
+                    {req.status === 'pending' ? (
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          onClick={() => {
+                            setLeaveRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'approved', reviewedBy: 'Operator' } : r))
+                            showCToast('Leave approved')
+                          }}
+                          style={{ padding: '5px 10px', borderRadius: 6, border: 'none', background: '#16a34a', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => {
+                            setLeaveRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'denied', reviewedBy: 'Operator' } : r))
+                            showCToast('Leave denied')
+                          }}
+                          style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          Deny
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>
+                        {req.reviewedBy ? `By ${req.reviewedBy}` : ''}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── CONTRACTS ── */}
+        {tab === 'contracts' && (
+          <motion.div key="contracts" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
+              {contracts.map(c => {
+                const empTypeLabel: Record<string, string> = { full_time: 'Full Time', part_time: 'Part Time', casual: 'Casual', contractor: 'Contractor' }
+                const statusMap: Record<string, { bg: string; color: string }> = {
+                  active:  { bg: '#16a34a18', color: '#16a34a' },
+                  expired: { bg: '#dc262618', color: '#dc2626' },
+                  draft:   { bg: 'var(--bg-elevated)', color: 'var(--text-muted)' },
+                }
+                const sm = statusMap[c.status]
+                return (
+                  <div key={c.staffId} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    {/* Header */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 42, height: 42, borderRadius: '50%', background: `${accent}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: accent, flexShrink: 0 }}>
+                        {c.staffName.split(' ').map(p => p[0]).join('')}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{c.staffName}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
+                          <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 8px', borderRadius: 20, background: `${accent}18`, color: accent }}>
+                            {empTypeLabel[c.employmentType]}
+                          </span>
+                          <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 8px', borderRadius: 20, background: sm.bg, color: sm.color, textTransform: 'capitalize' }}>
+                            {c.status}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stats */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+                      {[
+                        { label: 'Start Date',    value: c.startDate },
+                        { label: 'Rate',          value: `NOK ${c.hourlyRate}/hr` },
+                        { label: 'Weekly Hours',  value: `${c.weeklyHours}h` },
+                        { label: 'Notice Period', value: `${c.noticePeriodDays} days` },
+                      ].map(({ label, value }) => (
+                        <div key={label} style={{ padding: '8px 10px', background: 'var(--bg-elevated)', borderRadius: 7 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-subtle)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 3 }}>{label}</div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{value}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Benefits */}
+                    <div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-subtle)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 7 }}>Benefits</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                        {c.benefits.map(b => (
+                          <span key={b} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: `${accent}12`, color: accent }}>{b}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </motion.div>
         )}
 

@@ -18,6 +18,7 @@ import { APPROVALS, type Approval } from '@/lib/data/approvals'
 import { JOBS, STAFF_MEMBERS } from '@/lib/data/staff'
 import { UPSELL_APPROVAL_REQUESTS } from '@/lib/data/upsellApprovals'
 import { useRole } from '@/context/RoleContext'
+import { FEED_ITEMS, filterFeed, type FeedTab } from '@/lib/data/activityFeed'
 
 // ─── Team clock status (same as staff dashboard) ────────────────────────────
 const TEAM_CLOCK_STATUS = [
@@ -27,14 +28,6 @@ const TEAM_CLOCK_STATUS = [
   { id: 'jl', name: 'Johan L.', initials: 'JL', avatarBg: '#6b7280', role: 'Cleaning',       property: 'Harbor Studio',  clockedIn: false, late: false },
 ]
 
-// ─── Activity feed data ──────────────────────────────────────────────────────
-const ACTIVITY_ITEMS = [
-  { time: '2 min ago', actor: 'Anna Hansen', action: 'marked task complete', detail: 'Cleaning — Sunset Villa', color: '#10b981' },
-  { time: '14 min ago', actor: 'Lars Eriksen', action: 'logged a guest issue', detail: 'Noise complaint — Harbor Studio', color: '#ef4444' },
-  { time: '31 min ago', actor: 'Sofia Berg', action: 'submitted field report', detail: 'Broken window latch — Ocean View Apt', color: '#d97706' },
-  { time: '1h ago', actor: 'Operator', action: 'approved refund', detail: '750 NOK — Downtown Loft', color: '#6366f1' },
-  { time: '2h ago', actor: 'Magnus Dahl', action: 'clocked in', detail: 'Staff portal', color: '#7c3aed' },
-]
 
 interface FieldReport {
   id: string; property: string; issueType: string; urgency: 'Urgent' | 'Standard'; description: string; reporter: string; time: string
@@ -80,6 +73,7 @@ export default function OperatorDashboard() {
   const [qaReviewItem, setQaReviewItem] = useState<QaPendingItem | null>(null)
   const [toast, setToast] = useState('')
   const [openSection, setOpenSection] = useState<string | null>(null)
+  const [feedTab, setFeedTab] = useState<FeedTab>('all')
   const [pendingPOApprovals, setPendingPOApprovals] = useState(
     PURCHASE_ORDERS.filter(po => po.approvalTier === 'manager' && po.approvalStatus === 'pending')
   )
@@ -133,7 +127,7 @@ export default function OperatorDashboard() {
   ]
 
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <PageHeader title="Dashboard" subtitle="Operations overview" />
 
       {/* ─── KPI Chips ─────────────────────────────────────────────────────── */}
@@ -193,10 +187,10 @@ export default function OperatorDashboard() {
       })()}
 
       {/* ─── Outer layout: main + activity sidebar ─────────────────────────── */}
-      <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', gap: 20, flex: 1, overflow: 'hidden' }}>
 
         {/* ── MAIN CONTENT ─────────────────────────────────────────────────── */}
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'auto', paddingRight: 4 }}>
 
           {/* ── Main 2-col grid ────────────────────────────────────────────── */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
@@ -500,8 +494,6 @@ export default function OperatorDashboard() {
         {/* ── ACTIVITY SIDEBAR ─────────────────────────────────────────────── */}
         <div style={{
           width: 280, flexShrink: 0,
-          position: 'sticky', top: 0,
-          height: 'calc(100vh - 52px)',
           overflowY: 'auto',
           background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10,
         }}>
@@ -520,29 +512,67 @@ export default function OperatorDashboard() {
             </span>
           </div>
 
+          {/* Tab bar */}
+          <div style={{ display: 'flex', gap: 2, padding: '8px 12px', borderBottom: '1px solid var(--border)' }}>
+            {(['all', 'in_progress', 'completed', 'issues'] as FeedTab[]).map(tab => (
+              <button key={tab} onClick={() => setFeedTab(tab)} style={{
+                flex: 1, padding: '4px 0', fontSize: 11, fontWeight: feedTab === tab ? 600 : 400,
+                borderRadius: 5, border: 'none', cursor: 'pointer',
+                background: feedTab === tab ? `${accent}18` : 'transparent',
+                color: feedTab === tab ? accent : 'var(--text-muted)',
+              }}>
+                {tab === 'all' ? 'All' : tab === 'in_progress' ? 'In progress' : tab === 'completed' ? 'Completed' : 'Issues'}
+              </button>
+            ))}
+          </div>
+
           {/* Feed items */}
           <div style={{ padding: '4px 0' }}>
-            {ACTIVITY_ITEMS.map((item, i) => (
-              <div
-                key={i}
-                style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 10,
-                  padding: '12px 16px',
-                  borderBottom: i < ACTIVITY_ITEMS.length - 1 ? '1px solid var(--border-subtle)' : 'none',
-                  minHeight: 48,
-                }}
-              >
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: item.color, flexShrink: 0, marginTop: 5 }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12, lineHeight: 1.4 }}>
-                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.actor}</span>
-                    <span style={{ color: 'var(--text-muted)' }}> {item.action}</span>
+            {filterFeed(FEED_ITEMS, feedTab).map((item, i, arr) => {
+              const isRich = item.type === 'in_progress' || item.type === 'blocked' || item.type === 'en_route'
+              return (
+                <div
+                  key={item.id}
+                  style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 10,
+                    padding: '12px 16px',
+                    borderBottom: i < arr.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                    minHeight: 48,
+                  }}
+                >
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: item.color, flexShrink: 0, marginTop: 5 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {isRich ? (
+                      <>
+                        <div style={{ fontSize: 12, lineHeight: 1.4 }}>
+                          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.actor}</span>
+                          <span style={{ color: 'var(--text-muted)' }}> — {item.action} {item.property}</span>
+                          {item.detail && <span style={{ color: 'var(--text-subtle)' }}> · {item.detail}</span>}
+                        </div>
+                        {item.statusLabel && (
+                          <div style={{ fontSize: 11, fontWeight: 600, color: item.color, marginTop: 3 }}>{item.statusLabel}</div>
+                        )}
+                        {item.type === 'in_progress' && item.progress !== undefined && (
+                          <div style={{ marginTop: 5, height: 4, borderRadius: 2, background: 'var(--border)', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${item.progress}%`, background: item.color, borderRadius: 2 }} />
+                          </div>
+                        )}
+                        <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginTop: 4 }}>{item.time}</div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ fontSize: 12, lineHeight: 1.4 }}>
+                          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.actor}</span>
+                          <span style={{ color: 'var(--text-muted)' }}> {item.action}</span>
+                          {item.detail && <span style={{ color: 'var(--text-muted)' }}> — {item.detail} · {item.property}</span>}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginTop: 2 }}>{item.time}</div>
+                      </>
+                    )}
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>— {item.detail}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginTop: 2 }}>{item.time}</div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>

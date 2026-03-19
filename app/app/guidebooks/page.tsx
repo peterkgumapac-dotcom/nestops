@@ -338,7 +338,7 @@ export default function AppGuidebooksPage() {
                   >
                     <Edit size={12} /> Edit
                   </button>
-                  <button style={{ flex: 1, padding: '7px', borderRadius: 7, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                  <button onClick={() => window.open(`/guest/guidebook/${g.id}`, '_blank')} style={{ flex: 1, padding: '7px', borderRadius: 7, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
                     <Eye size={12} /> Preview
                   </button>
                 </div>

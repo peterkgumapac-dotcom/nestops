@@ -3,7 +3,7 @@ import { useState, use, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { GUEST_VERIFICATIONS } from '@/lib/data/verification'
 import { GUIDEBOOKS } from '@/lib/data/guidebooks'
-import { Shield, Upload, FileText, CheckSquare, CreditCard, ChevronRight, Lock, Check, Camera } from 'lucide-react'
+import { Shield, FileText, CheckSquare, CreditCard, ChevronRight, Lock, Check, Camera } from 'lucide-react'
 
 const TOTAL_STEPS = 5
 
@@ -51,6 +51,23 @@ This agreement shall be governed by the laws of the jurisdiction where the prope
 
 By signing below, Guest acknowledges reading, understanding, and agreeing to all terms of this Agreement.`
 
+const C = {
+  bg:          '#07090E',
+  surface:     '#0D1117',
+  card:        '#131920',
+  elevated:    '#1A2130',
+  border:      '#1E2A38',
+  borderFaint: '#131924',
+  text:        '#F0F4FA',
+  textSub:     '#B8C0CC',
+  textMuted:   '#6B7585',
+  textFaint:   '#3D4555',
+  green:       '#10b981',
+  amber:       '#f59e0b',
+  blue:        '#60a5fa',
+  red:         '#f87171',
+}
+
 export default function GuestVerifyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
@@ -81,6 +98,11 @@ export default function GuestVerifyPage({ params }: { params: Promise<{ id: stri
   // Step 5 state
   const [depositState, setDepositState] = useState<'idle' | 'processing' | 'confirmed'>('idle')
 
+  // Swipe + agreement state
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [swipeDir, setSwipeDir] = useState<'forward' | 'back'>('forward')
+  const [agreementExpanded, setAgreementExpanded] = useState(false)
+
   const accentColor = guidebook?.brandColor ?? '#7c3aed'
 
   useEffect(() => {
@@ -96,10 +118,10 @@ export default function GuestVerifyPage({ params }: { params: Promise<{ id: stri
 
   if (!verification) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
+      <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
         <div style={{ fontSize: 32 }}>🔐</div>
-        <div style={{ color: '#f0f0f0', fontSize: 18, fontWeight: 600 }}>Verification link not found</div>
-        <div style={{ color: '#888', fontSize: 14 }}>This link may have expired or is invalid.</div>
+        <div style={{ color: C.text, fontSize: 18, fontWeight: 600 }}>Verification link not found</div>
+        <div style={{ color: C.textMuted, fontSize: 14 }}>This link may have expired or is invalid.</div>
       </div>
     )
   }
@@ -107,18 +129,24 @@ export default function GuestVerifyPage({ params }: { params: Promise<{ id: stri
   const canAdvance = (() => {
     if (step === 1) return nameConfirmed && phoneConfirmed
     if (step === 2) return idFile !== null
-    if (step === 3) return agreementScrolled && agreementChecked && signature.trim().length >= 2
+    if (step === 3) return (agreementExpanded ? agreementScrolled : true) && signature.trim().length >= 2
     if (step === 4) return ruleChecks.every(Boolean)
     if (step === 5) return depositState === 'confirmed'
     return false
   })()
 
   const advance = () => {
+    setSwipeDir('forward')
     if (step < TOTAL_STEPS) {
       setStep(s => s + 1)
     } else {
       setCompleted(true)
     }
+  }
+
+  const goBack = () => {
+    setSwipeDir('back')
+    setStep(s => s - 1)
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -134,6 +162,7 @@ export default function GuestVerifyPage({ params }: { params: Promise<{ id: stri
     const el = e.currentTarget
     if (el.scrollTop + el.clientHeight >= el.scrollHeight - 20) {
       setAgreementScrolled(true)
+      setAgreementChecked(true)
     }
   }
 
@@ -146,351 +175,320 @@ export default function GuestVerifyPage({ params }: { params: Promise<{ id: stri
     setRuleChecks(prev => prev.map((v, idx) => idx === i ? !v : v))
   }
 
-  const cardStyle: React.CSSProperties = {
-    background: '#111827',
-    border: '1px solid #1f2937',
-    borderRadius: 12,
-    padding: '20px',
-  }
-
-  const ctaBtnStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '14px',
-    borderRadius: 10,
-    border: 'none',
-    background: canAdvance ? accentColor : '#1f2937',
-    color: canAdvance ? '#fff' : '#4b5563',
-    fontSize: 15,
-    fontWeight: 600,
-    cursor: canAdvance ? 'pointer' : 'not-allowed',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    transition: 'background 0.2s',
-  }
-
   if (completed) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, padding: 24 }}>
-        <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#10b98120', border: '2px solid #10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Check size={28} style={{ color: '#10b981' }} />
+      <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, padding: 24 }}>
+        <div style={{ width: 72, height: 72, borderRadius: '50%', background: `${C.green}20`, border: `2px solid ${C.green}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Check size={32} style={{ color: C.green }} />
         </div>
-        <div style={{ color: '#f0f0f0', fontSize: 22, fontWeight: 700, textAlign: 'center' }}>Verification Complete!</div>
-        <div style={{ color: '#6b7280', fontSize: 14, textAlign: 'center' }}>Unlocking your guidebook…</div>
-        <div style={{ width: 40, height: 3, borderRadius: 2, background: accentColor, animation: 'pulse 1s infinite' }} />
+        <div style={{ color: C.text, fontSize: 24, fontWeight: 700, textAlign: 'center', letterSpacing: '-0.02em' }}>Verification Complete</div>
+        <div style={{ color: C.textMuted, fontSize: 14, textAlign: 'center' }}>Unlocking your guidebook…</div>
+        <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+          {[0.4, 0.65, 0.9].map((op, i) => (
+            <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: accentColor, opacity: op }} />
+          ))}
+        </div>
       </div>
     )
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: 48 }}>
+    <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: 60 }}>
+      <style>{`
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(20px) } to { opacity: 1; transform: none } }
+        @keyframes slideInLeft  { from { opacity: 0; transform: translateX(-20px) } to { opacity: 1; transform: none } }
+        @keyframes spin { to { transform: rotate(360deg) } }
+      `}</style>
+
       <div style={{ width: '100%', maxWidth: 480 }}>
 
         {/* Header */}
-        <div style={{ padding: '24px 20px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: `${accentColor}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Shield size={16} style={{ color: accentColor }} />
-            </div>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#f0f0f0' }}>Guest Verification</div>
-              <div style={{ fontSize: 11, color: '#6b7280' }}>{verification.propertyName}</div>
-            </div>
+        <div style={{ padding: '32px 20px 0' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: accentColor, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+            {verification.propertyName}
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: C.text, letterSpacing: '-0.02em', marginBottom: 20 }}>
+            {STEP_META[step - 1].label}
           </div>
 
-          {/* Progress bar */}
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 500 }}>Step {step} of {TOTAL_STEPS}</span>
-              <span style={{ fontSize: 12, color: accentColor, fontWeight: 600 }}>{STEP_META[step - 1].label}</span>
-            </div>
-            <div style={{ height: 4, background: '#1f2937', borderRadius: 2 }}>
-              <div style={{ height: '100%', width: `${(step / TOTAL_STEPS) * 100}%`, background: accentColor, borderRadius: 2, transition: 'width 0.3s' }} />
-            </div>
-            {/* Step dots */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-              {STEP_META.map((s, i) => {
-                const done = i + 1 < step
-                const active = i + 1 === step
-                return (
-                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: done ? accentColor : active ? `${accentColor}30` : '#1f2937', border: `2px solid ${done || active ? accentColor : '#374151'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
-                      {done
-                        ? <Check size={12} style={{ color: '#fff' }} />
-                        : <span style={{ fontSize: 9, fontWeight: 700, color: active ? accentColor : '#4b5563' }}>{i + 1}</span>
-                      }
-                    </div>
-                    <span style={{ fontSize: 9, color: active ? accentColor : '#4b5563', fontWeight: active ? 600 : 400 }}>{s.short}</span>
-                  </div>
-                )
-              })}
-            </div>
+          {/* Segmented progress bar */}
+          <div style={{ display: 'flex', gap: 3, marginBottom: 6 }}>
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} style={{ flex: 1, height: 3, borderRadius: 3, background: i <= step ? accentColor : C.elevated, transition: 'background 0.3s' }} />
+            ))}
+          </div>
+          <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 24 }}>
+            Step {step} of {TOTAL_STEPS} · {STEP_META[step - 1].short}
           </div>
         </div>
 
-        <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div
+          style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 14 }}
+          onTouchStart={(e) => setTouchStart(e.touches[0].clientX)}
+          onTouchEnd={(e) => {
+            if (touchStart === null) return
+            const delta = e.changedTouches[0].clientX - touchStart
+            if (Math.abs(delta) < 60) { setTouchStart(null); return }
+            if (delta < 0 && canAdvance) advance()
+            if (delta > 0 && step > 1) goBack()
+            setTouchStart(null)
+          }}
+        >
 
-          {/* ─── STEP 1: Confirm Info ─── */}
-          {step === 1 && (
-            <>
-              <div style={cardStyle}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#f0f0f0', marginBottom: 6 }}>Confirm Your Info</div>
-                <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 20, lineHeight: 1.5 }}>
-                  Please verify that the details below match your booking. Tap each item to confirm.
-                </div>
+          {/* Animated step wrapper */}
+          <div key={step} style={{ animation: `${swipeDir === 'forward' ? 'slideInRight' : 'slideInLeft'} 0.25s ease-out both` }}>
 
-                {/* Name */}
-                <div
-                  onClick={() => setNameConfirmed(v => !v)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px', borderRadius: 10, background: nameConfirmed ? `${accentColor}15` : '#0d1525', border: `1px solid ${nameConfirmed ? accentColor : '#1f2937'}`, cursor: 'pointer', marginBottom: 10, transition: 'all 0.15s' }}
-                >
-                  <div style={{ width: 20, height: 20, borderRadius: 4, border: `2px solid ${nameConfirmed ? accentColor : '#374151'}`, background: nameConfirmed ? accentColor : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
-                    {nameConfirmed && <Check size={12} style={{ color: '#fff' }} />}
+            {/* ─── STEP 1: Identity ─── */}
+            {step === 1 && (
+              <div style={{ background: C.surface, borderRadius: 14, padding: 20, boxShadow: `0 1px 3px rgba(0,0,0,0.4), 0 0 0 1px ${C.border}` }}>
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: C.text, letterSpacing: '-0.02em', marginBottom: 4 }}>
+                    {verification.guestName}
                   </div>
-                  <div>
-                    <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 2 }}>Full Name</div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#f0f0f0' }}>{verification.guestName}</div>
-                  </div>
+                  <div style={{ fontSize: 15, color: C.textSub }}>{verification.guestEmail}</div>
                 </div>
 
-                {/* Phone (simulated from email) */}
-                <div
-                  onClick={() => setPhoneConfirmed(v => !v)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px', borderRadius: 10, background: phoneConfirmed ? `${accentColor}15` : '#0d1525', border: `1px solid ${phoneConfirmed ? accentColor : '#1f2937'}`, cursor: 'pointer', transition: 'all 0.15s' }}
-                >
-                  <div style={{ width: 20, height: 20, borderRadius: 4, border: `2px solid ${phoneConfirmed ? accentColor : '#374151'}`, background: phoneConfirmed ? accentColor : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
-                    {phoneConfirmed && <Check size={12} style={{ color: '#fff' }} />}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 2 }}>Email Address</div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#f0f0f0' }}>{verification.guestEmail}</div>
-                  </div>
+                <div style={{ padding: '12px 14px', borderRadius: 10, background: C.card, borderLeft: `3px solid ${accentColor}`, marginBottom: 24 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>Booking</div>
+                  <div style={{ fontSize: 13, color: C.textSub, marginBottom: 2 }}>{verification.propertyName}</div>
+                  <div style={{ fontSize: 12, color: C.textMuted }}>{verification.checkInDate} → {verification.checkOutDate}</div>
                 </div>
 
-                <div style={{ marginTop: 14, padding: '10px 12px', borderRadius: 8, background: '#0d1525', border: '1px solid #1f2937' }}>
-                  <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 2 }}>Property</div>
-                  <div style={{ fontSize: 13, color: '#d0d0d0' }}>{verification.propertyName} · {verification.checkInDate} → {verification.checkOutDate}</div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* ─── STEP 2: Upload ID ─── */}
-          {step === 2 && (
-            <div style={cardStyle}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#f0f0f0', marginBottom: 6 }}>Upload Government ID</div>
-              <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 20, lineHeight: 1.5 }}>
-                Please upload a clear photo of the front of your government-issued photo ID (passport, driver&apos;s licence, or national ID card).
-              </div>
-
-              <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} style={{ display: 'none' }} />
-
-              {idPreview ? (
-                <div style={{ marginBottom: 16 }}>
-                  <img src={idPreview} alt="ID preview" style={{ width: '100%', borderRadius: 10, border: `2px solid ${accentColor}`, objectFit: 'cover', maxHeight: 200 }} />
-                  <button
-                    onClick={() => { setIdFile(null); setIdPreview(null) }}
-                    style={{ marginTop: 10, width: '100%', padding: '8px', borderRadius: 8, border: '1px solid #374151', background: 'transparent', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}
-                  >
-                    Remove & retake
-                  </button>
-                </div>
-              ) : (
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  style={{ border: '2px dashed #374151', borderRadius: 12, padding: '40px 20px', textAlign: 'center', cursor: 'pointer', marginBottom: 12, transition: 'border-color 0.15s' }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = accentColor)}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = '#374151')}
-                >
-                  <Upload size={32} style={{ color: '#374151', marginBottom: 12 }} />
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#d0d0d0', marginBottom: 6 }}>Tap to upload or take photo</div>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>JPG, PNG or HEIC · max 10MB</div>
-                </div>
-              )}
-
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => fileInputRef.current?.click()} style={{ flex: 1, padding: '10px', borderRadius: 8, border: `1px solid ${accentColor}`, background: `${accentColor}18`, color: accentColor, fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                  <Camera size={14} /> Take Photo
-                </button>
-                <button onClick={() => fileInputRef.current?.click()} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #374151', background: 'transparent', color: '#9ca3af', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                  <Upload size={14} /> Upload File
-                </button>
-              </div>
-
-              <div style={{ marginTop: 14, padding: '10px 12px', borderRadius: 8, background: '#0a1628', border: '1px solid #1e3a5f', fontSize: 12, color: '#60a5fa', lineHeight: 1.5 }}>
-                🔒 Your ID is encrypted and used only for verification. It is never stored permanently.
-              </div>
-            </div>
-          )}
-
-          {/* ─── STEP 3: Sign Agreement ─── */}
-          {step === 3 && (
-            <div style={cardStyle}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#f0f0f0', marginBottom: 6 }}>Rental Agreement</div>
-              <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 14, lineHeight: 1.5 }}>
-                Please read the agreement below in full, then sign to confirm your acceptance.
-              </div>
-
-              {/* Scrollable agreement */}
-              <div
-                ref={agreementRef}
-                onScroll={handleAgreementScroll}
-                style={{ height: 200, overflowY: 'auto', background: '#0d1525', border: '1px solid #1f2937', borderRadius: 8, padding: '14px', marginBottom: 14, fontSize: 12, color: '#9ca3af', lineHeight: 1.7, whiteSpace: 'pre-line' }}
-              >
-                {RENTAL_AGREEMENT}
-              </div>
-
-              {!agreementScrolled && (
-                <div style={{ fontSize: 11, color: '#f59e0b', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
-                  ↑ Scroll to the bottom of the agreement to continue
-                </div>
-              )}
-
-              {/* I agree checkbox */}
-              <div
-                onClick={() => agreementScrolled && setAgreementChecked(v => !v)}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px', borderRadius: 8, background: agreementChecked ? `${accentColor}12` : '#0d1525', border: `1px solid ${agreementChecked ? accentColor : '#1f2937'}`, cursor: agreementScrolled ? 'pointer' : 'not-allowed', marginBottom: 14, opacity: agreementScrolled ? 1 : 0.4, transition: 'all 0.15s' }}
-              >
-                <div style={{ width: 20, height: 20, borderRadius: 4, border: `2px solid ${agreementChecked ? accentColor : '#374151'}`, background: agreementChecked ? accentColor : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  {agreementChecked && <Check size={12} style={{ color: '#fff' }} />}
-                </div>
-                <span style={{ fontSize: 13, color: '#d0d0d0' }}>I have read and agree to the Rental Agreement</span>
-              </div>
-
-              {/* Signature */}
-              <div>
-                <label style={{ fontSize: 11, color: '#6b7280', display: 'block', marginBottom: 6 }}>Digital Signature — type your full name</label>
-                <input
-                  value={signature}
-                  onChange={e => setSignature(e.target.value)}
-                  placeholder={verification.guestName}
-                  disabled={!agreementChecked}
-                  style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: `1px solid ${signature.trim().length >= 2 ? accentColor : '#1f2937'}`, background: '#0d1525', color: '#f0f0f0', fontSize: 16, fontFamily: 'Georgia, serif', outline: 'none', opacity: agreementChecked ? 1 : 0.4, boxSizing: 'border-box' }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* ─── STEP 4: House Rules ─── */}
-          {step === 4 && (
-            <div style={cardStyle}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#f0f0f0', marginBottom: 6 }}>House Rules</div>
-              <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 18, lineHeight: 1.5 }}>
-                Please acknowledge each rule by tapping it. All rules must be accepted to continue.
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {HOUSE_RULES.map((rule, i) => (
-                  <div
-                    key={i}
-                    onClick={() => toggleRule(i)}
-                    style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px', borderRadius: 10, background: ruleChecks[i] ? `${accentColor}12` : '#0d1525', border: `1px solid ${ruleChecks[i] ? accentColor : '#1f2937'}`, cursor: 'pointer', transition: 'all 0.15s' }}
-                  >
-                    <div style={{ width: 20, height: 20, borderRadius: 4, border: `2px solid ${ruleChecks[i] ? accentColor : '#374151'}`, background: ruleChecks[i] ? accentColor : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, transition: 'all 0.15s' }}>
-                      {ruleChecks[i] && <Check size={12} style={{ color: '#fff' }} />}
-                    </div>
-                    <span style={{ fontSize: 13, color: '#d0d0d0', lineHeight: 1.5 }}>{rule}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ marginTop: 14, padding: '8px 12px', borderRadius: 8, background: '#0d1525', border: '1px solid #1f2937', fontSize: 12, color: '#6b7280' }}>
-                {ruleChecks.filter(Boolean).length} of {HOUSE_RULES.length} rules acknowledged
-              </div>
-            </div>
-          )}
-
-          {/* ─── STEP 5: Security Deposit ─── */}
-          {step === 5 && (
-            <div style={cardStyle}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#f0f0f0', marginBottom: 6 }}>Security Deposit</div>
-              <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 20, lineHeight: 1.5 }}>
-                A pre-authorization hold will be placed on your card. This is not a charge — it will be released after your stay if there are no damages.
-              </div>
-
-              {/* Deposit summary */}
-              <div style={{ background: '#0d1525', border: '1px solid #1f2937', borderRadius: 10, padding: '16px', marginBottom: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <span style={{ fontSize: 13, color: '#9ca3af' }}>Security Deposit</span>
-                  <span style={{ fontSize: 18, fontWeight: 700, color: '#f0f0f0' }}>NOK 3,000</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <span style={{ fontSize: 12, color: '#6b7280' }}>Property</span>
-                  <span style={{ fontSize: 12, color: '#9ca3af' }}>{verification.propertyName}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 12, color: '#6b7280' }}>Hold type</span>
-                  <span style={{ fontSize: 12, color: '#10b981', fontWeight: 600 }}>Pre-auth only · Released after checkout</span>
-                </div>
-              </div>
-
-              {/* Card mock */}
-              <div style={{ background: 'linear-gradient(135deg, #1e3a5f, #0d1525)', border: '1px solid #1f2937', borderRadius: 12, padding: '16px', marginBottom: 16, position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: `${accentColor}20` }} />
-                <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 12 }}>Payment Method</div>
-                <div style={{ fontSize: 18, fontFamily: 'monospace', color: '#d0d0d0', letterSpacing: '0.12em', marginBottom: 12 }}>•••• •••• •••• 4242</div>
-                <div style={{ display: 'flex', gap: 20 }}>
-                  <div>
-                    <div style={{ fontSize: 9, color: '#6b7280', marginBottom: 2 }}>EXPIRES</div>
-                    <div style={{ fontSize: 12, color: '#9ca3af' }}>12/28</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 9, color: '#6b7280', marginBottom: 2 }}>CARD HOLDER</div>
-                    <div style={{ fontSize: 12, color: '#9ca3af' }}>{verification.guestName.toUpperCase()}</div>
-                  </div>
-                </div>
-              </div>
-
-              {depositState === 'idle' && (
                 <button
-                  onClick={handleDepositAuthorize}
+                  onClick={() => { setNameConfirmed(true); setPhoneConfirmed(true); setSwipeDir('forward'); setStep(s => s + 1) }}
                   style={{ width: '100%', padding: '14px', borderRadius: 10, border: 'none', background: accentColor, color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                 >
-                  <CreditCard size={16} /> Authorize Hold — NOK 3,000
+                  Yes, this is me <ChevronRight size={16} />
                 </button>
-              )}
-
-              {depositState === 'processing' && (
-                <div style={{ padding: '14px', borderRadius: 10, background: '#1f2937', textAlign: 'center', color: '#9ca3af', fontSize: 14 }}>
-                  Processing with Stripe…
-                </div>
-              )}
-
-              {depositState === 'confirmed' && (
-                <div style={{ padding: '14px', borderRadius: 10, background: '#10b98120', border: '1px solid #10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#10b981', fontSize: 14, fontWeight: 600 }}>
-                  <Check size={16} /> Authorization confirmed
-                </div>
-              )}
-
-              <div style={{ marginTop: 14, fontSize: 11, color: '#4b5563', textAlign: 'center', lineHeight: 1.5 }}>
-                Powered by Stripe · Your payment is secured with 256-bit encryption
               </div>
-            </div>
+            )}
+
+            {/* ─── STEP 2: Upload ID ─── */}
+            {step === 2 && (
+              <div style={{ background: C.surface, borderRadius: 14, padding: 20, boxShadow: `0 1px 3px rgba(0,0,0,0.4), 0 0 0 1px ${C.border}` }}>
+                <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} style={{ display: 'none' }} />
+
+                {idPreview ? (
+                  <div style={{ position: 'relative', height: 160, borderRadius: 12, overflow: 'hidden', marginBottom: 14 }}>
+                    <img src={idPreview} alt="ID preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <button
+                      onClick={() => { setIdFile(null); setIdPreview(null) }}
+                      style={{ position: 'absolute', top: 10, right: 10, padding: '5px 12px', borderRadius: 100, background: 'rgba(0,0,0,0.75)', border: 'none', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      Retake
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{ height: 160, borderRadius: 12, background: C.card, border: `2px dashed ${C.border}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer', marginBottom: 14 }}
+                  >
+                    <Camera size={36} style={{ color: accentColor }} />
+                    <div style={{ fontSize: 15, fontWeight: 600, color: C.text }}>Take or upload photo</div>
+                    <div style={{ fontSize: 12, color: C.textMuted }}>Passport · Driver&apos;s licence · National ID</div>
+                  </div>
+                )}
+
+                <div style={{ padding: '10px 12px', borderRadius: 10, background: '#0a1628', border: '1px solid #1e3a5f', fontSize: 12, color: C.blue, lineHeight: 1.5 }}>
+                  🔒 Your ID is encrypted and used only for verification. It is never stored permanently.
+                </div>
+              </div>
+            )}
+
+            {/* ─── STEP 3: Agreement ─── */}
+            {step === 3 && (
+              <div style={{ background: C.surface, borderRadius: 14, padding: 20, boxShadow: `0 1px 3px rgba(0,0,0,0.4), 0 0 0 1px ${C.border}` }}>
+
+                {agreementExpanded ? (
+                  <div style={{ position: 'relative', marginBottom: 14 }}>
+                    <div
+                      ref={agreementRef}
+                      onScroll={handleAgreementScroll}
+                      style={{ height: 180, overflowY: 'auto', background: C.card, borderRadius: 10, padding: '16px', fontSize: 13, color: C.textSub, lineHeight: 1.75, fontFamily: 'Georgia, serif', whiteSpace: 'pre-line' }}
+                    >
+                      {RENTAL_AGREEMENT}
+                    </div>
+                    {!agreementScrolled && (
+                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 60, background: `linear-gradient(transparent, ${C.card})`, borderRadius: '0 0 10px 10px', pointerEvents: 'none' }} />
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>Key Terms</div>
+                    {[
+                      'Occupancy limit as stated in your booking',
+                      'No damage beyond normal wear and tear',
+                      'Follow all house rules',
+                      'Payment as agreed in booking confirmation',
+                      'Cancellation per booking policy',
+                    ].map((bullet, i, arr) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 0', borderBottom: i < arr.length - 1 ? `1px solid ${C.borderFaint}` : 'none' }}>
+                        <span style={{ color: accentColor, fontWeight: 700, fontSize: 13, flexShrink: 0 }}>·</span>
+                        <span style={{ fontSize: 13, color: C.textSub, lineHeight: 1.5 }}>{bullet}</span>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => setAgreementExpanded(true)}
+                      style={{ marginTop: 12, background: 'none', border: 'none', cursor: 'pointer', color: C.blue, fontSize: 12, padding: 0 }}
+                    >
+                      Read full agreement ↓
+                    </button>
+                  </div>
+                )}
+
+                {agreementExpanded && !agreementScrolled && (
+                  <div style={{ fontSize: 11, color: C.amber, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    ↓ Scroll to read the full agreement to continue
+                  </div>
+                )}
+
+                {(!agreementExpanded || agreementScrolled) && (
+                  <div style={{ marginTop: 4 }}>
+                    <div style={{ fontSize: 13, color: C.textSub, fontWeight: 500, marginBottom: 14 }}>I agree and sign below</div>
+                    <input
+                      value={signature}
+                      onChange={e => setSignature(e.target.value)}
+                      placeholder={verification.guestName}
+                      style={{
+                        width: '100%',
+                        height: 56,
+                        padding: '0 0 8px 0',
+                        border: 'none',
+                        borderBottom: `2px solid ${signature.trim().length >= 2 ? accentColor : C.border}`,
+                        background: 'transparent',
+                        color: C.text,
+                        fontSize: 20,
+                        fontFamily: 'Georgia, serif',
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                        transition: 'border-color 0.2s',
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ─── STEP 4: House Rules ─── */}
+            {step === 4 && (
+              <div style={{ background: C.surface, borderRadius: 14, padding: 20, boxShadow: `0 1px 3px rgba(0,0,0,0.4), 0 0 0 1px ${C.border}` }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0, marginBottom: 24 }}>
+                  {HOUSE_RULES.map((rule, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 0', borderBottom: i < HOUSE_RULES.length - 1 ? `1px solid ${C.borderFaint}` : 'none' }}>
+                      <span style={{ color: C.textMuted, fontSize: 16, flexShrink: 0, lineHeight: 1.65 }}>·</span>
+                      <span style={{ fontSize: 13, color: C.textSub, lineHeight: 1.65 }}>{rule}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => { setRuleChecks(HOUSE_RULES.map(() => true)); setSwipeDir('forward'); setStep(s => s + 1) }}
+                  style={{ width: '100%', padding: '14px', borderRadius: 10, border: 'none', background: accentColor, color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                >
+                  I acknowledge all rules <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
+
+            {/* ─── STEP 5: Deposit ─── */}
+            {step === 5 && (
+              <div style={{ background: C.surface, borderRadius: 14, padding: 20, boxShadow: `0 1px 3px rgba(0,0,0,0.4), 0 0 0 1px ${C.border}` }}>
+                {/* Summary list */}
+                <div style={{ background: C.card, borderRadius: 10, padding: '16px', marginBottom: 16 }}>
+                  {[
+                    { label: 'Security Hold', value: 'NOK 3,000', bold: true, color: C.text },
+                    { label: 'Property', value: verification.propertyName, bold: false, color: C.textSub },
+                    { label: 'Type', value: 'Pre-authorization · Released after checkout', bold: false, color: C.green },
+                  ].map((row, i, arr) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: i < arr.length - 1 ? 12 : 0, marginBottom: i < arr.length - 1 ? 12 : 0, borderBottom: i < arr.length - 1 ? `1px solid ${C.borderFaint}` : 'none' }}>
+                      <span style={{ fontSize: 13, color: C.textMuted, flexShrink: 0 }}>{row.label}</span>
+                      <span style={{ fontSize: row.bold ? 18 : 13, fontWeight: row.bold ? 700 : 500, color: row.color, textAlign: 'right', maxWidth: '60%', lineHeight: 1.4 }}>{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Trust badges */}
+                <div style={{ display: 'flex', gap: 6, marginBottom: 20, justifyContent: 'center', flexWrap: 'wrap' }}>
+                  {['🔒 Stripe Secured', '256-bit SSL', 'No charge until confirmed'].map(badge => (
+                    <div key={badge} style={{ padding: '5px 10px', borderRadius: 100, background: C.card, border: `1px solid ${C.border}`, fontSize: 10, color: C.textMuted, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                      {badge}
+                    </div>
+                  ))}
+                </div>
+
+                {depositState === 'idle' && (
+                  <button
+                    onClick={handleDepositAuthorize}
+                    style={{ width: '100%', padding: '14px', borderRadius: 10, border: 'none', background: accentColor, color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    Authorize Hold — NOK 3,000
+                  </button>
+                )}
+
+                {depositState === 'processing' && (
+                  <div style={{ padding: '14px', borderRadius: 10, background: C.elevated, textAlign: 'center', color: C.textSub, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                    <div style={{ width: 16, height: 16, border: `2px solid ${accentColor}40`, borderTopColor: accentColor, borderRadius: '50%', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
+                    Processing with Stripe…
+                  </div>
+                )}
+
+                {depositState === 'confirmed' && (
+                  <div style={{ padding: '14px', borderRadius: 10, background: `${C.green}20`, border: `1px solid ${C.green}`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: C.green, fontSize: 14, fontWeight: 600 }}>
+                    <Check size={16} /> Authorization confirmed
+                  </div>
+                )}
+              </div>
+            )}
+
+          </div>
+
+          {/* CTA for steps 2 and 3 */}
+          {(step === 2 || step === 3) && (
+            <button
+              onClick={advance}
+              disabled={!canAdvance}
+              style={{
+                width: '100%', padding: '14px', borderRadius: 10, border: 'none',
+                background: canAdvance ? accentColor : C.elevated,
+                color: canAdvance ? '#fff' : C.textFaint,
+                fontSize: 15, fontWeight: 600,
+                cursor: canAdvance ? 'pointer' : 'not-allowed',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                transition: 'background 0.2s',
+              }}
+            >
+              Continue {canAdvance && <ChevronRight size={16} />}
+            </button>
           )}
 
-          {/* CTA */}
-          <button
-            onClick={advance}
-            disabled={!canAdvance}
-            style={ctaBtnStyle}
-          >
-            {step === TOTAL_STEPS ? (depositState === 'confirmed' ? 'Complete Verification' : 'Authorize Deposit First') : 'Continue'}
-            {canAdvance && <ChevronRight size={16} />}
-          </button>
+          {/* CTA for step 5 once confirmed */}
+          {step === 5 && depositState === 'confirmed' && (
+            <button
+              onClick={advance}
+              style={{ width: '100%', padding: '14px', borderRadius: 10, border: 'none', background: accentColor, color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+            >
+              Complete Verification <ChevronRight size={16} />
+            </button>
+          )}
 
         </div>
 
         {/* Locked guidebook teaser */}
-        <div style={{ margin: '24px 20px 0', position: 'relative', overflow: 'hidden', borderRadius: 12 }}>
-          <div style={{ background: '#111827', border: '1px solid #1f2937', borderRadius: 12, padding: '16px', filter: 'blur(2px)', pointerEvents: 'none', userSelect: 'none' }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 10 }}>Your Guidebook</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: '#f0f0f0', marginBottom: 6 }}>{verification.propertyName}</div>
-            <div style={{ fontSize: 13, color: '#6b7280' }}>WiFi · Check-in guide · House rules · Local tips · Add-ons</div>
+        <div style={{ margin: '28px 20px 0', position: 'relative', overflow: 'hidden', borderRadius: 14 }}>
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: '20px', filter: 'blur(3px)', pointerEvents: 'none', userSelect: 'none' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: accentColor, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Waiting for you →</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 10 }}>{verification.propertyName}</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {['WiFi', 'Door Code', 'Local Tips', 'Add-ons'].map(tag => (
+                <div key={tag} style={{ padding: '3px 10px', borderRadius: 100, background: C.card, border: `1px solid ${C.border}`, fontSize: 11, color: C.textMuted }}>
+                  {tag}
+                </div>
+              ))}
+            </div>
           </div>
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0a0a0a90', backdropFilter: 'blur(1px)', borderRadius: 12, gap: 6 }}>
-            <Lock size={20} style={{ color: '#6b7280' }} />
-            <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 500 }}>Complete verification to unlock</span>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: `${C.bg}88`, backdropFilter: 'blur(2px)', borderRadius: 14, gap: 8 }}>
+            <Lock size={22} style={{ color: C.textMuted }} />
+            <span style={{ fontSize: 12, color: C.textMuted, fontWeight: 500 }}>Complete all steps to unlock</span>
           </div>
         </div>
 

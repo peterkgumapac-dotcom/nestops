@@ -10,7 +10,7 @@ export interface UpsellItem {
 }
 
 export interface LocalRec {
-  category: 'food' | 'activity' | 'transport'
+  category: 'food' | 'cafe' | 'bar' | 'grocery' | 'beach' | 'activity' | 'gym' | 'transport' | 'pharmacy' | 'hidden'
   name: string
   tip: string
   address?: string
@@ -48,6 +48,8 @@ export interface Guidebook {
   brandingTemplateId?: string
   requiresVerification: boolean
   verificationTemplateId?: string
+  operatorPhone?: string
+  operatorName?: string
   // Door code access
   doorCodeRevealMode?: 'always' | 'verified_only' | 'time_gated'
   codeRevealHoursBeforeCheckin?: number
@@ -79,6 +81,8 @@ export const GUIDEBOOKS: Guidebook[] = [
     checkOutTime: '11:00',
     requiresVerification: false,
     doorCodeRevealMode: 'verified_only',
+    operatorPhone: '+4791234567',
+    operatorName: 'Anna K.',
     amenities: ['WiFi', 'Pool', 'Parking', 'AC', 'Washer', 'BBQ', 'Sea View'],
     localRecs: [
       { category: 'food', name: 'Brygga Bistro', tip: 'Best seafood in town, book ahead on weekends', address: 'Strandveien 12' },
@@ -139,6 +143,8 @@ export const GUIDEBOOKS: Guidebook[] = [
     requiresVerification: true,
     verificationTemplateId: 'vt2',
     doorCodeRevealMode: 'time_gated',
+    operatorPhone: '+4791234567',
+    operatorName: 'Anna K.',
     codeRevealHoursBeforeCheckin: 2,
     amenities: ['WiFi', 'AC', 'Washer', 'Sea View', 'Parking', 'Pet Friendly', 'Balcony'],
     localRecs: [
