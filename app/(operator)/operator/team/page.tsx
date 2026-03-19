@@ -3,10 +3,11 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users, Calendar, BarChart2, Plus, Clock, Home,
-  CheckCircle, X, ChevronDown, ChevronRight, DollarSign,
+  CheckCircle, X, ChevronDown, ChevronRight, DollarSign, Wrench, Phone, Star,
 } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
+import AppDrawer from '@/components/shared/AppDrawer'
 import { useRole } from '@/context/RoleContext'
 import { STAFF_MEMBERS } from '@/lib/data/staff'
 import { PROPERTIES } from '@/lib/data/properties'
@@ -17,7 +18,19 @@ import {
   type Shift, type DayOfWeek, type ShiftType,
 } from '@/lib/data/staffScheduling'
 
-type Tab = 'roster' | 'schedule' | 'workload' | 'payroll'
+type Tab = 'roster' | 'schedule' | 'workload' | 'payroll' | 'contractors'
+
+interface Contractor {
+  id: string; name: string; specialty: string; phone: string; email: string; rating: number; status: 'active' | 'inactive'
+}
+
+const INITIAL_CONTRACTORS: Contractor[] = [
+  { id: 'c1', name: 'Lars Plumbing AS',   specialty: 'Plumbing',    phone: '+47 900 12 345', email: 'lars@plumbing.no',       rating: 4.8, status: 'active' },
+  { id: 'c2', name: 'Elcon Electricians', specialty: 'Electrical',  phone: '+47 900 23 456', email: 'contact@elcon.no',        rating: 4.9, status: 'active' },
+  { id: 'c3', name: 'CleanPro Bergen',    specialty: 'Cleaning',    phone: '+47 900 34 567', email: 'info@cleanpro.no',        rating: 4.6, status: 'active' },
+  { id: 'c4', name: 'Nordic HVAC',        specialty: 'HVAC',        phone: '+47 900 45 678', email: 'service@nordichvac.no',   rating: 4.7, status: 'active' },
+  { id: 'c5', name: 'Tømrer Hansen',      specialty: 'Carpentry',   phone: '+47 900 56 789', email: 'hansen@tomrer.no',        rating: 4.5, status: 'inactive' },
+]
 
 const TYPE_LABEL: Record<ShiftType, string> = {
   cleaning:    'Cleaning',
@@ -183,6 +196,14 @@ export default function TeamPage() {
   const [expandedStaff, setExpandedStaff] = useState<string | null>(null)
 
   const workload = getWorkloadSummary()
+  const [contractors, setContractors] = useState<Contractor[]>(INITIAL_CONTRACTORS)
+  const [addDrawer, setAddDrawer] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newSpecialty, setNewSpecialty] = useState('')
+  const [newPhone, setNewPhone] = useState('')
+  const [newEmail, setNewEmail] = useState('')
+  const [cToast, setCToast] = useState('')
+  const showCToast = (msg: string) => { setCToast(msg); setTimeout(() => setCToast(''), 3000) }
 
   const tabStyle = (t: Tab): React.CSSProperties => ({
     display: 'flex', alignItems: 'center', gap: 7,
@@ -207,10 +228,11 @@ export default function TeamPage() {
 
       {/* Tab nav */}
       <div style={{ display: 'flex', gap: 2, marginBottom: 24, padding: 4, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, width: 'fit-content' }}>
-        <button style={tabStyle('roster')}   onClick={() => setTab('roster')}>   <Users size={14} /> Roster   </button>
-        <button style={tabStyle('schedule')} onClick={() => setTab('schedule')}> <Calendar size={14} /> Schedule </button>
-        <button style={tabStyle('workload')} onClick={() => setTab('workload')}> <BarChart2 size={14} /> Workload </button>
-        <button style={tabStyle('payroll')}  onClick={() => setTab('payroll')}>  <DollarSign size={14} /> Payroll  </button>
+        <button style={tabStyle('roster')}      onClick={() => setTab('roster')}>      <Users size={14} /> Roster      </button>
+        <button style={tabStyle('schedule')}    onClick={() => setTab('schedule')}>    <Calendar size={14} /> Schedule    </button>
+        <button style={tabStyle('workload')}    onClick={() => setTab('workload')}>    <BarChart2 size={14} /> Workload    </button>
+        <button style={tabStyle('payroll')}     onClick={() => setTab('payroll')}>     <DollarSign size={14} /> Payroll     </button>
+        <button style={tabStyle('contractors')} onClick={() => setTab('contractors')}> <Wrench size={14} /> Contractors </button>
       </div>
 
       <AnimatePresence mode="wait">
@@ -649,6 +671,77 @@ export default function TeamPage() {
                 )
               })()}
             </div>
+          </motion.div>
+        )}
+
+        {/* ── CONTRACTORS ── */}
+        {tab === 'contractors' && (
+          <motion.div key="contractors" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+              <button onClick={() => setAddDrawer(true)} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Add Contractor</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+              {contractors.map(c => (
+                <div key={c.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 24, transition: 'transform 0.2s', cursor: 'pointer' }}
+                  onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
+                  onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 8, background: `${accent}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Wrench size={18} style={{ color: accent }} strokeWidth={1.5} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>{c.name}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{c.specialty}</div>
+                    </div>
+                    <StatusBadge status={c.status} />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>
+                    <Phone size={11} /> {c.phone}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>{c.email}</div>
+                  <div style={{ height: 1, background: 'var(--border)', marginBottom: 12 }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <Star size={12} style={{ color: '#fbbf24', fill: '#fbbf24' }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{c.rating}</span>
+                    <span style={{ fontSize: 12, color: 'var(--text-subtle)' }}>/ 5.0</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <AppDrawer
+              open={addDrawer}
+              onClose={() => setAddDrawer(false)}
+              title="Add Contractor"
+              footer={
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => setAddDrawer(false)} style={{ padding: '9px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={() => {
+                    if (!newName.trim()) return
+                    setContractors(prev => [...prev, { id: `c${prev.length + 1}`, name: newName.trim(), specialty: newSpecialty.trim() || 'General', phone: newPhone.trim(), email: newEmail.trim(), rating: 5.0, status: 'active' }])
+                    setNewName(''); setNewSpecialty(''); setNewPhone(''); setNewEmail('')
+                    setAddDrawer(false); showCToast('Contractor added')
+                  }} style={{ padding: '9px 16px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Save</button>
+                </div>
+              }
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {[
+                  { label: 'Name', value: newName, set: setNewName, placeholder: 'Company or person name' },
+                  { label: 'Specialty', value: newSpecialty, set: setNewSpecialty, placeholder: 'e.g. Plumbing, Electrical' },
+                  { label: 'Phone', value: newPhone, set: setNewPhone, placeholder: '+47 900 00 000' },
+                  { label: 'Email', value: newEmail, set: setNewEmail, placeholder: 'email@company.no' },
+                ].map(f => (
+                  <div key={f.label}>
+                    <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>{f.label}</label>
+                    <input value={f.value} onChange={e => f.set(e.target.value)} placeholder={f.placeholder} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontSize: 14, outline: 'none' }} />
+                  </div>
+                ))}
+              </div>
+            </AppDrawer>
+            {cToast && (
+              <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#16a34a', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>{cToast}</div>
+            )}
           </motion.div>
         )}
 

@@ -1,1 +1,3 @@
-export { default } from '../../(operator)/operator/contractors/page'
+'use client'
+import { redirect } from 'next/navigation'
+export default function Page() { redirect('/app/team') }

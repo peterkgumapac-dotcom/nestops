@@ -190,10 +190,8 @@ export const MAIN_APP_OPERATOR_NAV: NavSection[] = [
   {
     label: 'Properties',
     items: [
-      { label: 'Properties',  href: '/app/properties',  icon: Building2 },
-      { label: 'Schedules',   href: '/app/cleaning',    icon: CalendarCheck },
+      { label: 'Properties', href: '/app/properties', icon: Building2 },
       { label: 'Compliance',  href: '/app/compliance',  icon: ShieldCheck },
-      { label: 'Contractors', href: '/app/contractors', icon: HardHat },
     ],
   },
   {
@@ -201,32 +199,29 @@ export const MAIN_APP_OPERATOR_NAV: NavSection[] = [
     items: [
       { label: 'Operations',     href: '/app/operations',     icon: ClipboardList },
       { label: 'Guest Services', href: '/app/guest-services', icon: Headphones },
-      { label: 'Requests',       href: '/app/tickets',        icon: Ticket,    badge: 5 },
-      { label: 'Inventory',      href: '/app/inventory',      icon: Package },
-      { label: 'Fixed Assets',   href: '/app/assets',         icon: HardDrive },
+      { label: 'Requests',       href: '/app/tickets',        icon: Ticket, badge: 5 },
     ],
   },
   {
-    label: 'Team',
+    label: 'Resources',
     items: [
-      { label: 'Staff', href: '/app/team', icon: UserCheck },
+      { label: 'Inventory', href: '/app/inventory', icon: Package },
+      { label: 'Staff',     href: '/app/team',      icon: UserCheck },
     ],
   },
   {
     label: 'Platform',
     items: [
-      { label: 'Guidebooks',    href: '/app/guidebooks',    icon: BookOpen },
-      { label: 'Upsells',       href: '/app/upsells',       icon: ShoppingBag },
-      { label: 'Verification',  href: '/app/verification',  icon: ShieldCheck },
-      { label: 'Automations',   href: '/app/automations',   icon: Zap },
-      { label: 'Alerts',        href: '/app/alerts',        icon: Bell },
+      { label: 'Guidebooks',   href: '/app/guidebooks',   icon: BookOpen },
+      { label: 'Upsells',      href: '/app/upsells',      icon: ShoppingBag },
+      { label: 'Verification', href: '/app/verification', icon: ShieldCheck },
+      { label: 'Automations',  href: '/app/automations',  icon: Zap },
     ],
   },
   {
-    label: 'Account',
+    label: 'System',
     items: [
-      { label: 'Settings',  href: '/app/settings',   icon: Settings },
-      { label: 'Changelog', href: '/app/changelog',  icon: History },
+      { label: 'Settings', href: '/app/settings', icon: Settings },
     ],
   },
 ]
