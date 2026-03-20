@@ -10,8 +10,12 @@ import CountdownTimer from '@/components/shared/CountdownTimer'
 import AppDrawer from '@/components/shared/AppDrawer'
 import { OVERNIGHT_REPORTS } from '@/lib/data/guestServices'
 import { PROPERTIES } from '@/lib/data/properties'
+import { OWNERS } from '@/lib/data/owners'
 import { PROPERTY_WEATHER } from '@/lib/data/weather'
 import { JOBS } from '@/lib/data/staff'
+import { REQUESTS } from '@/lib/data/requests'
+import { APPROVALS } from '@/lib/data/approvals'
+import { COMPLIANCE_DOCS } from '@/lib/data/compliance'
 import { sortJobsByAccessibility } from '@/lib/utils/pteUtils'
 import { FEED_ITEMS, filterFeed, type FeedTab } from '@/lib/data/activityFeed'
 
@@ -244,6 +248,19 @@ export default function AppDashboard() {
   const [newCleaningNotes, setNewCleaningNotes] = useState('')
   const [addedCleanings, setAddedCleanings] = useState<{id:string, templateName:string, property:string, date:string}[]>([])
   const [feedTab2, setFeedTab2] = useState<FeedTab>('all')
+  const [approvalStatuses, setApprovalStatuses] = useState<Record<string, 'pending' | 'card' | 'invoice' | 'followup'>>(
+    Object.fromEntries(APPROVALS.map(a => [a.id, 'pending']))
+  )
+  const [followUpSent, setFollowUpSent] = useState<Record<string, boolean>>({})
+
+  const handleApprove = (id: string, mode: 'card' | 'invoice') => {
+    setApprovalStatuses(prev => ({ ...prev, [id]: mode }))
+    showToast(mode === 'card' ? '✓ Payment charged to card on file' : '✓ Added to next owner statement')
+  }
+  const handleFollowUp = (id: string) => {
+    setFollowUpSent(prev => ({ ...prev, [id]: true }))
+    showToast('AI escalation email drafted — check your drafts')
+  }
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -1183,19 +1200,46 @@ export default function AppDashboard() {
       {/* ── OPERATOR ──────────────────────────────────────────────────────────── */}
       {isOperator && (
         <>
-          {/* 4 stat cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
+          {/* Alert banner */}
+          {(APPROVALS.filter(a => approvalStatuses[a.id] === 'pending').length > 0 || NEEDS_ACTION_ITEMS.length > 0) && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', marginBottom: 16, background: 'rgba(217,119,6,0.1)', border: '1px solid rgba(217,119,6,0.3)', borderLeft: '4px solid #d97706', borderRadius: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: C.amber }}>
+                {NEEDS_ACTION_ITEMS.length} items need action · {APPROVALS.filter(a => approvalStatuses[a.id] === 'pending').length} approvals pending
+              </span>
+            </div>
+          )}
+
+          {/* 8 stat cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 10 }}>
             {[
-              { label: 'Open Issues', value: 3, icon: '⚠️' },
-              { label: 'Turnovers Today', value: TODAY_CHECKINS.length, icon: '🔄' },
-              { label: 'Low Stock Alerts', value: 4, icon: '📦' },
-              { label: 'Pending Approvals', value: 1, icon: '✅' },
+              { label: 'Properties',    value: PROPERTIES.length,                                              icon: '🏠', href: '/operator/properties' },
+              { label: 'Owners',        value: OWNERS.length,                                                  icon: '👤', href: '/owner' },
+              { label: 'Requests',      value: REQUESTS.filter(r => r.status === 'open' || r.status === 'pending').length, icon: '🎫', href: '/operator/tickets' },
+              { label: 'Stock Alerts',  value: 4,                                                              icon: '📦', href: '/operator/inventory' },
             ].map(stat => (
-              <div key={stat.label} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '16px 18px' }}>
-                <div style={{ fontSize: 20, marginBottom: 8 }}>{stat.icon}</div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: C.text, marginBottom: 2 }}>{stat.value}</div>
-                <div style={{ fontSize: 11, color: C.muted, fontWeight: 500 }}>{stat.label}</div>
-              </div>
+              <Link key={stat.label} href={stat.href} style={{ textDecoration: 'none' }}>
+                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '14px 16px', cursor: 'pointer', transition: 'border-color 0.15s' }}>
+                  <div style={{ fontSize: 16, marginBottom: 6 }}>{stat.icon}</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 1 }}>{stat.value}</div>
+                  <div style={{ fontSize: 11, color: C.muted, fontWeight: 500 }}>{stat.label}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 24 }}>
+            {[
+              { label: 'Cleanings Today', value: TODAY_CHECKINS.length,                                       icon: '🧹', href: '/operator/cleaning' },
+              { label: 'Open Tasks',      value: 6,                                                            icon: '✅', href: '/operator/operations' },
+              { label: 'Overdue',         value: 2,                                                            icon: '⏰', href: '/operator/operations', alert: true },
+              { label: 'Approvals',       value: APPROVALS.filter(a => approvalStatuses[a.id] === 'pending').length, icon: '💳', href: '/operator/tickets', alert: APPROVALS.filter(a => approvalStatuses[a.id] === 'pending').length > 0 },
+            ].map(stat => (
+              <Link key={stat.label} href={stat.href} style={{ textDecoration: 'none' }}>
+                <div style={{ background: C.card, border: `1px solid ${(stat as {alert?: boolean}).alert ? 'rgba(239,68,68,0.4)' : C.border}`, borderRadius: 10, padding: '14px 16px', cursor: 'pointer' }}>
+                  <div style={{ fontSize: 16, marginBottom: 6 }}>{stat.icon}</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: (stat as {alert?: boolean}).alert ? '#ef4444' : C.text, marginBottom: 1 }}>{stat.value}</div>
+                  <div style={{ fontSize: 11, color: C.muted, fontWeight: 500 }}>{stat.label}</div>
+                </div>
+              </Link>
             ))}
           </div>
 
@@ -1314,6 +1358,54 @@ export default function AppDashboard() {
 
           {/* Right column */}
           <div>
+            {/* Owner Approvals */}
+            <SectionLabel label="Pending Owner Approvals" />
+            <div style={{ marginBottom: 12 }}>
+              {APPROVALS.map(approval => {
+                const status = approvalStatuses[approval.id]
+                const isPending = status === 'pending'
+                return (
+                  <div key={approval.id} style={{
+                    background: C.card, border: `1px solid ${isPending ? 'rgba(217,119,6,0.35)' : C.border}`,
+                    borderRadius: 10, padding: '14px 16px', marginBottom: 10,
+                    borderLeft: `4px solid ${isPending ? '#d97706' : status === 'card' ? '#10b981' : status === 'invoice' ? '#6366f1' : '#374151'}`,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 8 }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{approval.title}</div>
+                        <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{approval.property} · {approval.category}</div>
+                      </div>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: isPending ? '#d97706' : '#10b981', flexShrink: 0 }}>
+                        {approval.amount.toLocaleString()} {approval.currency}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 12, color: C.muted, marginBottom: 10 }}>{approval.description}</div>
+                    {isPending ? (
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button onClick={() => handleApprove(approval.id, 'card')} style={{ flex: 1, padding: '6px 0', borderRadius: 6, border: 'none', background: '#10b981', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                          Approve (Pay by Card)
+                        </button>
+                        <button onClick={() => handleApprove(approval.id, 'invoice')} style={{ flex: 1, padding: '6px 0', borderRadius: 6, border: '1px solid #6366f140', background: '#6366f115', color: '#6366f1', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                          Approve (Invoice Later)
+                        </button>
+                        {!followUpSent[approval.id] && (
+                          <button onClick={() => handleFollowUp(approval.id)} style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid rgba(217,119,6,0.3)', background: 'rgba(217,119,6,0.1)', color: '#d97706', fontSize: 11, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
+                            Follow-Up
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div style={{ padding: '5px 10px', borderRadius: 6, background: status === 'card' ? 'rgba(16,185,129,0.1)' : 'rgba(99,102,241,0.1)', textAlign: 'center' }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: status === 'card' ? '#10b981' : '#6366f1' }}>
+                          {status === 'card' ? '✓ Charged to card on file' : '✓ Added to owner statement'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
             {/* Check-ins */}
             <SectionLabel label="Today's Check-ins" />
             <Card>

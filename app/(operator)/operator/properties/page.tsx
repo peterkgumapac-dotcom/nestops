@@ -1,6 +1,6 @@
 'use client'
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { Building2, Search, LayoutGrid, List, ChevronRight, X, MapPin, Bed, Bath } from 'lucide-react'
+import { Building2, Search, LayoutGrid, List, ChevronRight, X, MapPin, Bed, Bath, BookOpen, AlertTriangle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
@@ -8,7 +8,7 @@ import { PROPERTIES, PropertyStatus } from '@/lib/data/properties'
 import { OWNERS } from '@/lib/data/owners'
 import { COMPLIANCE_DOCS } from '@/lib/data/compliance'
 import { useRole } from '@/context/RoleContext'
-import { getLibrary } from '@/lib/data/propertyLibrary'
+import { getLibrary, PROPERTY_LIBRARIES } from '@/lib/data/propertyLibrary'
 
 function getComplianceDot(propertyId: string): { color: string; title: string; label: string } {
   const docs = COMPLIANCE_DOCS.filter(d => d.propertyId === propertyId)
@@ -49,6 +49,15 @@ export default function PropertiesPage() {
   const [cityFilter, setCityFilter] = useState('all')
   const [sortBy, setSortBy] = useState<'name_asc' | 'name_desc' | 'status' | 'beds_asc' | 'beds_desc'>('name_asc')
 
+  // Library search mode
+  const [libraryMode, setLibraryMode] = useState(false)
+  const [libSearch, setLibSearch] = useState('')
+  const [debouncedLibSearch, setDebouncedLibSearch] = useState('')
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedLibSearch(libSearch), 250)
+    return () => clearTimeout(t)
+  }, [libSearch])
+
   // Pagination
   const [page, setPage] = useState(1)
 
@@ -57,6 +66,65 @@ export default function PropertiesPage() {
     const t = setTimeout(() => setDebouncedSearch(search), 250)
     return () => clearTimeout(t)
   }, [search])
+
+  // Library search results
+  const librarySearchResults = useMemo(() => {
+    if (!debouncedLibSearch) return null
+    const q = debouncedLibSearch.toLowerCase()
+    const results: { prop: typeof PROPERTIES[0]; matches: { label: string; value: string }[]; lib: typeof PROPERTY_LIBRARIES[0] | null }[] = []
+    const missing: typeof PROPERTIES[0][] = []
+
+    PROPERTIES.forEach(prop => {
+      const lib = PROPERTY_LIBRARIES.find(l => l.propertyId === prop.id) ?? null
+      const matches: { label: string; value: string }[] = []
+
+      if (!lib) { missing.push(prop); return }
+
+      const chk = (label: string, value?: string | null) => {
+        if (value && value.toLowerCase().includes(q)) matches.push({ label, value })
+      }
+      chk('Access Code', lib.accessCode)
+      chk('Entry Instructions', lib.accessInstructions)
+      chk('Parking', lib.parkingInfo)
+      chk('Garbage / Bins', lib.garbageInfo)
+      chk('WiFi Name', lib.wifiName)
+      chk('WiFi Password', lib.wifiPassword)
+      chk('Meter Location', lib.meterLocation)
+      chk('Electricity Provider', lib.electricityProvider)
+      chk('Water Provider', lib.waterProvider)
+      chk('Internet Provider', lib.internetProvider)
+      chk('Heating Type', lib.heatingType)
+      chk('Heating Instructions', lib.heatingInstructions)
+      chk('TV Info', lib.tvInfo)
+      chk('Description', lib.description)
+      chk('Tagline', lib.tagline)
+      chk('Check-in Time', lib.checkIn)
+      chk('Check-out Time', lib.checkOut)
+      lib.appliances?.forEach(a => {
+        if ([a.name, a.brand, a.model, a.location, a.notes].some(v => v?.toLowerCase().includes(q)))
+          matches.push({ label: 'Appliance', value: [a.name, a.brand, a.model].filter(Boolean).join(' · ') })
+      })
+      lib.smartHome?.forEach(s => {
+        if ([s.device, s.appName, s.notes].some(v => v?.toLowerCase().includes(q)))
+          matches.push({ label: 'Smart Home', value: s.device })
+      })
+      lib.houseRules?.additionalRules?.forEach(r => {
+        if (r.toLowerCase().includes(q)) matches.push({ label: 'House Rule', value: r })
+      })
+      lib.emergency?.contacts?.forEach(c => {
+        if ([c.name, c.phone, c.notes].some(v => v?.toLowerCase().includes(q)))
+          matches.push({ label: 'Emergency Contact', value: c.name + (c.phone ? ` · ${c.phone}` : '') })
+      })
+      chk('Nearest Hospital', lib.emergency?.nearestHospital)
+      chk('Nearest Pharmacy', lib.emergency?.nearestPharmacy)
+      chk('Maintenance Contractor', lib.emergency?.maintenanceContractor)
+
+      if (matches.length > 0) results.push({ prop, matches, lib })
+      else missing.push(prop)
+    })
+
+    return { results, missing }
+  }, [debouncedLibSearch])
 
   // Reset page on any filter/sort change
   useEffect(() => { setPage(1) }, [debouncedSearch, statusFilter, ownerFilter, cityFilter, sortBy])
@@ -209,7 +277,54 @@ export default function PropertiesPage() {
         <button style={iconBtnStyle(viewMode === 'list')} onClick={() => setViewMode('list')} title="List view">
           <List size={15} />
         </button>
+
+        {/* Divider */}
+        <div style={{ width: 1, height: 28, background: 'var(--border)', margin: '0 2px' }} />
+
+        {/* Library search toggle */}
+        <button
+          style={{
+            ...iconBtnStyle(libraryMode),
+            gap: 5,
+            padding: '7px 12px',
+            fontSize: 12,
+            fontWeight: 500,
+          }}
+          onClick={() => { setLibraryMode(m => !m); setLibSearch('') }}
+          title="Search across all property library data"
+        >
+          <BookOpen size={13} />
+          Search Library
+        </button>
       </div>
+
+      {/* Library search bar */}
+      {libraryMode && (
+        <div style={{ marginBottom: 16, padding: 14, background: `${accent}08`, border: `1px solid ${accent}30`, borderRadius: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <BookOpen size={14} style={{ color: accent, flexShrink: 0 }} />
+            <div style={{ flex: 1, position: 'relative' }}>
+              <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+              <input
+                type="text"
+                placeholder='Search all property library fields… e.g. "fusebox", "wifi", "Nespresso"'
+                value={libSearch}
+                onChange={e => setLibSearch(e.target.value)}
+                autoFocus
+                style={{ ...selectStyle, width: '100%', paddingLeft: 30, boxSizing: 'border-box' }}
+              />
+            </div>
+            {libSearch && (
+              <button onClick={() => setLibSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}>
+                <X size={14} />
+              </button>
+            )}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
+            Searches across access codes, wifi, utilities, appliances, smart home, house rules, emergency contacts, and more.
+          </div>
+        </div>
+      )}
 
       {/* Results bar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, minHeight: 24, flexWrap: 'wrap' }}>
@@ -234,6 +349,94 @@ export default function PropertiesPage() {
         )}
       </div>
 
+      {/* Library search results */}
+      {libraryMode && librarySearchResults !== null && (
+        <div>
+          {librarySearchResults.results.length === 0 && librarySearchResults.missing.length > 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+              <BookOpen size={36} style={{ opacity: 0.3, marginBottom: 12 }} />
+              <div style={{ fontSize: 15, fontWeight: 600 }}>No library data matches "{debouncedLibSearch}"</div>
+              <div style={{ fontSize: 13, marginTop: 6 }}>{librarySearchResults.missing.length} {librarySearchResults.missing.length === 1 ? 'property' : 'properties'} have no match for this term</div>
+            </div>
+          ) : (
+            <div>
+              {/* Match count */}
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
+                <span style={{ fontWeight: 600, color: accent }}>{librarySearchResults.results.length}</span> {librarySearchResults.results.length === 1 ? 'property' : 'properties'} with data matching "{debouncedLibSearch}"
+                {librarySearchResults.missing.length > 0 && (
+                  <> · <span style={{ color: '#d97706', fontWeight: 500 }}>{librarySearchResults.missing.length} missing this info</span></>
+                )}
+              </div>
+
+              {/* Result cards */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+                {librarySearchResults.results.map(({ prop, matches }) => (
+                  <div
+                    key={prop.id}
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 14, cursor: 'pointer', display: 'flex', gap: 14 }}
+                    onClick={() => router.push(`/operator/properties/${prop.id}`)}
+                  >
+                    {/* Thumbnail */}
+                    {prop.imageUrl ? (
+                      <img src={prop.imageUrl} alt={prop.name} style={{ width: 56, height: 56, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
+                    ) : (
+                      <div style={{ width: 56, height: 56, borderRadius: 8, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Building2 size={22} style={{ color: accent, opacity: 0.5 }} />
+                      </div>
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)', marginBottom: 6 }}>{prop.name}</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {matches.slice(0, 6).map((m, i) => (
+                          <span key={i} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: `${accent}14`, color: 'var(--text-primary)', border: `1px solid ${accent}30` }}>
+                            <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>{m.label}:</span>{' '}
+                            <span style={{ color: 'var(--text-primary)' }}>
+                              {m.value.length > 60 ? m.value.slice(0, 57) + '…' : m.value}
+                            </span>
+                          </span>
+                        ))}
+                        {matches.length > 6 && (
+                          <span style={{ fontSize: 11, color: 'var(--text-muted)', padding: '2px 4px' }}>+{matches.length - 6} more</span>
+                        )}
+                      </div>
+                    </div>
+                    <ChevronRight size={14} style={{ color: 'var(--text-muted)', flexShrink: 0, alignSelf: 'center' }} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Missing section */}
+              {librarySearchResults.missing.length > 0 && (
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                    <AlertTriangle size={13} style={{ color: '#d97706' }} />
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#d97706' }}>
+                      Missing this info — {librarySearchResults.missing.length} {librarySearchResults.missing.length === 1 ? 'property' : 'properties'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {librarySearchResults.missing.map(prop => (
+                      <div
+                        key={prop.id}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 12px', background: 'var(--bg-card)', border: '1px solid #d9770630', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}
+                        onClick={() => router.push(`/operator/properties/${prop.id}`)}
+                      >
+                        <AlertTriangle size={11} style={{ color: '#d97706', flexShrink: 0 }} />
+                        <span style={{ color: 'var(--text-primary)' }}>{prop.name}</span>
+                        <span style={{ fontSize: 11, color: '#d97706', fontWeight: 500 }}>Update library →</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Normal property list (hidden when library search has results) */}
+      {(!libraryMode || librarySearchResults === null) && (
+      <>
       {/* Empty state — no properties at all */}
       {PROPERTIES.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
@@ -440,6 +643,8 @@ export default function PropertiesPage() {
             Next →
           </button>
         </div>
+      )}
+      </>
       )}
     </div>
   )
