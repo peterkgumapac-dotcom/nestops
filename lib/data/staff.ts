@@ -1,6 +1,18 @@
 import type { ChecklistItem, WorkItem, TaskPhoto, DeployRequest } from '@/lib/data/checklists'
 import { getCleaningChecklist, getMaintenanceChecklist } from '@/lib/data/checklists'
 
+export interface ActivityEntry {
+  id: string
+  type: 'message' | 'system'
+  authorName?: string
+  authorRole?: string
+  authorAvatar?: string
+  message?: string
+  event?: string
+  detail?: string
+  timestamp: string
+}
+
 export type JobStatus = 'pending' | 'in_progress' | 'done'
 export type JobPriority = 'low' | 'medium' | 'high' | 'urgent'
 export type JobPTEStatus = 'not_required' | 'auto_granted' | 'pending' | 'granted' | 'denied' | 'expired'
@@ -58,6 +70,7 @@ export interface Job {
   workItems?: WorkItem[]
   beforePhotos?: TaskPhoto[]
   afterPhotos?: TaskPhoto[]
+  activity?: ActivityEntry[]
 }
 
 export interface StaffMember {
@@ -108,6 +121,14 @@ export const JOBS: Job[] = [
     staffId: 's3',
     workItems: getMaintenanceChecklist().map(i => ({ ...i, completed: false })),
     beforePhotos: [], afterPhotos: [],
+    activity: [
+      { id: 'act-1', type: 'system', event: 'Task created', detail: 'Assigned to Marcus Berg', timestamp: '2026-03-20T07:30:00' },
+      { id: 'act-2', type: 'system', event: 'PTE required', detail: 'Guest Henrik Solberg in property. GS notified.', timestamp: '2026-03-20T07:30:00' },
+      { id: 'act-3', type: 'message', authorName: 'Fatima Ndiaye', authorRole: 'guest_services', authorAvatar: 'FN', message: 'Contacting guest now via WhatsApp. Henrik is usually responsive in mornings.', timestamp: '2026-03-20T08:15:00' },
+      { id: 'act-4', type: 'message', authorName: 'Marcus Berg', authorRole: 'maintenance', authorAvatar: 'MB', message: 'Going to Sunset Villa first while waiting. That one is empty so I can start there.', timestamp: '2026-03-20T08:45:00' },
+      { id: 'act-5', type: 'message', authorName: 'Fatima Ndiaye', authorRole: 'guest_services', authorAvatar: 'FN', message: 'Henrik confirmed — OK to enter between 11:00 and 15:00. He will be out for lunch.', timestamp: '2026-03-20T09:30:00' },
+      { id: 'act-6', type: 'system', event: 'Guest granted PTE via Fatima Ndiaye', detail: 'Access window: 11:00–15:00. Access code unlocked.', timestamp: '2026-03-20T09:30:00' },
+    ],
   },
   {
     id: 'j3',

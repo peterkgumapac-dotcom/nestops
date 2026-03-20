@@ -13,7 +13,7 @@ import { PROPERTY_LIBRARIES } from '@/lib/data/propertyLibrary'
 import { PROPERTIES } from '@/lib/data/properties'
 import { STOCK_ITEMS } from '@/lib/data/inventory'
 import { isAccessCodeVisible, getPTEDisplay } from '@/lib/utils/pteUtils'
-import type { Job, JobPTEStatus, JobReservation, JobPTE } from '@/lib/data/staff'
+import type { Job, JobPTEStatus, JobReservation, JobPTE, ActivityEntry } from '@/lib/data/staff'
 import type { ChecklistItem, WorkItem, TaskPhoto, DeployRequest } from '@/lib/data/checklists'
 
 // TaskItem extends Job fields for backwards-compat with kanban usage
@@ -38,6 +38,7 @@ export interface TaskItem {
   workItems?: WorkItem[]
   beforePhotos?: TaskPhoto[]
   afterPhotos?: TaskPhoto[]
+  activity?: ActivityEntry[]
 }
 
 interface TaskSheetProps {
@@ -625,7 +626,7 @@ function CleaningLayout({ task, accent }: { task: TaskItem; accent: string }) {
 export default function TaskSheet({ task, open, onClose, onMarkComplete }: TaskSheetProps) {
   const { accent, role } = useRole()
   const [comment, setComment] = useState('')
-  const [comments, setComments] = useState<{ text: string; by: string; at: string }[]>([])
+  const [localActivity, setLocalActivity] = useState<ActivityEntry[]>([])
   const [completed, setCompleted] = useState(false)
   const [localPTEStatus, setLocalPTEStatus] = useState<JobPTEStatus | undefined>(task?.pteStatus)
   const [localPTE, setLocalPTE] = useState<JobPTE | undefined>(task?.pte)
@@ -635,7 +636,7 @@ export default function TaskSheet({ task, open, onClose, onMarkComplete }: TaskS
     setLocalPTEStatus(task?.pteStatus)
     setLocalPTE(task?.pte)
     setCompleted(false)
-    setComments([])
+    setLocalActivity([])
   }, [task?.id])
 
   // Resolve stored user for subRole
@@ -660,7 +661,15 @@ export default function TaskSheet({ task, open, onClose, onMarkComplete }: TaskS
 
   const addComment = () => {
     if (!comment.trim()) return
-    setComments(prev => [...prev, { text: comment, by: 'You', at: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) }])
+    const entry: ActivityEntry = {
+      id: `msg-${Date.now()}`,
+      type: 'message',
+      authorName: 'You',
+      authorAvatar: 'ME',
+      message: comment,
+      timestamp: new Date().toISOString(),
+    }
+    setLocalActivity(prev => [...prev, entry])
     setComment('')
   }
 
@@ -838,32 +847,75 @@ export default function TaskSheet({ task, open, onClose, onMarkComplete }: TaskS
             </div>
           )}
 
-          {/* Activity */}
-          <div>
-            <div style={sectionLabel('Activity')}>Activity</div>
-            {comments.length === 0 && (
-              <div style={{ fontSize: 12, color: 'var(--text-subtle)', marginBottom: 10 }}>No comments yet.</div>
-            )}
-            {comments.map((c, i) => (
-              <div key={i} style={{ marginBottom: 8, padding: '8px 10px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6 }}>
-                <div style={{ display: 'flex', gap: 6, marginBottom: 2 }}>
-                  <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>{c.by}</span>
-                  <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{c.at}</span>
+          {/* Activity Thread */}
+          {(() => {
+            const roleAvatarBg: Record<string, string> = {
+              guest_services: '#ec4899', maintenance: '#0ea5e9',
+              cleaning: '#d97706', operator: '#7c3aed', default: '#6b7280',
+            }
+            const seedActivity = task?.activity ?? []
+            const allActivity = [...seedActivity, ...localActivity]
+            return (
+              <div>
+                <div style={sectionLabel('Activity')}>Activity</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  {allActivity.length === 0 && (
+                    <div style={{ fontSize: 12, color: 'var(--text-subtle)', marginBottom: 10 }}>No activity yet.</div>
+                  )}
+                  {allActivity.map((entry) => {
+                    if (entry.type === 'system') {
+                      return (
+                        <div key={entry.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '6px 0', marginBottom: 4 }}>
+                          <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--bg-elevated)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                            <span style={{ fontSize: 9 }}>🔔</span>
+                          </div>
+                          <div>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}>{entry.event}</span>
+                            {entry.detail && <span style={{ fontSize: 11, color: 'var(--text-subtle)', marginLeft: 4 }}>— {entry.detail}</span>}
+                            <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>
+                              {new Date(entry.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    }
+                    const avatarBg = roleAvatarBg[entry.authorRole ?? 'default'] ?? roleAvatarBg.default
+                    return (
+                      <div key={entry.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 0', marginBottom: 4 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: '50%', background: avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 10, fontWeight: 700, color: '#fff' }}>
+                          {entry.authorAvatar ?? entry.authorName?.[0] ?? '?'}
+                        </div>
+                        <div style={{ flex: 1, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 10px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{entry.authorName}</span>
+                            {entry.authorRole && (
+                              <span style={{ fontSize: 10, padding: '1px 5px', borderRadius: 3, background: `${avatarBg}22`, color: avatarBg, fontWeight: 600 }}>
+                                {entry.authorRole.replace('_', ' ')}
+                              </span>
+                            )}
+                            <span style={{ fontSize: 11, color: 'var(--text-subtle)', marginLeft: 'auto' }}>
+                              {new Date(entry.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>{entry.message}</p>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
-                <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>{c.text}</p>
+                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                  <input
+                    value={comment}
+                    onChange={e => setComment(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && addComment()}
+                    placeholder="Write a message..."
+                    style={{ flex: 1, padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontSize: 13, outline: 'none' }}
+                  />
+                  <button onClick={addComment} style={{ padding: '8px 14px', borderRadius: 6, background: accent, color: '#fff', border: 'none', fontSize: 13, cursor: 'pointer', fontWeight: 600 }}>Send</button>
+                </div>
               </div>
-            ))}
-            <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-              <input
-                value={comment}
-                onChange={e => setComment(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && addComment()}
-                placeholder="Add a comment..."
-                style={{ flex: 1, padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontSize: 13, outline: 'none' }}
-              />
-              <button onClick={addComment} style={{ padding: '8px 14px', borderRadius: 6, background: accent, color: '#fff', border: 'none', fontSize: 13, cursor: 'pointer' }}>Post</button>
-            </div>
-          </div>
+            )
+          })()}
         </div>
 
         {/* Footer */}
