@@ -8,14 +8,16 @@ import { useRole } from '@/context/RoleContext'
 import { useTheme } from '@/context/ThemeContext'
 import { MAIN_APP_NAV_BY_ROLE, getStaffNav } from '@/lib/nav'
 
-const APP_VERSION = 'v2.6'
-const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v2.6'
+const APP_VERSION = 'v2.9'
+const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v2.9'
 const WHATS_NEW_ITEMS = [
-  'Alerts page title is now role-aware: "Team Alerts" for supervisors, "My Alerts" for cleaners',
-  'Demo Personas: Cleaning Supervisor (Anna K.) now lands on /app/dashboard instead of My Tasks',
-  "Fixed Cleaner home dashboard: Maria's subRole now correctly triggers Today's Schedule section",
-  'Upsell Approvals section on My Tasks is now gated to supervisors only',
-  'ClockStatus header: supervisors see "Team Overview" link instead of individual "Start Shift" button',
+  'PTE dissolved into tasks — no more standalone PTE page. Access status lives on each task card and drawer.',
+  'Task drawer now has 3 layouts: Maintenance (before/after photos + work items), Cleaning (collapsible checklist + deploy requests), Guest Services (issue + PTE management)',
+  'Reservation context on tasks — guest name, check-in/out, nights remaining shown inline',
+  'Access codes locked (🔒) until Guest Services grants PTE with a date + time window',
+  'Cleaning checklists: collapsible by category, photo upload per item, deploy inventory requests',
+  'Dashboard: PTE Needs Attention alerts for pending 4+ hours, denied, and auto-granted tasks',
+  'Property access info in task drawer — door code, WiFi (with copy), parking, gated by PTE status',
 ]
 
 interface MainAppSidebarProps {
