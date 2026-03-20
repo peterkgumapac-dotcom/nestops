@@ -10,6 +10,26 @@ interface ChangeEntry {
 
 const CHANGELOG: ChangeEntry[] = [
   {
+    version: 'v2.8',
+    date: 'Mar 20, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'Properties Library Global Search — "Search Library" toggle in the Properties toolbar; searches across ALL library fields per property (access code, wifi, utilities, appliances, smart home, house rules, emergency contacts, and more); results show per-property match cards with field label + value pills; "Missing info" section flags properties without the searched data with amber alerts and "Update library →" quick links' },
+      { tag: '⚡ Feature', text: 'Operator Dashboard command center: expanded from 4 to 8 stat cards in two rows — Properties, Owners, Requests, Stock Alerts, Cleanings Today, Open Tasks, Overdue, and Approvals; alert banner for pending items; Owner Approvals section with "Approve (Pay by Card)" and "Approve (Invoice Later)" payment buttons; Follow-Up drafts an AI escalation email for unresponded approvals' },
+    ],
+  },
+  {
+    version: 'v2.7',
+    date: 'Mar 20, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'Compliance standalone module — /operator/compliance rebuilt from scratch: 4 stat cards (categories, expired, expiring, missing), alert banner for critical docs, accordion per category (Fire Safety, Electrical, STR License, Building Insurance), per-property rows with status badges, "Request from Owner" drawer with AI-drafted email, "Add Document" drawer with file upload' },
+      { tag: '⚡ Feature', text: 'Contractors onboarding link + work order tool — 3-tab structure: Directory (existing contacts + Send Onboarding Link), Onboarding (unique link generation, 6-step progress tracker, approve/activate flow), Work Orders (issue tokenized work order links, status tracking, detail drawer with before/after photos, invoice upload, time tracking)' },
+      { tag: '⚡ Feature', text: 'PTE Management page — /operator/pte: request queue with filter tabs (All, Pending, Granted, Denied/Expired), Grant PTE drawer with date + time window picker that unlocks the access code, Deny drawer with optional reason, Follow-Up alert for requests pending 4+ hours, auto_granted badge for vacant properties' },
+      { tag: '⚡ Feature', text: 'Check-In Guide auto-attaches to task cards — every task card now shows access code, parking info, entry instructions, and cleaning notes pulled from the property library; zero config, updates immediately when library is edited' },
+      { tag: '⚡ Feature', text: 'Guest Experience unified module — /operator/guest-experience: Portal Builder (per-property verification gate toggles with booking-source conditions — Airbnb, Direct, VRBO, Booking.com — and door code reveal modes), Guidebooks quick-access tab, Guest-Initiated Issues feed with PTE window display' },
+      { tag: '🧭 Nav', text: 'Added PTE Requests to operator Operations nav and Guest Services staff nav; added Guest Experience to Platform nav; Compliance restored as standalone nav item (no longer a redirect)' },
+    ],
+  },
+  {
     version: 'v2.6',
     date: 'Mar 19, 2026',
     items: [
