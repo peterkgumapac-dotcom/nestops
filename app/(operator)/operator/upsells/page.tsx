@@ -139,6 +139,8 @@ export default function UpsellsPage() {
       targetPropertyIds: [],
       conditions: [],
       ctaLabel: 'Add to Stay',
+      approvalType: 'auto',
+      paymentMode: 'auto_charge',
     })
     setEditorTab('details')
     setDrawerOpen(true)
