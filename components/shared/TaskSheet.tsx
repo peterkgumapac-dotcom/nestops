@@ -1,9 +1,11 @@
 'use client'
 import { useState } from 'react'
 import { Sheet, SheetContent, SheetTitle, SheetClose } from '@/components/ui/sheet'
-import { X, Check } from 'lucide-react'
+import { X, Check, KeyRound, Car, DoorOpen, Info } from 'lucide-react'
 import { useRole } from '@/context/RoleContext'
 import StatusBadge from '@/components/shared/StatusBadge'
+import { PROPERTY_LIBRARIES } from '@/lib/data/propertyLibrary'
+import { PROPERTIES } from '@/lib/data/properties'
 
 interface TaskItem {
   id: string
@@ -14,6 +16,7 @@ interface TaskItem {
   due: string
   columnId?: string
   propertyName?: string
+  propertyId?: string
   description?: string
 }
 
@@ -60,6 +63,13 @@ export default function TaskSheet({ task, open, onClose, onMarkComplete }: TaskS
   const [comment, setComment] = useState('')
   const [comments, setComments] = useState<{ text: string; by: string; at: string }[]>([])
   const [completed, setCompleted] = useState(false)
+
+  // Resolve property library for check-in guide
+  const property = task ? (
+    PROPERTIES.find(p => p.id === task.propertyId) ??
+    PROPERTIES.find(p => p.name === task.propertyName)
+  ) : null
+  const library = property ? PROPERTY_LIBRARIES.find(l => l.propertyId === property.id) : null
 
   const checklist = TYPE_CHECKLIST[task?.type ?? ''] ?? []
   const progress = checklist.length > 0 ? Math.round((checkedItems.size / checklist.length) * 100) : 0
@@ -137,6 +147,53 @@ export default function TaskSheet({ task, open, onClose, onMarkComplete }: TaskS
               </div>
             ))}
           </div>
+
+          {/* Check-In Guide — auto-attached from Property Library */}
+          {library && (
+            <div style={{ background: `${accent}08`, border: `1px solid ${accent}25`, borderRadius: 8, padding: '12px 14px' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: accent, textTransform: 'uppercase', marginBottom: 10 }}>
+                Check-In Guide
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {library.accessCode && (
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <KeyRound size={13} style={{ color: accent, flexShrink: 0, marginTop: 2 }} />
+                    <div>
+                      <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Access Code</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'monospace', letterSpacing: '0.1em' }}>{library.accessCode}</div>
+                    </div>
+                  </div>
+                )}
+                {library.parkingInfo && (
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <Car size={13} style={{ color: 'var(--text-muted)', flexShrink: 0, marginTop: 2 }} />
+                    <div>
+                      <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Parking</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>{library.parkingInfo}</div>
+                    </div>
+                  </div>
+                )}
+                {library.accessInstructions && (
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <DoorOpen size={13} style={{ color: 'var(--text-muted)', flexShrink: 0, marginTop: 2 }} />
+                    <div>
+                      <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Entry</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>{library.accessInstructions}</div>
+                    </div>
+                  </div>
+                )}
+                {library.cleaningInstructions && (
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <Info size={13} style={{ color: 'var(--text-muted)', flexShrink: 0, marginTop: 2 }} />
+                    <div>
+                      <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Notes</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>{library.cleaningInstructions}</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Checklist */}
           {checklist.length > 0 && (
