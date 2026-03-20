@@ -43,7 +43,6 @@ export const OPERATOR_NAV: NavSection[] = [
     items: [
       { label: 'Operations',     href: '/operator/operations',     icon: ClipboardList },
       { label: 'Guest Services', href: '/operator/guest-services', icon: Headphones },
-      { label: 'PTE Requests',   href: '/operator/pte',           icon: KeyRound, badge: 2 },
       { label: 'Requests',       href: '/operator/tickets',        icon: Ticket,    badge: 5 },
       { label: 'Inventory',      href: '/operator/inventory',      icon: Package },
       { label: 'Fixed Assets',   href: '/operator/assets',         icon: HardDrive },
@@ -195,7 +194,6 @@ export const STAFF_GUEST_SERVICES_NAV: NavSection[] = [
       { label: 'My Queue',       href: '/app/my-guest-services',         icon: Headphones },
       { label: 'All Issues',     href: '/app/guest-services',            icon: Users },
       { label: 'Issues List',    href: '/app/guest-services/issues',     icon: Inbox },
-      { label: 'PTE Requests',   href: '/operator/pte',                  icon: KeyRound, badge: 2 },
       { label: 'Analytics',      href: '/app/guest-services/analytics',  icon: ClipboardList },
       { label: 'Work Orders',    href: '/app/work-orders',               icon: Ticket },
     ],

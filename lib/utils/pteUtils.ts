@@ -1,11 +1,37 @@
 import type { PTEStatus } from '@/lib/data/staffScheduling'
-import type { Job } from '@/lib/data/staff'
+import type { Job, JobPTEStatus } from '@/lib/data/staff'
+import { RESERVATIONS } from '@/lib/data/reservations'
 
 export function isPropertyOccupied(propertyId: string, date: string): boolean {
-  // Stub — would check booking data in production
-  void propertyId
-  void date
-  return false
+  const d = new Date(date)
+  return RESERVATIONS.some(r =>
+    r.propertyId === propertyId &&
+    r.pmsStatus !== 'cancelled' &&
+    r.pmsStatus !== 'checked_out' &&
+    d >= new Date(r.checkInDate) &&
+    d < new Date(r.checkOutDate)
+  )
+}
+
+export function getPTEDisplay(status: JobPTEStatus): { label: string; color: string; bg: string; icon: string } {
+  const map: Record<JobPTEStatus, { label: string; color: string; bg: string; icon: string }> = {
+    not_required: { label: 'No Guest',    color: '#6b7280', bg: '#6b728015', icon: '○' },
+    auto_granted: { label: 'PTE Granted', color: '#16a34a', bg: '#16a34a15', icon: '✓' },
+    granted:      { label: 'PTE Granted', color: '#16a34a', bg: '#16a34a15', icon: '✓' },
+    pending:      { label: 'PTE Pending', color: '#d97706', bg: '#d9770615', icon: '⏳' },
+    denied:       { label: 'PTE Denied',  color: '#dc2626', bg: '#dc262615', icon: '✗' },
+    expired:      { label: 'PTE Expired', color: '#6b7280', bg: '#6b728015', icon: '⏱' },
+  }
+  return map[status] ?? map.not_required
+}
+
+export function canStartTask(job: Pick<Job, 'pteRequired' | 'pteStatus'>): boolean {
+  if (!job.pteRequired) return true
+  return job.pteStatus === 'granted' || job.pteStatus === 'auto_granted' || job.pteStatus === 'not_required'
+}
+
+export function isAccessCodeVisible(status?: JobPTEStatus): boolean {
+  return status === 'granted' || status === 'auto_granted' || status === 'not_required'
 }
 
 export function checkAndGrantPTE(task: { pteRequired: boolean; propertyId?: string }): PTEStatus {

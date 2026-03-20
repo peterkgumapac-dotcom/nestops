@@ -3,24 +3,61 @@ export interface ChecklistItem {
   label: string
   category: string
   photoRequired?: boolean
+  completed?: boolean
+  completedAt?: string
+  completedBy?: string
+  notes?: string
+  deployable?: boolean
+  photoUrl?: string
+}
+
+export interface WorkItem {
+  id: string
+  label: string
+  completed: boolean
+  completedAt?: string
+  completedBy?: string
+  photoUrl?: string
+}
+
+export interface TaskPhoto {
+  id: string
+  url: string
+  uploadedBy: string
+  uploadedAt: string
+  caption?: string
+}
+
+export interface DeployRequest {
+  id: string
+  checklistItemId?: string
+  itemName: string
+  quantity: number
+  reason?: string
+  status: 'requested' | 'approved' | 'deployed' | 'denied'
+  requestedBy: string
+  requestedAt: string
+  inventoryItemId?: string
 }
 
 // Per-bedroom tasks (label gets " — Bedroom N" appended when beds > 1)
-const BEDROOM_LABELS = [
-  'Strip all bed linens',
-  'Remake bed with fresh linens and protectors',
-  'Dust and wipe bedside tables and all surfaces',
-  'Check under bed and inside wardrobe/drawers',
-  'Vacuum bedroom floor',
+// deployable index 1 = linen replacement
+const BEDROOM_LABELS: { label: string; deployable?: boolean }[] = [
+  { label: 'Strip all bed linens' },
+  { label: 'Remake bed with fresh linens and protectors', deployable: true },
+  { label: 'Dust and wipe bedside tables and all surfaces' },
+  { label: 'Check under bed and inside wardrobe/drawers' },
+  { label: 'Vacuum bedroom floor' },
 ]
 
 // Per-bathroom tasks
-const BATHROOM_LABELS = [
-  'Deep clean and disinfect toilet',
-  'Clean sink, tap fittings, and mirror',
-  'Clean shower and/or bathtub thoroughly',
-  'Replace towels and restock toiletries',
-  'Mop bathroom floor and wipe tile grout',
+// deployable index 3 = towels/toiletries
+const BATHROOM_LABELS: { label: string; deployable?: boolean }[] = [
+  { label: 'Deep clean and disinfect toilet' },
+  { label: 'Clean sink, tap fittings, and mirror' },
+  { label: 'Clean shower and/or bathtub thoroughly' },
+  { label: 'Replace towels and restock toiletries', deployable: true },
+  { label: 'Mop bathroom floor and wipe tile grout' },
 ]
 
 // Always-included common area tasks
@@ -33,7 +70,7 @@ const COMMON_ITEMS: Omit<ChecklistItem, 'id'>[] = [
   { label: 'Empty all bins and replace liners', category: 'Common Areas' },
   { label: 'Wipe all light switches and door handles', category: 'Common Areas' },
   { label: 'Clean windows and glass surfaces (interior)', category: 'Common Areas' },
-  { label: 'Check and restock consumables (coffee, tea, soap, toilet paper)', category: 'Consumables' },
+  { label: 'Check and restock consumables (coffee, tea, soap, toilet paper)', category: 'Consumables', deployable: true },
   { label: 'Final walk-through and spot check', category: 'Sign-Off', photoRequired: true },
 ]
 
@@ -103,16 +140,16 @@ export function getCleaningChecklist(beds: number, baths: number, amenities: str
   // Per-bedroom items
   for (let i = 1; i <= beds; i++) {
     const cat = beds > 1 ? `Bedroom ${i}` : 'Bedroom'
-    BEDROOM_LABELS.forEach(label => {
-      items.push({ id: id(), label: beds > 1 ? `${label} — Bedroom ${i}` : label, category: cat })
+    BEDROOM_LABELS.forEach(({ label, deployable }) => {
+      items.push({ id: id(), label: beds > 1 ? `${label} — Bedroom ${i}` : label, category: cat, deployable })
     })
   }
 
   // Per-bathroom items
   for (let i = 1; i <= baths; i++) {
     const cat = baths > 1 ? `Bathroom ${i}` : 'Bathroom'
-    BATHROOM_LABELS.forEach(label => {
-      items.push({ id: id(), label: baths > 1 ? `${label} — Bathroom ${i}` : label, category: cat })
+    BATHROOM_LABELS.forEach(({ label, deployable }) => {
+      items.push({ id: id(), label: baths > 1 ? `${label} — Bathroom ${i}` : label, category: cat, deployable })
     })
   }
 

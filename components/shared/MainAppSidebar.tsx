@@ -8,14 +8,14 @@ import { useRole } from '@/context/RoleContext'
 import { useTheme } from '@/context/ThemeContext'
 import { MAIN_APP_NAV_BY_ROLE, getStaffNav } from '@/lib/nav'
 
-const APP_VERSION = 'v2.0'
-const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v2.0'
+const APP_VERSION = 'v2.6'
+const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v2.6'
 const WHATS_NEW_ITEMS = [
-  'Guest-facing Guidebook page — share /guest/guidebook/[id] directly with guests (WiFi, house rules, how-to)',
-  'Portal Quick Switch pills below logo — switch Operator / Owner / Staff in one click, persists on refresh',
-  "Team Daily tab — see every staff member's tasks for today in one view with type colors and detail sheets",
-  'Operator dashboard Team Today widget — compact staff grid with task pills and PTE flags at a glance',
-  'Full Guest Services & Inspector roles wired — correct data, dedicated nav, new demo logins',
+  'Alerts page title is now role-aware: "Team Alerts" for supervisors, "My Alerts" for cleaners',
+  'Demo Personas: Cleaning Supervisor (Anna K.) now lands on /app/dashboard instead of My Tasks',
+  "Fixed Cleaner home dashboard: Maria's subRole now correctly triggers Today's Schedule section",
+  'Upsell Approvals section on My Tasks is now gated to supervisors only',
+  'ClockStatus header: supervisors see "Team Overview" link instead of individual "Start Shift" button',
 ]
 
 interface MainAppSidebarProps {

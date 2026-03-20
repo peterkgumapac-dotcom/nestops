@@ -49,6 +49,8 @@ interface KanbanTask {
   columnId: string
   boardId: 'property-ops' | 'onboarding' | 'maintenance'
   property?: string
+  pteRequired?: boolean
+  pteStatus?: 'not_required' | 'pending' | 'auto_granted' | 'granted' | 'denied'
 }
 
 interface SopRow {
@@ -106,11 +108,11 @@ const INITIAL_TASKS: KanbanTask[] = [
   { id: 't10', title: 'Create listing — Kim Portfolio',   type: 'Onboarding', priority: 'medium', assignee: 'Ivan P.',   due: '2026-03-24', columnId: 'todo',       boardId: 'onboarding' },
   { id: 't11', title: 'Property walkthrough complete',    type: 'Onboarding', priority: 'low',    assignee: 'Peter K.',  due: '2026-03-18', columnId: 'done',       boardId: 'onboarding' },
   // Maintenance
-  { id: 't2',  title: 'Fix bathroom extractor fan',       type: 'Maintenance',priority: 'high',   assignee: 'Bjorn L.',  due: '2026-03-18', columnId: 'todo',       boardId: 'maintenance', property: 'Downtown Loft' },
+  { id: 't2',  title: 'Fix bathroom extractor fan',       type: 'Maintenance',priority: 'high',   assignee: 'Bjorn L.',  due: '2026-03-18', columnId: 'todo',       boardId: 'maintenance', property: 'Downtown Loft', pteRequired: true, pteStatus: 'pending' },
   { id: 't3',  title: 'Deep clean — Harbor Studio',       type: 'Cleaning',   priority: 'high',   assignee: 'Fatima N.', due: '2026-03-17', columnId: 'inprogress', boardId: 'maintenance', property: 'Harbor Studio' },
-  { id: 't12', title: 'Replace mattress — Downtown Loft', type: 'Maintenance',priority: 'medium', assignee: 'Bjorn L.',  due: '2026-03-26', columnId: 'todo',       boardId: 'maintenance', property: 'Downtown Loft' },
-  { id: 't13', title: 'Heating system check — Sunset',    type: 'Maintenance',priority: 'low',    assignee: 'Bjorn L.',  due: '2026-03-28', columnId: 'todo',       boardId: 'maintenance', property: 'Sunset Villa' },
-  { id: 't14', title: 'Leaking tap — Ocean View kitchen', type: 'Maintenance',priority: 'high',   assignee: 'Bjorn L.',  due: '2026-03-19', columnId: 'inprogress', boardId: 'maintenance', property: 'Ocean View Apt' },
+  { id: 't12', title: 'Replace mattress — Downtown Loft', type: 'Maintenance',priority: 'medium', assignee: 'Bjorn L.',  due: '2026-03-26', columnId: 'todo',       boardId: 'maintenance', property: 'Downtown Loft', pteRequired: true, pteStatus: 'pending' },
+  { id: 't13', title: 'Heating system check — Sunset',    type: 'Maintenance',priority: 'low',    assignee: 'Bjorn L.',  due: '2026-03-28', columnId: 'todo',       boardId: 'maintenance', property: 'Sunset Villa',  pteRequired: true, pteStatus: 'auto_granted' },
+  { id: 't14', title: 'Leaking tap — Ocean View kitchen', type: 'Maintenance',priority: 'high',   assignee: 'Bjorn L.',  due: '2026-03-19', columnId: 'inprogress', boardId: 'maintenance', property: 'Ocean View Apt', pteRequired: true, pteStatus: 'granted' },
 ]
 
 const SOPS: SopRow[] = [
@@ -233,7 +235,20 @@ function SortableCard({ task, accent }: { task: KanbanTask; accent: string }) {
         )}
         <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 10, lineHeight: 1.4 }}>{task.title}</div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <StatusBadge status={task.priority} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <StatusBadge status={task.priority} />
+            {task.pteRequired && task.pteStatus && (() => {
+              const pteColors: Record<string, { bg: string; label: string }> = {
+                pending:      { bg: '#d9770620', label: '⏳ PTE Pending' },
+                granted:      { bg: '#16a34a20', label: '✓ PTE Granted' },
+                auto_granted: { bg: '#16a34a20', label: '✓ Auto PTE' },
+                denied:       { bg: '#dc262620', label: '✗ PTE Denied' },
+              }
+              const c = pteColors[task.pteStatus] ?? { bg: '#6b728020', label: 'PTE' }
+              const textColor = task.pteStatus === 'pending' ? '#d97706' : task.pteStatus === 'denied' ? '#dc2626' : '#16a34a'
+              return <span style={{ fontSize: 10, padding: '1px 5px', borderRadius: 4, background: c.bg, color: textColor, fontWeight: 600 }}>{c.label}</span>
+            })()}
+          </div>
           <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{task.assignee}</span>
         </div>
         <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginTop: 6 }}>{task.due}</div>

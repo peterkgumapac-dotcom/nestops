@@ -192,7 +192,7 @@ export default function ContractorsPage() {
                   <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>{c.name}</div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{c.specialty}</div>
                 </div>
-                <StatusBadge status={c.status} />
+                <StatusBadge status={c.status === 'pending_review' ? 'pending' : c.status} />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>
                 <Phone size={11} /> {c.phone}
@@ -237,7 +237,7 @@ export default function ContractorsPage() {
                     <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>{c.name}</div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{c.specialty} · {c.email}</div>
                   </div>
-                  <StatusBadge status={c.status} />
+                  <StatusBadge status={c.status === 'pending_review' ? 'pending' : c.status} />
                 </div>
 
                 {/* Progress steps */}

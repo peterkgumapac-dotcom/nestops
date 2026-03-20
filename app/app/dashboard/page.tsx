@@ -1209,6 +1209,52 @@ export default function AppDashboard() {
             </div>
           )}
 
+          {/* PTE alert cards */}
+          {(() => {
+            const ptePendingLong = JOBS.filter(j =>
+              j.pteStatus === 'pending' &&
+              j.pte?.requestedAt &&
+              Date.now() - new Date(j.pte.requestedAt).getTime() > 4 * 3600000
+            )
+            const pteDenied = JOBS.filter(j => j.pteStatus === 'denied')
+            const pteAutoGranted = JOBS.filter(j => j.pteStatus === 'auto_granted')
+            if (ptePendingLong.length === 0 && pteDenied.length === 0 && pteAutoGranted.length === 0) return null
+            return (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: C.muted, marginBottom: 8 }}>Needs Attention — PTE</div>
+                {ptePendingLong.map(j => (
+                  <div key={j.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', marginBottom: 8, background: 'rgba(217,119,6,0.08)', border: '1px solid rgba(217,119,6,0.3)', borderLeft: '4px solid #d97706', borderRadius: 8 }}>
+                    <span style={{ fontSize: 14, flexShrink: 0 }}>⏳</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>PTE pending 4+ hours — {j.title}</div>
+                      <div style={{ fontSize: 12, color: C.muted }}>{j.propertyName} · Guest Services not yet responded</div>
+                    </div>
+                    <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, background: 'rgba(217,119,6,0.15)', color: '#d97706', fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>View Task</span>
+                  </div>
+                ))}
+                {pteDenied.map(j => (
+                  <div key={j.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', marginBottom: 8, background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.3)', borderLeft: '4px solid #dc2626', borderRadius: 8 }}>
+                    <span style={{ fontSize: 14, flexShrink: 0 }}>✗</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>PTE denied — {j.title}</div>
+                      <div style={{ fontSize: 12, color: C.muted }}>{j.propertyName} · Reschedule required</div>
+                    </div>
+                    <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, background: 'rgba(220,38,38,0.15)', color: '#dc2626', fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>View Task</span>
+                  </div>
+                ))}
+                {pteAutoGranted.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', marginBottom: 8, background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.25)', borderLeft: '4px solid #16a34a', borderRadius: 8 }}>
+                    <span style={{ fontSize: 14, flexShrink: 0 }}>✓</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{pteAutoGranted.length} task{pteAutoGranted.length > 1 ? 's' : ''} auto-granted PTE</div>
+                      <div style={{ fontSize: 12, color: C.muted }}>Properties vacant — no guest access needed</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
+
           {/* 8 stat cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 10 }}>
             {[

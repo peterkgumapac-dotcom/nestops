@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Filter, Camera, X, Check, ShoppingBag, Calendar, MapPin, Zap } from 'lucide-react'
+import { Filter, Camera, X, Check, ShoppingBag, Calendar, MapPin, Zap, Lock, Eye } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
 import AppDrawer from '@/components/shared/AppDrawer'
@@ -9,6 +9,7 @@ import { useRole } from '@/context/RoleContext'
 import type { UserProfile } from '@/context/RoleContext'
 import { PROPERTIES } from '@/lib/data/properties'
 import { getCleaningChecklist, getMaintenanceChecklist, type ChecklistItem } from '@/lib/data/checklists'
+import { getPTEBadge, isAccessCodeVisible } from '@/lib/utils/pteUtils'
 import { UPSELL_APPROVAL_REQUESTS, type UpsellApprovalRequest } from '@/lib/data/upsellApprovals'
 import CleanerApprovalSheet from '@/components/upsells/CleanerApprovalSheet'
 
@@ -52,6 +53,30 @@ function hasTightGap(checkoutTime: string, windowStart: string): boolean {
   return gapMins < 90
 }
 
+interface TaskPTE {
+  status: string
+  guestName?: string
+  guestCheckout?: string
+  enterAfter?: string
+  accessCode?: string
+  notes?: string
+  grantedBy?: string
+  validFrom?: string
+  validUntil?: string
+  requestedAt?: string
+}
+
+interface TaskReservation {
+  id: string
+  guestName: string
+  platform?: string
+  checkIn: string
+  checkOut: string
+  nights: number
+  nightsRemaining?: number
+  status: string
+}
+
 interface PersonalTask {
   id: string
   title: string
@@ -65,11 +90,22 @@ interface PersonalTask {
   due: string
   dueDisplay: string
   description?: string
+  pteRequired?: boolean
+  pteStatus?: 'not_required' | 'pending' | 'auto_granted' | 'granted' | 'denied'
+  pte?: TaskPTE
+  reservation?: TaskReservation
 }
 
 const ALL_TASKS: PersonalTask[] = [
   // Maria S. — Cleaner (s1)
-  { id: 't1',  title: 'Turnover clean — Harbor Studio',           type: 'Cleaning',    priority: 'high',   status: 'today',     assignee: 'Maria S.',  propertyId: 'p2', propertyName: 'Harbor Studio',  propertyImage: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=100&q=80', due: '2026-03-19', dueDisplay: 'Today 10:00' },
+  {
+    id: 't1', title: 'Turnover clean — Harbor Studio', type: 'Cleaning', priority: 'high', status: 'today',
+    assignee: 'Maria S.', propertyId: 'p2', propertyName: 'Harbor Studio',
+    propertyImage: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=100&q=80',
+    due: '2026-03-19', dueDisplay: 'Today 10:00',
+    pteRequired: false, pteStatus: 'not_required',
+    reservation: { id: 'res-003', guestName: 'Camilla Dahl', platform: 'Booking.com', checkIn: '2026-03-20', checkOut: '2026-03-23', nights: 3, nightsRemaining: 3, status: 'confirmed' },
+  },
   { id: 't9',  title: 'Turnover clean — Sunset Villa',            type: 'Cleaning',    priority: 'high',   status: 'today',     assignee: 'Maria S.',  propertyId: 'p1', propertyName: 'Sunset Villa',    propertyImage: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=100&q=80',  due: '2026-03-19', dueDisplay: 'Today 13:00' },
   { id: 't10', title: 'Deep clean — Ocean View Apt',              type: 'Cleaning',    priority: 'high',   status: 'today',     assignee: 'Maria S.',  propertyId: 'p3', propertyName: 'Ocean View Apt',  propertyImage: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=100&q=80',  due: '2026-03-19', dueDisplay: 'Today 15:00' },
   { id: 't8',  title: 'Quarterly inspection — Ocean View',        type: 'Inspection',  priority: 'medium', status: 'this_week', assignee: 'Maria S.',  propertyId: 'p3', propertyName: 'Ocean View Apt',  propertyImage: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=100&q=80',  due: '2026-03-20', dueDisplay: 'Fri 10:00' },
@@ -79,8 +115,31 @@ const ALL_TASKS: PersonalTask[] = [
   { id: 't12', title: 'Turnover clean — Downtown Loft',           type: 'Cleaning',    priority: 'high',   status: 'today',     assignee: 'Anna K.',   propertyId: 'p4', propertyName: 'Downtown Loft',   propertyImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=100&q=80',     due: '2026-03-19', dueDisplay: 'Today 09:00' },
   { id: 't13', title: 'Pre-arrival inspection — Harbor Studio',   type: 'Inspection',  priority: 'high',   status: 'today',     assignee: 'Anna K.',   propertyId: 'p2', propertyName: 'Harbor Studio',   propertyImage: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=100&q=80', due: '2026-03-19', dueDisplay: 'Today 16:00' },
   // Bjorn L. — Maintenance
-  { id: 't4',  title: 'Fix bathroom extractor fan',               type: 'Maintenance', priority: 'high',   status: 'today',     assignee: 'Bjorn L.',  propertyId: 'p2', propertyName: 'Harbor Studio',   propertyImage: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=100&q=80', due: '2026-03-19', dueDisplay: 'Today 14:00' },
-  { id: 't5',  title: 'Inspect heating system',                   type: 'Maintenance', priority: 'high',   status: 'today',     assignee: 'Bjorn L.',  propertyId: 'p4', propertyName: 'Downtown Loft',   propertyImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=100&q=80',     due: '2026-03-19', dueDisplay: 'Today 12:00' },
+  {
+    id: 't4', title: 'Fix bathroom extractor fan', type: 'Maintenance', priority: 'high', status: 'today',
+    assignee: 'Bjorn L.', propertyId: 'p2', propertyName: 'Harbor Studio',
+    propertyImage: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=100&q=80',
+    due: '2026-03-19', dueDisplay: 'Today 14:00',
+    pteRequired: false, pteStatus: 'not_required',
+  },
+  {
+    id: 't5', title: 'Inspect heating system', type: 'Maintenance', priority: 'high', status: 'today',
+    assignee: 'Bjorn L.', propertyId: 'p4', propertyName: 'Downtown Loft',
+    propertyImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=100&q=80',
+    due: '2026-03-19', dueDisplay: 'Today 12:00',
+    pteRequired: true, pteStatus: 'pending',
+    pte: {
+      status: 'pending',
+      guestName: 'Henrik Solberg',
+      guestCheckout: '2026-03-22T11:00:00',
+      requestedAt: '2026-03-20T07:30:00',
+      notes: 'Guest in property — GS contacting guest',
+    },
+    reservation: {
+      id: 'res-001', guestName: 'Henrik Solberg', platform: 'Airbnb',
+      checkIn: '2026-03-18', checkOut: '2026-03-22', nights: 4, nightsRemaining: 2, status: 'checked_in',
+    },
+  },
   { id: 't3',  title: 'Annual fire safety check',                 type: 'Compliance',  priority: 'urgent', status: 'overdue',   assignee: 'Bjorn L.',  propertyId: 'p3', propertyName: 'Ocean View Apt',  propertyImage: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=100&q=80',  due: '2026-03-14', dueDisplay: '5 days overdue' },
   // Fatima N. — Guest Services
   { id: 't7',  title: 'Guest issue follow-up — Camilla Dahl',    type: 'Compliance',  priority: 'medium', status: 'today',     assignee: 'Fatima N.', propertyId: 'p4', propertyName: 'Downtown Loft',   propertyImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=100&q=80',     due: '2026-03-19', dueDisplay: 'Today 17:00' },
@@ -120,6 +179,7 @@ export default function MyTasksPage() {
   const [qaRating, setQaRating] = useState(0)
   const [qaNotes, setQaNotes] = useState('')
   const [toast, setToast] = useState('')
+  const [showAccessCode, setShowAccessCode] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Upsell approval state — resolved after user loads from localStorage
@@ -167,6 +227,7 @@ export default function MyTasksPage() {
     setAfterPhotos([])
     setQaRating(0)
     setQaNotes('')
+    setShowAccessCode(false)
   }, [selectedTask?.id])
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
@@ -480,9 +541,23 @@ export default function MyTasksPage() {
                           <span style={{ fontSize: 11, color: accent, fontWeight: 500 }}>→ Open checklist</span>
                         )}
                       </div>
+                      {task.reservation && (
+                        <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginTop: 3 }}>
+                          Guest: {task.reservation.guestName.split(' ')[0]} {task.reservation.guestName.split(' ')[1]?.[0] ?? ''}. · Checkout {new Date(task.reservation.checkOut).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                        </div>
+                      )}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                       <StatusBadge status={task.priority} />
+                      {task.pteRequired && task.pteStatus && (() => {
+                        const badge = getPTEBadge(task.pteStatus as 'not_required' | 'pending' | 'auto_granted' | 'granted' | 'denied' | 'expired')
+                        const bgMap: Record<string, string> = { pending: '#d9770620', granted: '#16a34a20', auto_granted: '#16a34a20', denied: '#dc262620', not_required: '#6b728020' }
+                        return (
+                          <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: bgMap[task.pteStatus] ?? '#6b728020', color: badge.color, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                            {badge.icon} {badge.label}
+                          </span>
+                        )
+                      })()}
                       {completedIds.has(task.id) && <span style={{ fontSize: 11, color: '#10b981' }}>✓ Done</span>}
                     </div>
                   </div>
@@ -538,6 +613,63 @@ export default function MyTasksPage() {
           </div>
         }
       >
+        {/* Reservation section */}
+        {selectedTask?.reservation && (
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', marginBottom: 14 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-subtle)', marginBottom: 8 }}>Connected Reservation</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>👤 {selectedTask.reservation.guestName}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                📅 {new Date(selectedTask.reservation.checkIn).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} → {new Date(selectedTask.reservation.checkOut).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} ({selectedTask.reservation.nights} nights)
+              </div>
+              {selectedTask.reservation.platform && (
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>🏠 {selectedTask.reservation.platform} · {selectedTask.reservation.status.replace('_', ' ')}</div>
+              )}
+              {selectedTask.reservation.nightsRemaining !== undefined && (
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>⏳ {selectedTask.reservation.nightsRemaining} nights remaining</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* PTE section (read-only for field staff) */}
+        {selectedTask?.pteRequired && selectedTask.pteStatus && (
+          <div style={{
+            background: 'var(--bg-card)', borderRadius: 10, padding: '12px 14px', marginBottom: 14,
+            border: `1px solid ${selectedTask.pteStatus === 'pending' ? '#d9770640' : selectedTask.pteStatus === 'granted' || selectedTask.pteStatus === 'auto_granted' ? '#16a34a40' : selectedTask.pteStatus === 'denied' ? '#dc262640' : 'var(--border)'}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-subtle)' }}>Permission to Enter</div>
+              <span style={{ fontSize: 11, fontWeight: 600, color: selectedTask.pteStatus === 'pending' ? '#d97706' : selectedTask.pteStatus === 'granted' || selectedTask.pteStatus === 'auto_granted' ? '#16a34a' : '#dc2626' }}>
+                {selectedTask.pteStatus === 'pending' ? '⏳ Pending' : selectedTask.pteStatus === 'granted' ? '✓ Granted' : selectedTask.pteStatus === 'auto_granted' ? '✓ Auto-Granted' : '✗ Denied'}
+              </span>
+            </div>
+            {selectedTask.pte?.guestName && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 3 }}>Guest: {selectedTask.pte.guestName}</div>}
+            {selectedTask.pte?.guestCheckout && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 3 }}>Checkout: {new Date(selectedTask.pte.guestCheckout).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>}
+            {selectedTask.pteStatus === 'auto_granted' && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 3 }}>Property is vacant — no active reservation</div>}
+            {selectedTask.pte?.validFrom && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 3 }}>Access window: {new Date(selectedTask.pte.validFrom).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}{selectedTask.pte.validUntil ? ` — ${new Date(selectedTask.pte.validUntil).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}` : ''}</div>}
+            {selectedTask.pte?.enterAfter && !selectedTask.pte.validFrom && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 3 }}>Enter after: {selectedTask.pte.enterAfter}</div>}
+            {selectedTask.pte?.grantedBy && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 3 }}>Granted by: {selectedTask.pte.grantedBy === 'system' ? 'System (auto)' : selectedTask.pte.grantedBy}</div>}
+            {/* Access code */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Access code:</span>
+              {isAccessCodeVisible(selectedTask.pteStatus as 'not_required' | 'pending' | 'auto_granted' | 'granted' | 'denied' | 'expired') && selectedTask.pte?.accessCode ? (
+                showAccessCode
+                  ? <span style={{ fontSize: 13, fontWeight: 700, fontFamily: 'monospace', color: 'var(--text-primary)', letterSpacing: 2 }}>{selectedTask.pte.accessCode}</span>
+                  : <button onClick={() => setShowAccessCode(true)} style={{ fontSize: 12, color: accent, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}><Eye size={13} /> Show Code</button>
+              ) : (
+                <span style={{ fontSize: 12, color: 'var(--text-subtle)', display: 'flex', alignItems: 'center', gap: 4 }}><Lock size={12} /> Locked until PTE granted</span>
+              )}
+            </div>
+            {selectedTask.pteStatus === 'pending' && (
+              <div style={{ marginTop: 8, fontSize: 12, color: '#d97706', background: '#d9770610', borderRadius: 6, padding: '6px 10px' }}>
+                ⚠ Waiting for Guest Services to confirm access
+              </div>
+            )}
+            {selectedTask.pte?.notes && <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)', fontStyle: 'italic' }}>"{selectedTask.pte.notes}"</div>}
+          </div>
+        )}
+
         {selectedTask?.type === 'Cleaning' && (
           <div>
             {/* Property info banner */}
