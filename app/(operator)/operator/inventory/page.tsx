@@ -12,6 +12,7 @@ import { ASSETS, type Asset } from '@/lib/data/assets'
 import { PROPERTIES as PROPERTY_OBJECTS } from '@/lib/data/properties'
 import {
   STOCK_ITEMS, PURCHASE_ORDERS, VENDORS, STORAGE_LOCATIONS, CONSUMPTION_TEMPLATES, STAFF_WASTE, COST_RECORDS,
+  getStockItemsForUser,
   type StockItem, type PurchaseOrder, type StorageLocation, type ConsumptionTemplate,
 } from '@/lib/data/inventory'
 import { useRole } from '@/context/RoleContext'
@@ -36,7 +37,8 @@ const APPROVAL_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
 }
 
 export default function InventoryPage() {
-  const { accent } = useRole()
+  const { accent, user } = useRole()
+  const STOCK_ITEMS = getStockItemsForUser(user?.id ?? 'u1')
   const [activeTab, setActiveTab] = useState('warehouse')
 
   // Warehouse

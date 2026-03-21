@@ -207,7 +207,7 @@ export default function BriefingPage() {
 
   void WeatherWidget
 
-  const handleClockInAndGo = () => {
+  const handleClockInAndGo = (destination: string = '/app/dashboard') => {
     localStorage.setItem('nestops_clockin', JSON.stringify({
       staffId: currentUser.id,
       shiftId: firstShift?.id ?? 'unknown',
@@ -216,7 +216,7 @@ export default function BriefingPage() {
       clockInTimestamp: Date.now(),
       status: 'in_progress',
     }))
-    router.push('/app/dashboard')
+    router.push(destination)
   }
 
   const primaryBtnBase: React.CSSProperties = {
@@ -242,29 +242,30 @@ export default function BriefingPage() {
     }
     if (currentUser.role === 'owner') {
       return (
-        <Link href="/owner" style={{ ...primaryBtnBase, background: '#2563eb', color: '#fff' }}>
-          Go to Owner Portal →
-        </Link>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button
+            onClick={() => handleClockInAndGo('/owner')}
+            style={{ ...primaryBtnBase, background: '#7F77DD', color: '#fff' }}
+          >
+            ▶ Clock In Now
+          </button>
+          <Link href="/owner" style={secondaryBtnStyle}>
+            Go to Owner Portal →
+          </Link>
+        </div>
       )
     }
-    const canClockIn = minutesUntilShift <= 15
     const accentColor = currentUser.subRole?.includes('Cleaning') ? '#d97706'
       : currentUser.subRole?.includes('Maintenance') ? '#0ea5e9'
       : '#ec4899'
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {canClockIn ? (
-          <button
-            onClick={handleClockInAndGo}
-            style={{ ...primaryBtnBase, background: accentColor, color: '#fff' }}
-          >
-            ▶ Clock In Now
-          </button>
-        ) : (
-          <Link href="/app/dashboard" style={{ ...primaryBtnBase, background: '#7c3aed', color: '#fff' }}>
-            Go to Dashboard →
-          </Link>
-        )}
+        <button
+          onClick={() => handleClockInAndGo()}
+          style={{ ...primaryBtnBase, background: accentColor, color: '#fff' }}
+        >
+          ▶ Clock In Now
+        </button>
         <Link href="/app/dashboard" style={secondaryBtnStyle}>
           View Full Dashboard
         </Link>

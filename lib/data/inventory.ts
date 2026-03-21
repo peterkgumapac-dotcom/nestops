@@ -183,6 +183,63 @@ export const COST_RECORDS: CostRecord[] = [
   { month: 'Mar', category: 'Cleaning', amount: 2300, property: 'Ocean View Apt', vendor: 'Nordic Supply AS' },
 ]
 
+// Per-persona stock visibility (user.id keys: u1=pk, u2=sj, u3=ms, u4=bl, u5=fn, u6=mc, u7=ak)
+const USER_STOCK_FILTER: Record<string, string[]> = {
+  u1: ['i1','i2','i3','i4','i5','i6','i7','i8'], // Operator (pk): full visibility
+  u2: ['i1','i2','i3','i4','i5','i6','i7','i8'], // Owner Sarah: all
+  u3: ['i1','i2','i5','i6','i8'],                  // Cleaner Maria: cleaning + linen
+  u4: ['i3','i7','i8'],                             // Maintenance Bjorn: non-linen supplies
+  u5: ['i3','i4','i5','i6'],                        // Guest Services Fatima: amenities + linen
+  u6: ['i1','i2','i3','i4','i5','i6','i7','i8'], // Owner Michael: all
+  u7: ['i1','i2','i3','i4','i5','i6','i7','i8'], // Supervisor Anna: all
+}
+
+// Per-persona stock overrides — gives each persona a distinct starting reality
+const PERSONA_STOCK_SNAPSHOTS: Record<string, { id: string; inStock: number; status: StockStatus }[]> = {
+  u3: [ // Maria (Cleaner) — nearly out of everything
+    { id: 'i1', inStock: 2, status: 'critical' },
+    { id: 'i2', inStock: 0, status: 'out' },
+    { id: 'i6', inStock: 2, status: 'critical' },
+  ],
+  u4: [ // Bjorn (Maintenance) — low on spray, protectors critical
+    { id: 'i8', inStock: 1, status: 'critical' },
+    { id: 'i7', inStock: 3, status: 'low' },
+    { id: 'i3', inStock: 10, status: 'ok' },
+  ],
+  u5: [ // Fatima (Guest Services) — coffee nearly out, towels ok
+    { id: 'i4', inStock: 1, status: 'critical' },
+    { id: 'i5', inStock: 18, status: 'ok' },
+    { id: 'i6', inStock: 12, status: 'ok' },
+  ],
+}
+
+export function getStockItemsForUser(userId: string): StockItem[] {
+  const allowedIds = USER_STOCK_FILTER[userId] ?? USER_STOCK_FILTER['u1']
+  const baseItems = STOCK_ITEMS.filter(i => allowedIds.includes(i.id))
+
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem(`nestops_stock_${userId}`)
+      if (saved) {
+        const overrides: { id: string; inStock: number; status: StockStatus }[] = JSON.parse(saved)
+        return baseItems.map(item => {
+          const ov = overrides.find(o => o.id === item.id)
+          return ov ? { ...item, ...ov } : item
+        })
+      }
+    } catch { /* fall through */ }
+  }
+
+  const snapshot = PERSONA_STOCK_SNAPSHOTS[userId]
+  if (snapshot) {
+    return baseItems.map(item => {
+      const ov = snapshot.find(o => o.id === item.id)
+      return ov ? { ...item, ...ov } : item
+    })
+  }
+  return baseItems
+}
+
 // Pre-check-in alert data (used by operator dashboard)
 export const PROPERTY_CHECKINS: { property: string; date: string; stockItemIds: string[] }[] = [
   { property: 'Sunset Villa', date: '2026-03-20', stockItemIds: ['i1', 'i2', 'i4'] },

@@ -1,12 +1,26 @@
 'use client'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Menu, Bell, X } from 'lucide-react'
 import Link from 'next/link'
+import { AnimatePresence, motion } from 'framer-motion'
 import MainAppSidebar from './MainAppSidebar'
 import ClockStatus from './ClockStatus'
 import CommandPalette from '@/components/command-palette'
 import { useRole } from '@/context/RoleContext'
+import type { Role, UserProfile } from '@/context/RoleContext'
 import { useAlerts } from '@/context/AlertsContext'
+
+const DEMO_SWITCHER_PERSONAS = [
+  { userId: 'pk', initials: 'PK', name: 'Peter K.',   role: 'operator' as Role, avatarBg: '#1D9E75', emoji: '⚙️', label: 'Operator' },
+  { userId: 'ms', initials: 'MS', name: 'Maria S.',   role: 'staff'    as Role, subRole: 'Cleaner',             avatarBg: '#d97706', emoji: '🧹', label: 'Cleaner' },
+  { userId: 'bl', initials: 'BL', name: 'Bjorn L.',   role: 'staff'    as Role, subRole: 'Maintenance',         avatarBg: '#378ADD', emoji: '🔧', label: 'Maintenance' },
+  { userId: 'fn', initials: 'FN', name: 'Fatima N.',  role: 'staff'    as Role, subRole: 'Guest Services',      avatarBg: '#ec4899', emoji: '🛎️', label: 'Guest Svc' },
+  { userId: 'ak', initials: 'AK', name: 'Anna K.',    role: 'staff'    as Role, subRole: 'Cleaning Supervisor', avatarBg: '#06b6d4', emoji: '👷', label: 'Supervisor' },
+  { userId: 'sj', initials: 'SJ', name: 'Sarah J.',   role: 'owner'    as Role, avatarBg: '#7F77DD', emoji: '🏠', label: 'Owner' },
+  { userId: 'mc', initials: 'MC', name: 'Michael C.', role: 'owner'    as Role, avatarBg: '#15d492', emoji: '🏠', label: 'Owner' },
+]
+const USER_ID_MAP: Record<string, string> = { pk: 'u1', ms: 'u3', bl: 'u4', fn: 'u5', ak: 'u7', sj: 'u2', mc: 'u6' }
 
 function fmtAlertTime(date: Date): string {
   const mins = Math.floor((Date.now() - date.getTime()) / 60000)
@@ -23,8 +37,28 @@ function alertTypeIcon(type: string): string {
 export default function MainAppShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [alertsOpen, setAlertsOpen] = useState(false)
-  const { meshClass, accent } = useRole()
+  const [demoOpen, setDemoOpen] = useState(false)
+  const { meshClass, accent, user, setUser } = useRole()
   const { getAlertsForRole, dismissAlert, dismissAll } = useAlerts()
+  const router = useRouter()
+
+  const handleSwitchPersona = (p: typeof DEMO_SWITCHER_PERSONAS[number]) => {
+    setDemoOpen(false)
+    const profile: UserProfile = {
+      id: USER_ID_MAP[p.userId] ?? p.userId,
+      name: p.name,
+      role: p.role,
+      subRole: p.subRole,
+      avatarInitials: p.initials,
+      avatarColor: p.avatarBg,
+    }
+    localStorage.setItem('nestops_user', JSON.stringify(profile))
+    setUser(profile)
+    let dest = '/app/my-tasks'
+    if (p.role === 'operator' || p.subRole?.includes('Supervisor')) dest = '/app/dashboard'
+    else if (p.role === 'owner') dest = '/owner'
+    router.push(dest)
+  }
 
   const activeAlerts = getAlertsForRole('cleaner').filter(a => !a.dismissed)
   const urgentCount = activeAlerts.filter(a => a.type === 'urgent').length
@@ -118,6 +152,68 @@ export default function MainAppShell({ children }: { children: React.ReactNode }
         </main>
       </div>
       <CommandPalette />
+
+      {/* Floating demo persona switcher */}
+      <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 300 }}>
+        <AnimatePresence>
+          {demoOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              style={{
+                background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+                borderRadius: 14, padding: '12px 14px', marginBottom: 10,
+                minWidth: 220, boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+              }}
+            >
+              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+                Switch Persona
+              </div>
+              <div style={{ height: 1, background: 'var(--border)', marginBottom: 8 }} />
+              {DEMO_SWITCHER_PERSONAS.map(p => (
+                <button
+                  key={p.userId}
+                  onClick={() => handleSwitchPersona(p)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    width: '100%', padding: '8px 10px', borderRadius: 8,
+                    background: user?.id === USER_ID_MAP[p.userId] ? `${p.avatarBg}18` : 'var(--bg-surface)',
+                    border: `1px solid ${user?.id === USER_ID_MAP[p.userId] ? p.avatarBg + '40' : 'var(--border)'}`,
+                    cursor: 'pointer', marginBottom: 4, textAlign: 'left', fontFamily: 'inherit',
+                    transition: 'all 0.12s',
+                  }}
+                >
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: p.avatarBg, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#fff' }}>
+                    {p.initials}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{p.name}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{p.subRole ?? p.label}</div>
+                  </div>
+                  <span style={{ fontSize: 15 }}>{p.emoji}</span>
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <button
+          onClick={() => setDemoOpen(v => !v)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '10px 16px', borderRadius: 40,
+            background: demoOpen ? 'var(--bg-elevated)' : accent,
+            border: `1px solid ${demoOpen ? 'var(--border)' : accent}`,
+            color: '#fff', fontSize: 13, fontWeight: 500,
+            cursor: 'pointer', boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+            fontFamily: 'inherit', transition: 'all 0.15s',
+          }}
+        >
+          <span>🎭</span>
+          <span>{demoOpen ? 'Close' : 'Demo'}</span>
+        </button>
+      </div>
     </div>
   )
 }

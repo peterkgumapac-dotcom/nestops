@@ -339,7 +339,10 @@ export default function LoginPage() {
     const profile = buildProfile(user)
     localStorage.setItem('nestops_user', JSON.stringify(profile))
     setUser(profile)
-    router.push(user.subRole?.includes('Supervisor') ? '/app/dashboard' : '/app/my-tasks')
+    let dest = '/app/my-tasks'
+    if (user.role === 'operator' || user.subRole?.includes('Supervisor')) dest = '/app/dashboard'
+    else if (user.role === 'owner') dest = '/owner'
+    router.push(dest)
   }
 
   const handleLogin = () => {
@@ -554,27 +557,23 @@ export default function LoginPage() {
             >
               <div className="floating-panel-title">Demo Personas</div>
               <div className="floating-panel-divider" />
-              <button className="floating-btn" onClick={() => handleFloatingLogin('ms')}>
-                <span style={{ fontSize: 16 }}>🧹</span>
-                <div>
-                  <div className="floating-btn-name">Login as Cleaner</div>
-                  <div className="floating-btn-sub">Maria S. · /app/my-tasks</div>
-                </div>
-              </button>
-              <button className="floating-btn" onClick={() => handleFloatingLogin('pk')}>
-                <span style={{ fontSize: 16 }}>⚙️</span>
-                <div>
-                  <div className="floating-btn-name">Login as Operator</div>
-                  <div className="floating-btn-sub">Peter K. · /app/dashboard</div>
-                </div>
-              </button>
-              <button className="floating-btn" onClick={() => handleFloatingLogin('ak')}>
-                <span style={{ fontSize: 16 }}>👷</span>
-                <div>
-                  <div className="floating-btn-name">Login as Supervisor</div>
-                  <div className="floating-btn-sub">Anna K. · /app/dashboard</div>
-                </div>
-              </button>
+              {[
+                { userId: 'pk', emoji: '⚙️', label: 'Operator',       sub: 'Peter K. · /app/dashboard' },
+                { userId: 'ms', emoji: '🧹', label: 'Cleaner',         sub: 'Maria S. · /app/my-tasks' },
+                { userId: 'bl', emoji: '🔧', label: 'Maintenance',     sub: 'Bjorn L. · /app/my-tasks' },
+                { userId: 'fn', emoji: '🛎️', label: 'Guest Services',  sub: 'Fatima N. · /app/my-tasks' },
+                { userId: 'ak', emoji: '👷', label: 'Supervisor',      sub: 'Anna K. · /app/dashboard' },
+                { userId: 'sj', emoji: '🏠', label: 'Owner',           sub: 'Sarah J. · /owner' },
+                { userId: 'mc', emoji: '🏠', label: 'Owner',           sub: 'Michael C. · /owner' },
+              ].map(p => (
+                <button key={p.userId} className="floating-btn" onClick={() => handleFloatingLogin(p.userId)}>
+                  <span style={{ fontSize: 16 }}>{p.emoji}</span>
+                  <div>
+                    <div className="floating-btn-name">Login as {p.label}</div>
+                    <div className="floating-btn-sub">{p.sub}</div>
+                  </div>
+                </button>
+              ))}
             </motion.div>
           )}
         </AnimatePresence>
