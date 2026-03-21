@@ -480,9 +480,9 @@ footer p{font-size:12px;color:var(--text3)}
 <div class="nav-links">
 <a onclick="window.open('nestops-features.html','_blank');return false" href="javascript:void(0)">Features</a>
 <a onclick="window.open('nestops-pricing.html','_blank');return false" href="javascript:void(0)">Pricing</a>
-<a href="javascript:void(0)" style="color:var(--text)">Sign in</a>
+<a href="/login" style="color:var(--text)">Sign in</a>
 </div>
-<a href="#" class="nav-cta">Try free</a>
+<a href="/login" class="nav-cta">Try free</a>
 </div>
 </nav>
 
@@ -513,8 +513,8 @@ footer p{font-size:12px;color:var(--text3)}
 <div style="text-align:right"><div class="save-amt" id="sv"></div><div class="save-yr" id="sy"></div></div>
 </div>
 <div class="tags" id="tg"></div>
-<button class="cta-primary" id="mainCta">Start free trial</button>
-<button class="cta-ghost">Get detailed savings report</button>
+<button class="cta-primary" id="mainCta" onclick="location.href='/login'">Start free trial</button>
+<button class="cta-ghost" onclick="location.href='/login'">Get detailed savings report</button>
 </div>
 </div>
 </div>
@@ -586,7 +586,7 @@ footer p{font-size:12px;color:var(--text3)}
 <button class="mb-rbtn" data-mbrole="cleaner" onclick="mbSwitch('cleaner')">🧹 Cleaners</button>
 </div>
 <div class="mb-cta-row">
-<a href="#" class="feat-cta" id="mb-cta">Start free trial <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"><path d="M6 3l5 5-5 5"/></svg></a>
+<a href="/login" class="feat-cta" id="mb-cta">Start free trial <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"><path d="M6 3l5 5-5 5"/></svg></a>
 </div>
 </div>
 
@@ -720,7 +720,7 @@ footer p{font-size:12px;color:var(--text3)}
 <button class="aw-cb" id="aw-b3" onclick="awGo('resolve')" style="padding:6px 14px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2);transition:all .12s;font-family:var(--sans)">With NestOps</button>
 </div>
 </div>
-<div style="text-align:center;margin-top:20px"><button class="cta-primary" style="display:inline-block;width:auto;padding:14px 40px">Start free trial</button></div>
+<div style="text-align:center;margin-top:20px"><button class="cta-primary" style="display:inline-block;width:auto;padding:14px 40px" onclick="location.href='/login'">Start free trial</button></div>
 </div>
 </section>
 
@@ -801,7 +801,7 @@ footer p{font-size:12px;color:var(--text3)}
 <span><strong style="color:var(--text);font-weight:700;font-family:var(--mono);">0 emergency supply runs</strong> after 30 days</span>
 </div>
 <div style="display:flex;align-items:center;gap:10px;">
-<a href="#" class="feat-cta">Start free trial <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"><path d="M6 3l5 5-5 5"/></svg></a>
+<a href="/login" class="feat-cta">Start free trial <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"><path d="M6 3l5 5-5 5"/></svg></a>
 <button id="iv-replay" onclick="ivRestart()" style="display:none;padding:6px 12px;border-radius:7px;background:transparent;color:var(--text3);font-family:var(--sans);font-size:10px;font-weight:500;border:1px solid var(--border);cursor:pointer;">↺ Watch again</button>
 </div>
 </div>
@@ -3588,7 +3588,7 @@ gqIiAqOKq37r/wBKIoEYURFg2f/Z" alt="NestOps Dashboard — Operator view" style="w
 <button onclick="smStart()" id="sm-play" style="padding:8px 22px;border-radius:8px;background:var(--green);color:#fff;font-family:var(--sans);font-size:12px;font-weight:600;border:none;cursor:pointer;transition:opacity .15s">▶ Play both mornings</button>
 <button onclick="smRestart()" id="sm-replay" style="padding:7px 16px;border-radius:8px;background:transparent;color:var(--text3);font-family:var(--sans);font-size:11px;font-weight:500;border:1px solid var(--border);cursor:pointer;display:none;transition:border-color .15s,color .15s">↺ Replay</button>
 </div>
-<div style="text-align:center;margin-top:16px"><a href="#" class="feat-cta">Start free trial <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"><path d="M6 3l5 5-5 5"/></svg></a></div>
+<div style="text-align:center;margin-top:16px"><a href="/login" class="feat-cta">Start free trial <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"><path d="M6 3l5 5-5 5"/></svg></a></div>
 </div>
 </section>
 
@@ -3614,7 +3614,7 @@ gqIiAqOKq37r/wBKIoEYURFg2f/Z" alt="NestOps Dashboard — Operator view" style="w
 <li>Team scheduling + shifts</li>
 <li>Auto-task on check-in/out</li>
 </ul>
-<button class="cta-ghost" style="margin-top:20px">Start free trial</button>
+<button class="cta-ghost" style="margin-top:20px" onclick="location.href='/login'">Start free trial</button>
 </div>
 <div class="tier pop">
 <div class="tier-badge">Popular</div>
@@ -3632,7 +3632,7 @@ gqIiAqOKq37r/wBKIoEYURFg2f/Z" alt="NestOps Dashboard — Operator view" style="w
 <li>Owner portal + payments</li>
 <li>Automation center (if/then)</li>
 </ul>
-<button class="cta-primary" style="margin-top:20px">Start free trial</button>
+<button class="cta-primary" style="margin-top:20px" onclick="location.href='/login'">Start free trial</button>
 </div>
 <div class="tier">
 <div class="tier-name">Enterprise</div>
@@ -3647,7 +3647,7 @@ gqIiAqOKq37r/wBKIoEYURFg2f/Z" alt="NestOps Dashboard — Operator view" style="w
 <li>Bulk property import</li>
 <li>Account manager</li>
 </ul>
-<button class="cta-ghost" style="margin-top:20px">Contact sales</button>
+<button class="cta-ghost" style="margin-top:20px" onclick="location.href='mailto:hello@nestops.io'">Contact sales</button>
 </div>
 </div>
 </div>
@@ -3659,7 +3659,7 @@ gqIiAqOKq37r/wBKIoEYURFg2f/Z" alt="NestOps Dashboard — Operator view" style="w
 <div class="container">
 <h2>Ready for a quieter morning?</h2>
 <p>14-day free trial. No credit card required. Cancel anytime.</p>
-<button class="cta-primary">Start free trial</button>
+<button class="cta-primary" onclick="location.href='/login'">Start free trial</button>
 </div>
 </section>
 
