@@ -1015,7 +1015,7 @@ var repMap={breezeway:"Ops Hub + Cleaning",turno:"Cleaning Calendar",suiteop:"Gu
 function P(){return+document.getElementById('ps').value}
 function S(){return+document.getElementById('ts').value}
 function cost(t){if(t.hrs)return 0;if(t.m==='property')return t.p*P();if(t.m==='seat')return t.p*S();return t.p}
-function fmt(n){return n===0?'Free':'+Math.round(n)}
+function fmt(n){return n===0?'Free':'$'+Math.round(n)}
 function renderGrid(){
 var g=document.getElementById('tgrid');g.innerHTML='';
 cats.forEach(function(cat){
@@ -1026,7 +1026,7 @@ cat.tools.forEach(function(t){
 var c=cost(t);var d=document.createElement('div');
 d.className='tc'+(on.has(t.id)?' on':'');
 var priceTxt=t.hrs?'20-40 hrs/mo':fmt(c)+'/mo';
-var metaTxt=t.hrs?'Time cost':t.m==='property'?'+t.p+' x '+P()+' props':'+t.p+' x '+S()+' seats';
+var metaTxt=t.hrs?'Time cost':t.m==='property'?'$'+t.p+' x '+P()+' props':'$'+t.p+' x '+S()+' seats';
 d.innerHTML='<div><div class="tc-name">'+t.n+'</div><div class="tc-meta">'+metaTxt+'</div></div><div class="tc-price">'+priceTxt+'</div>';
 d.onclick=function(){on.has(t.id)?on.delete(t.id):on.add(t.id);U()};
 cards.appendChild(d);
