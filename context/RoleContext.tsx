@@ -24,7 +24,7 @@ interface RoleContextType {
 }
 
 const ROLE_META: Record<Role, { accent: string; accentVar: string; portalLabel: string; meshClass: string }> = {
-  operator: { accent: '#7c3aed', accentVar: 'var(--accent-operator)', portalLabel: 'Operator Portal', meshClass: 'mesh-operator' },
+  operator: { accent: '#1D9E75', accentVar: 'var(--accent-operator)', portalLabel: 'Operator Portal', meshClass: 'mesh-operator' },
   owner:    { accent: '#059669', accentVar: 'var(--accent-owner)',    portalLabel: 'Owner Portal',    meshClass: 'mesh-owner' },
   staff:    { accent: '#d97706', accentVar: 'var(--accent-staff)',    portalLabel: 'Staff Portal',    meshClass: 'mesh-staff' },
   vendor:   { accent: '#0ea5e9', accentVar: 'var(--accent-vendor)',   portalLabel: 'Vendor Portal',   meshClass: 'mesh-operator' },
@@ -97,7 +97,7 @@ export function useRole() {
       setRole: () => {},
       user: null,
       setUser: () => {},
-      accent: '#7c3aed',
+      accent: '#1D9E75',
       accentVar: 'var(--accent-operator)',
       portalLabel: 'Operator Portal',
       meshClass: 'mesh-operator',

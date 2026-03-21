@@ -4,27 +4,36 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --bg-page: #0d0d0d;
-  --bg-surface: #141414;
-  --bg-card: #1c1c1c;
-  --bg-elevated: #242424;
-  --border: #303030;
-  --border-subtle: #222222;
-  --text-primary: #f5f5f5;
-  --text-muted: #888888;
-  --text-subtle: #6b7280;
-  --accent-operator: #7c3aed;
+  --bg-page: #080b12;
+  --bg-surface: #0f1219;
+  --bg-card: #111722;
+  --bg-elevated: #161b26;
+  --border: rgba(255,255,255,0.06);
+  --border-subtle: rgba(255,255,255,0.04);
+  --text-primary: #e8e6e1;
+  --text-muted: #9ca3af;
+  --text-subtle: #5a5f6b;
+  --accent-operator: #1D9E75;
   --accent-owner: #059669;
   --accent-staff: #d97706;
-  --accent: #7c3aed;
+  --accent: #1D9E75;
+
+  /* Brand green tokens */
+  --green: #1D9E75;
+  --green2: #15d492;
+  --green-bg: rgba(29,158,117,0.08);
+  --green-border: rgba(29,158,117,0.2);
+  --red: #e24b4a;
+  --amber: #ef9f27;
+  --blue: #378ADD;
 
   /* Status badge tokens — dark mode defaults */
   --status-purple-bg: rgba(124, 58, 237, 0.15);
   --status-purple-fg: #a78bfa;
   --status-amber-bg:  rgba(217, 119, 6, 0.15);
   --status-amber-fg:  #fbbf24;
-  --status-green-bg:  rgba(5, 150, 105, 0.15);
-  --status-green-fg:  #34d399;
+  --status-green-bg:  rgba(29, 158, 117, 0.15);
+  --status-green-fg:  #15d492;
   --status-red-bg:    rgba(239, 68, 68, 0.15);
   --status-red-fg:    #f87171;
   --status-blue-bg:   rgba(59, 130, 246, 0.15);
@@ -78,7 +87,7 @@
 body {
   background: var(--bg-page);
   color: var(--text-primary);
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-sans), Outfit, system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -93,8 +102,8 @@ body {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse at 20% 20%, rgba(124, 58, 237, 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 80%, rgba(124, 58, 237, 0.04) 0%, transparent 60%);
+    radial-gradient(ellipse at 20% 20%, rgba(29, 158, 117, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(29, 158, 117, 0.04) 0%, transparent 60%);
   animation: meshMove 20s ease-in-out infinite alternate;
   pointer-events: none;
   z-index: 0;
@@ -212,4 +221,24 @@ html {
 .heading {
   font-weight: 600;
   letter-spacing: -0.02em;
+}
+
+/* Landing page utility classes */
+.grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+.dot-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
 }
