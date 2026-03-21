@@ -630,6 +630,7 @@ export default function TaskSheet({ task, open, onClose, onMarkComplete }: TaskS
   const [completed, setCompleted] = useState(false)
   const [localPTEStatus, setLocalPTEStatus] = useState<JobPTEStatus | undefined>(task?.pteStatus)
   const [localPTE, setLocalPTE] = useState<JobPTE | undefined>(task?.pte)
+  const [accessOpen, setAccessOpen] = useState(false)
 
   // Sync when task changes
   useEffect(() => {
@@ -637,6 +638,7 @@ export default function TaskSheet({ task, open, onClose, onMarkComplete }: TaskS
     setLocalPTE(task?.pte)
     setCompleted(false)
     setLocalActivity([])
+    setAccessOpen(false)
   }, [task?.id])
 
   // Resolve stored user for subRole
@@ -753,69 +755,106 @@ export default function TaskSheet({ task, open, onClose, onMarkComplete }: TaskS
             ))}
           </div>
 
-          {/* Check-In Guide */}
+          {/* Property Access — collapsible */}
           {library && (
-            <div style={{ background: `${accent}08`, border: `1px solid ${accent}25`, borderRadius: 8, padding: '12px 14px' }}>
-              <div style={sectionLabel('Check-In Guide', accent)}>Check-In Guide</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {library.accessCode && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                    <KeyRound size={13} style={{ color: accent, flexShrink: 0, marginTop: 2 }} />
-                    <div>
-                      <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Access Code</div>
-                      {isAccessCodeVisible(task.pteStatus)
-                        ? <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'monospace', letterSpacing: '0.1em' }}>{library.accessCode}</div>
-                        : <div style={{ fontSize: 12, color: 'var(--text-subtle)', display: 'flex', alignItems: 'center', gap: 4 }}><Lock size={12} /> Locked until PTE granted</div>
-                      }
-                    </div>
-                  </div>
-                )}
-                {library.wifiName && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                    <Info size={13} style={{ color: 'var(--text-muted)', flexShrink: 0, marginTop: 2 }} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>WiFi</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>{library.wifiName}</div>
-                      {library.wifiPassword && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                          <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'monospace' }}>{'•'.repeat(8)}</span>
-                          <button
-                            onClick={() => navigator.clipboard?.writeText(library.wifiPassword ?? '')}
-                            style={{ fontSize: 11, color: accent, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                          >Copy</button>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+              <button
+                onClick={() => setAccessOpen(o => !o)}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <KeyRound size={13} style={{ color: accent }} />
+                  <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-subtle)' }}>Property Access</span>
+                  {task.pteRequired && !isAccessCodeVisible(localPTEStatus) && (
+                    <span style={{ fontSize: 10, padding: '1px 5px', borderRadius: 4, background: '#f59e0b20', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 3 }}>
+                      <Lock size={9} /> PTE required
+                    </span>
+                  )}
+                </div>
+                {accessOpen ? <ChevronDown size={14} style={{ color: 'var(--text-subtle)' }} /> : <ChevronRight size={14} style={{ color: 'var(--text-subtle)' }} />}
+              </button>
+              {accessOpen && (
+                <div style={{ padding: '0 14px 12px', display: 'flex', flexDirection: 'column', gap: 8, borderTop: '1px solid var(--border)' }}>
+                  {(library.checkIn || library.checkOut) && (
+                    <div style={{ display: 'flex', gap: 16, paddingTop: 8 }}>
+                      {library.checkIn && (
+                        <div>
+                          <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Check-in</div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{library.checkIn}</div>
+                        </div>
+                      )}
+                      {library.checkOut && (
+                        <div>
+                          <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Check-out</div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{library.checkOut}</div>
                         </div>
                       )}
                     </div>
-                  </div>
-                )}
-                {library.parkingInfo && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                    <Car size={13} style={{ color: 'var(--text-muted)', flexShrink: 0, marginTop: 2 }} />
-                    <div>
-                      <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Parking</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>{library.parkingInfo}</div>
+                  )}
+                  {library.accessCode && (
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                      <KeyRound size={13} style={{ color: accent, flexShrink: 0, marginTop: 2 }} />
+                      <div>
+                        <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>
+                          {library.accessType === 'key_box' ? 'Key Box Code' : library.accessType === 'keypad' ? 'Door Code' : 'Access Code'}
+                        </div>
+                        {isAccessCodeVisible(localPTEStatus)
+                          ? <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'monospace', letterSpacing: '0.1em' }}>{library.accessCode}</div>
+                          : <div style={{ fontSize: 12, color: 'var(--text-subtle)', display: 'flex', alignItems: 'center', gap: 4 }}><Lock size={12} /> Locked until PTE granted</div>
+                        }
+                      </div>
                     </div>
-                  </div>
-                )}
-                {library.accessInstructions && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                    <DoorOpen size={13} style={{ color: 'var(--text-muted)', flexShrink: 0, marginTop: 2 }} />
-                    <div>
-                      <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Entry</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>{library.accessInstructions}</div>
+                  )}
+                  {library.wifiName && (
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                      <Info size={13} style={{ color: 'var(--text-muted)', flexShrink: 0, marginTop: 2 }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>WiFi</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>{library.wifiName}</div>
+                        {library.wifiPassword && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                            <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'monospace' }}>{'•'.repeat(8)}</span>
+                            <button
+                              onClick={() => navigator.clipboard?.writeText(library.wifiPassword ?? '')}
+                              style={{ fontSize: 11, color: accent, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                            >Copy</button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
-                {library.cleaningInstructions && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                    <Info size={13} style={{ color: 'var(--text-muted)', flexShrink: 0, marginTop: 2 }} />
-                    <div>
-                      <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Notes</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>{library.cleaningInstructions}</div>
+                  )}
+                  {library.parkingInfo && (
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                      <Car size={13} style={{ color: 'var(--text-muted)', flexShrink: 0, marginTop: 2 }} />
+                      <div>
+                        <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Parking</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>{library.parkingInfo}</div>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                  {library.accessInstructions && (
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                      <DoorOpen size={13} style={{ color: 'var(--text-muted)', flexShrink: 0, marginTop: 2 }} />
+                      <div>
+                        <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Entry</div>
+                        {isAccessCodeVisible(localPTEStatus)
+                          ? <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>{library.accessInstructions}</div>
+                          : <div style={{ fontSize: 12, color: 'var(--text-subtle)', display: 'flex', alignItems: 'center', gap: 4 }}><Lock size={12} /> Locked until PTE granted</div>
+                        }
+                      </div>
+                    </div>
+                  )}
+                  {library.cleaningInstructions && (
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                      <Info size={13} style={{ color: 'var(--text-muted)', flexShrink: 0, marginTop: 2 }} />
+                      <div>
+                        <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Notes</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>{library.cleaningInstructions}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
