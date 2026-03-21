@@ -18,7 +18,7 @@ const OPERATOR_PAGES: NavItem[] = [
   { label: 'Inventory', href: '/operator/inventory', category: 'Pages' },
   { label: 'Properties', href: '/operator/properties', category: 'Pages' },
   { label: 'Team', href: '/operator/team', category: 'Pages' },
-  { label: 'Workspace', href: '/operator/workspace', category: 'Pages' },
+  { label: 'Workspace', href: '/workspace', category: 'Pages' },
   { label: 'Compliance', href: '/operator/compliance', category: 'Pages' },
   { label: 'Upsells', href: '/operator/upsells', category: 'Pages' },
   { label: 'Guidebooks', href: '/operator/guidebooks', category: 'Pages' },
@@ -28,7 +28,7 @@ const OPERATOR_PAGES: NavItem[] = [
 const ACTIONS = [
   { label: 'New Issue', href: '/operator/guest-services', category: 'Actions', action: 'new-issue' },
   { label: 'Log Refund', href: '/operator/guest-services/refunds', category: 'Actions', action: 'log-refund' },
-  { label: 'New Task', href: '/operator/workspace', category: 'Actions', action: 'new-task' },
+  { label: 'New Task', href: '/workspace', category: 'Actions', action: 'new-task' },
 ]
 
 const RECENT_KEY = 'nestops_cmd_recent'

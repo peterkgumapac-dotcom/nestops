@@ -98,7 +98,7 @@ export default function ContractorsPage() {
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   const copyLink = (link: string, id: string) => {
-    navigator.clipboard.writeText(`https://${link}`).catch(() => {})
+    navigator.clipboard.writeText(`https://${link}`).catch(() => showToast('Copy failed — try manually'))
     setCopied(id)
     setTimeout(() => setCopied(null), 2000)
   }

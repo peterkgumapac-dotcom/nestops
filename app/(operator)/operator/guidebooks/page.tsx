@@ -101,7 +101,7 @@ export default function GuidebooksPage() {
   const [expiryMode, setExpiryMode] = useState('checkout')
 
   const copyToken = (token: string) => {
-    navigator.clipboard.writeText(token).catch(() => {})
+    navigator.clipboard.writeText(token).catch(() => showToast('Copy failed — try manually'))
     setVariablesCopied(token)
     setTimeout(() => setVariablesCopied(''), 2000)
   }
@@ -591,7 +591,7 @@ export default function GuidebooksPage() {
                 <label style={labelStyle}>Custom Domain</label>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <input style={{ ...inputStyle, flex: 1 }} value={customDomain} onChange={e => setCustomDomain(e.target.value)} placeholder="guide.yourbrand.com" />
-                  <button onClick={() => showToast('Domain connection coming soon')} style={{ padding: '10px 14px', borderRadius: 8, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}>Connect →</button>
+                  <button disabled style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-subtle)', fontSize: 13, fontWeight: 500, cursor: 'not-allowed', whiteSpace: 'nowrap', opacity: 0.5 }}>Coming Soon</button>
                 </div>
               </div>
 

@@ -101,7 +101,7 @@ export default function GuestExperiencePage() {
   }
 
   const copyLink = (url: string, id: string) => {
-    navigator.clipboard.writeText(`https://${url}`).catch(() => {})
+    navigator.clipboard.writeText(`https://${url}`).catch(() => showToast('Copy failed — try manually'))
     setCopied(id)
     setTimeout(() => setCopied(null), 2000)
   }
@@ -387,7 +387,7 @@ export default function GuestExperiencePage() {
                       <div style={{ fontSize: 11, fontWeight: 600, color: '#10b981' }}>Guest provided PTE window</div>
                       <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>{issue.pteWindow}</div>
                     </div>
-                    <Link href="/operator/pte" style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 600, color: accent, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3 }}>
+                    <Link href="/operator/operations" style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 600, color: accent, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3 }}>
                       View PTE <ChevronRight size={12} />
                     </Link>
                   </div>

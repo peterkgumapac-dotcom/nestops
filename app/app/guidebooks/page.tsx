@@ -21,11 +21,13 @@ export default function AppGuidebooksPage() {
   const [howTo, setHowTo] = useState('')
   const [localTips, setLocalTips] = useState('')
   const [libraryLoaded, setLibraryLoaded] = useState(false)
+  const [toast, setToast] = useState('')
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   const handleLoadFromLibrary = () => {
     if (!editingGuide) return
     const lib = getLibrary(editingGuide.propertyId)
-    if (!lib) { alert('No library data found for this property. Complete the Property Library first.'); return }
+    if (!lib) { showToast('No library data found for this property. Complete the Property Library first.'); return }
 
     // Pre-populate with library data (rules shown as text)
     const rulesText = lib.houseRules ? [
@@ -280,6 +282,8 @@ export default function AppGuidebooksPage() {
   }
 
   return (
+    <>
+    {toast && <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 999, background: '#1a1f2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 16px', fontSize: 13, color: '#e8e6e1', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>{toast}</div>}
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <PageHeader
         title="Guidebooks"
@@ -348,5 +352,6 @@ export default function AppGuidebooksPage() {
         })}
       </div>
     </motion.div>
+    </>
   )
 }

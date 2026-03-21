@@ -243,10 +243,10 @@ export default function VerificationPage() {
                       <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 7, background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                         <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>Only require if…</div>
                         <button
-                          style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: '1px dashed var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
-                          onClick={() => showToast('Condition builder coming soon')}
+                          disabled
+                          style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: '1px dashed var(--border)', background: 'transparent', color: 'var(--text-subtle)', cursor: 'not-allowed', opacity: 0.5 }}
                         >
-                          + Add condition
+                          + Add condition (coming soon)
                         </button>
                       </div>
                     )}

@@ -202,7 +202,7 @@ export default function AlertsPage() {
                     <div style={{ display: 'flex', gap: 6 }}>
                       {intg.connected ? (
                         <>
-                          <button onClick={() => intg.id === 'slack' && setSlackSheet(true)} style={{ padding: '5px 12px', borderRadius: 7, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, fontSize: 12, cursor: 'pointer' }}>Configure</button>
+                          <button onClick={() => { if (intg.id === 'slack') setSlackSheet(true) }} style={{ padding: '5px 12px', borderRadius: 7, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, fontSize: 12, cursor: 'pointer' }}>Configure</button>
                           <button onClick={() => disconnectIntegration(intg.id)} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid var(--border)', background: 'transparent', color: '#f87171', fontSize: 12, cursor: 'pointer' }}>Disconnect</button>
                         </>
                       ) : (
