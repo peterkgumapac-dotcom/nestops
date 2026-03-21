@@ -8,16 +8,16 @@ import { useRole } from '@/context/RoleContext'
 import { useTheme } from '@/context/ThemeContext'
 import { MAIN_APP_NAV_BY_ROLE, getStaffNav } from '@/lib/nav'
 
-const APP_VERSION = 'v2.9'
-const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v2.9'
+const APP_VERSION = 'v3.0'
+const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v3.0'
 const WHATS_NEW_ITEMS = [
-  'PTE dissolved into tasks — no more standalone PTE page. Access status lives on each task card and drawer.',
-  'Task drawer now has 3 layouts: Maintenance (before/after photos + work items), Cleaning (collapsible checklist + deploy requests), Guest Services (issue + PTE management)',
-  'Reservation context on tasks — guest name, check-in/out, nights remaining shown inline',
-  'Access codes locked (🔒) until Guest Services grants PTE with a date + time window',
-  'Cleaning checklists: collapsible by category, photo upload per item, deploy inventory requests',
-  'Dashboard: PTE Needs Attention alerts for pending 4+ hours, denied, and auto-granted tasks',
-  'Property access info in task drawer — door code, WiFi (with copy), parking, gated by PTE status',
+  'Demo persona switcher — floating 🎭 button in-app lets you switch between all 7 personas instantly',
+  'Per-persona inventory stock — each staff member sees only their assigned properties and realistic stock levels',
+  'Staff alerts now include Early Check-in and Late Checkout upsell requests with direct navigation',
+  'My Cleanings cards are now clickable — tap any cleaning to open the full checklist directly',
+  'Upsell approval sheet now shows your full day schedule with tight-gap detection and impact analysis',
+  'Guest Services portal shows a live notification panel when cleaners approve or decline upsell requests',
+  'Briefing page: Clock In always visible for staff; owners get direct route to Owner Portal',
 ]
 
 interface MainAppSidebarProps {

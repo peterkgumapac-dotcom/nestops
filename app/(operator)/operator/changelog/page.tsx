@@ -10,6 +10,23 @@ interface ChangeEntry {
 
 const CHANGELOG: ChangeEntry[] = [
   {
+    version: 'v3.0',
+    date: 'Mar 21, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'Demo persona switcher — floating 🎭 button available inside every portal; switch between all 7 personas (Operator, Owner, Cleaner, Supervisor, Guest Services, Maintenance, Linen) in one tap without returning to login' },
+      { tag: '⚡ Feature', text: 'Per-persona inventory stock — inventory page filters items and stock levels per logged-in user; each persona sees only their assigned properties with realistic seed data; stock persisted in namespaced localStorage (nestops_stock_userId)' },
+      { tag: '⚡ Feature', text: 'Staff alerts now include Early Check-in and Late Checkout upsell requests visible to cleaners; clicking an alert navigates directly to My Tasks with "→ Review request" CTA on the alert card' },
+      { tag: '⚡ Feature', text: "My Cleanings timeline cards on the staff portal are now fully clickable — tapping a cleaning job opens the full task checklist drawer; 'Open checklist' label shown on hover" },
+      { tag: '⚡ Feature', text: 'Upsell approval sheet rewritten: shows full day schedule with type badge, property, time window, and ⚡ Tight gap warning per slot; Impact of Approving section computes a conflict verdict (🟢 Looks fine / 🟡 Plan carefully / 🔴 Schedule conflict) based on checkout/checkin time analysis' },
+      { tag: '⚡ Feature', text: 'Guest Services portal now displays a live Staff Decisions notification panel showing which cleaners approved or declined upsell requests, synced via localStorage without a backend' },
+      { tag: '🐛 Fix', text: 'Briefing page: Clock In button always visible for cleaners (removed 15-min shift gate); Owners get a dedicated "Clock In Now" button routing to the Owner Portal' },
+      { tag: '🐛 Fix', text: 'Command palette links for Workspace and New Task now route correctly to /workspace instead of /operator/workspace' },
+      { tag: '🐛 Fix', text: 'Guest Experience page: dead PTE link fixed to route to /operator/operations; clipboard failures now show an actionable toast instead of silent failure' },
+      { tag: '🐛 Fix', text: 'Guidebooks "Connect →" custom domain button disabled with Coming Soon label; clipboard errors surface as user-visible toasts across guidebooks, contractors, and staff pages' },
+      { tag: '🐛 Fix', text: 'Verification "+ Add condition" button disabled with Coming Soon label to prevent confusing dead-end interaction' },
+    ],
+  },
+  {
     version: 'v2.8',
     date: 'Mar 20, 2026',
     items: [
