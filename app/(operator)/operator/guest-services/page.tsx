@@ -96,9 +96,26 @@ export default function GuestServicesPage() {
 
   const catMax = Math.max(...Object.values(catBreak))
   const upsellApprovals = getTodayUpsellApprovals(TODAY)
-  const [approvalStatuses, setApprovalStatuses] = useState<Record<string, string>>(
-    Object.fromEntries(UPSELL_APPROVAL_REQUESTS.map(r => [r.id, r.status]))
-  )
+
+  interface UpsellDecision { id: string; status: string; guestName?: string; upsellTitle?: string; propertyName?: string; notes?: string; decidedAt: string }
+  const [upsellDecisions, setUpsellDecisions] = useState<UpsellDecision[]>([])
+  const [approvalStatuses, setApprovalStatuses] = useState<Record<string, string>>(() => {
+    return Object.fromEntries(UPSELL_APPROVAL_REQUESTS.map(r => [r.id, r.status]))
+  })
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('nestops_upsell_decisions')
+      if (raw) {
+        const decisions: UpsellDecision[] = JSON.parse(raw)
+        setUpsellDecisions(decisions)
+        setApprovalStatuses(prev => ({
+          ...prev,
+          ...Object.fromEntries(decisions.map(d => [d.id, d.status])),
+        }))
+      }
+    } catch {}
+  }, [])
 
   const handleApproveUpsellRequest = (id: string) => {
     setApprovalStatuses(prev => ({ ...prev, [id]: 'approved' }))
@@ -236,6 +253,38 @@ export default function GuestServicesPage() {
                     </button>
                   </div>
                 )}
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Upsell Decision Notifications (from cleaner approvals) */}
+      {upsellDecisions.length > 0 && (
+        <motion.div {...fadeIn} transition={{ duration: 0.2 }} style={{ marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Staff Decisions
+            </span>
+            <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 10, background: '#05966920', color: '#059669', fontWeight: 600 }}>
+              {upsellDecisions.length}
+            </span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {upsellDecisions.map(d => (
+              <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: 'var(--bg-card)', border: `1px solid ${d.status === 'approved' ? '#05966930' : '#ef444430'}`, borderLeft: `4px solid ${d.status === 'approved' ? '#059669' : '#ef4444'}` }}>
+                <span style={{ fontSize: 18 }}>{d.status === 'approved' ? '✅' : '❌'}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                    {d.upsellTitle} — {d.propertyName}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    {d.guestName} · {d.status === 'approved' ? 'Approved by staff' : `Declined${d.notes ? ` — ${d.notes}` : ''}`}
+                  </div>
+                </div>
+                <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 10, background: d.status === 'approved' ? '#05966918' : '#ef444418', color: d.status === 'approved' ? '#059669' : '#ef4444', border: `1px solid ${d.status === 'approved' ? '#05966930' : '#ef444430'}`, flexShrink: 0, textTransform: 'capitalize' }}>
+                  {d.status}
+                </span>
               </div>
             ))}
           </div>

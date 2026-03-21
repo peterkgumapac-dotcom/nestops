@@ -187,14 +187,32 @@ export default function MyTasksPage() {
   const [selectedApprovalRequest, setSelectedApprovalRequest] = useState<UpsellApprovalRequest | null>(null)
 
   const handleUpsellApprove = (id: string) => {
+    const req = upsellApprovalRequests.find(r => r.id === id)
     setUpsellApprovalRequests(prev => prev.filter(r => r.id !== id))
     setSelectedApprovalRequest(null)
+    // Persist decision so operator Guest Services portal picks it up
+    try {
+      const existing = JSON.parse(localStorage.getItem('nestops_upsell_decisions') ?? '[]')
+      localStorage.setItem('nestops_upsell_decisions', JSON.stringify([
+        ...existing.filter((d: {id: string}) => d.id !== id),
+        { id, status: 'approved', guestName: req?.guestName, upsellTitle: req?.upsellTitle, propertyName: req?.propertyName, decidedAt: new Date().toISOString() },
+      ]))
+    } catch {}
     showToast('Upsell approved — guest will be notified')
   }
 
   const handleUpsellDecline = (id: string, notes: string) => {
+    const req = upsellApprovalRequests.find(r => r.id === id)
     setUpsellApprovalRequests(prev => prev.filter(r => r.id !== id))
     setSelectedApprovalRequest(null)
+    // Persist decision so operator Guest Services portal picks it up
+    try {
+      const existing = JSON.parse(localStorage.getItem('nestops_upsell_decisions') ?? '[]')
+      localStorage.setItem('nestops_upsell_decisions', JSON.stringify([
+        ...existing.filter((d: {id: string}) => d.id !== id),
+        { id, status: 'declined', guestName: req?.guestName, upsellTitle: req?.upsellTitle, propertyName: req?.propertyName, notes, decidedAt: new Date().toISOString() },
+      ]))
+    } catch {}
     showToast('Upsell declined')
   }
 
@@ -394,8 +412,13 @@ export default function MyTasksPage() {
                 const tight = hasTightGap(job.checkoutTime, windowStart)
                 const typeColor = CLEANING_TYPE_COLOR[job.type]
                 const statusColor = CLEANING_STATUS_COLOR[job.status]
+                const matchingTask = ALL_TASKS.find(t => t.propertyName === job.property && t.type === 'Cleaning')
                 return (
-                  <div key={job.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderLeft: `4px solid ${typeColor}`, borderRadius: 10, padding: '12px 14px', opacity: job.status === 'done' ? 0.6 : 1 }}>
+                  <div
+                    key={job.id}
+                    onClick={() => matchingTask && job.status !== 'done' && setSelectedTask(matchingTask)}
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderLeft: `4px solid ${typeColor}`, borderRadius: 10, padding: '12px 14px', opacity: job.status === 'done' ? 0.6 : 1, cursor: job.status === 'done' ? 'default' : 'pointer' }}
+                  >
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, flexWrap: 'wrap' }}>
@@ -412,9 +435,14 @@ export default function MyTasksPage() {
                           {isSupervisor && <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>· {job.assignedTo}</span>}
                         </div>
                       </div>
-                      <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 10, background: `${statusColor}18`, color: statusColor, border: `1px solid ${statusColor}30`, flexShrink: 0, marginTop: 2 }}>
-                        {job.status === 'in-progress' ? 'In progress' : job.status === 'done' ? '✓ Done' : 'Pending'}
-                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 10, background: `${statusColor}18`, color: statusColor, border: `1px solid ${statusColor}30`, marginTop: 2 }}>
+                          {job.status === 'in-progress' ? 'In progress' : job.status === 'done' ? '✓ Done' : 'Pending'}
+                        </span>
+                        {matchingTask && job.status !== 'done' && (
+                          <span style={{ fontSize: 11, color: accent, fontWeight: 500 }}>→ Open checklist</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )
@@ -425,7 +453,7 @@ export default function MyTasksPage() {
       })()}
 
       {/* Upsell Approvals Section */}
-      {isSupervisor && upsellApprovalRequests.length > 0 && (
+      {upsellApprovalRequests.length > 0 && (
         <div style={{ marginBottom: 28 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <ShoppingBag size={14} style={{ color: '#d97706' }} />
@@ -945,6 +973,7 @@ export default function MyTasksPage() {
           onClose={() => setSelectedApprovalRequest(null)}
           onApprove={handleUpsellApprove}
           onDecline={handleUpsellDecline}
+          myDaySchedule={TODAYS_CLEANINGS.filter(c => isSupervisor ? true : c.assignedTo === assigneeName)}
         />
       )}
 

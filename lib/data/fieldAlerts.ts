@@ -15,6 +15,7 @@ export interface FieldAlert {
   assignedTo: string[]        // staffIds
   createdAt: string
   read: boolean
+  actionRoute?: string        // if set, clicking the alert navigates here
 }
 
 export const FIELD_ALERTS: FieldAlert[] = [
@@ -89,6 +90,33 @@ export const FIELD_ALERTS: FieldAlert[] = [
     assignedTo: ['s2'],
     createdAt: '2026-03-19T06:45:00Z',
     read: false,
+    actionRoute: '/app/my-tasks',
+  },
+  {
+    id: 'fa8',
+    type: 'upsell_escalation',
+    severity: 'warning',
+    title: 'Early Check-in request — Ocean View Suite',
+    body: 'Guest Alex Torres is requesting early check-in for Mar 22. Tap to review and approve or decline before the deadline.',
+    propertyId: 'p1',
+    propertyName: 'Ocean View Suite',
+    assignedTo: ['s1'],
+    createdAt: '2026-03-19T09:20:00Z',
+    read: false,
+    actionRoute: '/app/my-tasks',
+  },
+  {
+    id: 'fa9',
+    type: 'upsell_escalation',
+    severity: 'urgent',
+    title: 'Late Checkout request — Harbor Studio',
+    body: 'Guest Soren Dahl is requesting a late checkout until 14:00. Your turnover window starts at 12:00 — this creates a tight gap.',
+    propertyId: 'p2',
+    propertyName: 'Harbor Studio',
+    assignedTo: ['s1'],
+    createdAt: '2026-03-19T07:10:00Z',
+    read: false,
+    actionRoute: '/app/my-tasks',
   },
   {
     id: 'fa7',

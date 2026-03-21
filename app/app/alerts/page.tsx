@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Bell } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
@@ -51,9 +52,11 @@ const FILTER_PILLS = [
   { key: 'new_task', label: 'Tasks' },
   { key: 'schedule_change', label: 'Schedule' },
   { key: 'backjob', label: 'Cleaner Report' },
+  { key: 'upsell_escalation', label: 'Upsell' },
 ]
 
 export default function AlertsPage() {
+  const router = useRouter()
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
   const [alerts, setAlerts] = useState<FieldAlert[]>([])
   const [filter, setFilter] = useState('all')
@@ -70,8 +73,8 @@ export default function AlertsPage() {
 
         const visible = FIELD_ALERTS.filter(a => {
           if (isSupervisor) return true
-          // Cleaner: only alerts assigned to them, never upsell_escalation
-          return a.assignedTo.includes(staffId) && a.type !== 'upsell_escalation'
+          // Cleaner: only alerts assigned to them
+          return a.assignedTo.includes(staffId)
         })
         setAlerts(visible)
       } catch {}
@@ -87,8 +90,9 @@ export default function AlertsPage() {
 
   const unreadCount = alerts.filter(a => !a.read).length
 
-  const markRead = (id: string) => {
+  const markRead = (id: string, actionRoute?: string) => {
     setAlerts(prev => prev.map(a => a.id === id ? { ...a, read: true } : a))
+    if (actionRoute) router.push(actionRoute)
   }
 
   // Group: urgent first, then by today vs earlier
@@ -111,7 +115,7 @@ export default function AlertsPage() {
       <motion.div
         key={alert.id}
         layout
-        onClick={() => markRead(alert.id)}
+        onClick={() => markRead(alert.id, alert.actionRoute)}
         style={{
           background: alert.read ? 'var(--bg-card)' : SEVERITY_BG[alert.severity],
           border: `1px solid ${alert.read ? 'var(--border)' : borderColor + '40'}`,
@@ -148,6 +152,11 @@ export default function AlertsPage() {
               <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{alert.propertyName}</span>
               <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>·</span>
               <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{timeAgo(alert.createdAt)}</span>
+              {alert.actionRoute && (
+                <span style={{ fontSize: 11, fontWeight: 600, color: SEVERITY_COLORS[alert.severity], marginLeft: 4 }}>
+                  → Review request
+                </span>
+              )}
             </div>
           </div>
         </div>

@@ -4,12 +4,38 @@ import { X, Calendar, MapPin, User } from 'lucide-react'
 import type { UpsellApprovalRequest } from '@/lib/data/upsellApprovals'
 import { getPropertyWorkload } from '@/lib/data/cleaningWorkload'
 
+interface DaySlot {
+  property: string
+  type: string
+  timeWindow: string   // e.g. "10:00–12:00"
+  checkoutTime: string
+  checkinTime: string
+}
+
 interface CleanerApprovalSheetProps {
   request: UpsellApprovalRequest
   open: boolean
   onClose: () => void
   onApprove: (id: string) => void
   onDecline: (id: string, notes: string) => void
+  myDaySchedule?: DaySlot[]
+}
+
+function toMins(time: string): number {
+  const [h, m] = time.split(':').map(Number)
+  return h * 60 + m
+}
+
+function slotEnd(timeWindow: string): string {
+  return timeWindow.split('–')[1]?.trim() ?? timeWindow.split('-')[1]?.trim() ?? ''
+}
+
+function slotStart(timeWindow: string): string {
+  return timeWindow.split('–')[0]?.trim() ?? timeWindow.split('-')[0]?.trim() ?? ''
+}
+
+function hasTightGap(checkoutTime: string, windowStart: string): boolean {
+  return toMins(windowStart) - toMins(checkoutTime) < 90
 }
 
 function SignalBadge({ signal }: { signal: 'available' | 'tentative' | 'blocked' }) {
@@ -40,6 +66,7 @@ export default function CleanerApprovalSheet({
   onClose,
   onApprove,
   onDecline,
+  myDaySchedule,
 }: CleanerApprovalSheetProps) {
   const [showDeclineInput, setShowDeclineInput] = useState(false)
   const [declineNotes, setDeclineNotes] = useState('')
@@ -151,10 +178,10 @@ export default function CleanerApprovalSheet({
                 </div>
               </div>
 
-              {/* Workload section */}
+              {/* Day Schedule section */}
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 10 }}>
-                  Your Workload at {request.propertyName} — {relevantDate}
+                  Your Schedule Today
                 </div>
                 {isEscalated && (
                   <div style={{ fontSize: 11, color: '#7c3aed', marginBottom: 8, padding: '6px 10px', background: '#7c3aed0c', border: '1px solid #7c3aed20', borderRadius: 6 }}>
@@ -162,28 +189,96 @@ export default function CleanerApprovalSheet({
                     Approving will confirm the upsell and capture the auth hold.
                   </div>
                 )}
-                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
-                  {[
-                    { icon: '🔄', count: workload.turnovers, label: 'Turnover cleans' },
-                    { icon: '⏰', count: workload.sameDayCheckIns, label: 'Same-day check-ins' },
-                    { icon: '🧹', count: workload.deepCleans, label: 'Deep cleans' },
-                    { icon: '👥', count: workload.totalGuests, label: 'Total guests that day' },
-                  ].map((row, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 12,
-                        padding: '10px 14px',
-                        borderBottom: i < 3 ? '1px solid var(--border)' : 'none',
-                      }}
-                    >
-                      <span style={{ fontSize: 16, width: 22, textAlign: 'center' }}>{row.icon}</span>
-                      <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', minWidth: 28 }}>{row.count}</span>
-                      <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{row.label}</span>
-                    </div>
-                  ))}
-                </div>
+                {myDaySchedule && myDaySchedule.length > 0 ? (
+                  <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+                    {myDaySchedule.map((slot, i) => {
+                      const tight = hasTightGap(slot.checkoutTime, slotStart(slot.timeWindow))
+                      const typeColors: Record<string, string> = { Turnover: '#7c3aed', 'Deep Clean': '#3b82f6', 'Same-day': '#f97316', Inspection: '#06b6d4' }
+                      const tc = typeColors[slot.type] ?? '#6b7280'
+                      return (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: i < myDaySchedule.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: `${tc}18`, color: tc, border: `1px solid ${tc}30`, whiteSpace: 'nowrap' }}>{slot.type}</span>
+                          <span style={{ fontSize: 13, color: 'var(--text-primary)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{slot.property}</span>
+                          <span style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>🕐 {slot.timeWindow}</span>
+                          {tight && <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 5px', borderRadius: 6, background: '#d9770618', color: '#d97706', border: '1px solid #d9770630', whiteSpace: 'nowrap' }}>⚡ Tight</span>}
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+                    {[
+                      { icon: '🔄', count: workload.turnovers, label: 'Turnover cleans' },
+                      { icon: '⏰', count: workload.sameDayCheckIns, label: 'Same-day check-ins' },
+                      { icon: '🧹', count: workload.deepCleans, label: 'Deep cleans' },
+                      { icon: '👥', count: workload.totalGuests, label: 'Total guests that day' },
+                    ].map((row, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderBottom: i < 3 ? '1px solid var(--border)' : 'none' }}>
+                        <span style={{ fontSize: 16, width: 22, textAlign: 'center' }}>{row.icon}</span>
+                        <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', minWidth: 28 }}>{row.count}</span>
+                        <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{row.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
+
+              {/* Impact analysis */}
+              {(() => {
+                const matchSlot = myDaySchedule?.find(s => s.property === request.propertyName)
+                const verdict = request.calendarSignal === 'blocked' ? 'conflict'
+                  : request.calendarSignal === 'available' ? 'fine'
+                  : 'careful'
+                const verdictStyle = verdict === 'conflict'
+                  ? { bg: '#ef444414', color: '#ef4444', border: '#ef444430', icon: '🔴' }
+                  : verdict === 'careful'
+                  ? { bg: '#d9770614', color: '#d97706', border: '#d9770630', icon: '🟡' }
+                  : { bg: '#05966914', color: '#059669', border: '#05966930', icon: '🟢' }
+                const verdictLabel = verdict === 'conflict' ? 'Schedule conflict' : verdict === 'careful' ? 'Plan carefully' : 'Looks fine'
+
+                let impactText = ''
+                if (isEco) {
+                  if (matchSlot) {
+                    const windowEndStr = slotEnd(matchSlot.timeWindow)
+                    const windowEndMins = toMins(windowEndStr)
+                    const earlyArrivalMins = windowEndMins - 120
+                    const earlyH = Math.floor(earlyArrivalMins / 60).toString().padStart(2, '0')
+                    const earlyM = (earlyArrivalMins % 60).toString().padStart(2, '0')
+                    impactText = `Guest wants early check-in (~${earlyH}:${earlyM}). Your cleaning at ${request.propertyName} ends at ${windowEndStr}. ${verdict === 'fine' ? '✓ You should have it ready in time.' : '⚠️ You may not finish in time.'}`
+                  } else {
+                    impactText = `Guest is requesting early check-in at ${request.propertyName}. Verify your cleaning schedule for ${relevantDate}.`
+                  }
+                } else {
+                  if (matchSlot) {
+                    const windowStartStr = slotStart(matchSlot.timeWindow)
+                    impactText = `Your turnover at ${request.propertyName} starts at ${windowStartStr}. A late checkout means the guest stays 2+ hours longer — your clean will start later than planned. ${verdict === 'conflict' ? '🔴 This will conflict with your next job.' : verdict === 'careful' ? '⚡ Plan extra buffer.' : '✓ You have enough gap.'}`
+                  } else {
+                    impactText = `Guest is requesting late checkout at ${request.propertyName}. This may push your cleaning window back by 2+ hours.`
+                  }
+                }
+
+                return (
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 10 }}>
+                      Impact of Approving
+                    </div>
+                    <div style={{ padding: '10px 14px', borderRadius: 8, background: verdictStyle.bg, border: `1px solid ${verdictStyle.border}`, marginBottom: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                        <span style={{ fontSize: 13 }}>{verdictStyle.icon}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: verdictStyle.color }}>{verdictLabel}</span>
+                      </div>
+                      <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>{impactText}</p>
+                    </div>
+                    {myDaySchedule && myDaySchedule.length > 0 && (
+                      <div style={{ fontSize: 11, color: 'var(--text-subtle)', display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                        <span>🔄 {myDaySchedule.filter(s => s.type === 'Turnover').length} turnover{myDaySchedule.filter(s => s.type === 'Turnover').length !== 1 ? 's' : ''}</span>
+                        <span>⏰ {myDaySchedule.filter(s => s.type === 'Same-day').length} same-day check-in{myDaySchedule.filter(s => s.type === 'Same-day').length !== 1 ? 's' : ''}</span>
+                        <span>🧹 {myDaySchedule.filter(s => s.type === 'Deep Clean').length} deep clean{myDaySchedule.filter(s => s.type === 'Deep Clean').length !== 1 ? 's' : ''}</span>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
 
               {/* Decline notes input */}
               {showDeclineInput && (
