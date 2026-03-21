@@ -1,12 +1,12 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, AlertCircle, DollarSign, BarChart2 } from 'lucide-react'
+import { LayoutDashboard, AlertCircle, DollarSign, BarChart2, ShieldCheck, ArrowUpCircle } from 'lucide-react'
 import { useRole } from '@/context/RoleContext'
 
-const SUBROUTES = ['', '/issues', '/refunds', '/analytics']
-const ICONS = [LayoutDashboard, AlertCircle, DollarSign, BarChart2]
-const LABELS = ['Overview', 'Issues', 'Refunds', 'Analytics']
+const SUBROUTES = ['', '/verifications', '/upsells', '/issues', '/refunds', '/analytics']
+const ICONS = [LayoutDashboard, ShieldCheck, ArrowUpCircle, AlertCircle, DollarSign, BarChart2]
+const LABELS = ['Overview', 'Verifications', 'Upsells', 'Issues', 'Refunds', 'Analytics']
 
 export default function GuestServicesNav() {
   const pathname = usePathname()
