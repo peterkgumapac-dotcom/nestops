@@ -47,7 +47,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
-        <main style={{ flex: 1, overflowY: 'auto', padding: 24, position: 'relative', zIndex: 1 }}>
+        <main style={{ flex: 1, overflowY: 'auto', padding: 'clamp(16px, 3vw, 24px)', position: 'relative', zIndex: 1 }}>
           {children}
         </main>
       </div>

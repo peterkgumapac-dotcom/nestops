@@ -73,7 +73,7 @@ export default function VerificationsPage() {
       </div>
 
       {/* Cards grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))', gap: 14 }}>
         {filtered.map((v, i) => {
           const cfg = STATUS_CONFIG[v.status]
           const completed = v.steps.filter(s => s.status === 'completed').length

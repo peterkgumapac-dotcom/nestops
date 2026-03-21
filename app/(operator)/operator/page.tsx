@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
 } from '@/components/ui/sheet'
@@ -56,6 +57,7 @@ interface QaPendingItem {
 
 export default function OperatorDashboard() {
   const { accent } = useRole()
+  const isMobile = useIsMobile()
   const [mounted, setMounted] = useState(false)
   const [pendingApprovals, setPendingApprovals] = useState<Approval[]>(APPROVALS)
   const [fieldReports, setFieldReports] = useState<FieldReport[]>([])
@@ -142,13 +144,20 @@ export default function OperatorDashboard() {
 
   // ─── Render ───────────────────────────────────────────────────────────────────
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: isMobile ? 'auto' : '100%' }}>
 
-      {/* 2-column layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', flex: 1, overflow: 'hidden', gap: 16 }}>
+      {/* 2-column layout — stacks on mobile */}
+      <div style={{
+        display: isMobile ? 'flex' : 'grid',
+        flexDirection: isMobile ? 'column' : undefined,
+        gridTemplateColumns: isMobile ? undefined : '1fr 320px',
+        flex: isMobile ? undefined : 1,
+        overflow: isMobile ? 'visible' : 'hidden',
+        gap: 16,
+      }}>
 
         {/* ═══ LEFT COLUMN — action ════════════════════════════════════════════ */}
-        <div style={{ overflowY: 'auto', paddingRight: 4, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ overflowY: isMobile ? 'visible' : 'auto', paddingRight: isMobile ? 0 : 4, display: 'flex', flexDirection: 'column', gap: 12 }}>
 
           {/* Greeting */}
           <div>
@@ -157,13 +166,13 @@ export default function OperatorDashboard() {
           </div>
 
           {/* Stat pills */}
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: isMobile ? 'nowrap' : 'wrap', overflowX: isMobile ? 'auto' : 'visible', paddingBottom: isMobile ? 4 : 0 }}>
             {PILLS.map(p => (
               <Link key={p.label} href={p.href} style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 padding: '5px 12px', borderRadius: 20,
                 background: p.bg, border: `1px solid ${p.border}`,
-                textDecoration: 'none',
+                textDecoration: 'none', flexShrink: 0,
               }}>
                 <span style={{ fontSize: 15, fontWeight: 700, color: p.color }}>{p.value}</span>
                 <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{p.label}</span>
@@ -466,7 +475,7 @@ export default function OperatorDashboard() {
         </div>
 
         {/* ═══ RIGHT COLUMN — monitor rail ═════════════════════════════════════ */}
-        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', overflow: isMobile ? 'visible' : 'hidden', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10 }}>
 
           {/* ── Section 1: Today's Check-Ins ─────────────────────────────────── */}
           <div style={{ flexShrink: 0, borderBottom: '1px solid var(--border)' }}>
@@ -516,8 +525,9 @@ export default function OperatorDashboard() {
           {/* ── Section 2: Live Feed ──────────────────────────────────────────── */}
           <div style={{
             display: 'flex', flexDirection: 'column',
-            flex: feedOpen ? '1 1 0' : '0 0 auto',
-            overflow: 'hidden', minHeight: 0,
+            flex: (!isMobile && feedOpen) ? '1 1 0' : '0 0 auto',
+            overflow: isMobile ? 'visible' : 'hidden',
+            minHeight: 0,
             borderBottom: '1px solid var(--border)',
           }}>
             <button
@@ -547,7 +557,7 @@ export default function OperatorDashboard() {
                   ))}
                 </div>
                 {/* Feed items */}
-                <div style={{ overflowY: 'auto', flex: 1 }}>
+                <div style={{ overflowY: 'auto', flex: 1, maxHeight: isMobile ? 360 : undefined }}>
                   {filterFeed(FEED_ITEMS, feedTab).map((item, i, arr) => {
                     const isRich = item.type === 'in_progress' || item.type === 'blocked' || item.type === 'en_route'
                     return (
@@ -586,7 +596,7 @@ export default function OperatorDashboard() {
           </div>
 
           {/* ── Section 3: Owner Approvals ────────────────────────────────────── */}
-          <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', maxHeight: approvalsOpen ? 320 : 'auto', overflow: 'hidden' }}>
+          <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', maxHeight: (!isMobile && approvalsOpen) ? 320 : 'none', overflow: isMobile ? 'visible' : 'hidden' }}>
             <button
               onClick={() => setApprovalsOpen(o => !o)}
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, width: '100%' }}

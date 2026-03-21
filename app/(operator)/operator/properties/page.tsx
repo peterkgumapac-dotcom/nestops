@@ -459,7 +459,7 @@ export default function PropertiesPage() {
 
       /* Grid view */
       ) : viewMode === 'grid' ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))', gap: 16 }}>
           {paginated.map(prop => {
             const owner = OWNERS.find(o => o.id === prop.ownerId)
             return (
@@ -551,8 +551,9 @@ export default function PropertiesPage() {
       /* List view */
       ) : (
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
           {/* Header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 100px 100px 140px 90px 110px 32px', gap: 12, padding: '10px 16px', background: 'var(--bg-subtle, var(--bg-card))', borderBottom: '1px solid var(--border)', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 100px 100px 140px 90px 110px 32px', gap: 12, padding: '10px 16px', background: 'var(--bg-subtle, var(--bg-card))', borderBottom: '1px solid var(--border)', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', minWidth: 720 }}>
             <span>Name</span>
             <span>Status</span>
             <span>City</span>
@@ -579,6 +580,7 @@ export default function PropertiesPage() {
                   borderBottom: i < paginated.length - 1 ? '1px solid var(--border)' : 'none',
                   cursor: 'pointer',
                   transition: 'background 0.15s',
+                  minWidth: 720,
                 }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover, rgba(0,0,0,0.03))')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
@@ -621,6 +623,7 @@ export default function PropertiesPage() {
               </div>
             )
           })}
+          </div>{/* end scroll wrapper */}
         </div>
       )}
 

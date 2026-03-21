@@ -242,3 +242,18 @@ html {
   background-size: 32px 32px;
   pointer-events: none;
 }
+
+/* ── Mobile responsive ─────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  body { overflow-x: hidden; }
+
+  /* Ensure tap targets are large enough */
+  button { min-height: 36px; }
+
+  /* Tables scroll horizontally on mobile */
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Horizontal scrolling pill rows */
+  .pills-row { flex-wrap: nowrap !important; overflow-x: auto; padding-bottom: 4px; }
+  .pills-row::-webkit-scrollbar { display: none; }
+}

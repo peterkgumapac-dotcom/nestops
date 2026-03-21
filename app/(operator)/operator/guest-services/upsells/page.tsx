@@ -204,7 +204,7 @@ export default function UpsellsPage() {
               {upsellApprovals.length}
             </span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))', gap: 10 }}>
             {upsellApprovals.map(({ guest, upsell, signal, triggerType }) => (
               <div
                 key={`${guest.id}-${upsell.upsellId}`}
@@ -288,7 +288,7 @@ export default function UpsellsPage() {
             No requests match this filter.
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))', gap: 10 }}>
             {filteredRequests.map(req => {
               const currentStatus = approvalStatuses[req.id] ?? req.status
               const isApproved = currentStatus === 'approved' || currentStatus === 'charged' || currentStatus === 'auth_held'

@@ -14,6 +14,7 @@ import NewIssueSheet from '@/components/guest-services/NewIssueSheet'
 import IssueSheet from '@/components/guest-services/IssueSheet'
 import { useRole } from '@/context/RoleContext'
 import type { UserProfile } from '@/context/RoleContext'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import {
   GUEST_ISSUES,
   getActiveIssues,
@@ -93,6 +94,7 @@ function fmtTime(iso: string) {
 
 export default function GuestServicesPage() {
   const { accent } = useRole()
+  const isMobile = useIsMobile()
   const router = useRouter()
   const [selectedIssue, setSelectedIssue] = useState<GuestIssue | null>(null)
   const [showNewIssue, setShowNewIssue] = useState(false)
@@ -352,7 +354,7 @@ export default function GuestServicesPage() {
         <StatCard label="Resolution Rate" value={`${resolveRate}%`}  icon={CheckCircle}   subtitle="Closed / total issues" animate={false} />
       </motion.div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24 }}>
+      <div style={{ display: isMobile ? 'flex' : 'grid', flexDirection: isMobile ? 'column' : undefined, gridTemplateColumns: isMobile ? undefined : '1fr 340px', gap: 24 }}>
         {/* Left column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
