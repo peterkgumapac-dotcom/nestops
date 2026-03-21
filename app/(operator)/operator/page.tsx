@@ -1,66 +1,57 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import {
-  AlertTriangle, ChevronDown, ChevronUp, ChevronRight,
-  Star, ShoppingCart, X,
-} from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
 } from '@/components/ui/sheet'
-import PageHeader from '@/components/shared/PageHeader'
-import StatusBadge from '@/components/shared/StatusBadge'
-import { REQUESTS } from '@/lib/data/requests'
 import { PROPERTIES } from '@/lib/data/properties'
 import { STOCK_ITEMS, PURCHASE_ORDERS, PROPERTY_CHECKINS } from '@/lib/data/inventory'
-import { GUEST_ISSUES, getActiveIssues, getTotalRefunds, getRedFlagProperties, fmtNok } from '@/lib/data/guestServices'
+import { GUEST_ISSUES, getActiveIssues } from '@/lib/data/guestServices'
 import { APPROVALS, type Approval } from '@/lib/data/approvals'
-import { JOBS, STAFF_MEMBERS } from '@/lib/data/staff'
+import { JOBS } from '@/lib/data/staff'
 import { UPSELL_APPROVAL_REQUESTS } from '@/lib/data/upsellApprovals'
 import { useRole } from '@/context/RoleContext'
 import { FEED_ITEMS, filterFeed, type FeedTab } from '@/lib/data/activityFeed'
 
-// ─── Team clock status (same as staff dashboard) ────────────────────────────
+// ─── Color constants ──────────────────────────────────────────────────────────
+const C = {
+  green:       '#1D9E75',
+  greenBg:     'rgba(29,158,117,0.08)',
+  greenBorder: 'rgba(29,158,117,0.2)',
+  red:         '#e24b4a',
+  redBg:       'rgba(226,75,74,0.08)',
+  redBorder:   'rgba(226,75,74,0.2)',
+  amber:       '#ef9f27',
+  amberBg:     'rgba(239,159,39,0.08)',
+  amberBorder: 'rgba(239,159,39,0.2)',
+  blue:        '#378ADD',
+  blueBg:      'rgba(55,138,221,0.08)',
+} as const
+
+// ─── Team clock status ────────────────────────────────────────────────────────
 const TEAM_CLOCK_STATUS = [
-  { id: 'ms', name: 'Maria S.',  initials: 'MS', avatarBg: '#d97706', role: 'Cleaning',       property: 'Ocean View Apt', clockedIn: true,  late: false },
-  { id: 'bl', name: 'Bjorn L.', initials: 'BL', avatarBg: '#0ea5e9', role: 'Maintenance',    property: 'Sunset Villa',   clockedIn: false, late: true  },
-  { id: 'fn', name: 'Fatima N.',initials: 'FN', avatarBg: '#ec4899', role: 'Guest Services',  property: 'Remote',         clockedIn: true,  late: false },
-  { id: 'jl', name: 'Johan L.', initials: 'JL', avatarBg: '#6b7280', role: 'Cleaning',       property: 'Harbor Studio',  clockedIn: false, late: false },
+  { id: 'ms', name: 'Maria S.',  initials: 'MS', avatarBg: '#1D9E75', role: 'Cleaning',      property: 'Ocean View Apt', clockedIn: true,  late: false, clockTime: '09:05' },
+  { id: 'bl', name: 'Bjorn L.', initials: 'BL', avatarBg: '#e24b4a', role: 'Maintenance',   property: 'Sunset Villa',   clockedIn: false, late: true,  lateMin: 349 },
+  { id: 'fn', name: 'Fatima N.',initials: 'FN', avatarBg: '#7c3aed', role: 'Guest Services', property: 'Remote',         clockedIn: true,  late: false, clockTime: '08:55' },
+  { id: 'jl', name: 'Johan L.', initials: 'JL', avatarBg: '#6b7280', role: 'Cleaning',      property: 'Harbor Studio',  clockedIn: false, late: false, startsAt: '14:00' },
 ]
 
+function fmtCountdown(sec: number) {
+  const h = Math.floor(sec / 3600)
+  const m = Math.floor((sec % 3600) / 60)
+  const s = sec % 60
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+}
 
 interface FieldReport {
-  id: string; property: string; issueType: string; urgency: 'Urgent' | 'Standard'; description: string; reporter: string; time: string
+  id: string; property: string; issueType: string; urgency: 'Urgent' | 'Standard'
+  description: string; reporter: string; time: string
 }
 interface QaPendingItem {
-  id: string; taskId: string; property: string; propertyId: string; cleaner: string; rating: number; notes: string; photos: string[]; submittedAt: string; qaStatus: 'pending' | 'approved' | 'redo'
-}
-
-// ─── Accordion section ───────────────────────────────────────────────────────
-function AccordionSection({ id, title, count, open, onToggle, children }: {
-  id: string; title: string; count: number; open: boolean; onToggle: () => void; children: React.ReactNode
-}) {
-  return (
-    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', marginBottom: 8 }}>
-      <button
-        onClick={onToggle}
-        style={{
-          width: '100%', height: 40, display: 'flex', alignItems: 'center', gap: 8,
-          padding: '0 16px', background: 'none', border: 'none', cursor: 'pointer',
-          borderBottom: open ? '1px solid var(--border)' : 'none',
-        }}
-      >
-        {open ? <ChevronUp size={14} style={{ color: 'var(--text-subtle)', flexShrink: 0 }} /> : <ChevronDown size={14} style={{ color: 'var(--text-subtle)', flexShrink: 0 }} />}
-        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{title}</span>
-        {count > 0 && (
-          <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 10, background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
-            {count}
-          </span>
-        )}
-      </button>
-      {open && <div style={{ padding: '12px 16px' }}>{children}</div>}
-    </div>
-  )
+  id: string; taskId: string; property: string; propertyId: string; cleaner: string
+  rating: number; notes: string; photos: string[]; submittedAt: string
+  qaStatus: 'pending' | 'approved' | 'redo'
 }
 
 export default function OperatorDashboard() {
@@ -72,11 +63,17 @@ export default function OperatorDashboard() {
   const [qaPending, setQaPending] = useState<QaPendingItem[]>([])
   const [qaReviewItem, setQaReviewItem] = useState<QaPendingItem | null>(null)
   const [toast, setToast] = useState('')
-  const [openSection, setOpenSection] = useState<string | null>(null)
   const [feedTab, setFeedTab] = useState<FeedTab>('all')
   const [pendingPOApprovals, setPendingPOApprovals] = useState(
     PURCHASE_ORDERS.filter(po => po.approvalTier === 'manager' && po.approvalStatus === 'pending')
   )
+  // Collapsible state
+  const [teamOpen, setTeamOpen] = useState(true)
+  const [lastNightOpen, setLastNightOpen] = useState(false)
+  const [checkinOpen, setCheckinOpen] = useState(true)
+  const [feedOpen, setFeedOpen] = useState(true)
+  const [approvalsOpen, setApprovalsOpen] = useState(true)
+  const [countdownSec, setCountdownSec] = useState(285)
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
@@ -87,6 +84,11 @@ export default function OperatorDashboard() {
     setMounted(true)
   }, [])
 
+  useEffect(() => {
+    const t = setInterval(() => setCountdownSec(s => Math.max(0, s - 1)), 1000)
+    return () => clearInterval(t)
+  }, [])
+
   const handleQaAction = (id: string, action: 'approved' | 'redo') => {
     const updated = qaPending.map(q => q.id === id ? { ...q, qaStatus: action } : q).filter(q => q.qaStatus === 'pending')
     setQaPending(updated)
@@ -95,18 +97,40 @@ export default function OperatorDashboard() {
     showToast(action === 'approved' ? '✓ Cleaning approved' : 'Flag sent — cleaner notified to redo')
   }
 
-  // ─── Derived counts ────────────────────────────────────────────────────────
+  // ─── Derived data ────────────────────────────────────────────────────────────
   const activeIssues = getActiveIssues(GUEST_ISSUES)
-  const totalRefunds = getTotalRefunds(GUEST_ISSUES)
-  const redFlags = getRedFlagProperties(GUEST_ISSUES)
   const lowStock = STOCK_ITEMS.filter(i => i.status === 'low' || i.status === 'critical' || i.status === 'out')
   const pendingUpsells = UPSELL_APPROVAL_REQUESTS.filter(r => r.status === 'pending_cleaner' || r.status === 'pending_supervisor')
-
-  // Check-ins / check-outs from JOBS
   const checkInJobs = JOBS.filter(j => j.checkinTime)
-  const checkOutJobs = JOBS.filter(j => j.checkoutTime)
-  const checkInNames = [...new Set(checkInJobs.map(j => j.propertyName))].join(', ')
-  const checkOutNames = [...new Set(checkOutJobs.map(j => j.propertyName))].join(', ')
+  const lateMembers = TEAM_CLOCK_STATUS.filter(m => m.late)
+  const onShift = TEAM_CLOCK_STATUS.filter(m => m.clockedIn)
+  const totalApprovalAmt = pendingApprovals.reduce((s, a) => s + a.amount, 0)
+
+  // Pre-check-in stock alert
+  const today = new Date('2026-03-21')
+  const urgentCheckins = PROPERTY_CHECKINS.filter(ci => {
+    const checkin = new Date(ci.date)
+    const hours = (checkin.getTime() - today.getTime()) / 3600000
+    return hours <= 72 && ci.stockItemIds.some(id => {
+      const item = STOCK_ITEMS.find(s => s.id === id)
+      return item && (item.status === 'low' || item.status === 'critical' || item.status === 'out')
+    })
+  })
+
+  // Greeting
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
+  const dateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+
+  // Stat pills
+  const PILLS = [
+    { label: 'Properties',  value: PROPERTIES.length,         color: C.green,  bg: C.greenBg,  border: C.greenBorder, href: '/operator/properties' },
+    { label: 'Check-ins',   value: checkInJobs.length,        color: C.green,  bg: C.greenBg,  border: C.greenBorder, href: '/operator/team' },
+    { label: 'Issues',      value: activeIssues.length,       color: activeIssues.length > 0 ? C.amber : C.green, bg: activeIssues.length > 0 ? C.amberBg : C.greenBg, border: activeIssues.length > 0 ? C.amberBorder : C.greenBorder, href: '/operator/guest-services/issues' },
+    { label: 'Upsells',     value: pendingUpsells.length,     color: pendingUpsells.length > 0 ? C.amber : C.green, bg: pendingUpsells.length > 0 ? C.amberBg : C.greenBg, border: pendingUpsells.length > 0 ? C.amberBorder : C.greenBorder, href: '/operator/guest-services/upsells' },
+    { label: 'Low stock',   value: lowStock.length,           color: lowStock.length > 0 ? C.red : C.green, bg: lowStock.length > 0 ? C.redBg : C.greenBg, border: lowStock.length > 0 ? C.redBorder : C.greenBorder, href: '/operator/inventory' },
+    { label: 'POs pending', value: pendingPOApprovals.length, color: pendingPOApprovals.length > 0 ? C.amber : C.green, bg: pendingPOApprovals.length > 0 ? C.amberBg : C.greenBg, border: pendingPOApprovals.length > 0 ? C.amberBorder : C.greenBorder, href: '/operator/inventory' },
+  ]
 
   if (!mounted) return (
     <div style={{ padding: 24 }}>
@@ -116,464 +140,496 @@ export default function OperatorDashboard() {
     </div>
   )
 
-  // ─── KPI chips ─────────────────────────────────────────────────────────────
-  const KPI_CHIPS = [
-    { label: 'Open Issues',       value: activeIssues.length,       dot: activeIssues.length > 0 ? '#ef4444' : '#10b981',  href: '/operator/guest-services/issues' },
-    { label: 'Owner Approvals',   value: pendingApprovals.length,   dot: pendingApprovals.length > 0 ? '#d97706' : '#10b981', href: '/owner/approvals' },
-    { label: 'Check-ins Today',   value: checkInJobs.length,        dot: '#10b981',                                          href: '/operator/team' },
-    { label: 'Check-outs Today',  value: checkOutJobs.length,       dot: '#d97706',                                          href: '/operator/team' },
-    { label: 'Upsell Requests',   value: pendingUpsells.length,     dot: pendingUpsells.length > 0 ? '#d97706' : '#10b981', href: '/operator/upsells' },
-    { label: 'Pending POs',       value: pendingPOApprovals.length, dot: pendingPOApprovals.length > 0 ? '#d97706' : '#10b981', href: '/operator/inventory' },
-  ]
-
+  // ─── Render ───────────────────────────────────────────────────────────────────
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <PageHeader title="Dashboard" subtitle="Operations overview" />
 
-      {/* ─── KPI Chips ─────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16, marginTop: 4 }}>
-        {KPI_CHIPS.map(chip => (
-          <Link
-            key={chip.label}
-            href={chip.href}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              height: 48, padding: '10px 16px', borderRadius: 8,
-              background: 'var(--bg-card)', border: '1px solid var(--border)',
-              textDecoration: 'none', flex: '1 1 130px', minWidth: 120,
-              transition: 'border-color 0.15s',
-            }}
-            onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = chip.dot)}
-            onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--border)')}
-          >
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: chip.dot, flexShrink: 0 }} />
-            <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1 }}>{chip.value}</span>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', lineHeight: 1.2 }}>{chip.label}</span>
-          </Link>
-        ))}
-      </div>
+      {/* 2-column layout */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', flex: 1, overflow: 'hidden', gap: 16 }}>
 
-      {/* ─── Pre-check-in Stock Alert ──────────────────────────────────────── */}
-      {(() => {
-        const today = new Date('2026-03-19')
-        const urgentCheckins = PROPERTY_CHECKINS.filter(ci => {
-          const checkin = new Date(ci.date)
-          const hours = (checkin.getTime() - today.getTime()) / 3600000
-          return hours <= 72 && ci.stockItemIds.some(id => {
-            const item = STOCK_ITEMS.find(s => s.id === id)
-            return item && (item.status === 'low' || item.status === 'critical' || item.status === 'out')
-          })
-        })
-        if (!urgentCheckins.length) return null
-        return (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, marginBottom: 20 }}>
-            <AlertTriangle size={16} color="#ef4444" style={{ flexShrink: 0 }} />
-            <div style={{ flex: 1 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#ef4444' }}>Pre-check-in Stock Alert — </span>
-              <span style={{ fontSize: 13, color: '#ef4444' }}>
-                {urgentCheckins.map(ci => {
-                  const lowItems = ci.stockItemIds.map(id => STOCK_ITEMS.find(s => s.id === id)).filter(i => i && i.status !== 'ok').map(i => i!.name)
-                  const checkin = new Date(ci.date)
-                  const hours = Math.round((checkin.getTime() - today.getTime()) / 3600000)
-                  return `${ci.property} check-in in ${hours}h — low: ${lowItems.join(', ')}`
-                }).join(' · ')}
-              </span>
-            </div>
-            <Link href="/operator/inventory?tab=alerts" style={{ fontSize: 12, color: '#ef4444', textDecoration: 'none', fontWeight: 600, flexShrink: 0, whiteSpace: 'nowrap' }}>
-              Restock →
-            </Link>
-          </div>
-        )
-      })()}
+        {/* ═══ LEFT COLUMN — action ════════════════════════════════════════════ */}
+        <div style={{ overflowY: 'auto', paddingRight: 4, display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-      {/* ─── Outer layout: main + activity sidebar ─────────────────────────── */}
-      <div style={{ display: 'flex', gap: 20, flex: 1, overflow: 'hidden' }}>
-
-        {/* ── MAIN CONTENT ─────────────────────────────────────────────────── */}
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'auto', paddingRight: 4 }}>
-
-          {/* ── Main 2-col grid ────────────────────────────────────────────── */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-
-            {/* Owner Approvals compact list */}
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Owner Approvals</span>
-                  {pendingApprovals.length > 0 && (
-                    <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 10, background: accent, color: '#fff' }}>
-                      {pendingApprovals.length}
-                    </span>
-                  )}
-                </div>
-                <Link href="/owner/approvals" style={{ fontSize: 12, color: accent, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3 }}>
-                  Owner portal <ChevronRight size={12} />
-                </Link>
-              </div>
-
-              {pendingApprovals.length === 0 ? (
-                <div style={{ padding: '16px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-                  ✓ No pending owner approvals
-                </div>
-              ) : (
-                <div>
-                  {pendingApprovals.slice(0, 5).map((a, i) => (
-                    <div
-                      key={a.id}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 8,
-                        height: 44, borderTop: i > 0 ? '1px solid var(--border-subtle)' : 'none',
-                      }}
-                    >
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.title}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{a.property} · {a.category}</div>
-                      </div>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', flexShrink: 0, whiteSpace: 'nowrap' }}>
-                        {a.amount.toLocaleString()} {a.currency}
-                      </span>
-                      <button
-                        onClick={() => { setPendingApprovals(p => p.filter(x => x.id !== a.id)); showToast('Approved — owner notified') }}
-                        style={{ height: 28, width: 60, borderRadius: 6, border: 'none', background: '#16a34a1a', color: '#34d399', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
-                      >✓</button>
-                      <button
-                        onClick={() => { setPendingApprovals(p => p.filter(x => x.id !== a.id)); showToast('Dismissed') }}
-                        style={{ height: 28, width: 28, borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      ><X size={12} /></button>
-                    </div>
-                  ))}
-                  {pendingApprovals.length > 5 && (
-                    <div style={{ paddingTop: 8, borderTop: '1px solid var(--border-subtle)' }}>
-                      <Link href="/owner/approvals" style={{ fontSize: 12, color: accent, textDecoration: 'none' }}>
-                        View all {pendingApprovals.length} →
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Today's Operations card */}
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
-
-              {/* Sub-section A: Today's Schedule */}
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 8 }}>Today&apos;s Schedule</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, height: 32 }}>
-                  <span style={{ fontSize: 12, color: 'var(--text-subtle)', width: 76, flexShrink: 0 }}>Check-ins</span>
-                  <span style={{ fontSize: 16, fontWeight: 700, color: '#10b981', flexShrink: 0 }}>{checkInJobs.length}</span>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{checkInNames || '—'}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, height: 32 }}>
-                  <span style={{ fontSize: 12, color: 'var(--text-subtle)', width: 76, flexShrink: 0 }}>Check-outs</span>
-                  <span style={{ fontSize: 16, fontWeight: 700, color: '#d97706', flexShrink: 0 }}>{checkOutJobs.length}</span>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{checkOutNames || '—'}</span>
-                </div>
-              </div>
-
-              {/* Sub-section B: Upsell Requests */}
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>Upsell Requests</span>
-                  {pendingUpsells.length > 3 && (
-                    <Link href="/operator/upsells" style={{ fontSize: 11, color: accent, textDecoration: 'none' }}>View all →</Link>
-                  )}
-                </div>
-                {pendingUpsells.length === 0 ? (
-                  <div style={{ fontSize: 12, color: 'var(--text-subtle)', padding: '4px 0' }}>No pending upsell requests</div>
-                ) : (
-                  pendingUpsells.slice(0, 3).map(req => (
-                    <div key={req.id} style={{ display: 'flex', alignItems: 'center', gap: 8, height: 40, borderBottom: '1px solid var(--border-subtle)' }}>
-                      <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', flex: '0 0 auto', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{req.upsellTitle}</span>
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{req.propertyName}</span>
-                      <span style={{ fontSize: 11, color: 'var(--text-subtle)', flexShrink: 0, maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{req.guestName}</span>
-                      <Link href="/operator/upsells" style={{ fontSize: 11, color: '#d97706', textDecoration: 'none', fontWeight: 600, flexShrink: 0 }}>Review →</Link>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {/* Sub-section C: Pending POs */}
-              <div style={{ padding: '12px 16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>Pending POs</span>
-                  {pendingPOApprovals.length > 3 && (
-                    <Link href="/operator/inventory" style={{ fontSize: 11, color: accent, textDecoration: 'none' }}>View all →</Link>
-                  )}
-                </div>
-                {pendingPOApprovals.length === 0 ? (
-                  <div style={{ fontSize: 12, color: 'var(--text-subtle)', padding: '4px 0' }}>No pending POs</div>
-                ) : (
-                  pendingPOApprovals.slice(0, 3).map(po => (
-                    <div key={po.id} style={{ display: 'flex', alignItems: 'center', gap: 8, height: 40, borderBottom: '1px solid var(--border-subtle)' }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'monospace', flexShrink: 0 }}>{po.poNumber}</span>
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{po.vendor}{po.requester ? ` · ${po.requester}` : ''}</span>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', flexShrink: 0 }}>{po.total.toLocaleString()} {po.currency}</span>
-                      <button
-                        onClick={() => { setPendingPOApprovals(p => p.filter(x => x.id !== po.id)); showToast(`PO ${po.poNumber} approved`) }}
-                        style={{ height: 26, padding: '0 10px', borderRadius: 5, border: 'none', background: '#16a34a1a', color: '#34d399', fontSize: 11, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
-                      >Approve</button>
-                      <button
-                        onClick={() => { setPendingPOApprovals(p => p.filter(x => x.id !== po.id)); showToast('Changes requested') }}
-                        style={{ height: 26, padding: '0 10px', borderRadius: 5, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer', flexShrink: 0 }}
-                      >Changes</button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* ── Who's Online — Staff Strip ──────────────────────────────────── */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 16,
-            height: 56, background: 'var(--bg-card)', border: '1px solid var(--border)',
-            borderRadius: 8, padding: '0 16px',
-          }}>
-            <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', flexShrink: 0 }}>On Duty</span>
-            <div style={{ display: 'flex', gap: 16, flex: 1, overflowX: 'auto' }}>
-              {TEAM_CLOCK_STATUS.slice(0, 6).map(member => (
-                <div key={member.id} style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                  <div style={{ position: 'relative' }}>
-                    <div style={{
-                      width: 32, height: 32, borderRadius: '50%', background: member.avatarBg,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0,
-                    }}>
-                      {member.initials}
-                    </div>
-                    <div style={{
-                      position: 'absolute', bottom: 0, right: 0,
-                      width: 8, height: 8, borderRadius: '50%',
-                      background: member.clockedIn ? '#10b981' : member.late ? '#ef4444' : '#6b7280',
-                      border: '1px solid var(--bg-card)',
-                    }} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: member.late ? '#d97706' : 'var(--text-primary)', whiteSpace: 'nowrap' }}>{member.name}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{member.role}</div>
-                  </div>
-                </div>
-              ))}
-              {TEAM_CLOCK_STATUS.length > 6 && (
-                <div style={{ display: 'flex', alignItems: 'center', fontSize: 12, color: 'var(--text-muted)', flexShrink: 0 }}>+{TEAM_CLOCK_STATUS.length - 6} more</div>
-              )}
-            </div>
-            <Link href="/operator/team?tab=daily" style={{ fontSize: 12, color: accent, textDecoration: 'none', flexShrink: 0, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 3 }}>
-              Full view <ChevronRight size={12} />
-            </Link>
-          </div>
-
-          {/* ── Secondary Accordions (below fold) ──────────────────────────── */}
+          {/* Greeting */}
           <div>
-            {/* Open Issues */}
-            <AccordionSection id="issues" title="Open Issues" count={activeIssues.length} open={openSection === 'issues'} onToggle={() => setOpenSection(s => s === 'issues' ? null : 'issues')}>
-              {activeIssues.length === 0 ? (
-                <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>No open issues</div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                  {activeIssues.slice(0, 8).map((issue, i) => (
-                    <div key={issue.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: i < activeIssues.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{issue.title}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{issue.propertyName} · {issue.assignedTo ?? 'Unassigned'}</div>
-                      </div>
-                      <StatusBadge status={issue.severity} />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </AccordionSection>
-
-            {/* Low Stock */}
-            <AccordionSection id="stock" title="Low Stock" count={lowStock.length} open={openSection === 'stock'} onToggle={() => setOpenSection(s => s === 'stock' ? null : 'stock')}>
-              {lowStock.length === 0 ? (
-                <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>All stock levels OK</div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                  {lowStock.map((item, i) => (
-                    <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '8px 0', borderBottom: i < lowStock.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 13, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.inStock} / {item.minLevel} {item.unit}</div>
-                      </div>
-                      <StatusBadge status={item.status} />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </AccordionSection>
-
-            {/* Guest Issues */}
-            <AccordionSection id="guest" title="Guest Issues" count={activeIssues.length} open={openSection === 'guest'} onToggle={() => setOpenSection(s => s === 'guest' ? null : 'guest')}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {[
-                  { label: 'Active issues', value: activeIssues.length, color: activeIssues.length > 3 ? '#ef4444' : 'var(--text-primary)' },
-                  { label: 'Total refunded', value: fmtNok(totalRefunds), color: 'var(--text-primary)' },
-                  { label: 'Flagged properties', value: redFlags.length, color: redFlags.length > 0 ? '#ef4444' : '#10b981' },
-                ].map(({ label, value, color }) => (
-                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 12, color: 'var(--text-subtle)' }}>{label}</span>
-                    <span style={{ fontSize: 14, fontWeight: 700, color }}>{value}</span>
-                  </div>
-                ))}
-                <Link href="/operator/guest-services" style={{ fontSize: 12, color: accent, textDecoration: 'none', marginTop: 4 }}>View guest services →</Link>
-              </div>
-            </AccordionSection>
-
-            {/* Work Orders */}
-            <AccordionSection
-              id="workorders"
-              title="Work Orders"
-              count={REQUESTS.filter(r => r.status !== 'resolved').length + ownerWorkOrders.length}
-              open={openSection === 'workorders'}
-              onToggle={() => setOpenSection(s => s === 'workorders' ? null : 'workorders')}
-            >
-              {REQUESTS.filter(r => r.status !== 'resolved').length === 0 && ownerWorkOrders.length === 0 ? (
-                <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>No open work orders</div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                  {[...ownerWorkOrders.slice(0, 3).map(wo => ({ title: wo.title, sub: `${wo.property} · ${wo.requestedBy}`, tag: 'Owner Approval', tagColor: '#ef4444' })),
-                    ...REQUESTS.filter(r => r.status !== 'resolved').slice(0, 3).map(r => {
-                      const prop = PROPERTIES.find(p => p.id === r.propertyId)
-                      return { title: r.title, sub: `${prop?.name ?? r.propertyId} · ${r.type}`, tag: r.requiresOwnerApproval ? 'Owner Approval' : 'Operator', tagColor: r.requiresOwnerApproval ? '#ef4444' : accent }
-                    }),
-                  ].map((wo, i, arr) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: i < arr.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{wo.title}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{wo.sub}</div>
-                      </div>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: `${wo.tagColor}18`, color: wo.tagColor, flexShrink: 0 }}>{wo.tag}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </AccordionSection>
-
-            {/* Field Reports — only when data exists */}
-            {fieldReports.length > 0 && (
-              <AccordionSection id="field" title="Field Reports" count={fieldReports.length} open={openSection === 'field'} onToggle={() => setOpenSection(s => s === 'field' ? null : 'field')}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                  {fieldReports.map((r, i) => (
-                    <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: i < fieldReports.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{r.issueType}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{r.property} · {r.reporter}</div>
-                      </div>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 5px', borderRadius: 3, background: r.urgency === 'Urgent' ? '#ef444418' : '#6b728018', color: r.urgency === 'Urgent' ? '#ef4444' : '#6b7280' }}>{r.urgency}</span>
-                    </div>
-                  ))}
-                </div>
-              </AccordionSection>
-            )}
-
-            {/* QA Pending — only when data exists */}
-            {qaPending.length > 0 && (
-              <AccordionSection id="qa" title="QA Pending" count={qaPending.length} open={openSection === 'qa'} onToggle={() => setOpenSection(s => s === 'qa' ? null : 'qa')}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                  {qaPending.map((item, i) => (
-                    <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: i < qaPending.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{item.property}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.cleaner}</div>
-                      </div>
-                      <span style={{ fontSize: 12, color: '#f59e0b' }}>{'★'.repeat(item.rating)}{'☆'.repeat(5 - item.rating)}</span>
-                      <button
-                        onClick={() => setQaReviewItem(item)}
-                        style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, cursor: 'pointer', fontWeight: 500, flexShrink: 0 }}
-                      >Review</button>
-                    </div>
-                  ))}
-                </div>
-              </AccordionSection>
-            )}
-          </div>
-        </div>
-
-        {/* ── ACTIVITY SIDEBAR ─────────────────────────────────────────────── */}
-        <div style={{
-          width: 280, flexShrink: 0,
-          overflowY: 'auto',
-          background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10,
-        }}>
-          {/* Header */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: '14px 16px',
-            borderBottom: '1px solid var(--border)',
-            position: 'sticky', top: 0,
-            background: 'var(--bg-card)',
-          }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Activity</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, padding: '2px 7px', borderRadius: 10, background: '#10b98118', color: '#10b981', border: '1px solid #10b98130' }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
-              Live
-            </span>
+            <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-primary)' }}>{greeting}, Peter</div>
+            <div style={{ fontSize: 12, color: 'var(--text-subtle)', fontFamily: 'monospace', marginTop: 3 }}>{dateStr}</div>
           </div>
 
-          {/* Tab bar */}
-          <div style={{ display: 'flex', gap: 2, padding: '8px 12px', borderBottom: '1px solid var(--border)' }}>
-            {(['all', 'in_progress', 'completed', 'issues'] as FeedTab[]).map(tab => (
-              <button key={tab} onClick={() => setFeedTab(tab)} style={{
-                flex: 1, padding: '4px 0', fontSize: 11, fontWeight: feedTab === tab ? 600 : 400,
-                borderRadius: 5, border: 'none', cursor: 'pointer',
-                background: feedTab === tab ? `${accent}18` : 'transparent',
-                color: feedTab === tab ? accent : 'var(--text-muted)',
+          {/* Stat pills */}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {PILLS.map(p => (
+              <Link key={p.label} href={p.href} style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '5px 12px', borderRadius: 20,
+                background: p.bg, border: `1px solid ${p.border}`,
+                textDecoration: 'none',
               }}>
-                {tab === 'all' ? 'All' : tab === 'in_progress' ? 'In progress' : tab === 'completed' ? 'Completed' : 'Issues'}
-              </button>
+                <span style={{ fontSize: 15, fontWeight: 700, color: p.color }}>{p.value}</span>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{p.label}</span>
+              </Link>
             ))}
           </div>
 
-          {/* Feed items */}
-          <div style={{ padding: '4px 0' }}>
-            {filterFeed(FEED_ITEMS, feedTab).map((item, i, arr) => {
-              const isRich = item.type === 'in_progress' || item.type === 'blocked' || item.type === 'en_route'
-              return (
-                <div
-                  key={item.id}
-                  style={{
-                    display: 'flex', alignItems: 'flex-start', gap: 10,
-                    padding: '12px 16px',
-                    borderBottom: i < arr.length - 1 ? '1px solid var(--border-subtle)' : 'none',
-                    minHeight: 48,
-                  }}
-                >
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: item.color, flexShrink: 0, marginTop: 5 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    {isRich ? (
-                      <>
-                        <div style={{ fontSize: 12, lineHeight: 1.4 }}>
-                          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.actor}</span>
-                          <span style={{ color: 'var(--text-muted)' }}> — {item.action} {item.property}</span>
-                          {item.detail && <span style={{ color: 'var(--text-subtle)' }}> · {item.detail}</span>}
-                        </div>
-                        {item.statusLabel && (
-                          <div style={{ fontSize: 11, fontWeight: 600, color: item.color, marginTop: 3 }}>{item.statusLabel}</div>
-                        )}
-                        {item.type === 'in_progress' && item.progress !== undefined && (
-                          <div style={{ marginTop: 5, height: 4, borderRadius: 2, background: 'var(--border)', overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: `${item.progress}%`, background: item.color, borderRadius: 2 }} />
-                          </div>
-                        )}
-                        <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginTop: 4 }}>{item.time}</div>
-                      </>
-                    ) : (
-                      <>
-                        <div style={{ fontSize: 12, lineHeight: 1.4 }}>
-                          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.actor}</span>
-                          <span style={{ color: 'var(--text-muted)' }}> {item.action}</span>
-                          {item.detail && <span style={{ color: 'var(--text-muted)' }}> — {item.detail} · {item.property}</span>}
-                        </div>
-                        <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginTop: 2 }}>{item.time}</div>
-                      </>
-                    )}
+          {/* Stock alert banner (amber) */}
+          {urgentCheckins.length > 0 && (
+            <Link href="/operator/inventory?tab=alerts" style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '10px 14px',
+              background: C.amberBg, border: `1px solid ${C.amberBorder}`,
+              borderLeft: `3px solid ${C.amber}`,
+              borderRadius: 8, textDecoration: 'none',
+            }}>
+              <span style={{
+                width: 8, height: 8, borderRadius: '50%', background: C.amber,
+                flexShrink: 0, animation: 'pulse 1.5s ease-in-out infinite',
+              }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: C.amber }}>Pre-check-in Stock Alert — </span>
+                <span style={{ fontSize: 12, color: C.amber, opacity: 0.8 }}>
+                  {urgentCheckins.map(ci => {
+                    const lowItems = ci.stockItemIds
+                      .map(id => STOCK_ITEMS.find(s => s.id === id))
+                      .filter(i => i && i.status !== 'ok')
+                      .map(i => i!.name)
+                    const hrs = Math.round((new Date(ci.date).getTime() - today.getTime()) / 3600000)
+                    return `${ci.property} in ${hrs}h — ${lowItems.join(', ')}`
+                  }).join(' · ')}
+                </span>
+              </div>
+              <ChevronRight size={14} color={C.amber} style={{ flexShrink: 0 }} />
+            </Link>
+          )}
+
+          {/* PTE Alert (red) */}
+          {activeIssues.length > 0 && (
+            <div style={{
+              padding: '10px 14px',
+              background: C.redBg, border: `1px solid ${C.redBorder}`,
+              borderLeft: `3px solid ${C.red}`,
+              borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10,
+            }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: C.red }}>PTE pending 4+ hours — Inspect heating system</div>
+                <div style={{ fontSize: 11, color: C.red, opacity: 0.7, marginTop: 2 }}>Downtown Loft · Guest Services not yet responded</div>
+              </div>
+              <Link href="/operator/guest-services/issues" style={{
+                fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6,
+                background: C.redBg, border: `1px solid ${C.redBorder}`,
+                color: C.red, textDecoration: 'none', flexShrink: 0,
+              }}>View Task</Link>
+            </div>
+          )}
+
+          {/* PTE Success (green) */}
+          <div style={{
+            padding: '8px 14px',
+            background: C.greenBg, border: `1px solid ${C.greenBorder}`,
+            borderLeft: `3px solid ${C.green}`,
+            borderRadius: 8,
+          }}>
+            <span style={{ fontSize: 12, fontWeight: 500, color: C.green }}>✓ 1 task auto-granted PTE · Properties vacant — no guest access needed</span>
+          </div>
+
+          {/* Needs Action */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+            <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: C.amber, flexShrink: 0 }} />
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Needs Action</span>
+            </div>
+            {/* Noise complaint */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>Noise complaint at Sunset Villa</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Reported 02:30 · Unassigned</div>
+              </div>
+              <button
+                onClick={() => showToast('Task assigned — team notified')}
+                style={{ fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 6, border: `1px solid ${C.amber}`, background: C.amberBg, color: C.amber, cursor: 'pointer', flexShrink: 0 }}
+              >Assign Now</button>
+            </div>
+            {/* Late members */}
+            {lateMembers.map((m, i) => (
+              <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: i < lateMembers.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{m.name} has not clocked in</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                    {m.role} · {m.property} · {'lateMin' in m ? `${(m as { lateMin: number }).lateMin} min late` : 'Late'}
                   </div>
                 </div>
-              )
-            })}
+                <button
+                  onClick={() => showToast(`Reminder sent to ${m.name}`)}
+                  style={{ fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 6, border: `1px solid ${C.amber}`, background: C.amberBg, color: C.amber, cursor: 'pointer', flexShrink: 0 }}
+                >Send Reminder</button>
+              </div>
+            ))}
           </div>
+
+          {/* Team Today — collapsible */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+            <button
+              onClick={() => setTeamOpen(o => !o)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', borderBottom: teamOpen ? '1px solid var(--border)' : 'none' }}
+            >
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', flex: 1, textAlign: 'left' }}>Team Today</span>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{onShift.length} on shift · {lateMembers.length} late</span>
+              <ChevronRight size={13} style={{ color: 'var(--text-subtle)', transform: teamOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+            </button>
+            {teamOpen && TEAM_CLOCK_STATUS.map((m, i) => (
+              <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', borderBottom: i < TEAM_CLOCK_STATUS.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                <div style={{ width: 30, height: 30, borderRadius: '50%', background: m.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                  {m.initials}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{m.role} · {m.property}</div>
+                </div>
+                <div style={{ flexShrink: 0 }}>
+                  {m.clockedIn && 'clockTime' in m
+                    ? <span style={{ fontSize: 11, fontWeight: 500, color: C.green }}>Clocked in {(m as { clockTime: string }).clockTime}</span>
+                    : m.late
+                    ? <span style={{ fontSize: 11, fontWeight: 500, color: C.red }}>{'lateMin' in m ? `${(m as { lateMin: number }).lateMin} min late` : 'Late'}</span>
+                    : 'startsAt' in m
+                    ? <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Starts {(m as { startsAt: string }).startsAt}</span>
+                    : null}
+                </div>
+                {m.late && (
+                  <button
+                    onClick={() => showToast(`Reminder sent to ${m.name}`)}
+                    style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 5, border: `1px solid ${C.amber}`, background: C.amberBg, color: C.amber, cursor: 'pointer', flexShrink: 0 }}
+                  >Remind</button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Last Night Incidents — collapsible */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+            <button
+              onClick={() => setLastNightOpen(o => !o)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', borderBottom: lastNightOpen ? '1px solid var(--border)' : 'none' }}
+            >
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', flex: 1, textAlign: 'left' }}>Last Night</span>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>2 incidents</span>
+              <ChevronRight size={13} style={{ color: 'var(--text-subtle)', transform: lastNightOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+            </button>
+            {lastNightOpen && (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <span style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--text-muted)', flexShrink: 0, width: 40 }}>02:30</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>Noise complaint</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Downtown Loft</div>
+                  </div>
+                  <button
+                    onClick={() => showToast('Task assigned')}
+                    style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 5, border: `1px solid ${C.amber}`, background: C.amberBg, color: C.amber, cursor: 'pointer', flexShrink: 0 }}
+                  >Assign Now</button>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px' }}>
+                  <span style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--text-muted)', flexShrink: 0, width: 40 }}>04:15</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>Hot water pressure low</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Sunset Villa</div>
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: C.green, flexShrink: 0 }}>✓ Assigned</span>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* My Tasks */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--border)' }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>My Tasks</span>
+              <Link href="/operator/team" style={{ fontSize: 11, color: accent, textDecoration: 'none' }}>View all →</Link>
+            </div>
+            {[
+              { title: 'Review QA submissions',      sub: 'Ocean View Apt · Cleaning' },
+              { title: 'Approve PO #PO-2024-008',    sub: 'Comfort Systems Nordic · 12,500 NOK' },
+              { title: 'Follow up guest complaint',  sub: 'Downtown Loft · High priority' },
+            ].map((task, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', borderBottom: i < 2 ? '1px solid var(--border-subtle)' : 'none' }}>
+                <div style={{ width: 16, height: 16, borderRadius: '50%', border: '1.5px solid var(--border)', flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>{task.title}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{task.sub}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Meetings */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+            <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border)' }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Meetings</span>
+            </div>
+            {[
+              { time: '10:00', title: 'Ops standup' },
+              { time: '14:00', title: 'Owner onboarding call' },
+            ].map((m, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 14px', borderBottom: i < 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                <span style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--text-muted)', flexShrink: 0, width: 42 }}>{m.time}</span>
+                <span style={{ fontSize: 12, color: 'var(--text-primary)' }}>{m.title}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* QA Pending — only when data exists */}
+          {qaPending.length > 0 && (
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderBottom: '1px solid var(--border)' }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>QA Pending</span>
+                <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 10, background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>{qaPending.length}</span>
+              </div>
+              {qaPending.map((item, i) => (
+                <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderBottom: i < qaPending.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>{item.property}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.cleaner}</div>
+                  </div>
+                  <span style={{ fontSize: 12, color: '#f59e0b' }}>{'★'.repeat(item.rating)}{'☆'.repeat(5 - item.rating)}</span>
+                  <button
+                    onClick={() => setQaReviewItem(item)}
+                    style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, cursor: 'pointer', fontWeight: 500, flexShrink: 0 }}
+                  >Review</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Pending POs — only when data exists */}
+          {pendingPOApprovals.length > 0 && (
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderBottom: '1px solid var(--border)' }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Pending POs</span>
+                <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 10, background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>{pendingPOApprovals.length}</span>
+              </div>
+              {pendingPOApprovals.slice(0, 3).map((po, i) => (
+                <div key={po.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderBottom: i < Math.min(pendingPOApprovals.length, 3) - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'monospace' }}>{po.poNumber}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{po.vendor}</div>
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', flexShrink: 0 }}>{po.total.toLocaleString()} {po.currency}</span>
+                  <button
+                    onClick={() => { setPendingPOApprovals(p => p.filter(x => x.id !== po.id)); showToast(`PO ${po.poNumber} approved`) }}
+                    style={{ height: 26, padding: '0 10px', borderRadius: 5, border: 'none', background: '#16a34a1a', color: '#34d399', fontSize: 11, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
+                  >Approve</button>
+                  <button
+                    onClick={() => { setPendingPOApprovals(p => p.filter(x => x.id !== po.id)); showToast('Changes requested') }}
+                    style={{ height: 26, padding: '0 10px', borderRadius: 5, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer', flexShrink: 0 }}
+                  >Changes</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Field Reports — only when data exists */}
+          {fieldReports.length > 0 && (
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderBottom: '1px solid var(--border)' }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Field Reports</span>
+                <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 10, background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>{fieldReports.length}</span>
+              </div>
+              {fieldReports.map((r, i) => (
+                <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderBottom: i < fieldReports.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>{r.issueType}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{r.property} · {r.reporter}</div>
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 5px', borderRadius: 3, background: r.urgency === 'Urgent' ? '#ef444418' : '#6b728018', color: r.urgency === 'Urgent' ? '#ef4444' : '#6b7280' }}>{r.urgency}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Work orders from owner (localStorage) */}
+          {ownerWorkOrders.length > 0 && (
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderBottom: '1px solid var(--border)' }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Owner Work Orders</span>
+                <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 10, background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>{ownerWorkOrders.length}</span>
+              </div>
+              {ownerWorkOrders.map((wo, i) => (
+                <div key={wo.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderBottom: i < ownerWorkOrders.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>{wo.title}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{wo.property} · {wo.requestedBy}</div>
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#ef444418', color: '#ef4444' }}>Owner</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+        </div>
+
+        {/* ═══ RIGHT COLUMN — monitor rail ═════════════════════════════════════ */}
+        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10 }}>
+
+          {/* ── Section 1: Today's Check-Ins ─────────────────────────────────── */}
+          <div style={{ flexShrink: 0, borderBottom: '1px solid var(--border)' }}>
+            <button
+              onClick={() => setCheckinOpen(o => !o)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer' }}
+            >
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', flex: 1, textAlign: 'left' }}>Today&apos;s Check-ins</span>
+              <span style={{ fontSize: 10, color: countdownSec < 60 ? C.red : 'var(--text-muted)', fontFamily: 'monospace', fontWeight: countdownSec < 60 ? 700 : 400 }}>
+                {fmtCountdown(countdownSec)}
+              </span>
+              <ChevronRight size={13} style={{ color: 'var(--text-subtle)', transform: checkinOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+            </button>
+            {checkinOpen && (
+              <div style={{ padding: '0 14px 10px' }}>
+                {checkInJobs.length === 0 ? (
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', padding: '6px 0' }}>No check-ins scheduled today</div>
+                ) : checkInJobs.map((job, i) => {
+                  const isAtRisk = i === 1
+                  return (
+                    <div key={i} style={{ padding: '8px 0', borderTop: i > 0 ? '1px solid var(--border-subtle)' : 'none' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{job.propertyName}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{job.reservation?.guestName ?? 'Guest'}</div>
+                        </div>
+                        <span style={{
+                          fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10,
+                          background: isAtRisk ? C.amberBg : C.greenBg,
+                          color: isAtRisk ? C.amber : C.green,
+                          border: `1px solid ${isAtRisk ? C.amberBorder : C.greenBorder}`,
+                          flexShrink: 0,
+                        }}>
+                          {isAtRisk ? 'At risk' : 'Ready'}
+                        </span>
+                      </div>
+                      {isAtRisk && (
+                        <div style={{ fontSize: 10, color: C.amber, marginTop: 4 }}>⚠ Cleaning finishes at 17:00</div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* ── Section 2: Live Feed ──────────────────────────────────────────── */}
+          <div style={{
+            display: 'flex', flexDirection: 'column',
+            flex: feedOpen ? '1 1 0' : '0 0 auto',
+            overflow: 'hidden', minHeight: 0,
+            borderBottom: '1px solid var(--border)',
+          }}>
+            <button
+              onClick={() => setFeedOpen(o => !o)}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, width: '100%' }}
+            >
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', flex: 1, textAlign: 'left' }}>Live Feed</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 10, background: C.greenBg, color: C.green, border: `1px solid ${C.greenBorder}` }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.green, display: 'inline-block' }} />
+                LIVE
+              </span>
+              <ChevronRight size={13} style={{ color: 'var(--text-subtle)', transform: feedOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+            </button>
+            {feedOpen && (
+              <>
+                {/* Feed tabs */}
+                <div style={{ display: 'flex', gap: 2, padding: '0 10px 8px', flexShrink: 0 }}>
+                  {(['all', 'in_progress', 'issues'] as FeedTab[]).map(tab => (
+                    <button key={tab} onClick={() => setFeedTab(tab)} style={{
+                      flex: 1, padding: '4px 0', fontSize: 10, fontWeight: feedTab === tab ? 600 : 400,
+                      borderRadius: 5, border: 'none', cursor: 'pointer',
+                      background: feedTab === tab ? `${accent}18` : 'transparent',
+                      color: feedTab === tab ? accent : 'var(--text-muted)',
+                    }}>
+                      {tab === 'all' ? 'All' : tab === 'in_progress' ? 'In Progress' : 'Issues'}
+                    </button>
+                  ))}
+                </div>
+                {/* Feed items */}
+                <div style={{ overflowY: 'auto', flex: 1 }}>
+                  {filterFeed(FEED_ITEMS, feedTab).map((item, i, arr) => {
+                    const isRich = item.type === 'in_progress' || item.type === 'blocked' || item.type === 'en_route'
+                    return (
+                      <div key={item.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 14px', borderBottom: i < arr.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: item.color, flexShrink: 0, marginTop: 4 }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          {isRich ? (
+                            <>
+                              <div style={{ fontSize: 11, lineHeight: 1.4 }}>
+                                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.actor}</span>
+                                <span style={{ color: 'var(--text-muted)' }}> — {item.action} {item.property}</span>
+                                {item.detail && <span style={{ color: 'var(--text-subtle)' }}> · {item.detail}</span>}
+                              </div>
+                              {item.statusLabel && <div style={{ fontSize: 10, fontWeight: 600, color: item.color, marginTop: 2 }}>{item.statusLabel}</div>}
+                              {item.type === 'in_progress' && item.progress !== undefined && (
+                                <div style={{ marginTop: 4, height: 3, borderRadius: 2, background: 'var(--border)', overflow: 'hidden' }}>
+                                  <div style={{ height: '100%', width: `${item.progress}%`, background: item.color, borderRadius: 2 }} />
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <div style={{ fontSize: 11, lineHeight: 1.4 }}>
+                              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.actor}</span>
+                              <span style={{ color: 'var(--text-muted)' }}> {item.action}</span>
+                              {item.detail && <span style={{ color: 'var(--text-muted)' }}> — {item.detail} · {item.property}</span>}
+                            </div>
+                          )}
+                          <div style={{ fontSize: 10, color: 'var(--text-subtle)', marginTop: 2 }}>{item.time}</div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* ── Section 3: Owner Approvals ────────────────────────────────────── */}
+          <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', maxHeight: approvalsOpen ? 320 : 'auto', overflow: 'hidden' }}>
+            <button
+              onClick={() => setApprovalsOpen(o => !o)}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, width: '100%' }}
+            >
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', flex: 1, textAlign: 'left' }}>Owner Approvals</span>
+              {pendingApprovals.length > 0 && (
+                <span style={{ fontSize: 10, color: C.amber, flexShrink: 0 }}>
+                  {totalApprovalAmt.toLocaleString()} NOK · {pendingApprovals.length}
+                </span>
+              )}
+              <ChevronRight size={13} style={{ color: 'var(--text-subtle)', transform: approvalsOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+            </button>
+            {approvalsOpen && (
+              <div style={{ overflowY: 'auto', flex: 1, borderTop: '1px solid var(--border)' }}>
+                {pendingApprovals.length === 0 ? (
+                  <div style={{ padding: '12px 14px', fontSize: 12, color: 'var(--text-muted)', textAlign: 'center' }}>✓ No pending approvals</div>
+                ) : pendingApprovals.map((a, i) => (
+                  <div key={a.id} style={{ padding: '10px 14px', borderBottom: i < pendingApprovals.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 2 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', flex: 1, marginRight: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.title}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: C.amber, flexShrink: 0 }}>{a.amount.toLocaleString()} {a.currency}</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>{a.property} · {a.category}</div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        onClick={() => { setPendingApprovals(p => p.filter(x => x.id !== a.id)); showToast('Approved — owner notified') }}
+                        style={{ flex: 1, height: 26, borderRadius: 5, border: 'none', background: '#16a34a1a', color: '#34d399', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                      >Approve</button>
+                      <button
+                        onClick={() => showToast('Invoiced later')}
+                        style={{ flex: 1, height: 26, borderRadius: 5, border: `1px solid ${C.blue}40`, background: C.blueBg, color: C.blue, fontSize: 11, cursor: 'pointer' }}
+                      >Invoice Later</button>
+                      <button
+                        onClick={() => showToast('Follow-up sent')}
+                        style={{ flex: 1, height: 26, borderRadius: 5, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer' }}
+                      >Follow-Up</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
 
