@@ -8,8 +8,8 @@ import { useRole } from '@/context/RoleContext'
 import { useTheme } from '@/context/ThemeContext'
 import { MAIN_APP_NAV_BY_ROLE, getStaffNav } from '@/lib/nav'
 
-const APP_VERSION = 'v3.0'
-const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v3.0'
+const APP_VERSION = 'v3.1'
+const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v3.1'
 const WHATS_NEW_ITEMS = [
   'Demo persona switcher — floating 🎭 button in-app lets you switch between all 7 personas instantly',
   'Per-persona inventory stock — each staff member sees only their assigned properties and realistic stock levels',

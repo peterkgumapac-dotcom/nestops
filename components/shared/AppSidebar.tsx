@@ -3,16 +3,19 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight, X, Sun, Moon, Sparkles } from 'lucide-react'
+import {
+  X, Sun, Moon, Sparkles,
+  AlertCircle, CalendarPlus, PlusSquare, Flag,
+} from 'lucide-react'
 import { useRole } from '@/context/RoleContext'
 import { useTheme } from '@/context/ThemeContext'
 import { NAV_BY_ROLE, getStaffNav } from '@/lib/nav'
 
-const APP_VERSION = 'v3.0'
-const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v3.0'
+const APP_VERSION = 'v3.1'
+const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v3.1'
 
 const WHATS_NEW_ITEMS = [
-  'Demo persona switcher — floating 🎭 button in-app lets you switch between all 7 personas instantly',
+  'Demo persona switcher — floating button in-app lets you switch between all 7 personas instantly',
   'Per-persona inventory stock — each staff member sees only their assigned properties and realistic stock levels',
   'Staff alerts now include Early Check-in and Late Checkout upsell requests with direct navigation',
   'My Cleanings cards are now clickable — tap any cleaning to open the full checklist directly',
@@ -24,6 +27,8 @@ const WHATS_NEW_ITEMS = [
 interface AppSidebarProps {
   isOpen?: boolean
   onClose?: () => void
+  collapsed?: boolean
+  onToggle?: () => void
 }
 
 const PORTAL_OPTIONS = [
@@ -32,14 +37,20 @@ const PORTAL_OPTIONS = [
   { role: 'staff'    as const, label: 'Staff Portal',    color: '#d97706', href: '/staff' },
 ]
 
+const QUICK_ACTIONS = [
+  { label: 'New Issue',      Icon: AlertCircle,  href: '#new-issue' },
+  { label: 'Schedule Clean', Icon: CalendarPlus, href: '#schedule-clean' },
+  { label: 'New Task',       Icon: PlusSquare,   href: '#new-task' },
+  { label: 'Log Incident',   Icon: Flag,         href: '#log-incident' },
+]
+
 interface StoredUser { id?: string; name?: string; role?: string; subRole?: string }
 
-export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
+export default function AppSidebar({ isOpen, onClose, collapsed = false }: AppSidebarProps) {
   const { role, setRole, accent, portalLabel } = useRole()
   const { theme, toggleTheme } = useTheme()
   const pathname = usePathname()
   const router = useRouter()
-  const [collapsed, setCollapsed] = useState(false)
   const [switcherOpen, setSwitcherOpen] = useState(false)
   const [storedUser, setStoredUser] = useState<StoredUser | null>(null)
   const [showWhatsNew, setShowWhatsNew] = useState(false)
@@ -78,31 +89,40 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
     ? getStaffNav(storedUser?.subRole)
     : NAV_BY_ROLE[role]
 
-  // Flatten items for stagger index calculation
   let globalIndex = 0
 
   const sidebarContent = (
     <div
       style={{
-        width: collapsed ? 64 : 240,
+        width: collapsed ? 48 : 220,
         background: 'var(--bg-surface)',
         borderRight: '1px solid var(--border)',
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        transition: 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        transition: 'width 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
         overflow: 'hidden',
       }}
     >
       {/* Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '20px 16px', minHeight: 64, flexShrink: 0 }}>
-        <div style={{ width: 32, height: 32, borderRadius: 8, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#fff', fontSize: 14, flexShrink: 0 }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: '20px 8px', minHeight: 64, flexShrink: 0,
+        justifyContent: collapsed ? 'center' : 'flex-start',
+      }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: 8, background: accent,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontWeight: 700, color: '#fff', fontSize: 14, flexShrink: 0,
+        }}>
           N
         </div>
-        <div style={{ opacity: collapsed ? 0 : 1, transition: 'opacity 0.2s ease', pointerEvents: collapsed ? 'none' : 'auto', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-          <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>NestOps</div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{portalLabel}</div>
-        </div>
+        {!collapsed && (
+          <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>NestOps</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{portalLabel}</div>
+          </div>
+        )}
         {!collapsed && (
           <button
             onClick={toggleTheme}
@@ -131,7 +151,8 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
                 title={opt.label}
                 style={{
                   flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                  padding: '5px 6px', borderRadius: 6, border: role === opt.role ? `1px solid ${opt.color}40` : '1px solid transparent',
+                  padding: '5px 6px', borderRadius: 6,
+                  border: role === opt.role ? `1px solid ${opt.color}40` : '1px solid transparent',
                   background: role === opt.role ? `${opt.color}18` : 'transparent',
                   color: role === opt.role ? opt.color : 'var(--text-subtle)',
                   fontSize: 11, fontWeight: role === opt.role ? 600 : 400, cursor: 'pointer',
@@ -152,7 +173,7 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
                 transition={{ duration: 0.2 }}
                 style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', paddingTop: 6 }}
               >
-                ✓ Switched to {switchedTo}
+                Switched to {switchedTo}
               </motion.div>
             )}
           </AnimatePresence>
@@ -182,6 +203,7 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
                 const Icon = item.icon
                 const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href + '/'))
                 const itemIndex = globalIndex++
+                const isRequests = item.label === 'Requests'
                 return (
                   <motion.div
                     key={item.href}
@@ -194,7 +216,9 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
                       title={collapsed ? item.label : undefined}
                       style={{
                         display: 'flex', alignItems: 'center', gap: 12,
-                        padding: '7px 8px', borderRadius: 7, marginBottom: 1,
+                        padding: collapsed ? '8px 0' : '7px 8px',
+                        justifyContent: collapsed ? 'center' : 'flex-start',
+                        borderRadius: 7, marginBottom: 1,
                         color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
                         background: isActive ? `${accent}1a` : 'transparent',
                         borderLeft: isActive ? `2px solid ${accent}` : '2px solid transparent',
@@ -205,8 +229,14 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
                       }}
                     >
                       <div style={{ position: 'relative', flexShrink: 0 }}>
-                        <Icon size={17} strokeWidth={1.6} />
-                        {item.badge && (
+                        <Icon size={16} strokeWidth={1.5} />
+                        {collapsed && isRequests && item.badge ? (
+                          <span style={{
+                            position: 'absolute', top: -2, right: -2,
+                            width: 6, height: 6, borderRadius: '50%',
+                            background: 'var(--n-red)',
+                          }} />
+                        ) : !collapsed && item.badge ? (
                           <span style={{
                             position: 'absolute', top: -6, right: -6, fontSize: 9, fontWeight: 700,
                             color: '#fff', background: accent, borderRadius: '50%',
@@ -214,9 +244,9 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
                           }}>
                             {item.badge}
                           </span>
-                        )}
+                        ) : null}
                       </div>
-                      <span style={{ opacity: collapsed ? 0 : 1, transition: 'opacity 0.2s ease' }}>
+                      <span style={{ opacity: collapsed ? 0 : 1, transition: 'opacity 0.15s ease', pointerEvents: 'none' }}>
                         {item.label}
                       </span>
                     </Link>
@@ -229,30 +259,91 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
         })}
       </nav>
 
+      {/* Quick actions */}
+      <div style={{ padding: '6px 8px', borderTop: '1px solid var(--border-subtle)', flexShrink: 0 }}>
+        {QUICK_ACTIONS.map(({ label, Icon, href }) => (
+          <Link
+            key={label}
+            href={href}
+            title={collapsed ? label : undefined}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              padding: collapsed ? '7px 0' : '6px 8px',
+              justifyContent: collapsed ? 'center' : 'flex-start',
+              borderRadius: 7, marginBottom: 1,
+              color: 'var(--text-muted)',
+              background: 'transparent',
+              borderLeft: '2px solid transparent',
+              textDecoration: 'none', fontSize: 13,
+              transition: 'background 0.15s, color 0.15s',
+              whiteSpace: 'nowrap', overflow: 'hidden',
+            }}
+            onMouseEnter={e => {
+              const el = e.currentTarget as HTMLAnchorElement
+              el.style.background = 'var(--bg-elevated)'
+              el.style.color = 'var(--text-primary)'
+            }}
+            onMouseLeave={e => {
+              const el = e.currentTarget as HTMLAnchorElement
+              el.style.background = 'transparent'
+              el.style.color = 'var(--text-muted)'
+            }}
+          >
+            <Icon size={16} strokeWidth={1.5} style={{ flexShrink: 0 }} />
+            <span style={{ opacity: collapsed ? 0 : 1, transition: 'opacity 0.15s ease', pointerEvents: 'none' }}>
+              {label}
+            </span>
+          </Link>
+        ))}
+      </div>
+
       {/* Footer */}
       <div style={{ padding: '8px', flexShrink: 0, borderTop: '1px solid var(--border-subtle)' }} ref={switcherRef}>
         <div style={{ position: 'relative' }}>
           <button
             onClick={() => setSwitcherOpen(o => !o)}
             title={collapsed ? 'Switch Portal' : undefined}
-            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '8px', borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', overflow: 'hidden' }}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+              padding: '8px', borderRadius: 8, background: 'none', border: 'none',
+              cursor: 'pointer', color: 'var(--text-muted)', overflow: 'hidden',
+              justifyContent: collapsed ? 'center' : 'flex-start',
+            }}
           >
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: '50%', background: accent,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 10, fontWeight: 700, color: '#fff', flexShrink: 0,
+            }}>
               {displayInitials}
             </div>
-            <div style={{ textAlign: 'left', opacity: collapsed ? 0 : 1, transition: 'opacity 0.2s ease', whiteSpace: 'nowrap', flex: 1, overflow: 'hidden' }}>
-              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{displayName}</div>
-              <div style={{ fontSize: 11, textTransform: 'capitalize', color: 'var(--text-muted)' }}>{storedUser?.subRole ?? role}</div>
-            </div>
+            {!collapsed && (
+              <div style={{ textAlign: 'left', whiteSpace: 'nowrap', flex: 1, overflow: 'hidden' }}>
+                <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{displayName}</div>
+                <div style={{ fontSize: 11, textTransform: 'capitalize', color: 'var(--text-muted)' }}>
+                  {storedUser?.subRole ?? role}
+                </div>
+              </div>
+            )}
           </button>
 
           {switcherOpen && (
-            <div style={{ position: 'absolute', bottom: 'calc(100% + 4px)', left: collapsed ? 60 : 0, width: 180, background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 10, padding: 4, boxShadow: '0 8px 32px rgba(0,0,0,0.2)', zIndex: 100 }}>
+            <div style={{
+              position: 'absolute', bottom: 'calc(100% + 4px)', left: collapsed ? 52 : 0,
+              width: 180, background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+              borderRadius: 10, padding: 4, boxShadow: '0 8px 32px rgba(0,0,0,0.2)', zIndex: 100,
+            }}>
               {PORTAL_OPTIONS.map(opt => (
                 <button
                   key={opt.role}
                   onClick={() => { setRole(opt.role); setSwitcherOpen(false); router.push(opt.href) }}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 7, background: role === opt.role ? `${opt.color}1a` : 'transparent', border: 'none', cursor: 'pointer', fontSize: 13, color: role === opt.role ? opt.color : 'var(--text-muted)', textAlign: 'left' }}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '8px 10px', borderRadius: 7,
+                    background: role === opt.role ? `${opt.color}1a` : 'transparent',
+                    border: 'none', cursor: 'pointer', fontSize: 13,
+                    color: role === opt.role ? opt.color : 'var(--text-muted)', textAlign: 'left',
+                  }}
                 >
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: opt.color, flexShrink: 0 }} />
                   {opt.label}
@@ -262,7 +353,7 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
           )}
         </div>
 
-        {/* Version badge */}
+        {/* Version badge — hidden when collapsed */}
         {!collapsed && (
           <button
             onClick={() => setShowWhatsNew(true)}
@@ -281,23 +372,14 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
             <Sparkles size={11} style={{ color: accent, marginLeft: 'auto' }} />
           </button>
         )}
-
-        <button
-          onClick={() => setCollapsed(c => !c)}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '7px', borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-subtle)', marginTop: 2 }}
-        >
-          {collapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
-        </button>
       </div>
-
     </div>
   )
 
-  // What's New banner — post-login, dismissable
+  // What's New banner
   const whatsNewBannerEl = whatsNewBanner && !collapsed && (
     <div style={{
-      position: 'fixed', bottom: 24, left: 256, zIndex: 100,
+      position: 'fixed', bottom: 24, left: 236, zIndex: 100,
       background: 'var(--bg-surface)', border: `1px solid ${accent}40`,
       borderRadius: 12, padding: '14px 16px', maxWidth: 320,
       boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
@@ -352,7 +434,7 @@ export default function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
 
       {whatsNewBannerEl}
 
-      {/* What's New Modal — rendered at root level to avoid stacking context issues */}
+      {/* What's New Modal */}
       {showWhatsNew && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 28, maxWidth: 380, width: '100%', boxShadow: '0 24px 64px rgba(0,0,0,0.3)' }}>

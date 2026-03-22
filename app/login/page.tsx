@@ -382,7 +382,7 @@ export default function LoginPage() {
           <div className="nav-left">
             <div className="nav-logo">N</div>
             <span className="nav-name">NestOps</span>
-            <span className="nav-tag">v3.0</span>
+            <span className="nav-tag">v3.1</span>
           </div>
           <a href="/" className="nav-cta">← Back to home</a>
         </div>
@@ -413,7 +413,7 @@ export default function LoginPage() {
           <div className="card-wordmark">
             <div className="nav-logo">N</div>
             <span className="nav-name">NestOps</span>
-            <span className="nav-tag">v3.0</span>
+            <span className="nav-tag">v3.1</span>
           </div>
 
           {/* Email */}
