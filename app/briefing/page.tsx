@@ -84,6 +84,16 @@ export default function BriefingPage() {
           router.replace('/briefing/cleaners')
           return
         }
+        // Redirect maintenance staff to dedicated briefing page
+        if (user.role === 'staff' && user.subRole?.includes('Maintenance')) {
+          router.replace('/briefing/maintenance')
+          return
+        }
+        // Redirect guest services staff to dedicated briefing page
+        if (user.role === 'staff' && user.subRole?.includes('Guest')) {
+          router.replace('/briefing/guest-services')
+          return
+        }
         setCurrentUser(user)
         const loaded = getPrefs(user.id, user.subRole ?? '', user.role)
         setPrefs(loaded)

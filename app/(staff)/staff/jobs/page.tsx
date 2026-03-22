@@ -1,12 +1,12 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import React from 'react'
 import { Wrench, CheckSquare, ClipboardList, Search, Headphones } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
 import AppDrawer from '@/components/shared/AppDrawer'
 import Tabs from '@/components/shared/Tabs'
-import { JOBS, STAFF_MEMBERS, type Job } from '@/lib/data/staff'
+import { JOBS, STAFF_MEMBERS, type Job, type StaffMember } from '@/lib/data/staff'
 import { useRole } from '@/context/RoleContext'
 
 const STATUS_BORDER: Record<string, string> = {
@@ -15,8 +15,9 @@ const STATUS_BORDER: Record<string, string> = {
   pending: '#6b7280',
 }
 
-const CURRENT_STAFF = STAFF_MEMBERS[0]
-const MY_JOBS = JOBS.filter(j => CURRENT_STAFF.jobIds.includes(j.id))
+const USER_TO_STAFF: Record<string, string> = {
+  u3: 's1', u4: 's3', u5: 's4', u7: 's2',
+}
 
 const TYPE_ICONS: Record<string, React.ElementType> = { cleaning: CheckSquare, maintenance: Wrench, inspection: Search, intake: ClipboardList, guest_services: Headphones }
 
@@ -24,15 +25,34 @@ export default function JobsPage() {
   const { accent } = useRole()
   const [activeTab, setActiveTab] = useState('all')
   const [selectedJob, setSelectedJob] = useState<Job | null>(null)
+  const [currentStaff, setCurrentStaff] = useState<StaffMember | null>(null)
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('nestops_user')
+      const profile = stored ? JSON.parse(stored) : null
+      const staffId = profile ? USER_TO_STAFF[profile.id] : null
+      const staff = staffId
+        ? STAFF_MEMBERS.find(s => s.id === staffId) ?? STAFF_MEMBERS[0]
+        : STAFF_MEMBERS[0]
+      setCurrentStaff(staff)
+    } catch {
+      setCurrentStaff(STAFF_MEMBERS[0])
+    }
+  }, [])
+
+  if (!currentStaff) return null
+
+  const myJobs = JOBS.filter(j => currentStaff.jobIds.includes(j.id))
 
   const tabs = [
-    { key: 'all', label: 'All', count: MY_JOBS.length },
-    { key: 'pending', label: 'Pending', count: MY_JOBS.filter(j => j.status === 'pending').length },
-    { key: 'in_progress', label: 'In Progress', count: MY_JOBS.filter(j => j.status === 'in_progress').length },
-    { key: 'done', label: 'Done', count: MY_JOBS.filter(j => j.status === 'done').length },
+    { key: 'all', label: 'All', count: myJobs.length },
+    { key: 'pending', label: 'Pending', count: myJobs.filter(j => j.status === 'pending').length },
+    { key: 'in_progress', label: 'In Progress', count: myJobs.filter(j => j.status === 'in_progress').length },
+    { key: 'done', label: 'Done', count: myJobs.filter(j => j.status === 'done').length },
   ]
 
-  const filtered = MY_JOBS.filter(j => activeTab === 'all' || j.status === activeTab)
+  const filtered = myJobs.filter(j => activeTab === 'all' || j.status === activeTab)
 
   const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)' as const, fontSize: 14, outline: 'none' }
 
@@ -42,7 +62,7 @@ export default function JobsPage() {
       <Tabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {filtered.length === 0 && <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-subtle)' }}>No jobs found</div>}
-        {filtered.map(job => {
+        {filtered.map((job) => {
           const Icon = TYPE_ICONS[job.type]
           return (
             <div
