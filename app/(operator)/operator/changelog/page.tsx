@@ -10,6 +10,20 @@ interface ChangeEntry {
 
 const CHANGELOG: ChangeEntry[] = [
   {
+    version: 'v3.3',
+    date: 'Mar 22, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'gs-supervisor role fully implemented — STAFF_GS_SUPERVISOR_NAV added to lib/nav.ts with team queue, all issues, analytics, staffing, and platforms sections; distinct from GS staff nav per PRD v3 spec' },
+      { tag: '⚡ Feature', text: 'Supervisor briefing page (/briefing/supervisor) — team-level view showing staff on shift today, today\'s cleanings count, and upsell approvals queue pending supervisor review' },
+      { tag: '⚡ Feature', text: 'GS Supervisor briefing page (/briefing/gs-supervisor) — open issues count, SLA risk panel (critical/high severity), unassigned issues, GS team roster, and quick-nav to team queue' },
+      { tag: '⚡ Feature', text: 'Carlos M. added as GS Supervisor demo persona (gs-supervisor jobRole, #8b5cf6) — available in login card, demo panel, and floating persona switcher; routes to /briefing/gs-supervisor on login' },
+      { tag: '🏗 Arch', text: 'getStaffNav() updated to dispatch on jobRole (exact PRD IDs) first, falling back to subRole string matching — eliminates ambiguity between supervisor/gs-supervisor and future role additions' },
+      { tag: '🏗 Arch', text: 'AppSidebar and MainAppSidebar now read and pass jobRole from localStorage to getStaffNav(), ensuring correct nav is rendered from first paint without subRole string hacks' },
+      { tag: '🐛 Fix', text: 'Intake removed from STAFF_CLEANING_NAV — cleaners receive assigned field visits via job queue, not self-initiated intake per PRD v3 spec' },
+      { tag: '⚡ Feature', text: 'Supervisor nav updated: Intake removed, Upsell Approvals (/app/upsells) and Schedule (/app/schedule) added per PRD v3 supervisor requirements' },
+    ],
+  },
+  {
     version: 'v3.2',
     date: 'Mar 22, 2026',
     items: [

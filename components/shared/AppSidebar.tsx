@@ -44,7 +44,7 @@ const QUICK_ACTIONS = [
   { label: 'Log Incident',   Icon: Flag,         href: '#log-incident' },
 ]
 
-interface StoredUser { id?: string; name?: string; role?: string; subRole?: string }
+interface StoredUser { id?: string; name?: string; role?: string; subRole?: string; jobRole?: string }
 
 export default function AppSidebar({ isOpen, onClose, collapsed = false }: AppSidebarProps) {
   const { role, setRole, accent, portalLabel } = useRole()
@@ -86,7 +86,7 @@ export default function AppSidebar({ isOpen, onClose, collapsed = false }: AppSi
     : displayName.slice(0, 2).toUpperCase()
 
   const sections = role === 'staff'
-    ? getStaffNav(storedUser?.subRole)
+    ? getStaffNav(storedUser?.jobRole, storedUser?.subRole)
     : NAV_BY_ROLE[role]
 
   let globalIndex = 0

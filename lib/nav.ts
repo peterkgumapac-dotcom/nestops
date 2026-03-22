@@ -7,7 +7,7 @@ import {
   Settings, History,
   Home, Inbox, PlusCircle, FileText, CheckSquare,
   Wrench, Users, CreditCard, UserCircle,
-  KeyRound, Globe,
+  KeyRound, Globe, Calendar,
   LucideIcon,
 } from 'lucide-react'
 
@@ -114,7 +114,6 @@ export const STAFF_CLEANING_NAV: NavSection[] = [
       { label: 'Alerts',       href: '/app/alerts',      icon: Bell },
       { label: 'Home',         href: '/app/dashboard',   icon: Home },
       { label: 'My Cleanings', href: '/app/my-tasks',    icon: CheckSquare },
-      { label: 'Intake',       href: '/app/new-intake',  icon: ClipboardList },
       { label: 'Work Orders',  href: '/app/work-orders', icon: Ticket },
     ],
   },
@@ -136,11 +135,12 @@ export const STAFF_CLEANING_SUPERVISOR_NAV: NavSection[] = [
   {
     label: '',
     items: [
-      { label: 'Team Alerts',  href: '/app/alerts',      icon: Bell },
-      { label: 'Home',         href: '/app/dashboard',   icon: Home },
-      { label: 'Team Tasks',   href: '/app/my-tasks',    icon: CheckSquare },
-      { label: 'Intake',       href: '/app/new-intake',  icon: ClipboardList },
-      { label: 'Work Orders',  href: '/app/work-orders', icon: Ticket },
+      { label: 'Team Alerts',      href: '/app/alerts',      icon: Bell },
+      { label: 'Home',             href: '/app/dashboard',   icon: Home },
+      { label: 'Team Tasks',       href: '/app/my-tasks',    icon: CheckSquare },
+      { label: 'Work Orders',      href: '/app/work-orders', icon: Ticket },
+      { label: 'Upsell Approvals', href: '/app/upsells',     icon: ShoppingBag, badge: 2 },
+      { label: 'Schedule',         href: '/app/schedule',    icon: Calendar },
     ],
   },
   {
@@ -208,6 +208,59 @@ export const STAFF_GUEST_SERVICES_NAV: NavSection[] = [
     ],
   },
   {
+    label: 'Platforms',
+    items: [
+      { label: 'Guest Portal',  href: '/app/guidebooks',   icon: BookOpen },
+      { label: 'Verification',  href: '/app/verification', icon: ShieldCheck },
+      { label: 'Upsells',       href: '/app/upsells',      icon: ShoppingBag },
+    ],
+  },
+  {
+    label: 'Reference',
+    items: [
+      { label: 'Guest SOPs', href: '/app/operations', icon: FileText },
+    ],
+  },
+  {
+    label: 'Account',
+    items: [
+      { label: 'My Account', href: '/app/my-account', icon: UserCircle },
+    ],
+  },
+]
+
+export const STAFF_GS_SUPERVISOR_NAV: NavSection[] = [
+  {
+    label: 'Overview',
+    items: [
+      { label: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: 'Guest Operations',
+    items: [
+      { label: 'Team Queue',     href: '/app/guest-services',           icon: Users },
+      { label: 'All Issues',     href: '/app/guest-services/issues',    icon: Inbox, badge: 3 },
+      { label: 'Analytics',      href: '/app/guest-services/analytics', icon: ClipboardList },
+      { label: 'Work Orders',    href: '/app/work-orders',              icon: Ticket },
+    ],
+  },
+  {
+    label: 'Resources',
+    items: [
+      { label: 'Properties', href: '/app/properties', icon: Building2 },
+      { label: 'Staffing',   href: '/app/team',       icon: UserCheck },
+    ],
+  },
+  {
+    label: 'Platforms',
+    items: [
+      { label: 'Guest Portal',  href: '/app/guidebooks',   icon: BookOpen },
+      { label: 'Verification',  href: '/app/verification', icon: ShieldCheck },
+      { label: 'Upsells',       href: '/app/upsells',      icon: ShoppingBag },
+    ],
+  },
+  {
     label: 'Reference',
     items: [
       { label: 'Guest SOPs', href: '/app/operations', icon: FileText },
@@ -245,7 +298,14 @@ export const STAFF_INSPECTOR_NAV: NavSection[] = [
   },
 ]
 
-export function getStaffNav(subRole?: string): NavSection[] {
+export function getStaffNav(jobRole?: string, subRole?: string): NavSection[] {
+  // jobRole (exact PRD IDs) takes priority over subRole string matching
+  if (jobRole === 'maintenance')    return STAFF_MAINTENANCE_NAV
+  if (jobRole === 'guest-services') return STAFF_GUEST_SERVICES_NAV
+  if (jobRole === 'gs-supervisor')  return STAFF_GS_SUPERVISOR_NAV
+  if (jobRole === 'supervisor')     return STAFF_CLEANING_SUPERVISOR_NAV
+  if (jobRole === 'cleaner')        return STAFF_CLEANING_NAV
+  // subRole fallback for backwards compatibility
   if (subRole?.includes('Maintenance')) return STAFF_MAINTENANCE_NAV
   if (subRole?.includes('Guest'))       return STAFF_GUEST_SERVICES_NAV
   if (subRole?.includes('Inspector'))   return STAFF_INSPECTOR_NAV

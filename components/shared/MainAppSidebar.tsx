@@ -8,16 +8,14 @@ import { useRole } from '@/context/RoleContext'
 import { useTheme } from '@/context/ThemeContext'
 import { MAIN_APP_NAV_BY_ROLE, getStaffNav } from '@/lib/nav'
 
-const APP_VERSION = 'v3.2'
-const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v3.2'
+const APP_VERSION = 'v3.3'
+const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v3.3'
 const WHATS_NEW_ITEMS = [
-  'Demo persona switcher — floating 🎭 button in-app lets you switch between all 7 personas instantly',
-  'Per-persona inventory stock — each staff member sees only their assigned properties and realistic stock levels',
-  'Staff alerts now include Early Check-in and Late Checkout upsell requests with direct navigation',
-  'My Cleanings cards are now clickable — tap any cleaning to open the full checklist directly',
-  'Upsell approval sheet now shows your full day schedule with tight-gap detection and impact analysis',
-  'Guest Services portal shows a live notification panel when cleaners approve or decline upsell requests',
-  'Briefing page: Clock In always visible for staff; owners get direct route to Owner Portal',
+  'GS Supervisor role live — Carlos M. demo persona, dedicated nav, and briefing page with SLA risk panel',
+  'Supervisor briefing page — team shift status, today\'s cleanings, and upsell approvals queue at a glance',
+  'Nav dispatch now uses jobRole (exact PRD IDs) — gs-supervisor and supervisor get fully distinct menus',
+  'Intake removed from cleaner nav — field visits are assigned, not self-initiated',
+  'Supervisor nav updated with Upsell Approvals and Schedule links per PRD v3',
 ]
 
 interface MainAppSidebarProps {
@@ -39,6 +37,7 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
   const [collapsed, setCollapsed] = useState(false)
   const [switcherOpen, setSwitcherOpen] = useState(false)
   const [currentSubRole, setCurrentSubRole] = useState<string | undefined>(user?.subRole)
+  const [currentJobRole, setCurrentJobRole] = useState<string | undefined>(user?.jobRole)
   const [showWhatsNew, setShowWhatsNew] = useState(false)
   const [whatsNewBanner, setWhatsNewBanner] = useState(false)
   const [switchedTo, setSwitchedTo] = useState<string | null>(null)
@@ -61,6 +60,7 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
       if (stored) {
         const u = JSON.parse(stored)
         setCurrentSubRole(u.subRole)
+        setCurrentJobRole(u.jobRole)
       }
     } catch {}
     try {
@@ -70,7 +70,7 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
   }, [])
 
   const sections = role === 'staff'
-    ? getStaffNav(currentSubRole ?? user?.subRole)
+    ? getStaffNav(currentJobRole ?? user?.jobRole, currentSubRole ?? user?.subRole)
     : (MAIN_APP_NAV_BY_ROLE[role] ?? MAIN_APP_NAV_BY_ROLE.operator)
 
   let globalIndex = 0

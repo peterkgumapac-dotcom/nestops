@@ -22,12 +22,13 @@ const DEMO_USERS: DemoUser[] = [
   { userId: 'bl', initials: 'BL', name: 'Bjorn L.',   role: 'staff'    as Role, subRole: 'Maintenance',         jobRole: 'maintenance',   avatarBg: '#378ADD', badgeLabel: 'Maintenance' },
   { userId: 'fn', initials: 'FN', name: 'Fatima N.',  role: 'staff'    as Role, subRole: 'Guest Services',      jobRole: 'guest-services',avatarBg: '#ec4899', badgeLabel: 'Guest Svc' },
   { userId: 'ak', initials: 'AK', name: 'Anna K.',    role: 'staff'    as Role, subRole: 'Cleaning Supervisor', jobRole: 'supervisor',    avatarBg: '#06b6d4', badgeLabel: 'Supervisor' },
+  { userId: 'cm', initials: 'CM', name: 'Carlos M.',  role: 'staff'    as Role, subRole: 'GS Supervisor',      jobRole: 'gs-supervisor', avatarBg: '#8b5cf6', badgeLabel: 'GS Supervisor' },
   { userId: 'sj', initials: 'SJ', name: 'Sarah J.',   role: 'owner'    as Role, avatarBg: '#7F77DD', badgeLabel: 'Owner' },
   { userId: 'mc', initials: 'MC', name: 'Michael C.', role: 'owner'    as Role, avatarBg: '#15d492', badgeLabel: 'Owner' },
 ]
 
 const USER_ID_MAP: Record<string, string> = {
-  pk: 'u1', ms: 'u3', bl: 'u4', fn: 'u5', ak: 'u7', sj: 'u2', mc: 'u6',
+  pk: 'u1', ms: 'u3', bl: 'u4', fn: 'u5', ak: 'u7', cm: 'u8', sj: 'u2', mc: 'u6',
 }
 
 const DEMO_USER_MAP: Record<string, DemoUser> = Object.fromEntries(
@@ -42,6 +43,7 @@ const CREDENTIALS = [
   { email: 'bjorn@nestops.com',    password: 'demo123', userId: 'bl' },
   { email: 'fatima@nestops.com',   password: 'demo123', userId: 'fn' },
   { email: 'anna@nestops.com',     password: 'demo123', userId: 'ak' },
+  { email: 'carlos@nestops.com',  password: 'demo123', userId: 'cm' },
   { email: 'sarah@nestops.com',    password: 'demo123', userId: 'sj' },
   { email: 'owner@nestops.com',    password: 'demo123', userId: 'sj' },
   { email: 'michael@nestops.com',  password: 'demo123', userId: 'mc' },
@@ -333,7 +335,13 @@ export default function LoginPage() {
     setUser(profile)
     let dest = '/briefing'
     if (profile.role === 'staff') {
-      if (profile.subRole?.includes('Maintenance'))        dest = '/briefing/maintenance'
+      if (profile.jobRole === 'maintenance')               dest = '/briefing/maintenance'
+      else if (profile.jobRole === 'gs-supervisor')        dest = '/briefing/gs-supervisor'
+      else if (profile.jobRole === 'supervisor')           dest = '/briefing/supervisor'
+      else if (profile.jobRole === 'guest-services')       dest = '/briefing/guest-services'
+      else if (profile.jobRole === 'cleaner')              dest = '/briefing/cleaners'
+      // subRole fallback
+      else if (profile.subRole?.includes('Maintenance'))   dest = '/briefing/maintenance'
       else if (profile.subRole?.includes('Guest'))         dest = '/briefing/guest-services'
       else if (profile.subRole?.includes('Cleaner') || profile.subRole?.includes('Cleaning'))
                                                            dest = '/briefing/cleaners'
@@ -391,7 +399,7 @@ export default function LoginPage() {
           <div className="nav-left">
             <div className="nav-logo">N</div>
             <span className="nav-name">NestOps</span>
-            <span className="nav-tag">v3.1</span>
+            <span className="nav-tag">v3.3</span>
           </div>
           <a href="/" className="nav-cta">← Back to home</a>
         </div>
@@ -422,7 +430,7 @@ export default function LoginPage() {
           <div className="card-wordmark">
             <div className="nav-logo">N</div>
             <span className="nav-name">NestOps</span>
-            <span className="nav-tag">v3.1</span>
+            <span className="nav-tag">v3.3</span>
           </div>
 
           {/* Email */}
@@ -572,6 +580,7 @@ export default function LoginPage() {
                 { userId: 'bl', emoji: '🔧', label: 'Maintenance',     sub: 'Bjorn L. · /app/my-tasks' },
                 { userId: 'fn', emoji: '🛎️', label: 'Guest Services',  sub: 'Fatima N. · /app/my-tasks' },
                 { userId: 'ak', emoji: '👷', label: 'Supervisor',      sub: 'Anna K. · /app/dashboard' },
+                { userId: 'cm', emoji: '🎧', label: 'GS Supervisor',   sub: 'Carlos M. · /app/dashboard' },
                 { userId: 'sj', emoji: '🏠', label: 'Owner',           sub: 'Sarah J. · /owner' },
                 { userId: 'mc', emoji: '🏠', label: 'Owner',           sub: 'Michael C. · /owner' },
               ].map(p => (
