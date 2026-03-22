@@ -27,7 +27,8 @@ export function useTaskComments(taskId: string) {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'task_comments', filter: `task_id=eq.${taskId}` },
-        (payload) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (payload: any) => {
           if (payload.eventType === 'INSERT') {
             setComments((prev) => [...prev, payload.new as TaskComment])
           } else if (payload.eventType === 'UPDATE') {

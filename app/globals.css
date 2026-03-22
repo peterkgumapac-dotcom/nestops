@@ -45,6 +45,17 @@
   --radius-lg: 10px;
   --radius-xl: 14px;
   --radius-2xl: 20px;
+
+  /* NestOps Task Engine tokens */
+  --n-bg:#080b12; --n-bg2:#0f1219; --n-bg3:#161b26; --n-card:#111722;
+  --n-border:rgba(255,255,255,0.06); --n-border2:rgba(255,255,255,0.10);
+  --n-text:#e8e6e1; --n-text2:#9ca3af; --n-text3:#5a5f6b;
+  --n-green:#1D9E75; --n-green2:#15d492;
+  --n-green-bg:rgba(29,158,117,0.08); --n-green-border:rgba(29,158,117,0.20);
+  --n-red:#e24b4a; --n-red-bg:rgba(226,75,74,0.08); --n-red-border:rgba(226,75,74,0.20);
+  --n-amber:#ef9f27; --n-amber-bg:rgba(239,159,39,0.08); --n-amber-border:rgba(239,159,39,0.20);
+  --n-blue:#378ADD; --n-blue-bg:rgba(55,138,221,0.08); --n-blue-border:rgba(55,138,221,0.20);
+  --n-mono:'JetBrains Mono',monospace;
 }
 
 .light {
@@ -243,6 +254,60 @@ html {
   pointer-events: none;
 }
 
+/* ── Collapsible pattern ─────────────────────────────────────────────────────── */
+.coll-header {
+  display:flex; align-items:center; gap:8px; padding:9px 12px;
+  cursor:pointer; background:var(--n-bg3); min-height:36px;
+  overflow:hidden; flex-wrap:nowrap; user-select:none;
+}
+.coll-title {
+  font-size:10px; font-weight:600; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--n-text3); white-space:nowrap;
+}
+.coll-meta {
+  font-size:11px; font-family:var(--n-mono); color:var(--n-text2);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.coll-chevron { width:14px; height:14px; transition:transform 0.2s; flex-shrink:0; }
+.coll-chevron.open { transform:rotate(90deg); }
+.coll-body {
+  display:grid; grid-template-rows:1fr;
+  transition:grid-template-rows 0.22s ease; overflow:hidden;
+}
+.coll-body.closed { grid-template-rows:0fr; }
+.coll-body-inner { overflow:hidden; }
+.coll-live-body { display:flex; flex-direction:column; flex:1; overflow:hidden; }
+.coll-live-body.closed { display:none; }
+
+@keyframes feedIn {
+  from { opacity:0; transform:translateY(-4px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.feed-item-enter { animation: feedIn 0.3s ease; }
+
+@keyframes livePulse {
+  0%   { box-shadow:0 0 0 0 rgba(21,212,146,0.6); }
+  70%  { box-shadow:0 0 0 5px rgba(21,212,146,0); }
+  100% { box-shadow:0 0 0 0 rgba(21,212,146,0); }
+}
+.live-dot {
+  width:6px; height:6px; border-radius:50%;
+  background:var(--n-green2);
+  animation: livePulse 1.8s ease-out infinite;
+  flex-shrink:0;
+}
+
+/* ── Dashboard 2-col layout ─────────────────────────────────────────────────── */
+.dash-grid {
+  display:grid;
+  grid-template-columns:1fr 320px;
+  gap:12px;
+  height:100%;
+  overflow:hidden;
+}
+.dash-left  { overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-bottom:24px; }
+.dash-right { display:flex; flex-direction:column; gap:0; overflow:hidden; }
+
 /* ── Mobile responsive ─────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
   body { overflow-x: hidden; }
@@ -256,4 +321,8 @@ html {
   /* Horizontal scrolling pill rows */
   .pills-row { flex-wrap: nowrap !important; overflow-x: auto; padding-bottom: 4px; }
   .pills-row::-webkit-scrollbar { display: none; }
+
+  /* Dashboard right column hidden on mobile */
+  .dash-grid { grid-template-columns:1fr; }
+  .dash-right { display:none; }
 }

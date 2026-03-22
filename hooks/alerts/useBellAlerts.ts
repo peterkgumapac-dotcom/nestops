@@ -31,14 +31,15 @@ export function useBellAlerts(userId: string) {
       .eq('target_user_id', userId)
       .is('read_at', null)
       .order('created_at', { ascending: false })
-      .then(({ data }) => { if (data) setAlerts(data as BellAlert[]) })
+      .then((result: { data: BellAlert[] | null; error: unknown }) => { if (result.data) setAlerts(result.data) })
 
     const channel = supabase
       .channel(`bell:${userId}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'bell_alerts', filter: `target_user_id=eq.${userId}` },
-        (payload) => setAlerts((prev) => [payload.new as BellAlert, ...prev])
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (payload: any) => setAlerts((prev) => [payload.new as BellAlert, ...prev])
       )
       .subscribe()
 
@@ -54,7 +55,7 @@ export function useBellAlerts(userId: string) {
     )
     await supabase
       .from('bell_alerts')
-      .update({ read_at: new Date().toISOString() })
+        .update({ read_at: new Date().toISOString() })
       .eq('id', alertId)
   }
 

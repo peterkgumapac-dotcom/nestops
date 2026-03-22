@@ -29,7 +29,8 @@ export function useChatMessages(currentUserId: string, otherUserId: string) {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'chat_messages' },
-        (payload) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (payload: any) => {
           const msg = payload.new as ChatMessage
           const isRelevant =
             (msg.sender_id === currentUserId && msg.recipient_id === otherUserId) ||
