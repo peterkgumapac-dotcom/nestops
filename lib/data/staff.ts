@@ -116,16 +116,16 @@ export const JOBS: Job[] = [
     type: 'maintenance', status: 'in_progress', priority: 'high',
     dueTime: '12:00', urgencyLabel: 'Urgent',
     pteRequired: true, pteStatus: 'pending',
-    pte: { status: 'pending', requestedBy: 'Marcus Berg', requestedAt: '2026-03-20T07:30:00', guestName: 'Henrik Solberg', guestCheckout: '2026-03-22T11:00:00', notes: 'Guest in property — GS contacting guest' },
+    pte: { status: 'pending', requestedBy: 'Bjorn Larsen', requestedAt: '2026-03-20T07:30:00', guestName: 'Henrik Solberg', guestCheckout: '2026-03-22T11:00:00', notes: 'Guest in property — GS contacting guest' },
     reservation: HENRIK_RESERVATION,
     staffId: 's3',
     workItems: getMaintenanceChecklist().map(i => ({ ...i, completed: false })),
     beforePhotos: [], afterPhotos: [],
     activity: [
-      { id: 'act-1', type: 'system', event: 'Task created', detail: 'Assigned to Marcus Berg', timestamp: '2026-03-20T07:30:00' },
+      { id: 'act-1', type: 'system', event: 'Task created', detail: 'Assigned to Bjorn Larsen', timestamp: '2026-03-20T07:30:00' },
       { id: 'act-2', type: 'system', event: 'PTE required', detail: 'Guest Henrik Solberg in property. GS notified.', timestamp: '2026-03-20T07:30:00' },
       { id: 'act-3', type: 'message', authorName: 'Fatima Ndiaye', authorRole: 'guest_services', authorAvatar: 'FN', message: 'Contacting guest now via WhatsApp. Henrik is usually responsive in mornings.', timestamp: '2026-03-20T08:15:00' },
-      { id: 'act-4', type: 'message', authorName: 'Marcus Berg', authorRole: 'maintenance', authorAvatar: 'MB', message: 'Going to Sunset Villa first while waiting. That one is empty so I can start there.', timestamp: '2026-03-20T08:45:00' },
+      { id: 'act-4', type: 'message', authorName: 'Bjorn Larsen', authorRole: 'maintenance', authorAvatar: 'BL', message: 'Going to Sunset Villa first while waiting. That one is empty so I can start there.', timestamp: '2026-03-20T08:45:00' },
       { id: 'act-5', type: 'message', authorName: 'Fatima Ndiaye', authorRole: 'guest_services', authorAvatar: 'FN', message: 'Henrik confirmed — OK to enter between 11:00 and 15:00. He will be out for lunch.', timestamp: '2026-03-20T09:30:00' },
       { id: 'act-6', type: 'system', event: 'Guest granted PTE via Fatima Ndiaye', detail: 'Access window: 11:00–15:00. Access code unlocked.', timestamp: '2026-03-20T09:30:00' },
     ],
@@ -241,6 +241,6 @@ export const JOBS: Job[] = [
 export const STAFF_MEMBERS: StaffMember[] = [
   { id: 's1', name: 'Johan Larsson',  initials: 'JL', role: 'Senior Cleaner',            assignedPropertyIds: ['p1', 'p3', 'p5'],             status: 'active', jobIds: ['j1', 'j3', 'j5'],  hourlyRate: 285 },
   { id: 's2', name: 'Anna Kowalski',  initials: 'AK', role: 'Inspector',                 assignedPropertyIds: ['p2', 'p4'],                   status: 'active', jobIds: ['j3', 'j8'],         hourlyRate: 320 },
-  { id: 's3', name: 'Marcus Berg',    initials: 'MB', role: 'Maintenance Tech',           assignedPropertyIds: ['p1', 'p4'],                   status: 'active', jobIds: ['j2', 'j6', 'j7'],   hourlyRate: 310 },
+  { id: 's3', name: 'Bjorn Larsen',   initials: 'BL', role: 'Maintenance Tech',           assignedPropertyIds: ['p1', 'p4'],                   status: 'active', jobIds: ['j2', 'j6', 'j7'],   hourlyRate: 310 },
   { id: 's4', name: 'Fatima Ndiaye',  initials: 'FN', role: 'Guest Services Coordinator', assignedPropertyIds: ['p1','p2','p3','p4','p5'],      status: 'active', jobIds: ['j9', 'j10'],        hourlyRate: 295 },
 ]

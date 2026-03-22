@@ -8,7 +8,7 @@ import { getStaffWeeklyHours } from '@/lib/data/staffScheduling'
 // Map user IDs → staff IDs (same as dashboard)
 const USER_TO_STAFF: Record<string, string> = {
   'u3': 's1', // Maria → Johan Larsson (cleaning)
-  'u4': 's3', // Bjorn → Marcus Berg (maintenance)
+  'u4': 's3', // Bjorn Larsen (maintenance)
   'u5': 's4', // Fatima → Fatima Ndiaye (guest services)
   'u7': 's2', // Anna → Anna Kowalski (inspector)
 }

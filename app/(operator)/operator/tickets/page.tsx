@@ -21,7 +21,7 @@ const TYPE_ICONS = {
   inquiry: HelpCircle,
 }
 
-const STAFF_OPTIONS = ['Johan Larsson', 'Anna Kowalski', 'Marcus Berg']
+const STAFF_OPTIONS = ['Johan Larsson', 'Anna Kowalski', 'Bjorn Larsen']
 
 type EnrichedRequest = Request & { propertyName: string; ownerName: string }
 

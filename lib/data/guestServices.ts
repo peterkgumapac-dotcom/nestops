@@ -827,7 +827,7 @@ export const OVERNIGHT_REPORTS: OvernightReport[] = [
     generatedAt: '06:00',
     issues: [
       { id: 'on-3', time: '02:30', property: 'Downtown Loft', title: 'Noise complaint from neighbor', severity: 'medium', assignedTo: undefined, status: 'unassigned' },
-      { id: 'on-4', time: '04:15', property: 'Sunset Villa', title: 'Hot water pressure low', severity: 'high', assignedTo: 'Marcus Berg', status: 'assigned' },
+      { id: 'on-4', time: '04:15', property: 'Sunset Villa', title: 'Hot water pressure low', severity: 'high', assignedTo: 'Bjorn Larsen', status: 'assigned' },
     ],
     lateCheckouts: [],
     noises: [],
