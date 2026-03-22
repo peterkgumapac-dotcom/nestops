@@ -463,6 +463,41 @@ footer p{font-size:12px;color:var(--text3)}
 @media(max-width:768px){
 #inventory-demo .container > div:last-child{flex-direction:column;align-items:center;gap:24px;}
 }
+
+/* ── MOBILE OPTIMIZATIONS ── */
+@media(max-width:768px){
+/* Hero */
+.hero{padding:80px 0 40px}
+.hero-glow{width:300px;height:220px;top:-60px}
+/* Section padding */
+.section{padding:60px 0}
+.feat{padding:50px 0}
+.sm-section{padding:50px 0}
+.final-cta{padding:60px 0 40px}
+#inventory-demo{padding:50px 0 40px !important}
+/* Access Window */
+#aw-fd{height:320px !important}
+#aw-demo-wrap > div:last-child{flex-wrap:wrap !important;justify-content:center !important}
+/* Morning Briefing */
+.mb-phone{height:440px}
+/* Silent Morning */
+.sm-side{min-height:280px}
+/* Calc card */
+.calc-card{padding:20px}
+/* Container tighter */
+.container{padding:0 16px}
+}
+@media(max-width:480px){
+/* Nav CTA compact */
+.nav-cta{padding:7px 12px;font-size:12px}
+/* Hero heading */
+.hero h1{font-size:28px}
+/* Access Window buttons */
+.aw-cb{flex:1;min-width:100px;text-align:center}
+/* MB phone smaller */
+.mb-phone{width:240px;height:420px}
+.mb-filmbar{width:240px}
+}
 </style>
 </head>
 <body>
