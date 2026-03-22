@@ -8,6 +8,7 @@ export interface UserProfile {
   name: string
   role: Role
   subRole?: string
+  jobRole?: 'cleaner' | 'supervisor' | 'maintenance' | 'guest-services' | 'gs-supervisor'
   avatarInitials: string
   avatarColor: string
 }

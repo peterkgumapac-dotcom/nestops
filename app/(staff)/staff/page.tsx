@@ -21,7 +21,9 @@ const USER_TO_STAFF: Record<string, string> = {
 }
 
 function getElapsed(clockInTime: string): string {
-  const diff = Date.now() - new Date(clockInTime).getTime()
+  const ms = new Date(clockInTime).getTime()
+  if (isNaN(ms)) return '—'
+  const diff = Date.now() - ms
   const h = Math.floor(diff / 3600000)
   const m = Math.floor((diff % 3600000) / 60000)
   if (h > 0) return `${h}h ${m}m`

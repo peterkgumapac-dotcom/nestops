@@ -11,16 +11,17 @@ interface DemoUser {
   name: string
   role: Role
   subRole?: string
+  jobRole?: UserProfile['jobRole']
   avatarBg: string
   badgeLabel: string
 }
 
 const DEMO_USERS: DemoUser[] = [
   { userId: 'pk', initials: 'PK', name: 'Peter K.',   role: 'operator' as Role, avatarBg: '#1D9E75', badgeLabel: 'Operator' },
-  { userId: 'ms', initials: 'MS', name: 'Maria S.',   role: 'staff'    as Role, subRole: 'Cleaner',             avatarBg: '#d97706', badgeLabel: 'Cleaner' },
-  { userId: 'bl', initials: 'BL', name: 'Bjorn L.',   role: 'staff'    as Role, subRole: 'Maintenance',         avatarBg: '#378ADD', badgeLabel: 'Maintenance' },
-  { userId: 'fn', initials: 'FN', name: 'Fatima N.',  role: 'staff'    as Role, subRole: 'Guest Services',      avatarBg: '#ec4899', badgeLabel: 'Guest Svc' },
-  { userId: 'ak', initials: 'AK', name: 'Anna K.',    role: 'staff'    as Role, subRole: 'Cleaning Supervisor', avatarBg: '#06b6d4', badgeLabel: 'Supervisor' },
+  { userId: 'ms', initials: 'MS', name: 'Maria S.',   role: 'staff'    as Role, subRole: 'Cleaner',             jobRole: 'cleaner',       avatarBg: '#d97706', badgeLabel: 'Cleaner' },
+  { userId: 'bl', initials: 'BL', name: 'Bjorn L.',   role: 'staff'    as Role, subRole: 'Maintenance',         jobRole: 'maintenance',   avatarBg: '#378ADD', badgeLabel: 'Maintenance' },
+  { userId: 'fn', initials: 'FN', name: 'Fatima N.',  role: 'staff'    as Role, subRole: 'Guest Services',      jobRole: 'guest-services',avatarBg: '#ec4899', badgeLabel: 'Guest Svc' },
+  { userId: 'ak', initials: 'AK', name: 'Anna K.',    role: 'staff'    as Role, subRole: 'Cleaning Supervisor', jobRole: 'supervisor',    avatarBg: '#06b6d4', badgeLabel: 'Supervisor' },
   { userId: 'sj', initials: 'SJ', name: 'Sarah J.',   role: 'owner'    as Role, avatarBg: '#7F77DD', badgeLabel: 'Owner' },
   { userId: 'mc', initials: 'MC', name: 'Michael C.', role: 'owner'    as Role, avatarBg: '#15d492', badgeLabel: 'Owner' },
 ]
@@ -319,6 +320,7 @@ export default function LoginPage() {
     name: user.name,
     role: user.role,
     subRole: user.subRole,
+    jobRole: user.jobRole,
     avatarInitials: user.initials,
     avatarColor: user.avatarBg,
   })

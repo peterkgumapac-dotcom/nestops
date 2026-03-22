@@ -10,6 +10,15 @@ interface ChangeEntry {
 
 const CHANGELOG: ChangeEntry[] = [
   {
+    version: 'v3.2',
+    date: 'Mar 22, 2026',
+    items: [
+      { tag: '🐛 Fix', text: 'Upsell Approvals section now strictly gated to supervisor and gs-supervisor roles — cleaner, maintenance, and guest-services roles no longer receive the approval UI (cleaners retain awareness-only view per PRD)' },
+      { tag: '🐛 Fix', text: 'Clock bar NaNm bug resolved — clockInTime was stored as a locale time string ("09:32 AM") by all briefing pages, causing new Date() to return NaN; ClockStatus now uses the clockInTimestamp (numeric ms) already persisted alongside it, with an isNaN guard as fallback' },
+      { tag: '🏗 Arch', text: 'Added jobRole field to UserProfile (cleaner | supervisor | maintenance | guest-services | gs-supervisor) — aligns with PRD v3 role ID spec; all role-conditional logic in My Tasks and ClockStatus now uses jobRole === exact match instead of subRole.includes() string matching, making supervisor and gs-supervisor fully distinct from each other and from cleaner/guest-services' },
+    ],
+  },
+  {
     version: 'v3.1',
     date: 'Mar 22, 2026',
     items: [

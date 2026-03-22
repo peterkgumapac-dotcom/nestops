@@ -9,11 +9,15 @@ interface ClockIn {
   propertyId: string
   date: string
   clockInTime: string
+  clockInTimestamp?: number
   status: string
 }
 
-function getElapsed(clockInTime: string): string {
-  const diff = Date.now() - new Date(clockInTime).getTime()
+function getElapsed(ci: ClockIn): string {
+  // Prefer numeric timestamp (always accurate); fall back to parsing clockInTime string
+  const ms = ci.clockInTimestamp ?? new Date(ci.clockInTime).getTime()
+  if (isNaN(ms)) return '—'
+  const diff = Date.now() - ms
   const h = Math.floor(diff / 3600000)
   const m = Math.floor((diff % 3600000) / 60000)
   if (h > 0) return `${h}h ${m}m`
@@ -32,7 +36,7 @@ export default function ClockStatus() {
       try {
         const u = JSON.parse(userStr)
         setIsStaff(u.role === 'staff')
-        setIsSupervisor(u.subRole?.includes('Supervisor') ?? false)
+        setIsSupervisor(u.jobRole === 'supervisor' || u.jobRole === 'gs-supervisor')
       } catch {}
     }
     const ciStr = localStorage.getItem('nestops_clockin')
@@ -42,7 +46,7 @@ export default function ClockStatus() {
         const today = new Date().toISOString().split('T')[0]
         if (ci.date === today && ci.status === 'in_progress') {
           setClockIn(ci)
-          setElapsed(getElapsed(ci.clockInTime))
+          setElapsed(getElapsed(ci))
         }
       } catch {}
     }
@@ -51,7 +55,7 @@ export default function ClockStatus() {
   useEffect(() => {
     if (!clockIn) return
     const interval = setInterval(() => {
-      setElapsed(getElapsed(clockIn.clockInTime))
+      setElapsed(getElapsed(clockIn))
     }, 60000)
     return () => clearInterval(interval)
   }, [clockIn])

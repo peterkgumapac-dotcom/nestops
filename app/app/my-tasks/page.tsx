@@ -14,6 +14,8 @@ import { getPTEBadge, isAccessCodeVisible } from '@/lib/utils/pteUtils'
 import { UPSELL_APPROVAL_REQUESTS, type UpsellApprovalRequest } from '@/lib/data/upsellApprovals'
 import CleanerApprovalSheet from '@/components/upsells/CleanerApprovalSheet'
 
+const USER_TO_STAFF: Record<string, string> = { 'u3': 's1', 'u4': 's3', 'u5': 's4', 'u7': 's2' }
+
 // ─── Today's Cleanings ────────────────────────────────────────────────────────
 
 interface CleaningJob {
@@ -252,22 +254,15 @@ export default function MyTasksPage() {
         setCurrentUser(user)
         // Set role identifier in URL
         const params = new URLSearchParams(window.location.search)
-        if (!params.get('role')) {
-          if (user.subRole?.includes('Maintenance')) router.replace('/app/my-tasks?role=maintenance')
-          else if (user.subRole?.includes('Supervisor')) router.replace('/app/my-tasks?role=supervisor')
-          else if (user.subRole?.includes('Cleaner') || user.subRole?.includes('Cleaning')) router.replace('/app/my-tasks?role=cleaner')
-          else if (user.subRole?.includes('Guest')) router.replace('/app/my-tasks?role=guest-services')
+        if (!params.get('role') && user.jobRole) {
+          router.replace(`/app/my-tasks?role=${user.jobRole}`)
         }
-        const isSup = user.subRole?.includes('Supervisor')
-        const cleanerId = 's1'
-        const supervisorId = 's2'
-        const requests = UPSELL_APPROVAL_REQUESTS.filter(r => {
-          if (isSup) {
-            return r.status === 'pending_cleaner' || (r.status === 'pending_supervisor' && r.escalatedToSupervisor)
-          }
-          return (r.status === 'pending_cleaner' && r.assignedCleanerId === cleanerId) ||
-            (r.status === 'pending_supervisor' && r.escalatedToSupervisor && r.supervisorId === supervisorId)
-        })
+        const isSup = user.jobRole === 'supervisor' || user.jobRole === 'gs-supervisor'
+        const staffId = USER_TO_STAFF[user.id] ?? null
+        // Only supervisor/gs-supervisor see upsell approvals; all other roles get empty list
+        const requests = isSup ? UPSELL_APPROVAL_REQUESTS.filter(r =>
+          r.status === 'pending_cleaner' || (r.status === 'pending_supervisor' && r.escalatedToSupervisor)
+        ) : []
         setUpsellApprovalRequests(requests)
       } catch {}
     } else {
@@ -327,15 +322,19 @@ export default function MyTasksPage() {
 
   const assigneeName = currentUser ? (USER_ASSIGNEE_MAP[currentUser.name] ?? currentUser.name) : null
   const subRole = currentUser?.subRole ?? ''
-  const isSupervisor = subRole.includes('Supervisor')
-  const isMaintenance = subRole.includes('Maintenance')
+  const jobRole = currentUser?.jobRole ?? ''
+  const isSupervisor    = jobRole === 'supervisor'
+  const isGSSupervisor  = jobRole === 'gs-supervisor'
+  const isMaintenance   = jobRole === 'maintenance'
+  const isGuestServices = jobRole === 'guest-services'
 
   const filteredTasks = ALL_TASKS.filter(task => {
     // Supervisor sees all team cleaning tasks; cleaner sees only their own
     const matchesAssignee = isSupervisor ? true : (!assigneeName || task.assignee === assigneeName)
     let matchesType = true
     if (isMaintenance) matchesType = task.type === 'Maintenance'
-    else if (subRole.includes('Cleaning') || subRole.includes('Cleaner') || isSupervisor) matchesType = task.type === 'Cleaning' || task.type === 'Inspection'
+    else if (jobRole === 'cleaner' || isSupervisor) matchesType = task.type === 'Cleaning' || task.type === 'Inspection'
+    else if (isGSSupervisor || isGuestServices) matchesType = true
     const effectiveStatus = completedIds.has(task.id) ? 'completed' : task.status
     const matchesStatus = statusFilter === 'all' || effectiveStatus === statusFilter
     const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter
@@ -431,7 +430,7 @@ export default function MyTasksPage() {
       </div>
 
       {/* Today's Cleanings Section */}
-      {(subRole.includes('Cleaning') || subRole.includes('Cleaner') || isSupervisor) && (() => {
+      {(jobRole === 'cleaner' || isSupervisor) && (() => {
         const myCleanings = isSupervisor
           ? (statusFilter === 'today' || statusFilter === 'all' ? TODAYS_CLEANINGS : TODAYS_CLEANINGS)
           : TODAYS_CLEANINGS.filter(c => c.assignedTo === assigneeName)
@@ -494,7 +493,7 @@ export default function MyTasksPage() {
       })()}
 
       {/* Upsell Approvals Section */}
-      {upsellApprovalRequests.length > 0 && (
+      {(isSupervisor || isGSSupervisor) && upsellApprovalRequests.length > 0 && (
         <div style={{ marginBottom: 28 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <ShoppingBag size={14} style={{ color: '#d97706' }} />
@@ -607,7 +606,7 @@ export default function MyTasksPage() {
                         <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>·</span>
                         <span style={{ fontSize: 12, color: 'var(--text-subtle)' }}>{task.dueDisplay}</span>
                         {(task.type === 'Cleaning' || task.type === 'Maintenance') && !completedIds.has(task.id) && (
-                          <span style={{ fontSize: 11, color: accent, fontWeight: 500 }}>→ Open checklist</span>
+                          <span style={{ fontSize: 11, color: accent, fontWeight: 500 }}>{isMaintenance ? '→ Open job' : '→ Open checklist'}</span>
                         )}
                       </div>
                       {task.reservation && (
@@ -1007,7 +1006,7 @@ export default function MyTasksPage() {
       </AppDrawer>
 
       {/* Cleaner Approval Sheet */}
-      {selectedApprovalRequest && (
+      {(isSupervisor || isGSSupervisor) && selectedApprovalRequest && (
         <CleanerApprovalSheet
           request={selectedApprovalRequest}
           open={!!selectedApprovalRequest}
