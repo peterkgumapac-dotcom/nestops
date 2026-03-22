@@ -48,6 +48,10 @@ export default function GuestServicesBriefingPage() {
     if (stored) {
       try {
         const user: UserProfile = JSON.parse(stored)
+        if (!user.subRole?.includes('Guest')) {
+          router.replace('/staff/start')
+          return
+        }
         setCurrentUser(user)
         const loaded = getPrefs(user.id, 'Guest Services', 'staff')
         setPrefs(loaded)

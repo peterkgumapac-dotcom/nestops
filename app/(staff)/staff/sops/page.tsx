@@ -1,9 +1,10 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FileText, Calendar } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
 import { useRole } from '@/context/RoleContext'
+import type { UserProfile } from '@/context/RoleContext'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose,
 } from '@/components/ui/dialog'
@@ -15,6 +16,7 @@ interface Sop {
   date: string
   acknowledged: boolean
   body: string
+  roles: string[]
 }
 
 const SOPS: Sop[] = [
@@ -25,6 +27,7 @@ const SOPS: Sop[] = [
     date: '2026-03-01',
     acknowledged: false,
     body: 'Confirm booking details 24 hours before arrival. Send check-in instructions via the guest messaging template. Verify the lockbox code is active and tested. Complete the pre-arrival inspection checklist.',
+    roles: ['Guest'],
   },
   {
     id: 'sop-2',
@@ -33,6 +36,7 @@ const SOPS: Sop[] = [
     date: '2026-02-15',
     acknowledged: true,
     body: 'Strip all bedding and towels after each checkout. Use the correct washing programme for each fabric type. Replace with freshly laundered sets from the linen cupboard. Report any damaged items to the operator.',
+    roles: ['Cleaning', 'Cleaner'],
   },
   {
     id: 'sop-3',
@@ -41,6 +45,7 @@ const SOPS: Sop[] = [
     date: '2026-03-10',
     acknowledged: false,
     body: 'For minor issues, log via the NestOps app and mark priority. For urgent issues (flooding, no heating), call the operator directly and submit a high-priority ticket immediately.',
+    roles: ['Maintenance'],
   },
 ]
 
@@ -50,6 +55,16 @@ export default function StaffSopsPage() {
   const { accent } = useRole()
   const [activeTab, setActiveTab] = useState<Tab>('needs')
   const [selectedSop, setSelectedSop] = useState<Sop | null>(null)
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
+
+  useEffect(() => {
+    const stored = localStorage.getItem('nestops_user')
+    if (stored) {
+      try { setCurrentUser(JSON.parse(stored)) } catch { /* ignore */ }
+    }
+  }, [])
+
+  const subRole = currentUser?.subRole ?? ''
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'needs', label: 'Needs Acknowledgement' },
@@ -58,6 +73,7 @@ export default function StaffSopsPage() {
   ]
 
   const visible = SOPS.filter(s => {
+    if (!s.roles.some(r => subRole.includes(r))) return false
     if (activeTab === 'needs') return !s.acknowledged
     if (activeTab === 'acknowledged') return s.acknowledged
     return true

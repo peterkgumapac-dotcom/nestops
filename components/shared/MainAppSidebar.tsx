@@ -8,13 +8,12 @@ import { useRole } from '@/context/RoleContext'
 import { useTheme } from '@/context/ThemeContext'
 import { MAIN_APP_NAV_BY_ROLE, getStaffNav } from '@/lib/nav'
 
-const APP_VERSION = 'v3.4'
-const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v3.4'
+const APP_VERSION = 'v3.5'
+const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v3.5'
 const WHATS_NEW_ITEMS = [
-  'Role routing fixed — cleaners now land on their briefing page after login, not the supervisor dashboard',
-  'Cleaner Upsell Awareness — read-only upcoming upsells in My Tasks (early check-in, late checkout, mid-stay, welcome basket, baby equipment)',
-  'Baby Equipment Add-on upsell type added (cot / high chair / baby bath)',
-  'Dead /app/schedule link removed from supervisor nav',
+  'Briefing pages now have auth guards — wrong-role users are redirected immediately',
+  'SOPs are now role-filtered — cleaners, maintenance, and GS staff each see only their relevant procedures',
+  'Staff intake field form foundation in place (/staff/intake/[propertyId])',
 ]
 
 interface MainAppSidebarProps {

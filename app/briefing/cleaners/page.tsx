@@ -51,6 +51,14 @@ export default function CleanerBriefingPage() {
     if (stored) {
       try {
         const user: UserProfile = JSON.parse(stored)
+        if (
+          !user.subRole?.includes('Cleaning') &&
+          !user.subRole?.includes('Cleaner') &&
+          !user.subRole?.includes('Supervisor')
+        ) {
+          router.replace('/staff/start')
+          return
+        }
         setCurrentUser(user)
         // Always load with 'Cleaning Team' key — no subRole ambiguity
         const loaded = getPrefs(user.id, 'Cleaning Team', 'staff')

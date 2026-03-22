@@ -49,6 +49,10 @@ export default function MaintenanceBriefingPage() {
     if (stored) {
       try {
         const user: UserProfile = JSON.parse(stored)
+        if (!user.subRole?.includes('Maintenance')) {
+          router.replace('/staff/start')
+          return
+        }
         setCurrentUser(user)
         const loaded = getPrefs(user.id, 'Maintenance', 'staff')
         setPrefs(loaded)

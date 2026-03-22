@@ -10,6 +10,15 @@ interface ChangeEntry {
 
 const CHANGELOG: ChangeEntry[] = [
   {
+    version: 'v3.5',
+    date: 'Mar 22, 2026',
+    items: [
+      { tag: '🐛 Fix', text: 'Briefing pages now have auth guards — /briefing/cleaners, /briefing/maintenance, and /briefing/guest-services redirect users with the wrong role to /staff/start instead of rendering for the wrong audience' },
+      { tag: '⚡ Feature', text: 'SOPs page now role-filtered — cleaners see only cleaning SOPs, maintenance staff see only maintenance SOPs, guest services staff see only guest SOPs; roles field added to Sop data model and filtered against subRole on render' },
+      { tag: '🏗 Arch', text: 'Staff intake field form directory added — /staff/intake/[propertyId] foundation in place for field visit data collection' },
+    ],
+  },
+  {
     version: 'v3.4',
     date: 'Mar 22, 2026',
     items: [
