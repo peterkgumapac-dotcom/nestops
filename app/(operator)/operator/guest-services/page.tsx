@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import {
   Headphones, AlertTriangle, DollarSign, Clock, CheckCircle,
-  ChevronRight, Plus, Activity,
+  ChevronRight, Plus, Activity, Package, Users,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import PageHeader from '@/components/shared/PageHeader'
@@ -15,6 +15,17 @@ import IssueSheet from '@/components/guest-services/IssueSheet'
 import { useRole } from '@/context/RoleContext'
 import type { UserProfile } from '@/context/RoleContext'
 import { useIsMobile } from '@/hooks/useIsMobile'
+
+const GS_GREEN = '#1D9E75', GS_GREEN_BG = 'rgba(29,158,117,0.08)', GS_GREEN_BORDER = 'rgba(29,158,117,0.2)'
+const GS_AMBER = '#ef9f27', GS_AMBER_BG = 'rgba(239,159,39,0.08)', GS_AMBER_BORDER = 'rgba(239,159,39,0.2)'
+
+function gsGetElapsed(clockInTime: string): string {
+  const diff = Date.now() - new Date(clockInTime).getTime()
+  const h = Math.floor(diff / 3600000)
+  const m = Math.floor((diff % 3600000) / 60000)
+  if (h > 0) return `${h}h ${m}m`
+  return `${m}m`
+}
 import {
   GUEST_ISSUES,
   getActiveIssues,
@@ -107,11 +118,35 @@ export default function GuestServicesPage() {
     setTimeout(() => setToastMsg(''), 3000)
   }
 
+  // Clock-in state (staff only)
+  const [gsClockedIn, setGsClockedIn] = useState(false)
+  const [gsClockInTime, setGsClockInTime] = useState<string | null>(null)
+  const [gsElapsed, setGsElapsed] = useState('')
+
+  useEffect(() => {
+    if (!gsClockInTime || !gsClockedIn) return
+    const interval = setInterval(() => setGsElapsed(gsGetElapsed(gsClockInTime)), 60000)
+    return () => clearInterval(interval)
+  }, [gsClockedIn, gsClockInTime])
+
   useEffect(() => {
     const stored = localStorage.getItem('nestops_user')
     if (stored) {
       try { setCurrentUser(JSON.parse(stored)) } catch {}
     }
+    // Load clock-in state
+    try {
+      const ciStr = localStorage.getItem('nestops_clockin')
+      if (ciStr) {
+        const ci = JSON.parse(ciStr)
+        const today = new Date().toISOString().split('T')[0]
+        if (ci.date === today && ci.status === 'in_progress') {
+          setGsClockedIn(true)
+          setGsClockInTime(ci.clockInTime)
+          setGsElapsed(gsGetElapsed(ci.clockInTime))
+        }
+      }
+    } catch {}
     // Merge localStorage upsell decisions into feed
     try {
       const raw = localStorage.getItem('nestops_upsell_decisions')
@@ -187,6 +222,88 @@ export default function GuestServicesPage() {
       />
 
       <GuestServicesNav />
+
+      {/* Clock-in widget + resource links — staff only */}
+      {isStaff && (
+        <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+          {/* Clock-in widget */}
+          {gsClockedIn ? (
+            <div style={{
+              flex: '1 1 260px', background: 'var(--bg-card)', border: '1px solid var(--border)',
+              borderLeft: `4px solid ${GS_GREEN}`, borderRadius: 12, padding: '12px 16px',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: GS_GREEN, boxShadow: `0 0 0 3px ${GS_GREEN_BG}` }} />
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>On shift · {gsElapsed}</span>
+              </div>
+              <button
+                onClick={() => {
+                  try {
+                    const ciStr = localStorage.getItem('nestops_clockin')
+                    if (ciStr) {
+                      const ci = JSON.parse(ciStr)
+                      localStorage.setItem('nestops_clockin', JSON.stringify({ ...ci, status: 'completed', clockOutTime: new Date().toISOString() }))
+                    }
+                  } catch {}
+                  setGsClockedIn(false); setGsClockInTime(null); setGsElapsed('')
+                }}
+                style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${GS_GREEN_BORDER}`, background: GS_GREEN_BG, color: GS_GREEN, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+              >
+                Clock Out
+              </button>
+            </div>
+          ) : (
+            <div style={{
+              flex: '1 1 260px', background: 'var(--bg-card)', border: '1px solid var(--border)',
+              borderLeft: `4px solid ${GS_AMBER}`, borderRadius: 12, padding: '12px 16px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#6b7280' }} />
+                <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>Not on shift</span>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={() => {
+                    const now = new Date().toISOString()
+                    const record = { staffId: currentUser?.id ?? '', shiftId: `shift_${Date.now()}`, propertyId: '', date: now.split('T')[0], clockInTime: now, status: 'in_progress' }
+                    localStorage.setItem('nestops_clockin', JSON.stringify(record))
+                    setGsClockedIn(true); setGsClockInTime(now); setGsElapsed(gsGetElapsed(now))
+                  }}
+                  style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 40 }}
+                >
+                  Clock In
+                </button>
+                <Link href="/briefing" style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 12, fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, textDecoration: 'none', minHeight: 40 }}>
+                  Briefing <ChevronRight size={13} />
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* Inventory quick link */}
+          <Link href="/app/inventory" style={{ flex: '0 1 auto', display: 'flex', alignItems: 'center', gap: 10, padding: '12px 18px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, textDecoration: 'none', minWidth: 140 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 8, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Package size={17} color={accent} strokeWidth={1.5} />
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Inventory</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Stock levels</div>
+            </div>
+          </Link>
+
+          {/* Staffing quick link */}
+          <Link href="/app/team" style={{ flex: '0 1 auto', display: 'flex', alignItems: 'center', gap: 10, padding: '12px 18px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, textDecoration: 'none', minWidth: 140 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 8, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Users size={17} color={accent} strokeWidth={1.5} />
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Staffing</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Team overview</div>
+            </div>
+          </Link>
+        </div>
+      )}
 
       {/* Red flag banner */}
       {redFlags.length > 0 && (

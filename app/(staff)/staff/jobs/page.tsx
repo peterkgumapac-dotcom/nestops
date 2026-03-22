@@ -9,6 +9,12 @@ import Tabs from '@/components/shared/Tabs'
 import { JOBS, STAFF_MEMBERS, type Job } from '@/lib/data/staff'
 import { useRole } from '@/context/RoleContext'
 
+const STATUS_BORDER: Record<string, string> = {
+  done: '#1D9E75',
+  in_progress: '#ef9f27',
+  pending: '#6b7280',
+}
+
 const CURRENT_STAFF = STAFF_MEMBERS[0]
 const MY_JOBS = JOBS.filter(j => CURRENT_STAFF.jobIds.includes(j.id))
 
@@ -42,13 +48,17 @@ export default function JobsPage() {
             <div
               key={job.id}
               onClick={() => setSelectedJob(job)}
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, cursor: 'pointer', transition: 'background 0.15s' }}
+              style={{
+                background: 'var(--bg-card)', border: '1px solid var(--border)',
+                borderLeft: `4px solid ${STATUS_BORDER[job.status] ?? '#6b7280'}`,
+                borderRadius: 10, padding: 16, cursor: 'pointer', transition: 'background 0.15s',
+              }}
               onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-elevated)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'var(--bg-card)')}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 8, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Icon size={16} style={{ color: accent }} strokeWidth={1.5} />
+                <div style={{ width: 40, height: 40, borderRadius: 8, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon size={18} style={{ color: accent }} strokeWidth={1.5} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
@@ -58,7 +68,13 @@ export default function JobsPage() {
                       <StatusBadge status={job.status} />
                     </div>
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{job.propertyName} · Due {job.dueTime}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>{job.propertyName} · Due {job.dueTime}</div>
+                  <button
+                    onClick={e => { e.stopPropagation(); setSelectedJob(job) }}
+                    style={{ padding: '6px 14px', borderRadius: 7, border: `1px solid ${accent}44`, background: `${accent}12`, color: accent, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    Start Job
+                  </button>
                 </div>
               </div>
             </div>

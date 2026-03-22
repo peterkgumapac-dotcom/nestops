@@ -78,6 +78,12 @@ export default function BriefingPage() {
     if (stored) {
       try {
         const user: UserProfile = JSON.parse(stored)
+        // Redirect cleaning staff to dedicated briefing page
+        if (user.role === 'staff' &&
+            (user.subRole?.includes('Cleaner') || user.subRole?.includes('Cleaning'))) {
+          router.replace('/briefing/cleaners')
+          return
+        }
         setCurrentUser(user)
         const loaded = getPrefs(user.id, user.subRole ?? '', user.role)
         setPrefs(loaded)
@@ -89,7 +95,7 @@ export default function BriefingPage() {
         // ignore parse errors
       }
     }
-  }, [])
+  }, [router])
 
   useEffect(() => {
     if (!today || !currentUser) return

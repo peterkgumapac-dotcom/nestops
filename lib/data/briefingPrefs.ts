@@ -175,7 +175,10 @@ function buildDefault(
   subRole: string,
   role: string,
 ): BriefingPrefs {
-  const key = role === 'operator' ? 'operator' : subRole
+  const rawKey = role === 'operator' ? 'operator' : subRole
+  const key = (rawKey === 'Cleaner' || rawKey === 'Cleaning Supervisor')
+    ? 'Cleaning Team'
+    : rawKey
   const toggles = {
     ...DEFAULT_PREFS['Cleaning Team'],
     ...(DEFAULT_PREFS[key] ?? {}),

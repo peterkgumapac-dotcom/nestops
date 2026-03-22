@@ -4,6 +4,7 @@ import { Menu, Bell } from 'lucide-react'
 import AppSidebar from './AppSidebar'
 import CommandPalette from '@/components/command-palette'
 import { useRole } from '@/context/RoleContext'
+import ClockStatus from './ClockStatus'
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -34,6 +35,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
           {/* Desktop spacer */}
           <div className="hidden md:block" />
+
+          <ClockStatus />
 
           {/* Notification bell */}
           <button

@@ -91,7 +91,7 @@ export default function ClockStatus() {
       ) : (
         <>
           <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#6b7280' }} />
-          <Link href="/staff/start" style={{ fontSize: 12, color: 'var(--text-muted)', textDecoration: 'none' }}>Start Shift</Link>
+          <Link href="/briefing" style={{ fontSize: 12, color: 'var(--text-muted)', textDecoration: 'none' }}>Start Shift</Link>
         </>
       )}
     </div>

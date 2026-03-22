@@ -1,15 +1,17 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { ClipboardList, CheckSquare, Building2 } from 'lucide-react'
+import { ClipboardList, Building2, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import PageHeader from '@/components/shared/PageHeader'
-import StatCard from '@/components/shared/StatCard'
 import StatusBadge from '@/components/shared/StatusBadge'
 import { JOBS, STAFF_MEMBERS } from '@/lib/data/staff'
 import { PROPERTIES } from '@/lib/data/properties'
 import { useRole } from '@/context/RoleContext'
 import Link from 'next/link'
 import type { StaffMember } from '@/lib/data/staff'
+
+const GREEN = '#1D9E75', GREEN_BG = 'rgba(29,158,117,0.08)', GREEN_BORDER = 'rgba(29,158,117,0.2)'
+const AMBER = '#ef9f27', AMBER_BG = 'rgba(239,159,39,0.08)', AMBER_BORDER = 'rgba(239,159,39,0.2)'
+const RED = '#e24b4a', RED_BG = 'rgba(226,75,74,0.08)', RED_BORDER = 'rgba(226,75,74,0.2)'
 
 const USER_TO_STAFF: Record<string, string> = {
   u3: 's1', // Maria → Johan Larsson (cleaning)
@@ -18,26 +20,53 @@ const USER_TO_STAFF: Record<string, string> = {
   u7: 's2', // Anna → Anna Kowalski (inspector)
 }
 
+function getElapsed(clockInTime: string): string {
+  const diff = Date.now() - new Date(clockInTime).getTime()
+  const h = Math.floor(diff / 3600000)
+  const m = Math.floor((diff % 3600000) / 60000)
+  if (h > 0) return `${h}h ${m}m`
+  return `${m}m`
+}
+
+function jobTypeBorderColor(type?: string): string {
+  if (type === 'maintenance') return '#3b82f6'
+  if (type === 'inspection') return AMBER
+  return GREEN
+}
+
+function priorityDotColor(priority: string): string {
+  if (priority === 'urgent') return RED
+  if (priority === 'high') return AMBER
+  return GREEN
+}
+
 export default function StaffHome() {
   const { accent } = useRole()
   const router = useRouter()
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+  const dateStr = new Date().toLocaleDateString('en-SE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase()
 
   const [currentStaff, setCurrentStaff] = useState<StaffMember | null>(null)
   const [checkedJobs, setCheckedJobs] = useState<Set<string>>(new Set())
+  const [userId, setUserId] = useState<string | null>(null)
+
+  // Clock-in state
+  const [clockedIn, setClockedIn] = useState(false)
+  const [clockInTime, setClockInTime] = useState<string | null>(null)
+  const [elapsed, setElapsed] = useState('')
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem('nestops_user')
       const profile = stored ? JSON.parse(stored) : null
+      setUserId(profile?.id ?? null)
       const staffId = profile ? USER_TO_STAFF[profile.id] : null
       const staff = staffId
         ? STAFF_MEMBERS.find(s => s.id === staffId) ?? STAFF_MEMBERS[0]
         : STAFF_MEMBERS[0]
       setCurrentStaff(staff)
-      // Load persisted checked state, fall back to done-status jobs
       const savedChecks = profile ? localStorage.getItem(`nestops_job_checks_${profile.id}`) : null
       if (savedChecks) {
         setCheckedJobs(new Set(JSON.parse(savedChecks)))
@@ -49,7 +78,27 @@ export default function StaffHome() {
     } catch {
       setCurrentStaff(STAFF_MEMBERS[0])
     }
+
+    // Load clock-in state
+    try {
+      const ciStr = localStorage.getItem('nestops_clockin')
+      if (ciStr) {
+        const ci = JSON.parse(ciStr)
+        const today = new Date().toISOString().split('T')[0]
+        if (ci.date === today && ci.status === 'in_progress') {
+          setClockedIn(true)
+          setClockInTime(ci.clockInTime)
+          setElapsed(getElapsed(ci.clockInTime))
+        }
+      }
+    } catch {}
   }, [])
+
+  useEffect(() => {
+    if (!clockedIn || !clockInTime) return
+    const interval = setInterval(() => setElapsed(getElapsed(clockInTime)), 60000)
+    return () => clearInterval(interval)
+  }, [clockedIn, clockInTime])
 
   if (!currentStaff) return null
 
@@ -88,17 +137,121 @@ export default function StaffHome() {
     } catch {}
   }
 
+  const handleClockIn = () => {
+    const now = new Date().toISOString()
+    const record = {
+      staffId: currentStaff.id,
+      shiftId: `shift_${Date.now()}`,
+      propertyId: myProperties[0]?.id ?? '',
+      date: now.split('T')[0],
+      clockInTime: now,
+      status: 'in_progress',
+    }
+    localStorage.setItem('nestops_clockin', JSON.stringify(record))
+    setClockedIn(true)
+    setClockInTime(now)
+    setElapsed(getElapsed(now))
+  }
+
+  const handleClockOut = () => {
+    try {
+      const ciStr = localStorage.getItem('nestops_clockin')
+      if (ciStr) {
+        const ci = JSON.parse(ciStr)
+        const updated = { ...ci, status: 'completed', clockOutTime: new Date().toISOString() }
+        localStorage.setItem('nestops_clockin', JSON.stringify(updated))
+      }
+    } catch {}
+    setClockedIn(false)
+    setClockInTime(null)
+    setElapsed('')
+  }
+
   return (
-    <div style={{ paddingBottom: 88 }}>
-      {/* Sticky day header */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--bg-page)', paddingBottom: 8, marginBottom: 4 }}>
-        <PageHeader title={`${greeting}, ${firstName} 👋`} subtitle="Here's your day at a glance" />
+    <div style={{ paddingBottom: 100 }}>
+      {/* Sticky header with greeting + date */}
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--bg-page)', paddingBottom: 8, marginBottom: 16 }}>
+        <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)' }}>{greeting}, {firstName}</div>
+        <div style={{ fontSize: 12, color: 'var(--text-subtle)', fontFamily: 'monospace', marginTop: 2 }}>{dateStr}</div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard label="Properties" value={myProperties.length} icon={Building2} />
-        <StatCard label="Open Tasks" value={openCount} icon={CheckSquare} />
-        <StatCard label="My Jobs" value={myJobs.length} icon={ClipboardList} />
+      {/* Clock-In Widget */}
+      {clockedIn ? (
+        <div style={{
+          background: 'var(--bg-card)', border: '1px solid var(--border)',
+          borderLeft: `4px solid ${GREEN}`, borderRadius: 12, padding: '14px 16px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          marginBottom: 16,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 10, height: 10, borderRadius: '50%', background: GREEN,
+              boxShadow: `0 0 0 3px ${GREEN_BG}`,
+            }} />
+            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>On shift · {elapsed}</span>
+          </div>
+          <button
+            onClick={handleClockOut}
+            style={{ padding: '7px 14px', borderRadius: 8, border: `1px solid ${GREEN_BORDER}`, background: GREEN_BG, color: GREEN, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+          >
+            Clock Out
+          </button>
+        </div>
+      ) : (
+        <div style={{
+          background: 'var(--bg-card)', border: '1px solid var(--border)',
+          borderLeft: `4px solid ${AMBER}`, borderRadius: 12, padding: '14px 16px',
+          marginBottom: 16,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#6b7280' }} />
+            <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>Not on shift</span>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={handleClockIn}
+              style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', minHeight: 44 }}
+            >
+              Clock In for Today
+            </button>
+            <Link
+              href="/briefing"
+              style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 13, fontWeight: 500, cursor: 'pointer', minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, textDecoration: 'none' }}
+            >
+              View Briefing <ChevronRight size={14} />
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Briefing Banner — only when not clocked in */}
+      {!clockedIn && (
+        <Link href="/briefing" style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          background: AMBER_BG, border: `1px solid ${AMBER_BORDER}`, borderRadius: 10,
+          padding: '12px 16px', marginBottom: 20, textDecoration: 'none',
+        }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: AMBER }}>📋 View today's pre-shift briefing</span>
+          <ChevronRight size={16} color={AMBER} />
+        </Link>
+      )}
+
+      {/* Stat pills row */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20, overflowX: 'auto', flexWrap: 'nowrap', paddingBottom: 4 }}>
+        {[
+          { label: `${myProperties.length} properties`, href: '/staff' },
+          { label: `${openCount} open`, href: '/staff/jobs' },
+          { label: `${myJobs.length} jobs`, href: '/staff/jobs' },
+        ].map(pill => (
+          <Link key={pill.label} href={pill.href} style={{
+            display: 'inline-flex', alignItems: 'center', whiteSpace: 'nowrap',
+            padding: '6px 14px', borderRadius: 100, border: '1px solid var(--border)',
+            background: 'var(--bg-card)', color: 'var(--text-muted)', fontSize: 13,
+            fontWeight: 600, textDecoration: 'none', flexShrink: 0,
+          }}>
+            {pill.label}
+          </Link>
+        ))}
       </div>
 
       {/* New Intake CTA */}
@@ -115,7 +268,7 @@ export default function StaffHome() {
         </div>
       </Link>
 
-      {/* Today's Properties — full width */}
+      {/* Today's Properties */}
       <div style={{ marginBottom: 24 }}>
         <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>Today's Properties</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -128,14 +281,56 @@ export default function StaffHome() {
           )}
           {myProperties.map(p => {
             const job = myJobs.find(j => j.propertyId === p.id)
+            const borderColor = jobTypeBorderColor(job?.type)
+            const propertyJobs = myJobs.filter(j => j.propertyId === p.id)
+            const donePropJobs = propertyJobs.filter(j => checkedJobs.has(j.id)).length
+            const progress = propertyJobs.length > 0 ? Math.round((donePropJobs / propertyJobs.length) * 100) : 0
+
+            // Calculate turnaround warning
+            let turnaroundWarning = false
+            if (job?.checkoutTime && job?.checkinTime) {
+              const coH = parseInt(job.checkoutTime.split(':')[0])
+              const coM = parseInt(job.checkoutTime.split(':')[1] ?? '0')
+              const ciH = parseInt(job.checkinTime.split(':')[0])
+              const ciM = parseInt(job.checkinTime.split(':')[1] ?? '0')
+              const turnaround = (ciH * 60 + ciM) - (coH * 60 + coM)
+              turnaroundWarning = turnaround < 120 && turnaround > 0
+            }
+
             return (
-              <div key={p.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 16px 14px' }}>
+              <div key={p.id} style={{
+                background: 'var(--bg-card)', border: '1px solid var(--border)',
+                borderLeft: `4px solid ${borderColor}`, borderRadius: 12, padding: '16px 16px 14px',
+              }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
                   <span style={{ fontWeight: 700, fontSize: 16, color: 'var(--text-primary)', lineHeight: 1.3 }}>{p.name}</span>
-                  {job?.urgencyLabel && <StatusBadge status={job.urgencyLabel.toLowerCase() as 'urgent' | 'scheduled'} />}
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0, marginLeft: 8 }}>
+                    {job?.type && (
+                      <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: borderColor, padding: '2px 7px', borderRadius: 5, background: `${borderColor}18` }}>
+                        {job.type}
+                      </span>
+                    )}
+                    {turnaroundWarning && (
+                      <span style={{ fontSize: 11, fontWeight: 700, color: AMBER, padding: '2px 7px', borderRadius: 5, background: AMBER_BG }}>⚡ Tight</span>
+                    )}
+                  </div>
                 </div>
-                {job?.checkoutTime && <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 2 }}>Checkout: {job.checkoutTime}</div>}
-                {job?.checkinTime && <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>Check-in: {job.checkinTime}</div>}
+                {job?.checkoutTime && (
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 2 }}>
+                    Checkout {job.checkoutTime}{job.checkinTime ? ` → Check-in ${job.checkinTime}` : ''}
+                  </div>
+                )}
+                {propertyJobs.length > 0 && (
+                  <div style={{ marginBottom: 12, marginTop: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{donePropJobs}/{propertyJobs.length} tasks done</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{progress}%</span>
+                    </div>
+                    <div style={{ height: 4, background: 'var(--border)', borderRadius: 2, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${progress}%`, background: progress === 100 ? GREEN : accent, borderRadius: 2, transition: 'width 0.3s' }} />
+                    </div>
+                  </div>
+                )}
                 <button
                   onClick={() => router.push('/staff/new-intake')}
                   style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', minHeight: 44, width: '100%' }}
@@ -148,7 +343,7 @@ export default function StaffHome() {
         </div>
       </div>
 
-      {/* Today's Tasks — full width, mobile-optimized */}
+      {/* Today's Tasks */}
       <div>
         <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>Today's Tasks</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -159,11 +354,19 @@ export default function StaffHome() {
           )}
           {myJobs.map(j => {
             const isDone = checkedJobs.has(j.id)
+            const dotColor = priorityDotColor(j.priority)
             return (
               <label
                 key={j.id}
-                style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, cursor: 'pointer', minHeight: 56 }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
+                  background: isDone ? GREEN_BG : 'var(--bg-card)',
+                  border: `1px solid ${isDone ? GREEN_BORDER : 'var(--border)'}`,
+                  borderRadius: 10, cursor: 'pointer', minHeight: 56,
+                  transition: 'background 0.2s, border-color 0.2s',
+                }}
               >
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
                 <input
                   type="checkbox"
                   checked={isDone}
@@ -171,8 +374,14 @@ export default function StaffHome() {
                   style={{ accentColor: accent, flexShrink: 0, width: 22, height: 22 }}
                 />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: isDone ? 'var(--text-subtle)' : 'var(--text-primary)', textDecoration: isDone ? 'line-through' : 'none', marginBottom: 2 }}>{j.title}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-subtle)' }}>{j.propertyName} · Due {j.dueTime}</div>
+                  <div style={{
+                    fontSize: 14, fontWeight: 600,
+                    color: isDone ? 'var(--text-subtle)' : 'var(--text-primary)',
+                    textDecoration: isDone ? 'line-through' : 'none', marginBottom: 2,
+                  }}>{j.title}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-subtle)' }}>
+                    {j.propertyName} · Due {j.dueTime}
+                  </div>
                 </div>
                 <StatusBadge status={j.priority} />
               </label>

@@ -199,10 +199,11 @@ export const STAFF_GUEST_SERVICES_NAV: NavSection[] = [
     ],
   },
   {
-    label: 'Properties',
+    label: 'Resources',
     items: [
       { label: 'Properties', href: '/app/properties', icon: Building2 },
       { label: 'Inventory',  href: '/app/inventory',  icon: Package },
+      { label: 'Staffing',   href: '/app/team',       icon: UserCheck },
     ],
   },
   {
