@@ -10,6 +10,19 @@ interface ChangeEntry {
 
 const CHANGELOG: ChangeEntry[] = [
   {
+    version: 'v3.1',
+    date: 'Mar 22, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'Maintenance role isolation — Maintenance staff now see only maintenance jobs; "My Jobs" page title replaces generic "My Tasks"; URL includes ?role=maintenance identifier for deep-linking and session clarity' },
+      { tag: '⚡ Feature', text: 'Alerts added to Maintenance nav — maintenance staff can now view urgent flags and job assignments via the Alerts page, with field alerts scoped to their staff ID (s3)' },
+      { tag: '🐛 Fix', text: 'Alerts page was showing cleaner alerts to all staff roles — staffId now maps correctly per subRole (Maintenance→s3, Guest Services→s4, Supervisor→s2)' },
+      { tag: '🐛 Fix', text: 'Maintenance SOPs nav link was pointing to the full operator Operations board — now correctly routes to /app/sops (staff SOPs reference)' },
+      { tag: '🐛 Fix', text: 'My Tasks page flashed all tasks briefly on load before user profile was read from localStorage — loading guard added to prevent cross-role data leak' },
+      { tag: '🌐 Landing', text: 'Access Window section copy updated — headline now mirrors the demo sequence (chaos → resolution); competitor names removed from subtext' },
+      { tag: '📱 Mobile', text: 'Landing page fully optimized for mobile — hero padding reduced, Access Window demo height fixed, Morning Briefing caption now appears above phone mockup, section padding halved across all breakpoints; new 480px breakpoint added' },
+    ],
+  },
+  {
     version: 'v3.0',
     date: 'Mar 21, 2026',
     items: [
