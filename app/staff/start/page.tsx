@@ -163,6 +163,11 @@ export default function StaffStartPage() {
   const staffId = currentUser ? USER_TO_STAFF[currentUser.id] : null
   const myJobs = staffId ? JOBS.filter(j => j.staffId === staffId) : []
   const isMaintenance = currentUser?.subRole?.includes('Maintenance') ?? false
+  const briefingHref =
+    currentUser?.subRole?.includes('Maintenance')                                     ? '/briefing/maintenance'
+    : currentUser?.subRole?.includes('Guest')                                         ? '/briefing/guest-services'
+    : (currentUser?.subRole?.includes('Cleaner') || currentUser?.subRole?.includes('Cleaning')) ? '/briefing/cleaners'
+    : '/briefing'
 
   const toggleCode = (id: string) => setShowCodes(prev => ({ ...prev, [id]: !prev[id] }))
 
@@ -417,7 +422,7 @@ export default function StaffStartPage() {
 
           {/* Back to Briefing */}
           <div style={{ textAlign: 'center', marginTop: 20 }}>
-            <Link href="/briefing" style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 20px', borderRadius: 8, display: 'inline-block', minHeight: 44, lineHeight: '20px' }}>
+            <Link href={briefingHref} style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 20px', borderRadius: 8, display: 'inline-block', minHeight: 44, lineHeight: '20px' }}>
               ← Back to Briefing
             </Link>
           </div>

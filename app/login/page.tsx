@@ -329,7 +329,14 @@ export default function LoginPage() {
     const profile = buildProfile(user)
     localStorage.setItem('nestops_user', JSON.stringify(profile))
     setUser(profile)
-    router.push('/briefing')
+    let dest = '/briefing'
+    if (profile.role === 'staff') {
+      if (profile.subRole?.includes('Maintenance'))        dest = '/briefing/maintenance'
+      else if (profile.subRole?.includes('Guest'))         dest = '/briefing/guest-services'
+      else if (profile.subRole?.includes('Cleaner') || profile.subRole?.includes('Cleaning'))
+                                                           dest = '/briefing/cleaners'
+    }
+    router.push(dest)
   }
 
   const handleFloatingLogin = (userId: string) => {

@@ -82,7 +82,7 @@ export const DEFAULT_PREFS: Record<string, Partial<BriefingToggles>> = {
   'Guest Services': {
     countdown: true,
     weather: false,
-    propertiestoday: false,
+    propertiestoday: true,
     taskcount: false,
     taskpreview: false,
     thisweek: false,
@@ -198,7 +198,7 @@ export const TOGGLE_LABELS: Record<
 > = {
   countdown:         { label: 'Countdown to shift',      description: 'Live timer before your shift starts',        roles: ['all'] },
   weather:           { label: 'Weather',                  description: 'Conditions at your first shift property',    roles: ['Cleaning Team', 'Maintenance', 'Guest Services', 'operator'] },
-  propertiestoday:   { label: 'Properties today',         description: 'All cleanings or jobs scheduled today',      roles: ['Cleaning Team', 'Maintenance'] },
+  propertiestoday:   { label: 'Properties today',         description: 'All cleanings or jobs scheduled today',      roles: ['Cleaning Team', 'Maintenance', 'Guest Services'] },
   taskcount:         { label: 'Task count',               description: 'Number of tasks per property',               roles: ['Cleaning Team'] },
   taskpreview:       { label: 'Task preview',             description: 'First 3 tasks listed before you start',      roles: ['Cleaning Team'] },
   thisweek:          { label: 'This week',                description: 'Mini calendar showing your weekly schedule', roles: ['Cleaning Team', 'Maintenance'] },

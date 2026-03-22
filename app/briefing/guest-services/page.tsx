@@ -10,6 +10,7 @@ import { PROPERTIES } from '@/lib/data/properties'
 import { JOBS } from '@/lib/data/staff'
 import { OVERNIGHT_REPORTS, GUEST_ISSUES, getActiveIssues } from '@/lib/data/guestServices'
 import CountdownTimer from '@/components/shared/CountdownTimer'
+import { MaintenanceTaskCard } from '@/components/tasks/maintenance/MaintenanceTaskCard'
 import {
   getPrefs, savePrefs, resetPrefs,
   TOGGLE_LABELS, ALWAYS_ON,
@@ -35,6 +36,7 @@ export default function GuestServicesBriefingPage() {
   const [mounted, setMounted] = useState(false)
   const [prefs, setPrefs] = useState<BriefingPrefs | null>(null)
   const [showToggles, setShowToggles] = useState(false)
+  const [accessCodeVisible, setAccessCodeVisible] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     setToday(new Date().toISOString().split('T')[0])
@@ -207,6 +209,30 @@ export default function GuestServicesBriefingPage() {
           </div>
 
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+
+            {/* TASKS TODAY */}
+            {prefs?.toggles.propertiestoday && (
+              checkInJobs.length === 0 ? (
+                <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '20px', marginBottom: 16, textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>
+                  No tasks scheduled today
+                </div>
+              ) : (
+                <>
+                  <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>
+                    Tasks Today
+                  </div>
+                  {checkInJobs.map((job, idx) => (
+                    <MaintenanceTaskCard
+                      key={job.id}
+                      job={job}
+                      isFirst={idx === 0}
+                      codeVisible={accessCodeVisible[job.id] ?? false}
+                      onToggleCode={() => setAccessCodeVisible(prev => ({ ...prev, [job.id]: true }))}
+                    />
+                  ))}
+                </>
+              )
+            )}
 
             {/* OVERNIGHT ISSUES */}
             {prefs?.toggles.overnightissues && (
