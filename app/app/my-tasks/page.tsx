@@ -270,7 +270,7 @@ export default function MyTasksPage() {
         setUpsellApprovalRequests(requests)
         // Cleaner upsell awareness — read-only, filtered to cleaner-relevant types + assigned properties
         if (user.jobRole === 'cleaner' && staffId) {
-          const cleanerVisibleRuleIds = new Set(UPSELL_RULES.filter(r => r.cleanerVisible).map(r => r.id))
+          const cleanerVisibleRuleIds = new Set(UPSELL_RULES.filter(r => r.cleanerVisible === true).map(r => r.id))
           const staffMember = STAFF_MEMBERS.find(m => m.id === staffId)
           const assignedPropIds = staffMember?.assignedPropertyIds ?? []
           const awareness = UPSELL_APPROVAL_REQUESTS.filter(r =>

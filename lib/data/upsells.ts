@@ -25,7 +25,7 @@ export interface UpsellRule {
   ctaLabel?: string
   approvalType: 'auto' | 'cleaner_required'
   paymentMode:  'auto_charge' | 'auth_hold'
-  cleanerVisible: boolean  // true = appears in cleaner upsell awareness section
+  cleanerVisible?: boolean  // true = appears in cleaner upsell awareness section
 }
 
 export const PROPERTY_GROUPS = [
