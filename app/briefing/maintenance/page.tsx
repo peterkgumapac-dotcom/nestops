@@ -15,6 +15,7 @@ import {
   getPrefs, savePrefs, resetPrefs,
   TOGGLE_LABELS, ALWAYS_ON,
 } from '@/lib/data/briefingPrefs'
+import { sortJobsByAccessibility } from '@/lib/utils/pteUtils'
 import type { BriefingPrefs, BriefingToggles } from '@/lib/data/briefingPrefs'
 
 const USER_TO_STAFF: Record<string, string> = {
@@ -82,7 +83,9 @@ export default function MaintenanceBriefingPage() {
     : today ? `${today}T08:00:00` : ''
 
   const staffId = USER_TO_STAFF[currentUser.id]
-  const myJobs = staffId ? JOBS.filter(j => j.staffId === staffId) : []
+  const myJobs = staffId
+    ? sortJobsByAccessibility(JOBS.filter(j => j.staffId === staffId))
+    : []
 
   const handleClockInAndGo = (destination = '/app/my-tasks') => {
     localStorage.setItem('nestops_clockin', JSON.stringify({
@@ -212,19 +215,28 @@ export default function MaintenanceBriefingPage() {
                   <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>
                     Jobs Today
                   </div>
-                  {myJobs.map((job, idx) => (
+                  {myJobs.map((job) => (
                     <MaintenanceTaskCard
                       key={job.id}
                       job={job}
-                      isFirst={idx === 0}
                       showPteStatus={prefs?.toggles.pteStatus}
-                      showRoutingHint={prefs?.toggles.routingHint}
                       showLocation={prefs?.toggles.jobLocation}
                       showAccessCode={prefs?.toggles.accesstype}
                       codeVisible={accessCodeVisible[job.id] ?? false}
                       onToggleCode={() => setAccessCodeVisible(prev => ({ ...prev, [job.id]: true }))}
                     />
                   ))}
+                  {prefs?.toggles.routingHint && (() => {
+                    const firstPending = myJobs.find(j => j.pteStatus === 'pending')
+                    const firstReady   = myJobs.find(j => j.pteStatus === 'auto_granted' || j.pteStatus === 'granted')
+                    if (!firstPending || !firstReady) return null
+                    return (
+                      <div style={{ fontSize: 13, color: '#f59e0b', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 12, padding: '10px 14px', marginTop: 4 }}>
+                        💡 Do <strong>{firstReady.propertyName}</strong> first while waiting for PTE on{' '}
+                        <strong>{firstPending.propertyName}</strong>
+                      </div>
+                    )
+                  })()}
                 </>
               )
             )}

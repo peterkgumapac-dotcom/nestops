@@ -221,11 +221,10 @@ export default function GuestServicesBriefingPage() {
                   <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>
                     Tasks Today
                   </div>
-                  {checkInJobs.map((job, idx) => (
+                  {checkInJobs.map((job) => (
                     <MaintenanceTaskCard
                       key={job.id}
                       job={job}
-                      isFirst={idx === 0}
                       codeVisible={accessCodeVisible[job.id] ?? false}
                       onToggleCode={() => setAccessCodeVisible(prev => ({ ...prev, [job.id]: true }))}
                     />
