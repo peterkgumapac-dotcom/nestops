@@ -15,10 +15,7 @@ interface MaintenanceTaskCardProps {
 
 export function MaintenanceTaskCard({ job }: MaintenanceTaskCardProps) {
   const prop = PROPERTIES.find(p => p.id === job.propertyId)
-  const [progress, setProgress] = useState<JobProgress>(job.jobProgress ?? 'assigned')
-  const [beforeDone, setBeforeDone] = useState(false)
-  const [afterDone, setAfterDone] = useState(false)
-  const [resolution, setResolution] = useState('')
+  const [progress] = useState<JobProgress>(job.jobProgress ?? 'assigned')
 
   return (
     <PipelineMaintenanceCard
@@ -30,16 +27,6 @@ export function MaintenanceTaskCard({ job }: MaintenanceTaskCardProps) {
       dueDisplay={job.dueTime}
       pteStatus={job.pteStatus}
       progress={progress}
-      onProgressChange={setProgress}
-      beforeDone={beforeDone}
-      afterDone={afterDone}
-      onBeforePhoto={() => setBeforeDone(true)}
-      onAfterPhoto={() => setAfterDone(true)}
-      resolution={resolution}
-      onResolve={(r) => {
-        setResolution(r)
-        if (r === 'minor' || r === 'fixed') setProgress('done')
-      }}
     />
   )
 }

@@ -229,6 +229,19 @@ export default function MyTasksPage() {
   const [maintAfterDone, setMaintAfterDone] = useState<Record<string, boolean>>({})
   const [maintResolution, setMaintResolution] = useState<Record<string, string>>({})
 
+  // Maintenance drawer
+  const [selectedMaintTask, setSelectedMaintTask] = useState<PersonalTask | null>(null)
+  const [maintEta, setMaintEta] = useState<Record<string, string>>({})
+  const [maintCodeVisible, setMaintCodeVisible] = useState<Record<string, boolean>>({})
+  const [maintComments, setMaintComments] = useState<Record<string, { author: string; text: string; time: string }[]>>({})
+  const [commentDraft, setCommentDraft] = useState('')
+  const [pteNotified, setPteNotified] = useState<Set<string>>(new Set())
+  const [vendorCategory, setVendorCategory] = useState<Record<string, string>>({})
+  const [vendorName, setVendorName] = useState<Record<string, string>>({})
+  const [vendorEstimate, setVendorEstimate] = useState<Record<string, string>>({})
+  const [vendorNotes, setVendorNotes] = useState<Record<string, string>>({})
+  const [partsNotes, setPartsNotes] = useState<Record<string, string>>({})
+
   const handleUpsellApprove = (id: string) => {
     const req = upsellApprovalRequests.find(r => r.id === id)
     setUpsellApprovalRequests(prev => prev.filter(r => r.id !== id))
@@ -694,19 +707,7 @@ export default function MyTasksPage() {
                       dueDisplay={task.dueDisplay}
                       pteStatus={task.pteStatus as 'not_required' | 'auto_granted' | 'pending' | 'granted' | 'denied' | 'expired' | undefined}
                       progress={maintProgress[task.id] ?? 'assigned'}
-                      onProgressChange={(p) => setMaintProgress(prev => ({ ...prev, [task.id]: p }))}
-                      beforeDone={maintBeforeDone[task.id] ?? false}
-                      afterDone={maintAfterDone[task.id] ?? false}
-                      onBeforePhoto={() => setMaintBeforeDone(prev => ({ ...prev, [task.id]: true }))}
-                      onAfterPhoto={() => setMaintAfterDone(prev => ({ ...prev, [task.id]: true }))}
-                      resolution={maintResolution[task.id] ?? ''}
-                      onResolve={(r) => {
-                        setMaintResolution(prev => ({ ...prev, [task.id]: r }))
-                        if (r === 'minor' || r === 'fixed') {
-                          setMaintProgress(prev => ({ ...prev, [task.id]: 'done' }))
-                          setCompletedIds(prev => new Set([...prev, task.id]))
-                        }
-                      }}
+                      onClick={() => setSelectedMaintTask(task)}
                     />
                   )
                 }
@@ -1135,6 +1136,493 @@ export default function MyTasksPage() {
           </div>
         )}
       </AppDrawer>
+
+      {/* Maintenance Task Drawer */}
+      {(() => {
+        const mt = selectedMaintTask
+        if (!mt) return null
+        const taskId = mt.id
+        const progress = maintProgress[taskId] ?? 'assigned'
+        const eta = maintEta[taskId] ?? ''
+        const resolution = maintResolution[taskId] ?? ''
+        const beforeDone = maintBeforeDone[taskId] ?? false
+        const afterDone = maintAfterDone[taskId] ?? false
+        const comments = maintComments[taskId] ?? []
+        const techName = assigneeName ?? 'Tech'
+
+        const MAINT_STEPS = [
+          { key: 'assigned', label: 'Assigned' },
+          { key: 'en_route', label: 'En route' },
+          { key: 'on_site',  label: 'On site' },
+          { key: 'done',     label: 'Done' },
+        ] as const
+
+        const stepIdx = { assigned: 0, en_route: 1, on_site: 2, done: 3 }[progress]
+
+        const handleSetEnRoute = () => {
+          if (!eta) return
+          setMaintProgress(prev => ({ ...prev, [taskId]: 'en_route' }))
+          // Write live alert
+          try {
+            const alerts = JSON.parse(localStorage.getItem('nestops_live_alerts') ?? '[]')
+            alerts.push({
+              id: `maint-enroute-${taskId}-${Date.now()}`,
+              type: 'maintenance_enroute',
+              severity: 'info',
+              title: `${techName} en route — ${mt.propertyName}`,
+              body: `ETA: ${eta}. Maintenance job: ${mt.title}`,
+              propertyId: mt.propertyId,
+              assignedTo: ['guest_services'],
+              read: false,
+              createdAt: new Date().toISOString(),
+              actionRoute: '/app/my-tasks',
+            })
+            localStorage.setItem('nestops_live_alerts', JSON.stringify(alerts))
+          } catch {}
+          // Update issue store
+          try {
+            const issues = JSON.parse(localStorage.getItem('nestops_issues') ?? '[]')
+            const idx = issues.findIndex((i: { propertyId: string; type: string; status: string }) =>
+              i.propertyId === mt.propertyId && i.type === 'maintenance' && i.status !== 'resolved'
+            )
+            if (idx !== -1) {
+              issues[idx].status = 'in_progress'
+              issues[idx].response = `Tech en route. ETA: ${eta}`
+            }
+            localStorage.setItem('nestops_issues', JSON.stringify(issues))
+          } catch {}
+          showToast('Guest Services notified')
+        }
+
+        const handleNotifyPTE = () => {
+          setPteNotified(prev => new Set([...prev, taskId]))
+          try {
+            const alerts = JSON.parse(localStorage.getItem('nestops_live_alerts') ?? '[]')
+            alerts.push({
+              id: `pte-followup-${taskId}-${Date.now()}`,
+              type: 'pte_followup',
+              severity: 'warning',
+              title: `PTE still pending — ${mt.propertyName}`,
+              body: `Maintenance tech assigned. Guest has not yet approved entry for ${mt.title}.`,
+              propertyId: mt.propertyId,
+              createdAt: new Date().toISOString(),
+              read: false,
+              actionRoute: '/app/my-tasks',
+            })
+            localStorage.setItem('nestops_live_alerts', JSON.stringify(alerts))
+          } catch {}
+          showToast('Guest Services notified')
+        }
+
+        const handleResolve = (r: string) => {
+          setMaintResolution(prev => ({ ...prev, [taskId]: r }))
+          if (r === 'fixed' || r === 'minor') {
+            setMaintProgress(prev => ({ ...prev, [taskId]: 'done' }))
+            setCompletedIds(prev => new Set([...prev, taskId]))
+            setSelectedMaintTask(null)
+            showToast('✓ Job completed')
+          }
+        }
+
+        const handleSubmitVendor = () => {
+          setMaintProgress(prev => ({ ...prev, [taskId]: 'done' }))
+          setCompletedIds(prev => new Set([...prev, taskId]))
+          setSelectedMaintTask(null)
+          showToast('✓ Work order submitted')
+        }
+
+        const handleSubmitParts = () => {
+          setMaintProgress(prev => ({ ...prev, [taskId]: 'done' }))
+          setCompletedIds(prev => new Set([...prev, taskId]))
+          setSelectedMaintTask(null)
+          showToast('✓ Parts request submitted')
+        }
+
+        const postComment = () => {
+          if (!commentDraft.trim()) return
+          const newComment = {
+            author: techName,
+            text: commentDraft.trim(),
+            time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+          }
+          setMaintComments(prev => ({ ...prev, [taskId]: [...(prev[taskId] ?? []), newComment] }))
+          setCommentDraft('')
+        }
+
+        // PTE panel border color
+        const pteBorderColor = mt.pteStatus === 'pending' ? 'rgba(239,159,39,0.35)'
+          : mt.pteStatus === 'granted' || mt.pteStatus === 'auto_granted' ? 'rgba(29,158,117,0.35)'
+          : mt.pteStatus === 'denied' ? 'rgba(226,75,74,0.35)'
+          : 'rgba(255,255,255,0.10)'
+
+        return (
+          <AppDrawer
+            open={!!selectedMaintTask}
+            onClose={() => setSelectedMaintTask(null)}
+            title={mt.title}
+            subtitle={`${mt.propertyName} · ${mt.dueDisplay}`}
+            width={520}
+          >
+            {/* ── A: Pipeline bar ── */}
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
+              {MAINT_STEPS.map((step, i) => {
+                const rel = i < stepIdx ? 'done' : i === stepIdx ? 'active' : 'inactive'
+                const style: React.CSSProperties = rel === 'done'
+                  ? { background: 'rgba(29,158,117,0.10)', color: '#15d492', border: '1px solid rgba(29,158,117,0.22)' }
+                  : rel === 'active'
+                    ? { background: 'rgba(55,138,221,0.10)', color: '#378ADD', border: '1px solid rgba(55,138,221,0.22)' }
+                    : { background: '#161b26', color: '#5a5f6b', border: '1px solid rgba(255,255,255,0.07)' }
+                return (
+                  <div key={step.key} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                    <div style={{ ...style, flex: 1, padding: '5px 8px', borderRadius: 5, fontSize: 10, fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap' }}>
+                      {step.label}
+                    </div>
+                    {i < MAINT_STEPS.length - 1 && (
+                      <div style={{ width: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#5a5f6b" strokeWidth="2"><path d="M4 8h8M9 5l3 3-3 3"/></svg>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* ── B: PTE panel ── */}
+            {mt.pteRequired && mt.pteStatus && mt.pteStatus !== 'not_required' && (
+              <div style={{ background: '#111722', border: `1px solid ${pteBorderColor}`, borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#5a5f6b' }}>Permission to Enter</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: mt.pteStatus === 'pending' ? '#ef9f27' : mt.pteStatus === 'granted' || mt.pteStatus === 'auto_granted' ? '#15d492' : '#e24b4a' }}>
+                    {mt.pteStatus === 'pending' ? '⏳ Awaiting guest approval'
+                      : mt.pteStatus === 'granted' ? '✅ Granted'
+                      : mt.pteStatus === 'auto_granted' ? '✅ Vacant — enter any time'
+                      : '🔒 Access denied'}
+                  </span>
+                </div>
+
+                {mt.pte?.guestName && <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 3 }}>Guest: {mt.pte.guestName}</div>}
+                {mt.pte?.validFrom && mt.pte?.validUntil && (
+                  <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 3 }}>
+                    Access window: {new Date(mt.pte.validFrom).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} — {new Date(mt.pte.validUntil).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                )}
+                {mt.pte?.grantedBy && <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 3 }}>Granted by: {mt.pte.grantedBy}</div>}
+                {mt.pte?.notes && <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 8, fontStyle: 'italic' }}>"{mt.pte.notes}"</div>}
+                {mt.pteStatus === 'auto_granted' && <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 8 }}>Property is vacant — no active reservation.</div>}
+
+                {/* Access code */}
+                {(mt.pteStatus === 'granted' || mt.pteStatus === 'auto_granted') && mt.pte?.accessCode && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <span style={{ fontSize: 12, color: '#9ca3af' }}>Access code:</span>
+                    {maintCodeVisible[taskId] ? (
+                      <span style={{ fontSize: 14, fontWeight: 700, fontFamily: 'monospace', color: '#e8e6e1', letterSpacing: 3, background: 'rgba(29,158,117,0.10)', padding: '2px 10px', borderRadius: 5 }}>{mt.pte.accessCode}</span>
+                    ) : (
+                      <button
+                        onClick={() => setMaintCodeVisible(prev => ({ ...prev, [taskId]: true }))}
+                        style={{ fontSize: 12, color: '#378ADD', background: 'rgba(55,138,221,0.10)', border: '1px solid rgba(55,138,221,0.22)', borderRadius: 6, padding: '3px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                      >
+                        <Eye size={12} /> Reveal Code
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Notify Guest Services button (pending only) */}
+                {mt.pteStatus === 'pending' && (
+                  <div style={{ marginTop: 8 }}>
+                    {pteNotified.has(taskId) ? (
+                      <span style={{ fontSize: 12, color: '#15d492' }}>✓ Guest Services notified</span>
+                    ) : (
+                      <button
+                        onClick={handleNotifyPTE}
+                        style={{ fontSize: 12, fontWeight: 500, color: '#378ADD', background: 'rgba(55,138,221,0.10)', border: '1px solid rgba(55,138,221,0.22)', borderRadius: 6, padding: '5px 12px', cursor: 'pointer' }}
+                      >
+                        Notify Guest Services
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── C: Step content ── */}
+
+            {/* Assigned step */}
+            {progress === 'assigned' && (
+              <div style={{ background: '#111722', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px', marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: 12, color: '#9ca3af', marginBottom: 8 }}>
+                  Your estimated arrival time
+                </label>
+                <input
+                  type="time"
+                  value={eta}
+                  onChange={e => setMaintEta(prev => ({ ...prev, [taskId]: e.target.value }))}
+                  style={{
+                    width: '100%', padding: '8px 10px', borderRadius: 8, fontSize: 14, fontFamily: "'JetBrains Mono', monospace",
+                    background: '#0f1219', border: '1px solid rgba(255,255,255,0.10)', color: '#e8e6e1',
+                    marginBottom: 12, boxSizing: 'border-box', outline: 'none',
+                  }}
+                />
+                <button
+                  onClick={handleSetEnRoute}
+                  disabled={!eta}
+                  style={{
+                    width: '100%', padding: '10px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                    cursor: eta ? 'pointer' : 'not-allowed',
+                    background: eta ? 'rgba(55,138,221,0.15)' : '#161b26',
+                    color: eta ? '#378ADD' : '#5a5f6b',
+                    border: eta ? '1px solid rgba(55,138,221,0.30)' : '1px solid rgba(255,255,255,0.07)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+                  Set En Route
+                </button>
+              </div>
+            )}
+
+            {/* En route step */}
+            {progress === 'en_route' && (
+              <div style={{ background: '#111722', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px', marginBottom: 16 }}>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 14,
+                  padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+                  background: 'rgba(55,138,221,0.10)', color: '#378ADD', border: '1px solid rgba(55,138,221,0.22)',
+                  fontFamily: "'JetBrains Mono', monospace",
+                }}>
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+                  ETA {eta}
+                </div>
+                <button
+                  onClick={() => setMaintProgress(prev => ({ ...prev, [taskId]: 'on_site' }))}
+                  style={{
+                    width: '100%', padding: '10px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                    cursor: 'pointer', border: 'none', background: '#1D9E75', color: '#fff',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2C5.8 2 4 3.8 4 6c0 3 4 8 4 8s4-5 4-8c0-2.2-1.8-4-4-4z"/><circle cx="8" cy="6" r="1.5"/></svg>
+                  I&apos;ve Arrived — Start Task
+                </button>
+              </div>
+            )}
+
+            {/* On site step */}
+            {progress === 'on_site' && (
+              <div style={{ marginBottom: 16 }}>
+                {/* Photo slots */}
+                <div style={{ background: '#111722', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px', marginBottom: 12 }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#5a5f6b', marginBottom: 10 }}>Documentation</div>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    {[
+                      { label: 'Before', done: beforeDone, onAdd: () => setMaintBeforeDone(prev => ({ ...prev, [taskId]: true })) },
+                      { label: 'After',  done: afterDone,  onAdd: () => setMaintAfterDone(prev => ({ ...prev, [taskId]: true })) },
+                    ].map(slot => (
+                      <div key={slot.label}>
+                        <div style={{ fontSize: 9, color: '#5a5f6b', marginBottom: 5, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{slot.label}</div>
+                        <button
+                          onClick={slot.done ? undefined : slot.onAdd}
+                          style={{
+                            width: 64, height: 48, borderRadius: 7,
+                            border: slot.done ? '1.5px solid rgba(29,158,117,0.22)' : '1.5px dashed rgba(255,255,255,0.12)',
+                            background: slot.done ? 'rgba(29,158,117,0.10)' : '#161b26',
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                            gap: 2, cursor: slot.done ? 'default' : 'pointer', fontSize: 9, color: '#5a5f6b',
+                          }}
+                        >
+                          {slot.done ? (
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#15d492" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8l4 4 6-7"/></svg>
+                          ) : (
+                            <>
+                              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="12" height="10" rx="1.5"/><circle cx="8" cy="8" r="2.5"/></svg>
+                              Add
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Resolution */}
+                <div style={{ background: '#111722', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px' }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#5a5f6b', marginBottom: 10 }}>
+                    How was this resolved?
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: resolution === 'needs_vendor' || resolution === 'needs_parts' ? 12 : 0 }}>
+                    {[
+                      { key: 'fixed',        label: '✓ Fixed',         bg: 'rgba(29,158,117,0.10)',  color: '#15d492', border: 'rgba(29,158,117,0.22)' },
+                      { key: 'minor',        label: 'Minor fix',       bg: 'rgba(29,158,117,0.07)',  color: '#9ca3af', border: 'rgba(255,255,255,0.12)' },
+                      { key: 'needs_vendor', label: 'Needs Vendor',    bg: 'rgba(55,138,221,0.10)',  color: '#378ADD', border: 'rgba(55,138,221,0.22)' },
+                      { key: 'needs_parts',  label: 'Needs Parts',     bg: 'rgba(239,159,39,0.10)',  color: '#ef9f27', border: 'rgba(239,159,39,0.22)' },
+                    ].map(btn => {
+                      const isSelected = resolution === btn.key
+                      return (
+                        <button
+                          key={btn.key}
+                          onClick={() => handleResolve(btn.key)}
+                          style={{
+                            padding: '9px 8px', borderRadius: 8, fontSize: 12, fontWeight: 500,
+                            cursor: 'pointer', textAlign: 'center',
+                            background: isSelected ? btn.bg : '#161b26',
+                            color: isSelected ? btn.color : '#9ca3af',
+                            border: isSelected ? `1px solid ${btn.border}` : '1px solid rgba(255,255,255,0.07)',
+                          }}
+                        >
+                          {btn.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {/* Needs Vendor expanded form */}
+                  {resolution === 'needs_vendor' && (
+                    <div style={{ marginTop: 4 }}>
+                      <div style={{ marginBottom: 8 }}>
+                        <label style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#5a5f6b', display: 'block', marginBottom: 4 }}>Category <span style={{ color: '#ef4444' }}>*</span></label>
+                        <select
+                          value={vendorCategory[taskId] ?? ''}
+                          onChange={e => setVendorCategory(prev => ({ ...prev, [taskId]: e.target.value }))}
+                          style={{ width: '100%', padding: '7px 10px', borderRadius: 7, background: '#0f1219', border: '1px solid rgba(255,255,255,0.10)', color: '#e8e6e1', fontSize: 12, outline: 'none' }}
+                        >
+                          <option value="">Select category...</option>
+                          {['HVAC', 'Plumbing', 'Electrical', 'Carpentry', 'Appliance', 'General Repairs', 'Other'].map(c => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div style={{ marginBottom: 8 }}>
+                        <label style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#5a5f6b', display: 'block', marginBottom: 4 }}>Vendor name (optional)</label>
+                        <input
+                          value={vendorName[taskId] ?? ''}
+                          onChange={e => setVendorName(prev => ({ ...prev, [taskId]: e.target.value }))}
+                          placeholder="e.g. Oslo VVS AS"
+                          style={{ width: '100%', padding: '7px 10px', borderRadius: 7, background: '#0f1219', border: '1px solid rgba(255,255,255,0.10)', color: '#e8e6e1', fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <div style={{ marginBottom: 8 }}>
+                        <label style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#5a5f6b', display: 'block', marginBottom: 4 }}>Estimate NOK (optional)</label>
+                        <input
+                          type="number"
+                          value={vendorEstimate[taskId] ?? ''}
+                          onChange={e => setVendorEstimate(prev => ({ ...prev, [taskId]: e.target.value }))}
+                          placeholder="0"
+                          style={{ width: '100%', padding: '7px 10px', borderRadius: 7, background: '#0f1219', border: '1px solid rgba(255,255,255,0.10)', color: '#e8e6e1', fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <div style={{ marginBottom: 12 }}>
+                        <label style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#5a5f6b', display: 'block', marginBottom: 4 }}>Notes (optional)</label>
+                        <textarea
+                          value={vendorNotes[taskId] ?? ''}
+                          onChange={e => setVendorNotes(prev => ({ ...prev, [taskId]: e.target.value }))}
+                          placeholder="Describe the issue..."
+                          rows={3}
+                          style={{ width: '100%', padding: '7px 10px', borderRadius: 7, background: '#0f1219', border: '1px solid rgba(255,255,255,0.10)', color: '#e8e6e1', fontSize: 12, outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <button
+                        onClick={handleSubmitVendor}
+                        disabled={!vendorCategory[taskId]}
+                        style={{
+                          width: '100%', padding: '10px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                          cursor: vendorCategory[taskId] ? 'pointer' : 'not-allowed',
+                          background: vendorCategory[taskId] ? '#1D9E75' : '#161b26',
+                          color: vendorCategory[taskId] ? '#fff' : '#5a5f6b',
+                          border: 'none',
+                        }}
+                      >
+                        Submit Work Order
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Needs Parts expanded form */}
+                  {resolution === 'needs_parts' && (
+                    <div style={{ marginTop: 4 }}>
+                      <div style={{ marginBottom: 12 }}>
+                        <label style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#5a5f6b', display: 'block', marginBottom: 4 }}>Parts needed <span style={{ color: '#ef4444' }}>*</span></label>
+                        <textarea
+                          value={partsNotes[taskId] ?? ''}
+                          onChange={e => setPartsNotes(prev => ({ ...prev, [taskId]: e.target.value }))}
+                          placeholder="List the parts required..."
+                          rows={3}
+                          style={{ width: '100%', padding: '7px 10px', borderRadius: 7, background: '#0f1219', border: '1px solid rgba(255,255,255,0.10)', color: '#e8e6e1', fontSize: 12, outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <button
+                        onClick={handleSubmitParts}
+                        disabled={!partsNotes[taskId]?.trim()}
+                        style={{
+                          width: '100%', padding: '10px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                          cursor: partsNotes[taskId]?.trim() ? 'pointer' : 'not-allowed',
+                          background: partsNotes[taskId]?.trim() ? '#1D9E75' : '#161b26',
+                          color: partsNotes[taskId]?.trim() ? '#fff' : '#5a5f6b',
+                          border: 'none',
+                        }}
+                      >
+                        Submit
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Done step */}
+            {progress === 'done' && (
+              <div style={{ background: 'rgba(29,158,117,0.08)', border: '1px solid rgba(29,158,117,0.22)', borderRadius: 10, padding: '16px 14px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#15d492" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8l4 4 6-7"/></svg>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#15d492' }}>Completed</div>
+                  {resolution && <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>Resolution: {resolution.replace('_', ' ')}</div>}
+                </div>
+              </div>
+            )}
+
+            {/* ── D: Comment section ── */}
+            <div style={{ marginTop: 8 }}>
+              <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '0 0 14px' }} />
+              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#5a5f6b', marginBottom: 10 }}>Comments</div>
+              {comments.length === 0 ? (
+                <div style={{ fontSize: 12, color: '#5a5f6b', fontStyle: 'italic', marginBottom: 12 }}>No comments yet.</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12 }}>
+                  {comments.map((c, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 10 }}>
+                      <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(55,138,221,0.15)', border: '1px solid rgba(55,138,221,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#378ADD', flexShrink: 0 }}>
+                        {c.author.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: '#e8e6e1' }}>{c.author}</span>
+                          <span style={{ fontSize: 11, color: '#5a5f6b' }}>{c.time}</span>
+                        </div>
+                        <div style={{ fontSize: 13, color: '#9ca3af', lineHeight: 1.5 }}>{c.text}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  value={commentDraft}
+                  onChange={e => setCommentDraft(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); postComment() } }}
+                  placeholder="Add a comment..."
+                  style={{ flex: 1, padding: '8px 10px', borderRadius: 8, background: '#0f1219', border: '1px solid rgba(255,255,255,0.10)', color: '#e8e6e1', fontSize: 13, outline: 'none' }}
+                />
+                <button
+                  onClick={postComment}
+                  disabled={!commentDraft.trim()}
+                  style={{ padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: commentDraft.trim() ? 'pointer' : 'not-allowed', background: commentDraft.trim() ? 'rgba(55,138,221,0.15)' : '#161b26', color: commentDraft.trim() ? '#378ADD' : '#5a5f6b', border: commentDraft.trim() ? '1px solid rgba(55,138,221,0.30)' : '1px solid rgba(255,255,255,0.07)' }}
+                >
+                  Post
+                </button>
+              </div>
+            </div>
+          </AppDrawer>
+        )
+      })()}
 
       {/* Cleaner Approval Sheet */}
       {(isSupervisor || isGSSupervisor) && selectedApprovalRequest && (
