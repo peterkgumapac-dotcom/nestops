@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Filter, Camera, X, Check, ShoppingBag, Calendar, MapPin, Zap, Lock, Eye } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
@@ -164,7 +165,8 @@ const STATUS_GROUPS: { key: string; label: string; color: string }[] = [
 
 export default function MyTasksPage() {
   const { accent } = useRole()
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
+  const router = useRouter()
+  const [currentUser, setCurrentUser] = useState<UserProfile | null | undefined>(undefined)
   const [statusFilter, setStatusFilter] = useState<string>('today')
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set())
@@ -222,6 +224,14 @@ export default function MyTasksPage() {
       try {
         const user: UserProfile = JSON.parse(stored)
         setCurrentUser(user)
+        // Set role identifier in URL
+        const params = new URLSearchParams(window.location.search)
+        if (!params.get('role')) {
+          if (user.subRole?.includes('Maintenance')) router.replace('/app/my-tasks?role=maintenance')
+          else if (user.subRole?.includes('Supervisor')) router.replace('/app/my-tasks?role=supervisor')
+          else if (user.subRole?.includes('Cleaner') || user.subRole?.includes('Cleaning')) router.replace('/app/my-tasks?role=cleaner')
+          else if (user.subRole?.includes('Guest')) router.replace('/app/my-tasks?role=guest-services')
+        }
         const isSup = user.subRole?.includes('Supervisor')
         const cleanerId = 's1'
         const supervisorId = 's2'
@@ -234,8 +244,10 @@ export default function MyTasksPage() {
         })
         setUpsellApprovalRequests(requests)
       } catch {}
+    } else {
+      setCurrentUser(null)
     }
-  }, [])
+  }, [router])
 
   // Reset checklist state when task changes
   useEffect(() => {
@@ -250,23 +262,25 @@ export default function MyTasksPage() {
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
+  // Loading guard — prevent flash of all tasks before user profile loads
+  if (currentUser === undefined) return null
+
   const assigneeName = currentUser ? (USER_ASSIGNEE_MAP[currentUser.name] ?? currentUser.name) : null
   const subRole = currentUser?.subRole ?? ''
   const isSupervisor = subRole.includes('Supervisor')
+  const isMaintenance = subRole.includes('Maintenance')
 
-  const filteredTasks = useMemo(() => {
-    return ALL_TASKS.filter(task => {
-      // Supervisor sees all team cleaning tasks; cleaner sees only their own
-      const matchesAssignee = isSupervisor ? true : (!assigneeName || task.assignee === assigneeName)
-      let matchesType = true
-      if (subRole.includes('Maintenance')) matchesType = task.type === 'Maintenance'
-      else if (subRole.includes('Cleaning') || subRole.includes('Cleaner') || isSupervisor) matchesType = task.type === 'Cleaning' || task.type === 'Inspection'
-      const effectiveStatus = completedIds.has(task.id) ? 'completed' : task.status
-      const matchesStatus = statusFilter === 'all' || effectiveStatus === statusFilter
-      const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter
-      return matchesAssignee && matchesType && matchesStatus && matchesPriority
-    })
-  }, [assigneeName, subRole, isSupervisor, statusFilter, priorityFilter, completedIds])
+  const filteredTasks = ALL_TASKS.filter(task => {
+    // Supervisor sees all team cleaning tasks; cleaner sees only their own
+    const matchesAssignee = isSupervisor ? true : (!assigneeName || task.assignee === assigneeName)
+    let matchesType = true
+    if (isMaintenance) matchesType = task.type === 'Maintenance'
+    else if (subRole.includes('Cleaning') || subRole.includes('Cleaner') || isSupervisor) matchesType = task.type === 'Cleaning' || task.type === 'Inspection'
+    const effectiveStatus = completedIds.has(task.id) ? 'completed' : task.status
+    const matchesStatus = statusFilter === 'all' || effectiveStatus === statusFilter
+    const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter
+    return matchesAssignee && matchesType && matchesStatus && matchesPriority
+  })
 
   // Generate checklist from task + property data
   const activeChecklist = useMemo((): ChecklistItem[] => {
@@ -370,8 +384,8 @@ export default function MyTasksPage() {
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <PageHeader
-        title={isSupervisor ? "Team's Cleaning Tasks" : "My Tasks"}
-        subtitle={isSupervisor ? "All team cleaning tasks — click any task to open its checklist" : "Tasks assigned to you — click any task to open its checklist"}
+        title={isMaintenance ? 'My Jobs' : isSupervisor ? "Team's Cleaning Tasks" : 'My Cleanings'}
+        subtitle={isMaintenance ? 'Your assigned maintenance jobs — click to open job details' : isSupervisor ? 'All team cleaning tasks — click any task to open its checklist' : 'Your cleaning tasks — click any task to open its checklist'}
       />
 
       {/* Filters */}

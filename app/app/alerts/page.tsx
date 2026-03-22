@@ -69,11 +69,13 @@ export default function AlertsPage() {
         setCurrentUser(user)
 
         const isSupervisor = user.subRole?.includes('Supervisor')
-        const staffId = user.subRole?.includes('Supervisor') ? 's2' : 's1'
+        let staffId = 's1'
+        if (user.subRole?.includes('Supervisor')) staffId = 's2'
+        else if (user.subRole?.includes('Maintenance')) staffId = 's3'
+        else if (user.subRole?.includes('Guest')) staffId = 's4'
 
         const visible = FIELD_ALERTS.filter(a => {
           if (isSupervisor) return true
-          // Cleaner: only alerts assigned to them
           return a.assignedTo.includes(staffId)
         })
         setAlerts(visible)
