@@ -14,7 +14,9 @@ import { getPTEBadge, isAccessCodeVisible } from '@/lib/utils/pteUtils'
 import { UPSELL_APPROVAL_REQUESTS, type UpsellApprovalRequest } from '@/lib/data/upsellApprovals'
 import { UPSELL_RULES } from '@/lib/data/upsells'
 import { STAFF_MEMBERS } from '@/lib/data/staff'
+import type { JobProgress } from '@/lib/data/staff'
 import CleanerApprovalSheet from '@/components/upsells/CleanerApprovalSheet'
+import { PipelineMaintenanceCard } from '@/components/tasks/maintenance/PipelineMaintenanceCard'
 
 const USER_TO_STAFF: Record<string, string> = { 'u3': 's1', 'u4': 's3', 'u5': 's4', 'u7': 's2' }
 
@@ -197,6 +199,7 @@ export default function MyTasksPage() {
   const { accent } = useRole()
   const router = useRouter()
   const [currentUser, setCurrentUser] = useState<UserProfile | null | undefined>(undefined)
+  const [userKey, setUserKey] = useState(0)
   const [statusFilter, setStatusFilter] = useState<string>('today')
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set())
@@ -219,6 +222,12 @@ export default function MyTasksPage() {
   const [selectedApprovalRequest, setSelectedApprovalRequest] = useState<UpsellApprovalRequest | null>(null)
   // Cleaner awareness — read-only, no approval actions
   const [cleanerUpsellAwareness, setCleanerUpsellAwareness] = useState<UpsellApprovalRequest[]>([])
+
+  // Maintenance pipeline state
+  const [maintProgress, setMaintProgress] = useState<Record<string, JobProgress>>({})
+  const [maintBeforeDone, setMaintBeforeDone] = useState<Record<string, boolean>>({})
+  const [maintAfterDone, setMaintAfterDone] = useState<Record<string, boolean>>({})
+  const [maintResolution, setMaintResolution] = useState<Record<string, string>>({})
 
   const handleUpsellApprove = (id: string) => {
     const req = upsellApprovalRequests.find(r => r.id === id)
@@ -249,6 +258,13 @@ export default function MyTasksPage() {
     } catch {}
     showToast('Upsell declined')
   }
+
+  // Re-run user effect when persona switcher changes localStorage
+  useEffect(() => {
+    const handler = () => setUserKey(k => k + 1)
+    window.addEventListener('storage', handler)
+    return () => window.removeEventListener('storage', handler)
+  }, [])
 
   useEffect(() => {
     const stored = localStorage.getItem('nestops_user')
@@ -284,7 +300,7 @@ export default function MyTasksPage() {
     } else {
       setCurrentUser(null)
     }
-  }, [router])
+  }, [router, userKey])
 
   // Reset checklist state when task changes
   useEffect(() => {
@@ -664,7 +680,37 @@ export default function MyTasksPage() {
                 <span style={{ fontSize: 12, fontWeight: 700, color: group.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{group.label}</span>
                 <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{groupTasks.length}</span>
               </div>
-              {groupTasks.map(task => (
+              {groupTasks.map(task => {
+                // Maintenance tasks get the pipeline card design
+                if (isMaintenance && task.type === 'Maintenance') {
+                  return (
+                    <PipelineMaintenanceCard
+                      key={task.id}
+                      id={task.id}
+                      title={task.title}
+                      propertyName={task.propertyName}
+                      assigneeName={assigneeName ?? 'Bjorn L.'}
+                      priority={task.priority as 'low' | 'medium' | 'high' | 'urgent'}
+                      dueDisplay={task.dueDisplay}
+                      pteStatus={task.pteStatus as 'not_required' | 'auto_granted' | 'pending' | 'granted' | 'denied' | 'expired' | undefined}
+                      progress={maintProgress[task.id] ?? 'assigned'}
+                      onProgressChange={(p) => setMaintProgress(prev => ({ ...prev, [task.id]: p }))}
+                      beforeDone={maintBeforeDone[task.id] ?? false}
+                      afterDone={maintAfterDone[task.id] ?? false}
+                      onBeforePhoto={() => setMaintBeforeDone(prev => ({ ...prev, [task.id]: true }))}
+                      onAfterPhoto={() => setMaintAfterDone(prev => ({ ...prev, [task.id]: true }))}
+                      resolution={maintResolution[task.id] ?? ''}
+                      onResolve={(r) => {
+                        setMaintResolution(prev => ({ ...prev, [task.id]: r }))
+                        if (r === 'minor' || r === 'fixed') {
+                          setMaintProgress(prev => ({ ...prev, [task.id]: 'done' }))
+                          setCompletedIds(prev => new Set([...prev, task.id]))
+                        }
+                      }}
+                    />
+                  )
+                }
+                return (
                 <motion.div
                   layout key={task.id}
                   onClick={() => !completedIds.has(task.id) && setSelectedTask(task)}
@@ -714,7 +760,8 @@ export default function MyTasksPage() {
                     </div>
                   </div>
                 </motion.div>
-              ))}
+                )
+              })}
             </div>
           )
         })

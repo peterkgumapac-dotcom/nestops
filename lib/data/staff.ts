@@ -14,6 +14,7 @@ export interface ActivityEntry {
 }
 
 export type JobStatus = 'pending' | 'in_progress' | 'done'
+export type JobProgress = 'assigned' | 'en_route' | 'on_site' | 'done'
 export type JobPriority = 'low' | 'medium' | 'high' | 'urgent'
 export type JobPTEStatus = 'not_required' | 'auto_granted' | 'pending' | 'granted' | 'denied' | 'expired'
 
@@ -65,6 +66,7 @@ export interface Job {
   pte?: JobPTE
   reservation?: JobReservation
   staffId?: string
+  jobProgress?: JobProgress
   checklist?: ChecklistItem[]
   deployRequests?: DeployRequest[]
   workItems?: WorkItem[]

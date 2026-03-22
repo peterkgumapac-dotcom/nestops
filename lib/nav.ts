@@ -163,7 +163,6 @@ export const STAFF_MAINTENANCE_NAV: NavSection[] = [
       { label: 'Alerts',      href: '/app/alerts',      icon: Bell },
       { label: 'Home',        href: '/app/dashboard',   icon: Home },
       { label: 'My Jobs',     href: '/app/my-tasks',    icon: CheckSquare },
-      { label: 'Intake',      href: '/app/new-intake',  icon: ClipboardList },
       { label: 'Work Orders', href: '/app/work-orders', icon: Ticket },
     ],
   },
