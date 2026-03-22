@@ -10,6 +10,18 @@ interface ChangeEntry {
 
 const CHANGELOG: ChangeEntry[] = [
   {
+    version: 'v3.4',
+    date: 'Mar 22, 2026',
+    items: [
+      { tag: '🐛 Fix', text: 'handleLogin() now routes by jobRole — cleaners go to /briefing/cleaners, maintenance to /briefing/maintenance, supervisors to /briefing/supervisor, gs-supervisors to /briefing/gs-supervisor; previously all email/password logins landed on /app/dashboard regardless of role' },
+      { tag: '🐛 Fix', text: 'handleFloatingLogin() now checks jobRole === supervisor/gs-supervisor instead of subRole.includes("Supervisor") — consistent with rest of codebase' },
+      { tag: '⚡ Feature', text: 'Cleaner Upsell Awareness section added to My Tasks — read-only list of upcoming upsells at assigned properties; filtered to cleaner-relevant types only (early check-in, late checkout, mid-stay refresh, welcome basket, baby equipment)' },
+      { tag: '⚡ Feature', text: 'Baby Equipment Add-on upsell rule (ur9) added — cot, high chair, baby bath; cleanerVisible: true; 3 sample approval records added for cleaner s1 properties (p1, p3, p5)' },
+      { tag: '🏗 Arch', text: 'cleanerVisible boolean added to UpsellRule interface — all 8 existing rules tagged; ur1/ur2/ur4/ur6/ur9 are cleaner-visible; ur3/ur5/ur7/ur8 are not' },
+      { tag: '🐛 Fix', text: 'Dead /app/schedule link removed from supervisor nav — no page exists for this route' },
+    ],
+  },
+  {
     version: 'v3.3',
     date: 'Mar 22, 2026',
     items: [

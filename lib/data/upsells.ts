@@ -25,6 +25,7 @@ export interface UpsellRule {
   ctaLabel?: string
   approvalType: 'auto' | 'cleaner_required'
   paymentMode:  'auto_charge' | 'auth_hold'
+  cleanerVisible: boolean  // true = appears in cleaner upsell awareness section
 }
 
 export const PROPERTY_GROUPS = [
@@ -49,6 +50,7 @@ export const UPSELL_RULES: UpsellRule[] = [
     ctaLabel: 'Book Now',
     approvalType: 'cleaner_required',
     paymentMode:  'auth_hold',
+    cleanerVisible: true,
   },
   {
     id: 'ur2',
@@ -65,6 +67,7 @@ export const UPSELL_RULES: UpsellRule[] = [
     ctaLabel: 'Add to Stay',
     approvalType: 'cleaner_required',
     paymentMode:  'auth_hold',
+    cleanerVisible: true,
   },
   {
     id: 'ur3',
@@ -81,6 +84,7 @@ export const UPSELL_RULES: UpsellRule[] = [
     ctaLabel: 'Book Transfer',
     approvalType: 'auto',
     paymentMode:  'auto_charge',
+    cleanerVisible: false,
   },
   {
     id: 'ur4',
@@ -99,6 +103,7 @@ export const UPSELL_RULES: UpsellRule[] = [
     ctaLabel: 'Add to Stay',
     approvalType: 'auto',
     paymentMode:  'auto_charge',
+    cleanerVisible: true,
   },
   {
     id: 'ur5',
@@ -117,6 +122,7 @@ export const UPSELL_RULES: UpsellRule[] = [
     ctaLabel: 'Book Tour',
     approvalType: 'auto',
     paymentMode:  'auto_charge',
+    cleanerVisible: false,
   },
   {
     id: 'ur6',
@@ -135,6 +141,7 @@ export const UPSELL_RULES: UpsellRule[] = [
     ctaLabel: 'Schedule Refresh',
     approvalType: 'auto',
     paymentMode:  'auto_charge',
+    cleanerVisible: true,
   },
   {
     id: 'ur7',
@@ -153,6 +160,7 @@ export const UPSELL_RULES: UpsellRule[] = [
     ctaLabel: 'Reserve Gear',
     approvalType: 'auto',
     paymentMode:  'auto_charge',
+    cleanerVisible: false,
   },
   {
     id: 'ur8',
@@ -169,5 +177,23 @@ export const UPSELL_RULES: UpsellRule[] = [
     ctaLabel: 'Add Pet',
     approvalType: 'auto',
     paymentMode:  'auto_charge',
+    cleanerVisible: false,
+  },
+  {
+    id: 'ur9',
+    title: 'Baby Equipment Add-on',
+    description: 'Cot, high chair, or baby bath — ready on arrival',
+    price: 200,
+    currency: 'NOK',
+    category: 'extras',
+    enabled: true,
+    targeting: 'all',
+    targetGroupIds: [],
+    targetPropertyIds: [],
+    conditions: [],
+    ctaLabel: 'Add Equipment',
+    approvalType: 'auto',
+    paymentMode:  'auto_charge',
+    cleanerVisible: true,
   },
 ]

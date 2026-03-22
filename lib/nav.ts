@@ -7,7 +7,7 @@ import {
   Settings, History,
   Home, Inbox, PlusCircle, FileText, CheckSquare,
   Wrench, Users, CreditCard, UserCircle,
-  KeyRound, Globe, Calendar,
+  KeyRound, Globe,
   LucideIcon,
 } from 'lucide-react'
 
@@ -140,7 +140,6 @@ export const STAFF_CLEANING_SUPERVISOR_NAV: NavSection[] = [
       { label: 'Team Tasks',       href: '/app/my-tasks',    icon: CheckSquare },
       { label: 'Work Orders',      href: '/app/work-orders', icon: Ticket },
       { label: 'Upsell Approvals', href: '/app/upsells',     icon: ShoppingBag, badge: 2 },
-      { label: 'Schedule',         href: '/app/schedule',    icon: Calendar },
     ],
   },
   {

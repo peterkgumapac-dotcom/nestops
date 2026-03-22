@@ -12,6 +12,8 @@ import { PROPERTIES } from '@/lib/data/properties'
 import { getCleaningChecklist, getMaintenanceChecklist, type ChecklistItem } from '@/lib/data/checklists'
 import { getPTEBadge, isAccessCodeVisible } from '@/lib/utils/pteUtils'
 import { UPSELL_APPROVAL_REQUESTS, type UpsellApprovalRequest } from '@/lib/data/upsellApprovals'
+import { UPSELL_RULES } from '@/lib/data/upsells'
+import { STAFF_MEMBERS } from '@/lib/data/staff'
 import CleanerApprovalSheet from '@/components/upsells/CleanerApprovalSheet'
 
 const USER_TO_STAFF: Record<string, string> = { 'u3': 's1', 'u4': 's3', 'u5': 's4', 'u7': 's2' }
@@ -215,6 +217,8 @@ export default function MyTasksPage() {
   // Upsell approval state — resolved after user loads from localStorage
   const [upsellApprovalRequests, setUpsellApprovalRequests] = useState<UpsellApprovalRequest[]>([])
   const [selectedApprovalRequest, setSelectedApprovalRequest] = useState<UpsellApprovalRequest | null>(null)
+  // Cleaner awareness — read-only, no approval actions
+  const [cleanerUpsellAwareness, setCleanerUpsellAwareness] = useState<UpsellApprovalRequest[]>([])
 
   const handleUpsellApprove = (id: string) => {
     const req = upsellApprovalRequests.find(r => r.id === id)
@@ -264,6 +268,18 @@ export default function MyTasksPage() {
           r.status === 'pending_cleaner' || (r.status === 'pending_supervisor' && r.escalatedToSupervisor)
         ) : []
         setUpsellApprovalRequests(requests)
+        // Cleaner upsell awareness — read-only, filtered to cleaner-relevant types + assigned properties
+        if (user.jobRole === 'cleaner' && staffId) {
+          const cleanerVisibleRuleIds = new Set(UPSELL_RULES.filter(r => r.cleanerVisible).map(r => r.id))
+          const staffMember = STAFF_MEMBERS.find(m => m.id === staffId)
+          const assignedPropIds = staffMember?.assignedPropertyIds ?? []
+          const awareness = UPSELL_APPROVAL_REQUESTS.filter(r =>
+            cleanerVisibleRuleIds.has(r.upsellRuleId) &&
+            assignedPropIds.includes(r.propertyId) &&
+            ['pending_cleaner', 'approved', 'auth_held'].includes(r.status)
+          )
+          setCleanerUpsellAwareness(awareness)
+        }
       } catch {}
     } else {
       setCurrentUser(null)
@@ -491,6 +507,74 @@ export default function MyTasksPage() {
           </div>
         )
       })()}
+
+      {/* Cleaner Upsell Awareness — read-only, no actions */}
+      {jobRole === 'cleaner' && (
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <ShoppingBag size={14} style={{ color: '#d97706' }} />
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Upcoming Upsells
+            </span>
+            {cleanerUpsellAwareness.length > 0 && (
+              <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 10, background: '#d9770620', color: '#d97706', fontWeight: 600 }}>
+                {cleanerUpsellAwareness.length}
+              </span>
+            )}
+            <span style={{ fontSize: 11, color: 'var(--text-subtle)', marginLeft: 'auto', fontStyle: 'italic' }}>
+              Prepare only — no action needed
+            </span>
+          </div>
+          {cleanerUpsellAwareness.length === 0 ? (
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px', fontSize: 13, color: 'var(--text-subtle)', textAlign: 'center' }}>
+              No upcoming upsell requests for your properties
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {cleanerUpsellAwareness.map(req => {
+                const statusColor = req.status === 'approved' || req.status === 'auth_held' ? '#059669' : '#d97706'
+                const statusLabel = req.status === 'approved' ? 'Confirmed' : req.status === 'auth_held' ? 'Confirmed' : 'Pending'
+                return (
+                  <div
+                    key={req.id}
+                    style={{
+                      background: 'var(--bg-card)',
+                      border: '1px solid var(--border)',
+                      borderLeft: `4px solid ${statusColor}`,
+                      borderRadius: 10,
+                      padding: '12px 14px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                            {req.upsellTitle}
+                          </span>
+                          <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: `${statusColor}18`, color: statusColor, border: `1px solid ${statusColor}30` }}>
+                            {statusLabel}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-muted)' }}>
+                            <MapPin size={11} /> {req.propertyName}
+                          </span>
+                          <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>·</span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-muted)' }}>
+                            <Calendar size={11} /> Check-in {req.checkInDate}
+                          </span>
+                          <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>·</span>
+                          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{req.guestName}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Upsell Approvals Section */}
       {(isSupervisor || isGSSupervisor) && upsellApprovalRequests.length > 0 && (

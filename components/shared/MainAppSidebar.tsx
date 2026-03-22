@@ -8,14 +8,13 @@ import { useRole } from '@/context/RoleContext'
 import { useTheme } from '@/context/ThemeContext'
 import { MAIN_APP_NAV_BY_ROLE, getStaffNav } from '@/lib/nav'
 
-const APP_VERSION = 'v3.3'
-const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v3.3'
+const APP_VERSION = 'v3.4'
+const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v3.4'
 const WHATS_NEW_ITEMS = [
-  'GS Supervisor role live — Carlos M. demo persona, dedicated nav, and briefing page with SLA risk panel',
-  'Supervisor briefing page — team shift status, today\'s cleanings, and upsell approvals queue at a glance',
-  'Nav dispatch now uses jobRole (exact PRD IDs) — gs-supervisor and supervisor get fully distinct menus',
-  'Intake removed from cleaner nav — field visits are assigned, not self-initiated',
-  'Supervisor nav updated with Upsell Approvals and Schedule links per PRD v3',
+  'Role routing fixed — cleaners now land on their briefing page after login, not the supervisor dashboard',
+  'Cleaner Upsell Awareness — read-only upcoming upsells in My Tasks (early check-in, late checkout, mid-stay, welcome basket, baby equipment)',
+  'Baby Equipment Add-on upsell type added (cot / high chair / baby bath)',
+  'Dead /app/schedule link removed from supervisor nav',
 ]
 
 interface MainAppSidebarProps {

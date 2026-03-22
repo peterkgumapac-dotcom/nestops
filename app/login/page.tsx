@@ -357,8 +357,9 @@ export default function LoginPage() {
     localStorage.setItem('nestops_user', JSON.stringify(profile))
     setUser(profile)
     let dest = '/app/my-tasks'
-    if (user.role === 'operator' || user.subRole?.includes('Supervisor')) dest = '/app/dashboard'
+    if (user.role === 'operator') dest = '/app/dashboard'
     else if (user.role === 'owner') dest = '/owner'
+    else if (user.jobRole === 'supervisor' || user.jobRole === 'gs-supervisor') dest = '/app/dashboard'
     router.push(dest)
   }
 
@@ -375,7 +376,18 @@ export default function LoginPage() {
           const profile = buildProfile(demoUser)
           localStorage.setItem('nestops_user', JSON.stringify(profile))
           setUser(profile)
-          router.push('/app/dashboard')
+          // Route by role — same logic as handleDemoSelect
+          let dest = '/briefing'
+          if (profile.role === 'owner') dest = '/owner'
+          else if (profile.role === 'operator') dest = '/app/dashboard'
+          else if (profile.role === 'staff') {
+            if (profile.jobRole === 'maintenance')         dest = '/briefing/maintenance'
+            else if (profile.jobRole === 'gs-supervisor')  dest = '/briefing/gs-supervisor'
+            else if (profile.jobRole === 'supervisor')     dest = '/briefing/supervisor'
+            else if (profile.jobRole === 'guest-services') dest = '/briefing/guest-services'
+            else if (profile.jobRole === 'cleaner')        dest = '/briefing/cleaners'
+          }
+          router.push(dest)
         }, 150)
       }
     } else {
@@ -399,7 +411,7 @@ export default function LoginPage() {
           <div className="nav-left">
             <div className="nav-logo">N</div>
             <span className="nav-name">NestOps</span>
-            <span className="nav-tag">v3.3</span>
+            <span className="nav-tag">v3.4</span>
           </div>
           <a href="/" className="nav-cta">← Back to home</a>
         </div>
@@ -430,7 +442,7 @@ export default function LoginPage() {
           <div className="card-wordmark">
             <div className="nav-logo">N</div>
             <span className="nav-name">NestOps</span>
-            <span className="nav-tag">v3.3</span>
+            <span className="nav-tag">v3.4</span>
           </div>
 
           {/* Email */}
