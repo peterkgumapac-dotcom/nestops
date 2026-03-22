@@ -262,6 +262,40 @@ export default function MyTasksPage() {
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
+  // ── Hooks that must live before any early return ──────────────────────────
+  // Generate checklist from task + property data
+  const activeChecklist = useMemo((): ChecklistItem[] => {
+    if (!selectedTask) return []
+    const prop = PROPERTIES.find(p => p.id === selectedTask.propertyId)
+    if (selectedTask.type === 'Cleaning') {
+      return getCleaningChecklist(prop?.beds ?? 1, prop?.baths ?? 1, prop?.amenities ?? [])
+    }
+    if (selectedTask.type === 'Maintenance') return getMaintenanceChecklist()
+    return []
+  }, [selectedTask])
+
+  // Group checklist by category
+  const checklistGroups = useMemo(() => {
+    const seen = new Set<string>()
+    const order: string[] = []
+    activeChecklist.forEach(item => { if (!seen.has(item.category)) { seen.add(item.category); order.push(item.category) } })
+    return order.map(cat => ({ name: cat, items: activeChecklist.filter(i => i.category === cat) }))
+  }, [activeChecklist])
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !uploadTarget) return
+    const url = URL.createObjectURL(file)
+    if (uploadTarget === 'before') setBeforePhotos(p => [...p, url])
+    else if (uploadTarget === 'after') setAfterPhotos(p => [...p, url])
+    else if (uploadTarget.startsWith('item:')) {
+      const itemId = uploadTarget.slice(5)
+      setChecklistPhotos(p => ({ ...p, [itemId]: url }))
+    }
+    e.target.value = ''
+    setUploadTarget(null)
+  }, [uploadTarget])
+
   // Loading guard — prevent flash of all tasks before user profile loads
   if (currentUser === undefined) return null
 
@@ -282,25 +316,6 @@ export default function MyTasksPage() {
     return matchesAssignee && matchesType && matchesStatus && matchesPriority
   })
 
-  // Generate checklist from task + property data
-  const activeChecklist = useMemo((): ChecklistItem[] => {
-    if (!selectedTask) return []
-    const prop = PROPERTIES.find(p => p.id === selectedTask.propertyId)
-    if (selectedTask.type === 'Cleaning') {
-      return getCleaningChecklist(prop?.beds ?? 1, prop?.baths ?? 1, prop?.amenities ?? [])
-    }
-    if (selectedTask.type === 'Maintenance') return getMaintenanceChecklist()
-    return []
-  }, [selectedTask])
-
-  // Group checklist by category
-  const checklistGroups = useMemo(() => {
-    const seen = new Set<string>()
-    const order: string[] = []
-    activeChecklist.forEach(item => { if (!seen.has(item.category)) { seen.add(item.category); order.push(item.category) } })
-    return order.map(cat => ({ name: cat, items: activeChecklist.filter(i => i.category === cat) }))
-  }, [activeChecklist])
-
   const checkedCount = activeChecklist.filter(i => checklistChecked[i.id]).length
   const totalCount = activeChecklist.length
   const progressPct = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0
@@ -318,20 +333,6 @@ export default function MyTasksPage() {
     setUploadTarget(target)
     fileInputRef.current?.click()
   }
-
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !uploadTarget) return
-    const url = URL.createObjectURL(file)
-    if (uploadTarget === 'before') setBeforePhotos(p => [...p, url])
-    else if (uploadTarget === 'after') setAfterPhotos(p => [...p, url])
-    else if (uploadTarget.startsWith('item:')) {
-      const itemId = uploadTarget.slice(5)
-      setChecklistPhotos(p => ({ ...p, [itemId]: url }))
-    }
-    e.target.value = ''
-    setUploadTarget(null)
-  }, [uploadTarget])
 
   const handleSubmit = () => {
     if (!selectedTask) return
