@@ -11,6 +11,7 @@ interface CleaningTaskCardProps {
   showTurnaround?: boolean
   codeVisible: boolean
   onToggleCode: () => void
+  onOpen?: () => void
 }
 
 export function CleaningTaskCard({
@@ -21,6 +22,7 @@ export function CleaningTaskCard({
   showTurnaround,
   codeVisible,
   onToggleCode,
+  onOpen,
 }: CleaningTaskCardProps) {
   const prop = PROPERTIES.find(p => p.id === shift.propertyId)
   const [startH, startM] = shift.startTime.split(':').map(Number)
@@ -42,7 +44,10 @@ export function CleaningTaskCard({
   const accessCode = prop?.accessCodes?.[0]?.code ?? 'Check SuiteOp'
 
   return (
-    <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '16px', marginBottom: 12, overflow: 'hidden' }}>
+    <div
+      onClick={onOpen}
+      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '16px', marginBottom: 12, overflow: 'hidden', cursor: onOpen ? 'pointer' : 'default' }}
+    >
       {prop?.imageUrl && (
         <img src={prop.imageUrl} alt={prop.name ?? shift.propertyId} style={{ width: '100%', height: 96, borderRadius: 8, objectFit: 'cover', marginBottom: 12 }} />
       )}
@@ -72,7 +77,7 @@ export function CleaningTaskCard({
           </div>
         ) : (
           <button
-            onClick={onToggleCode}
+            onClick={e => { e.stopPropagation(); onToggleCode() }}
             style={{ fontSize: 12, fontWeight: 600, color: '#60a5fa', background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.3)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', marginBottom: 4 }}
           >
             Show Code 👁

@@ -73,6 +73,7 @@ export interface Job {
   beforePhotos?: TaskPhoto[]
   afterPhotos?: TaskPhoto[]
   activity?: ActivityEntry[]
+  sourceFlag?: string       // links back to originating MaintenanceFlag id
 }
 
 export interface StaffMember {
@@ -145,11 +146,13 @@ export const JOBS: Job[] = [
   },
   {
     id: 'j4',
-    title: 'Standard clean',
+    title: 'Sunday deep clean',
     propertyId: 'p2', propertyName: 'Harbor Studio',
-    type: 'cleaning', status: 'done', priority: 'low',
-    dueTime: '11:00', pteRequired: false, pteStatus: 'not_required',
+    type: 'cleaning', status: 'pending', priority: 'high',
+    dueTime: '14:00', checkoutTime: '11:00', checkinTime: '15:00',
+    urgencyLabel: 'Urgent', pteRequired: false, pteStatus: 'not_required',
     staffId: 's1',
+    reservation: { id: 'res-200', guestName: 'Lars Eriksson', platform: 'Booking.com', checkIn: '2026-03-22', checkOut: '2026-03-26', nights: 4, nightsRemaining: 4, status: 'confirmed' },
     checklist: getCleaningChecklist(1, 1, []),
     deployRequests: [],
     beforePhotos: [], afterPhotos: [],

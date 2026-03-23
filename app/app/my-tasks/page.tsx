@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Filter, Camera, X, Check, ShoppingBag, Calendar, MapPin, Zap, Lock, Eye } from 'lucide-react'
+import { Filter, Camera, X, Check, ShoppingBag, Calendar, MapPin, Zap, Lock, Eye, ChevronDown } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
 import AppDrawer from '@/components/shared/AppDrawer'
@@ -17,6 +17,9 @@ import { STAFF_MEMBERS } from '@/lib/data/staff'
 import type { JobProgress } from '@/lib/data/staff'
 import CleanerApprovalSheet from '@/components/upsells/CleanerApprovalSheet'
 import { PipelineMaintenanceCard } from '@/components/tasks/maintenance/PipelineMaintenanceCard'
+import { ReportProblemModal } from '@/components/tasks/cleaning/modals/ReportProblemModal'
+import { CleaningProgressBar } from '@/components/tasks/cleaning/CleaningProgressBar'
+import { useCleaningProgress } from '@/hooks/tasks/useCleaningProgress'
 
 const USER_TO_STAFF: Record<string, string> = { 'u3': 's1', 'u4': 's3', 'u5': 's4', 'u7': 's2' }
 
@@ -34,8 +37,7 @@ interface CleaningJob {
 }
 
 const TODAYS_CLEANINGS: CleaningJob[] = [
-  { id: 'cl-001', type: 'Turnover',   property: 'Harbor Studio',  timeWindow: '10:00–12:00', status: 'in-progress', assignedTo: 'Maria S.',  checkoutTime: '10:00', checkinTime: '15:00' },
-  { id: 'cl-002', type: 'Deep Clean', property: 'Sunset Villa',   timeWindow: '13:00–16:00', status: 'pending',     assignedTo: 'Maria S.',  checkoutTime: '12:00', checkinTime: '17:00' },
+  { id: 'cl-001', type: 'Deep Clean', property: 'Harbor Studio',  timeWindow: '11:00–14:00', status: 'pending',     assignedTo: 'Maria S.',  checkoutTime: '11:00', checkinTime: '15:00' },
   { id: 'cl-003', type: 'Turnover',   property: 'Downtown Loft',  timeWindow: '09:00–11:00', status: 'done',        assignedTo: 'Anna K.',   checkoutTime: '09:00', checkinTime: '14:00' },
   { id: 'cl-004', type: 'Same-day',   property: 'Ocean View Apt', timeWindow: '15:00–17:00', status: 'pending',     assignedTo: 'Anna K.',   checkoutTime: '15:00', checkinTime: '16:30' },
 ]
@@ -106,21 +108,21 @@ interface PersonalTask {
 const ALL_TASKS: PersonalTask[] = [
   // Maria S. — Cleaner (s1)
   {
-    id: 't1', title: 'Turnover clean — Harbor Studio', type: 'Cleaning', priority: 'high', status: 'today',
+    id: 't1', title: 'Deep clean — Harbor Studio', type: 'Cleaning', priority: 'high', status: 'today',
     assignee: 'Maria S.', propertyId: 'p2', propertyName: 'Harbor Studio',
     propertyImage: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=100&q=80',
-    due: '2026-03-19', dueDisplay: 'Today 10:00',
+    due: '2026-03-22', dueDisplay: 'Today 11:00',
     pteRequired: false, pteStatus: 'not_required',
-    reservation: { id: 'res-003', guestName: 'Camilla Dahl', platform: 'Booking.com', checkIn: '2026-03-20', checkOut: '2026-03-23', nights: 3, nightsRemaining: 3, status: 'confirmed' },
+    reservation: { id: 'res-004', guestName: 'Lars Eriksson', platform: 'Booking.com', checkIn: '2026-03-22', checkOut: '2026-03-26', nights: 4, status: 'confirmed' },
   },
-  { id: 't9',  title: 'Turnover clean — Sunset Villa',            type: 'Cleaning',    priority: 'high',   status: 'today',     assignee: 'Maria S.',  propertyId: 'p1', propertyName: 'Sunset Villa',    propertyImage: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=100&q=80',  due: '2026-03-19', dueDisplay: 'Today 13:00' },
-  { id: 't10', title: 'Deep clean — Ocean View Apt',              type: 'Cleaning',    priority: 'high',   status: 'today',     assignee: 'Maria S.',  propertyId: 'p3', propertyName: 'Ocean View Apt',  propertyImage: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=100&q=80',  due: '2026-03-19', dueDisplay: 'Today 15:00' },
+  { id: 't9',  title: 'Turnover clean — Sunset Villa',            type: 'Cleaning',    priority: 'high',   status: 'this_week', assignee: 'Maria S.',  propertyId: 'p1', propertyName: 'Sunset Villa',    propertyImage: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=100&q=80',  due: '2026-03-28', dueDisplay: 'Sat 10:00' },
+  { id: 't10', title: 'Deep clean — Ocean View Apt',              type: 'Cleaning',    priority: 'high',   status: 'this_week', assignee: 'Maria S.',  propertyId: 'p3', propertyName: 'Ocean View Apt',  propertyImage: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=100&q=80',  due: '2026-03-23', dueDisplay: 'Mon 09:00' },
   { id: 't8',  title: 'Quarterly inspection — Ocean View',        type: 'Inspection',  priority: 'medium', status: 'this_week', assignee: 'Maria S.',  propertyId: 'p3', propertyName: 'Ocean View Apt',  propertyImage: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=100&q=80',  due: '2026-03-20', dueDisplay: 'Fri 10:00' },
   { id: 't11', title: 'Turnover clean — Downtown Loft',           type: 'Cleaning',    priority: 'medium', status: 'this_week', assignee: 'Maria S.',  propertyId: 'p4', propertyName: 'Downtown Loft',   propertyImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=100&q=80',     due: '2026-03-21', dueDisplay: 'Sat 11:00' },
   { id: 't6',  title: 'Restock toiletry kits — Sunset Villa',     type: 'Inventory',   priority: 'low',    status: 'completed', assignee: 'Maria S.',  propertyId: 'p1', propertyName: 'Sunset Villa',    propertyImage: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=100&q=80',  due: '2026-03-18', dueDisplay: 'Completed Mar 18' },
   // Anna K. — Cleaning Supervisor (s2) — team tasks
-  { id: 't12', title: 'Turnover clean — Downtown Loft',           type: 'Cleaning',    priority: 'high',   status: 'today',     assignee: 'Anna K.',   propertyId: 'p4', propertyName: 'Downtown Loft',   propertyImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=100&q=80',     due: '2026-03-19', dueDisplay: 'Today 09:00' },
-  { id: 't13', title: 'Pre-arrival inspection — Harbor Studio',   type: 'Inspection',  priority: 'high',   status: 'today',     assignee: 'Anna K.',   propertyId: 'p2', propertyName: 'Harbor Studio',   propertyImage: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=100&q=80', due: '2026-03-19', dueDisplay: 'Today 16:00' },
+  { id: 't12', title: 'Turnover clean — Downtown Loft',           type: 'Cleaning',    priority: 'high',   status: 'today',     assignee: 'Anna K.',   propertyId: 'p4', propertyName: 'Downtown Loft',   propertyImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=100&q=80',     due: '2026-03-22', dueDisplay: 'Today 09:00' },
+  { id: 't13', title: 'Pre-arrival inspection — Harbor Studio',   type: 'Inspection',  priority: 'high',   status: 'today',     assignee: 'Anna K.',   propertyId: 'p2', propertyName: 'Harbor Studio',   propertyImage: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=100&q=80', due: '2026-03-22', dueDisplay: 'Today 16:00' },
   // Bjorn L. — Maintenance
   {
     id: 't15', title: 'Fix toilet — blocked', type: 'Maintenance', priority: 'urgent', status: 'today',
@@ -241,6 +243,68 @@ export default function MyTasksPage() {
   const [vendorEstimate, setVendorEstimate] = useState<Record<string, string>>({})
   const [vendorNotes, setVendorNotes] = useState<Record<string, string>>({})
   const [partsNotes, setPartsNotes] = useState<Record<string, string>>({})
+
+  // Feature 1: Collapsable groups
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({
+    this_week: true,
+    upcoming: true,
+    completed: true,
+  })
+
+  // Feature 2: Report an Issue
+  const [reportingJob, setReportingJob] = useState<CleaningJob | null>(null)
+
+  // Feature 3: Start a Task
+  const [jobStatuses, setJobStatuses] = useState<Record<string, 'pending' | 'in-progress' | 'done'>>({})
+  const [jobStartedAt, setJobStartedAt] = useState<Record<string, string>>({})
+
+  // Feature 4: Live clock for timer
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30_000)
+    return () => clearInterval(id)
+  }, [])
+
+  // Feature 5: Add a Cleaning Task
+  const [showAddCleaning, setShowAddCleaning] = useState(false)
+  const [extraCleanings, setExtraCleanings] = useState<CleaningJob[]>([])
+  const [addProp, setAddProp] = useState('')
+  const [addType, setAddType] = useState<CleaningJob['type']>('Turnover')
+  const [addTimeStart, setAddTimeStart] = useState('')
+  const [addTimeEnd, setAddTimeEnd] = useState('')
+
+  // Drawer cleaning job match (for progress bar + report button)
+  const drawerCleaningJob = selectedTask?.type === 'Cleaning'
+    ? [...TODAYS_CLEANINGS, ...extraCleanings].find(j => j.property === selectedTask.propertyName) ?? null
+    : null
+  const drawerJobId = drawerCleaningJob?.id ?? null
+  const drawerStartedAt = drawerJobId ? (jobStartedAt[drawerJobId] ?? null) : null
+  const drawerWindowMins = drawerCleaningJob
+    ? (() => {
+        const [ws, we] = drawerCleaningJob.timeWindow.split('–')
+        const [sh, sm] = ws.split(':').map(Number)
+        const [eh, em] = we.split(':').map(Number)
+        return (eh * 60 + em) - (sh * 60 + sm)
+      })()
+    : null
+  const drawerCheckInIso = drawerCleaningJob
+    ? `2026-03-23T${drawerCleaningJob.checkinTime}:00`
+    : null
+  const drawerScheduledStartIso = drawerCleaningJob
+    ? `2026-03-23T${drawerCleaningJob.timeWindow.split('–')[0]}:00`
+    : null
+  const drawerJobStatus = drawerJobId
+    ? (jobStatuses[drawerJobId] ?? drawerCleaningJob?.status ?? 'pending')
+    : 'pending'
+
+  const cleaningProgress = useCleaningProgress({
+    taskId: drawerJobId ?? 'none',
+    startedAt: drawerStartedAt,
+    estimatedDurationMinutes: drawerWindowMins,
+    checkInTime: drawerCheckInIso,
+    scheduledStartTime: drawerScheduledStartIso,
+    status: drawerJobStatus,
+  })
 
   const handleUpsellApprove = (id: string) => {
     const req = upsellApprovalRequests.find(r => r.id === id)
@@ -476,9 +540,10 @@ export default function MyTasksPage() {
 
       {/* Today's Cleanings Section */}
       {(jobRole === 'cleaner' || isSupervisor) && (() => {
-        const myCleanings = isSupervisor
-          ? (statusFilter === 'today' || statusFilter === 'all' ? TODAYS_CLEANINGS : TODAYS_CLEANINGS)
+        const myCleanings = (isSupervisor
+          ? TODAYS_CLEANINGS
           : TODAYS_CLEANINGS.filter(c => c.assignedTo === assigneeName)
+        ).concat(extraCleanings.filter(c => isSupervisor || c.assignedTo === assigneeName))
         if (myCleanings.length === 0) return null
         return (
           <div style={{ marginBottom: 28 }}>
@@ -490,26 +555,39 @@ export default function MyTasksPage() {
               <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 10, background: '#7c3aed20', color: '#7c3aed', fontWeight: 600 }}>
                 {myCleanings.length}
               </span>
+              <button onClick={() => setShowAddCleaning(true)} style={{ marginLeft: 'auto', fontSize: 18, color: '#7c3aed', background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1, padding: '0 2px' }}>+</button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {myCleanings.map(job => {
                 const [windowStart] = job.timeWindow.split('–')
                 const tight = hasTightGap(job.checkoutTime, windowStart)
                 const typeColor = CLEANING_TYPE_COLOR[job.type]
-                const statusColor = CLEANING_STATUS_COLOR[job.status]
+                const effectiveStatus = jobStatuses[job.id] ?? job.status
+                const statusColor = CLEANING_STATUS_COLOR[effectiveStatus]
                 const matchingTask = ALL_TASKS.find(t => t.propertyName === job.property && t.type === 'Cleaning')
+                // Feature 4: timer
+                const startedAt = jobStartedAt[job.id]
+                const [winStart, winEnd] = job.timeWindow.split('–')
+                const [sh, sm] = winStart.split(':').map(Number)
+                const [eh, em] = winEnd.split(':').map(Number)
+                const windowMins = (eh * 60 + em) - (sh * 60 + sm)
+                const elapsedMs = startedAt ? now.getTime() - new Date(startedAt).getTime() : 0
+                const elapsedMins = Math.floor(elapsedMs / 60_000)
+                const estDone = startedAt
+                  ? new Date(new Date(startedAt).getTime() + windowMins * 60_000).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+                  : winEnd
                 return (
                   <div
                     key={job.id}
-                    onClick={() => matchingTask && job.status !== 'done' && setSelectedTask(matchingTask)}
-                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderLeft: `4px solid ${typeColor}`, borderRadius: 10, padding: '12px 14px', opacity: job.status === 'done' ? 0.6 : 1, cursor: job.status === 'done' ? 'default' : 'pointer' }}
+                    onClick={() => matchingTask && effectiveStatus !== 'done' && setSelectedTask(matchingTask)}
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderLeft: `4px solid ${typeColor}`, borderRadius: 10, padding: '12px 14px', opacity: effectiveStatus === 'done' ? 0.6 : 1, cursor: effectiveStatus === 'done' ? 'default' : 'pointer' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, flexWrap: 'wrap' }}>
                           <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: `${typeColor}18`, color: typeColor, border: `1px solid ${typeColor}30` }}>{job.type}</span>
                           <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{job.property}</span>
-                          {tight && job.status !== 'done' && (
+                          {tight && effectiveStatus !== 'done' && (
                             <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: '#d9770618', color: '#d97706', border: '1px solid #d9770630' }}>⚡ Tight gap</span>
                           )}
                         </div>
@@ -519,13 +597,40 @@ export default function MyTasksPage() {
                           <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Out {job.checkoutTime} → In {job.checkinTime}</span>
                           {isSupervisor && <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>· {job.assignedTo}</span>}
                         </div>
+                        {effectiveStatus === 'in-progress' && startedAt && (
+                          <div style={{ fontSize: 11, color: '#10b981', marginTop: 4 }}>
+                            ⏱ {elapsedMins}m elapsed · Est. done {estDone}
+                          </div>
+                        )}
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
-                        <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 10, background: `${statusColor}18`, color: statusColor, border: `1px solid ${statusColor}30`, marginTop: 2 }}>
-                          {job.status === 'in-progress' ? 'In progress' : job.status === 'done' ? '✓ Done' : 'Pending'}
-                        </span>
-                        {matchingTask && job.status !== 'done' && (
+                        {effectiveStatus === 'pending' ? (
+                          <button
+                            onClick={e => {
+                              e.stopPropagation()
+                              const ts = new Date().toISOString()
+                              setJobStatuses(prev => ({ ...prev, [job.id]: 'in-progress' }))
+                              setJobStartedAt(prev => ({ ...prev, [job.id]: ts }))
+                            }}
+                            style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 10, background: '#7c3aed', color: '#fff', border: 'none', cursor: 'pointer', marginTop: 2 }}
+                          >
+                            ▶ Start
+                          </button>
+                        ) : (
+                          <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 10, background: `${statusColor}18`, color: statusColor, border: `1px solid ${statusColor}30`, marginTop: 2 }}>
+                            {effectiveStatus === 'in-progress' ? 'In progress' : effectiveStatus === 'done' ? '✓ Done' : 'Pending'}
+                          </span>
+                        )}
+                        {matchingTask && effectiveStatus !== 'done' && (
                           <span style={{ fontSize: 11, color: accent, fontWeight: 500 }}>→ Open checklist</span>
+                        )}
+                        {matchingTask && effectiveStatus !== 'done' && (
+                          <button
+                            onClick={e => { e.stopPropagation(); setReportingJob(job) }}
+                            style={{ fontSize: 11, color: '#d97706', fontWeight: 500, border: '1px solid #d9770630', borderRadius: 6, padding: '2px 8px', background: '#d9770610', cursor: 'pointer' }}
+                          >
+                            ⚠ Report
+                          </button>
                         )}
                       </div>
                     </div>
@@ -688,12 +793,16 @@ export default function MyTasksPage() {
           if (groupTasks.length === 0) return null
           return (
             <div key={group.key} style={{ marginBottom: 24 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <div
+                onClick={() => setCollapsedGroups(prev => ({ ...prev, [group.key]: !prev[group.key] }))}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, cursor: 'pointer', userSelect: 'none' }}
+              >
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: group.color }} />
                 <span style={{ fontSize: 12, fontWeight: 700, color: group.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{group.label}</span>
                 <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{groupTasks.length}</span>
+                <ChevronDown size={13} style={{ color: 'var(--text-subtle)', marginLeft: 'auto', transform: collapsedGroups[group.key] ? 'rotate(-90deg)' : 'none', transition: 'transform 0.2s' }} />
               </div>
-              {groupTasks.map(task => {
+              {!collapsedGroups[group.key] && groupTasks.map(task => {
                 // Maintenance tasks get the pipeline card design
                 if (isMaintenance && task.type === 'Maintenance') {
                   return (
@@ -706,6 +815,9 @@ export default function MyTasksPage() {
                       priority={task.priority as 'low' | 'medium' | 'high' | 'urgent'}
                       dueDisplay={task.dueDisplay}
                       pteStatus={task.pteStatus as 'not_required' | 'auto_granted' | 'pending' | 'granted' | 'denied' | 'expired' | undefined}
+                      pteValidFrom={task.pte?.validFrom}
+                      pteValidUntil={task.pte?.validUntil}
+                      pteGuestName={task.pte?.guestName}
                       progress={maintProgress[task.id] ?? 'assigned'}
                       onClick={() => setSelectedMaintTask(task)}
                     />
@@ -797,6 +909,19 @@ export default function MyTasksPage() {
                 {afterPhotos.length === 0 && checkedCount === totalCount && '⚠ Upload at least 1 after photo'}
               </div>
             )}
+            {selectedTask?.type === 'Cleaning' && drawerJobStatus === 'in-progress' && drawerCleaningJob && (
+              <button
+                onClick={() => setReportingJob(drawerCleaningJob)}
+                style={{
+                  width: '100%', padding: '10px', borderRadius: 8, marginBottom: 8,
+                  background: 'rgba(239,68,68,0.08)', color: '#ef4444',
+                  border: '1px solid rgba(239,68,68,0.2)',
+                  fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                ⚠ Report a Problem
+              </button>
+            )}
             <button
               onClick={handleSubmit}
               disabled={!canSubmit}
@@ -872,6 +997,12 @@ export default function MyTasksPage() {
 
         {selectedTask?.type === 'Cleaning' && (
           <div>
+            {cleaningProgress && drawerJobStatus === 'in-progress' && (
+              <CleaningProgressBar
+                progress={cleaningProgress}
+                checkInTime={drawerCleaningJob?.checkinTime ?? null}
+              />
+            )}
             {/* Property info banner */}
             {(() => {
               const prop = PROPERTIES.find(p => p.id === selectedTask.propertyId)
@@ -1634,6 +1765,71 @@ export default function MyTasksPage() {
           onDecline={handleUpsellDecline}
           myDaySchedule={TODAYS_CLEANINGS.filter(c => isSupervisor ? true : c.assignedTo === assigneeName)}
         />
+      )}
+
+      {/* Feature 2: Report Problem Modal */}
+      {reportingJob && (
+        <ReportProblemModal
+          open
+          onClose={() => setReportingJob(null)}
+          propertyName={reportingJob.property}
+          cleanerName={assigneeName ?? 'Cleaner'}
+          onSubmit={(_category, _note) => {
+            setReportingJob(null)
+            showToast(`Problem reported for ${reportingJob.property}`)
+          }}
+        />
+      )}
+
+      {/* Feature 5: Add Cleaning Task Modal */}
+      {showAddCleaning && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: '#00000060', zIndex: 200, display: 'flex', alignItems: 'flex-end' }}
+          onClick={() => setShowAddCleaning(false)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: 'var(--bg-card)', borderRadius: '16px 16px 0 0', padding: '20px 20px 32px', width: '100%', maxWidth: 480, margin: '0 auto' }}
+          >
+            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>Add Cleaning Task</div>
+            <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Property</label>
+            <select value={addProp} onChange={e => setAddProp(e.target.value)}
+              style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)', marginBottom: 12, background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: 13 }}>
+              <option value=''>Select property…</option>
+              {PROPERTIES.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+            </select>
+            <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Clean Type</label>
+            <select value={addType} onChange={e => setAddType(e.target.value as CleaningJob['type'])}
+              style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)', marginBottom: 12, background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: 13 }}>
+              {(['Turnover', 'Deep Clean', 'Same-day', 'Inspection'] as const).map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+            <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Time Window</label>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+              <input type='time' value={addTimeStart} onChange={e => setAddTimeStart(e.target.value)}
+                style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: 13 }} />
+              <span style={{ alignSelf: 'center', color: 'var(--text-subtle)' }}>–</span>
+              <input type='time' value={addTimeEnd} onChange={e => setAddTimeEnd(e.target.value)}
+                style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: 13 }} />
+            </div>
+            <button
+              disabled={!addProp || !addTimeStart || !addTimeEnd}
+              onClick={() => {
+                const newJob: CleaningJob = {
+                  id: `cl-extra-${Date.now()}`, type: addType, property: addProp,
+                  timeWindow: `${addTimeStart}–${addTimeEnd}`, status: 'pending',
+                  assignedTo: assigneeName ?? 'Maria S.', checkoutTime: addTimeStart, checkinTime: addTimeEnd,
+                }
+                setExtraCleanings(prev => [...prev, newJob])
+                setShowAddCleaning(false)
+                setAddProp(''); setAddTimeStart(''); setAddTimeEnd(''); setAddType('Turnover')
+                showToast('Cleaning task added')
+              }}
+              style={{ width: '100%', padding: '11px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: (!addProp || !addTimeStart || !addTimeEnd) ? 0.4 : 1 }}
+            >
+              Add Task
+            </button>
+          </div>
+        </div>
       )}
 
       {toast && (

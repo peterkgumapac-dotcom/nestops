@@ -99,7 +99,7 @@ export const SHIFTS: Shift[] = [
   { id: 'sh-18', staffId: 's2', propertyId: 'p4', date: '2026-03-21', day: 'Sat', startTime: '09:00', endTime: '12:00', type: 'inspection',   status: 'scheduled',  notes: 'Saturday arrival check',           jobIds: [] },
 
   // Sunday 2026-03-22
-  { id: 'sh-19', staffId: 's1', propertyId: 'p2', date: '2026-03-22', day: 'Sun', startTime: '11:00', endTime: '14:00', type: 'cleaning',     status: 'scheduled',  notes: 'Sunday deep clean',                jobIds: [] },
+  { id: 'sh-19', staffId: 's1', propertyId: 'p2', date: '2026-03-22', day: 'Sun', startTime: '11:00', endTime: '14:00', type: 'cleaning',     status: 'scheduled',  notes: 'Sunday deep clean',                jobIds: ['j4'] },
   { id: 'sh-20', staffId: 's3', propertyId: 'p5', date: '2026-03-22', day: 'Sun', startTime: '10:00', endTime: '13:00', type: 'maintenance',  status: 'scheduled',  notes: 'Cabin heating system',             jobIds: [] },
 ]
 

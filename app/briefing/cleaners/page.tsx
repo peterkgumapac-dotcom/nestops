@@ -11,6 +11,7 @@ import { PROPERTIES } from '@/lib/data/properties'
 import { JOBS, STAFF_MEMBERS } from '@/lib/data/staff'
 import CountdownTimer from '@/components/shared/CountdownTimer'
 import { CleaningTaskCard } from '@/components/tasks/cleaning/CleaningTaskCard'
+import { CleaningTaskDrawer } from '@/components/tasks/cleaning/CleaningTaskDrawer'
 import {
   getPrefs, savePrefs, resetPrefs,
   TOGGLE_LABELS, ALWAYS_ON,
@@ -40,6 +41,7 @@ export default function CleanerBriefingPage() {
   const [prefs, setPrefs] = useState<BriefingPrefs | null>(null)
   const [showToggles, setShowToggles] = useState(false)
   const [accessCodeVisible, setAccessCodeVisible] = useState<Record<string, boolean>>({})
+  const [drawerShift, setDrawerShift] = useState<Shift | null>(null)
 
   useEffect(() => {
     setToday(new Date().toISOString().split('T')[0])
@@ -230,6 +232,7 @@ export default function CleanerBriefingPage() {
                     showTurnaround={prefs?.toggles.turnaroundwarning}
                     codeVisible={accessCodeVisible[shift.id] ?? false}
                     onToggleCode={() => setAccessCodeVisible(prev => ({ ...prev, [shift.id]: true }))}
+                    onOpen={() => setDrawerShift(shift)}
                   />
                 ))
               )
@@ -313,6 +316,23 @@ export default function CleanerBriefingPage() {
           </motion.div>
         </motion.div>
       </div>
+
+      {/* CLEANING TASK DRAWER */}
+      <AnimatePresence>
+        {drawerShift && currentUser && (
+          <CleaningTaskDrawer
+            shift={drawerShift}
+            job={
+              JOBS.find(j => drawerShift.jobIds.includes(j.id) && j.type === 'cleaning') ??
+              JOBS.find(j => j.staffId === staffId && j.propertyId === drawerShift.propertyId && j.type === 'cleaning' && j.status !== 'done') ??
+              null
+            }
+            currentUserId={currentUser.id}
+            currentUserName={currentUser.name}
+            onClose={() => setDrawerShift(null)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* TOGGLE PANEL */}
       <AnimatePresence>

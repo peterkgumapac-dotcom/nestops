@@ -9,6 +9,9 @@ export interface PipelineMaintenanceCardProps {
   priority: JobPriority
   dueDisplay?: string
   pteStatus?: JobPTEStatus
+  pteValidFrom?: string
+  pteValidUntil?: string
+  pteGuestName?: string
   progress: JobProgress
   onClick?: () => void
 }
@@ -33,6 +36,7 @@ function tagColor(priority: JobPriority): { bg: string; color: string; border: s
 function cardBorder(priority: JobPriority, pteStatus?: JobPTEStatus): string {
   if (pteStatus === 'denied' || pteStatus === 'expired') return '1px solid rgba(226,75,74,0.30)'
   if (pteStatus === 'pending') return '1px solid rgba(239,159,39,0.25)'
+  if (pteStatus === 'granted' || pteStatus === 'auto_granted') return '1px solid rgba(29,158,117,0.20)'
   if (priority === 'urgent' || priority === 'high') return '1px solid rgba(226,75,74,0.20)'
   return '1px solid rgba(255,255,255,0.07)'
 }
@@ -43,9 +47,61 @@ function stepPillStyle(rel: 'done' | 'active' | 'inactive'): React.CSSProperties
   return { background: '#161b26', color: '#5a5f6b', border: '1px solid rgba(255,255,255,0.07)' }
 }
 
-function ptePillInfo(pteStatus?: JobPTEStatus): { label: string; color: string; bg: string; border: string } | null {
-  if (pteStatus === 'pending') return { label: '⏳ PTE pending', color: '#ef9f27', bg: 'rgba(239,159,39,0.10)', border: 'rgba(239,159,39,0.22)' }
-  if (pteStatus === 'denied' || pteStatus === 'expired') return { label: '🔒 PTE denied', color: '#e24b4a', bg: 'rgba(226,75,74,0.10)', border: 'rgba(226,75,74,0.22)' }
+function getUrgency(validUntil?: string, validFrom?: string): { label: string; color: string; bg: string } | null {
+  if (!validUntil) return null
+  const now = Date.now()
+  const until = new Date(validUntil).getTime()
+  const from = validFrom ? new Date(validFrom).getTime() : null
+  if (from && now < from) {
+    const opensAt = new Date(validFrom!).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+    return { label: `Opens ${opensAt}`, color: '#378ADD', bg: 'rgba(55,138,221,0.10)' }
+  }
+  const minsLeft = Math.round((until - now) / 60000)
+  if (minsLeft < 0) return { label: 'Window closed', color: '#e24b4a', bg: 'rgba(226,75,74,0.10)' }
+  if (minsLeft <= 60) return { label: `⚡ ${minsLeft}m left`, color: '#e24b4a', bg: 'rgba(226,75,74,0.10)' }
+  if (minsLeft <= 180) {
+    const h = Math.floor(minsLeft / 60), m = minsLeft % 60
+    return { label: `⏱ ${h}h${m > 0 ? ` ${m}m` : ''} left`, color: '#ef9f27', bg: 'rgba(239,159,39,0.10)' }
+  }
+  return null
+}
+
+function pteRowInfo(
+  pteStatus?: JobPTEStatus,
+  validFrom?: string,
+  validUntil?: string,
+  guestName?: string,
+): {
+  icon: string
+  label: string
+  color: string
+  bg: string
+  border: string
+  urgency?: { label: string; color: string; bg: string }
+} | null {
+  if (!pteStatus || pteStatus === 'not_required') return null
+
+  if (pteStatus === 'granted') {
+    const windowStr = validFrom && validUntil
+      ? `${new Date(validFrom).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} – ${new Date(validUntil).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`
+      : 'Access granted'
+    const label = guestName ? `${windowStr} · ${guestName}` : windowStr
+    const urgency = getUrgency(validUntil, validFrom) ?? undefined
+    return { icon: '🔑', label, color: '#15d492', bg: 'rgba(29,158,117,0.08)', border: 'rgba(29,158,117,0.18)', urgency }
+  }
+
+  if (pteStatus === 'auto_granted') {
+    return { icon: '✅', label: 'Vacant — open access', color: '#15d492', bg: 'rgba(29,158,117,0.08)', border: 'rgba(29,158,117,0.18)' }
+  }
+
+  if (pteStatus === 'pending') {
+    return { icon: '⏳', label: 'PTE pending · awaiting approval', color: '#ef9f27', bg: 'rgba(239,159,39,0.08)', border: 'rgba(239,159,39,0.20)' }
+  }
+
+  if (pteStatus === 'denied' || pteStatus === 'expired') {
+    return { icon: '🔒', label: 'PTE denied', color: '#e24b4a', bg: 'rgba(226,75,74,0.08)', border: 'rgba(226,75,74,0.20)' }
+  }
+
   return null
 }
 
@@ -57,12 +113,13 @@ const ARROW = (
 
 export function PipelineMaintenanceCard({
   title, propertyName, assigneeName, priority, dueDisplay, pteStatus,
+  pteValidFrom, pteValidUntil, pteGuestName,
   progress, onClick,
 }: PipelineMaintenanceCardProps) {
   const tag = tagColor(priority)
   const border = cardBorder(priority, pteStatus)
   const stepIdx = STEP_INDEX[progress]
-  const ptePill = ptePillInfo(pteStatus)
+  const pteRow = pteRowInfo(pteStatus, pteValidFrom, pteValidUntil, pteGuestName)
 
   const stepSubtitle: Record<JobProgress, string> = {
     assigned: dueDisplay ?? 'Assigned',
@@ -140,13 +197,31 @@ export function PipelineMaintenanceCard({
           })}
         </div>
 
-        {/* Bottom row: PTE pill + CTA */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          {ptePill ? (
-            <span style={{ fontSize: 10, fontWeight: 500, padding: '2px 8px', borderRadius: 4, background: ptePill.bg, color: ptePill.color, border: `1px solid ${ptePill.border}` }}>
-              {ptePill.label}
+        {/* PTE info strip */}
+        {pteRow && (
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            background: pteRow.bg, border: `1px solid ${pteRow.border}`,
+            borderRadius: 6, padding: '5px 8px', marginBottom: 8,
+          }}>
+            <span style={{ fontSize: 11, color: pteRow.color, fontWeight: 500 }}>
+              {pteRow.icon} {pteRow.label}
             </span>
-          ) : <span />}
+            {pteRow.urgency && (
+              <span style={{
+                fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 4,
+                background: pteRow.urgency.bg, color: pteRow.urgency.color,
+                border: `1px solid ${pteRow.urgency.color}33`,
+                flexShrink: 0, marginLeft: 8,
+              }}>
+                {pteRow.urgency.label}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* CTA row */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           {progress === 'done' ? (
             <span style={{ fontSize: 11, color: '#15d492', fontWeight: 500 }}>✓ Completed</span>
           ) : (

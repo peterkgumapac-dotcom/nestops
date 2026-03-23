@@ -26,6 +26,9 @@ export function MaintenanceTaskCard({ job }: MaintenanceTaskCardProps) {
       priority={job.priority}
       dueDisplay={job.dueTime}
       pteStatus={job.pteStatus}
+      pteValidFrom={job.pte?.validFrom}
+      pteValidUntil={job.pte?.validUntil}
+      pteGuestName={job.pte?.guestName}
       progress={progress}
     />
   )
