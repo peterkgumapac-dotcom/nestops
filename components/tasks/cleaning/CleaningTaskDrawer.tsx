@@ -12,7 +12,7 @@ import { CleaningProgressBar } from './CleaningProgressBar'
 import { CleaningTaskOverflow } from './CleaningTaskOverflow'
 import { RestartTaskModal } from './modals/RestartTaskModal'
 import { AddConsumablesModal } from './modals/AddConsumablesModal'
-import { ReportProblemModal } from './modals/ReportProblemModal'
+import { ReportProblemModal, type ReportSubmission } from './modals/ReportProblemModal'
 import { LogMaintenanceIssueModal } from './modals/LogMaintenanceIssueModal'
 import type { MaintenanceFlag } from '@/lib/data/maintenanceFlags'
 import type { ChecklistItem } from '@/lib/data/checklists'
@@ -149,7 +149,8 @@ export function CleaningTaskDrawer({ shift, job, currentUserId, currentUserName,
     addActivity(`Consumables logged: ${summary}`)
   }
 
-  const handleReportProblem = async (category: string, note: string) => {
+  const handleReportProblem = async (report: ReportSubmission) => {
+    const { category, note } = report
     const categoryLabel = PROBLEM_CATEGORIES[category] ?? category
     const content = `${currentUserName} reported: ${categoryLabel} — ${propertyName}.${note ? ` Note: ${note}` : ''}`
 

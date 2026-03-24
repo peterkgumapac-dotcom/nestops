@@ -14,10 +14,12 @@ import { getPTEBadge, isAccessCodeVisible } from '@/lib/utils/pteUtils'
 import { UPSELL_APPROVAL_REQUESTS, type UpsellApprovalRequest } from '@/lib/data/upsellApprovals'
 import { UPSELL_RULES } from '@/lib/data/upsells'
 import { STAFF_MEMBERS } from '@/lib/data/staff'
+import { STOCK_ITEMS, CONSUMPTION_TEMPLATES } from '@/lib/data/inventory'
 import type { JobProgress } from '@/lib/data/staff'
 import CleanerApprovalSheet from '@/components/upsells/CleanerApprovalSheet'
 import { PipelineMaintenanceCard } from '@/components/tasks/maintenance/PipelineMaintenanceCard'
-import { ReportProblemModal } from '@/components/tasks/cleaning/modals/ReportProblemModal'
+import { ReportProblemModal, type ReportSubmission } from '@/components/tasks/cleaning/modals/ReportProblemModal'
+import { RestartTaskModal } from '@/components/tasks/cleaning/modals/RestartTaskModal'
 import { CleaningProgressBar } from '@/components/tasks/cleaning/CleaningProgressBar'
 import { useCleaningProgress } from '@/hooks/tasks/useCleaningProgress'
 
@@ -253,6 +255,13 @@ export default function MyTasksPage() {
 
   // Feature 2: Report an Issue
   const [reportingJob, setReportingJob] = useState<CleaningJob | null>(null)
+  const [restartingJob, setRestartingJob] = useState<CleaningJob | null>(null)
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
+  const [delegationPending, setDelegationPending] = useState<Set<string>>(new Set())
+
+  // Supplies Used
+  const [supplyItems, setSupplyItems] = useState<{ id: string; name: string; unit: string; qty: number }[]>([])
+  const [showSupplyPicker, setShowSupplyPicker] = useState(false)
 
   // Feature 3: Start a Task
   const [jobStatuses, setJobStatuses] = useState<Record<string, 'pending' | 'in-progress' | 'done'>>({})
@@ -388,6 +397,21 @@ export default function MyTasksPage() {
     setQaRating(0)
     setQaNotes('')
     setShowAccessCode(false)
+    setCollapsedCategories(new Set())
+    // Pre-populate supply items from consumption template
+    const prop = PROPERTIES.find(p => p.id === selectedTask?.propertyId)
+    const beds = prop?.beds ?? 1
+    const templateKey = beds <= 1 ? 'Studio' : beds <= 2 ? '1BR' : '2BR'
+    const template = CONSUMPTION_TEMPLATES.find(t => t.propertyType.startsWith(templateKey))
+    if (template) {
+      setSupplyItems(template.items.map(ti => {
+        const stock = STOCK_ITEMS.find(s => s.id === ti.stockItemId)
+        return { id: ti.stockItemId, name: stock?.name ?? ti.stockItemId, unit: stock?.unit ?? 'unit', qty: ti.qtyPerTurnover }
+      }))
+    } else {
+      setSupplyItems([])
+    }
+    setShowSupplyPicker(false)
   }, [selectedTask?.id])
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
@@ -463,9 +487,39 @@ export default function MyTasksPage() {
 
   const toggleCheck = (id: string) => setChecklistChecked(prev => ({ ...prev, [id]: !prev[id] }))
 
+  const toggleCategory = (cat: string) => {
+    setCollapsedCategories(prev => {
+      const next = new Set(prev)
+      if (next.has(cat)) next.delete(cat)
+      else next.add(cat)
+      return next
+    })
+  }
+
+  const handleStartFromDrawer = () => {
+    if (!drawerCleaningJob) return
+    const ts = new Date().toISOString()
+    setJobStatuses(prev => ({ ...prev, [drawerCleaningJob.id]: 'in-progress' }))
+    setJobStartedAt(prev => ({ ...prev, [drawerCleaningJob.id]: ts }))
+  }
+
+  const handleStopFromDrawer = () => {
+    if (!drawerCleaningJob) return
+    setJobStatuses(prev => ({ ...prev, [drawerCleaningJob.id]: 'pending' }))
+    setJobStartedAt(prev => { const n = { ...prev }; delete n[drawerCleaningJob.id]; return n })
+    showToast('Task stopped')
+  }
+
   const triggerUpload = (target: string) => {
     setUploadTarget(target)
     fileInputRef.current?.click()
+  }
+
+  const stepperBtn: React.CSSProperties = {
+    width: 24, height: 24, borderRadius: 6, border: '1px solid var(--border)',
+    background: 'var(--bg-elevated)', color: 'var(--text-primary)',
+    fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    lineHeight: 1,
   }
 
   const handleSubmit = () => {
@@ -486,6 +540,25 @@ export default function MyTasksPage() {
           qaStatus: 'pending',
         })
         localStorage.setItem('nestops_qa_pending', JSON.stringify(existing))
+      } catch {}
+    }
+    if (selectedTask.type === 'Cleaning' && supplyItems.length > 0) {
+      try {
+        const log = JSON.parse(localStorage.getItem('nestops_supply_consumption') ?? '[]')
+        log.push({
+          taskId: selectedTask.id,
+          property: selectedTask.propertyName,
+          propertyId: selectedTask.propertyId,
+          cleaner: selectedTask.assignee,
+          items: supplyItems.filter(i => i.qty > 0),
+          loggedAt: new Date().toISOString(),
+        })
+        localStorage.setItem('nestops_supply_consumption', JSON.stringify(log))
+        const overrides = JSON.parse(localStorage.getItem('nestops_stock_overrides') ?? '{}')
+        supplyItems.forEach(item => {
+          overrides[item.id] = (overrides[item.id] ?? 0) + item.qty
+        })
+        localStorage.setItem('nestops_stock_overrides', JSON.stringify(overrides))
       } catch {}
     }
     setCompletedIds(prev => new Set([...prev, selectedTask.id]))
@@ -623,6 +696,12 @@ export default function MyTasksPage() {
                         )}
                         {matchingTask && effectiveStatus !== 'done' && (
                           <span style={{ fontSize: 11, color: accent, fontWeight: 500 }}>→ Open checklist</span>
+                        )}
+                        {delegationPending.has(job.id) && (
+                          <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10,
+                            background: '#7c3aed18', color: '#7c3aed', border: '1px solid #7c3aed30' }}>
+                            ⏳ Pending reassignment
+                          </span>
                         )}
                         {matchingTask && effectiveStatus !== 'done' && (
                           <button
@@ -909,19 +988,6 @@ export default function MyTasksPage() {
                 {afterPhotos.length === 0 && checkedCount === totalCount && '⚠ Upload at least 1 after photo'}
               </div>
             )}
-            {selectedTask?.type === 'Cleaning' && drawerJobStatus === 'in-progress' && drawerCleaningJob && (
-              <button
-                onClick={() => setReportingJob(drawerCleaningJob)}
-                style={{
-                  width: '100%', padding: '10px', borderRadius: 8, marginBottom: 8,
-                  background: 'rgba(239,68,68,0.08)', color: '#ef4444',
-                  border: '1px solid rgba(239,68,68,0.2)',
-                  fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                }}
-              >
-                ⚠ Report a Problem
-              </button>
-            )}
             <button
               onClick={handleSubmit}
               disabled={!canSubmit}
@@ -997,12 +1063,61 @@ export default function MyTasksPage() {
 
         {selectedTask?.type === 'Cleaning' && (
           <div>
-            {cleaningProgress && drawerJobStatus === 'in-progress' && (
-              <CleaningProgressBar
-                progress={cleaningProgress}
-                checkInTime={drawerCleaningJob?.checkinTime ?? null}
-              />
+            {/* Action bar */}
+            {drawerCleaningJob && drawerJobStatus === 'pending' && (
+              <button
+                onClick={handleStartFromDrawer}
+                style={{
+                  width: '100%', padding: '12px', borderRadius: 8, border: 'none',
+                  background: accent, color: '#fff',
+                  fontSize: 14, fontWeight: 600, cursor: 'pointer', marginBottom: 14,
+                }}
+              >
+                ▶ Start Task
+              </button>
             )}
+
+            {drawerJobStatus === 'in-progress' && cleaningProgress && (
+              <div style={{ marginBottom: 14 }}>
+                <CleaningProgressBar
+                  progress={cleaningProgress}
+                  checkInTime={drawerCleaningJob?.checkinTime ?? null}
+                />
+                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                  <button
+                    onClick={() => drawerCleaningJob && setRestartingJob(drawerCleaningJob)}
+                    style={{
+                      flex: 1, padding: '8px 0', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                      background: 'rgba(99,102,241,0.08)', color: '#6366f1',
+                      border: '1px solid rgba(99,102,241,0.2)',
+                    }}
+                  >
+                    ⟳ Restart
+                  </button>
+                  <button
+                    onClick={handleStopFromDrawer}
+                    style={{
+                      flex: 1, padding: '8px 0', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                      background: 'rgba(107,114,128,0.08)', color: '#6b7280',
+                      border: '1px solid rgba(107,114,128,0.2)',
+                    }}
+                  >
+                    ■ Stop Task
+                  </button>
+                  <button
+                    onClick={() => drawerCleaningJob && setReportingJob(drawerCleaningJob)}
+                    style={{
+                      flex: 1, padding: '8px 0', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                      background: 'rgba(239,68,68,0.08)', color: '#ef4444',
+                      border: '1px solid rgba(239,68,68,0.2)',
+                    }}
+                  >
+                    ⚠ Report
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Property info banner */}
             {(() => {
               const prop = PROPERTIES.find(p => p.id === selectedTask.propertyId)
@@ -1023,24 +1138,29 @@ export default function MyTasksPage() {
             {/* Checklist by category */}
             {checklistGroups.map(group => {
               const groupChecked = group.items.filter(i => checklistChecked[i.id]).length
-              const groupDone = groupChecked === group.items.length
+              const isCollapsed = collapsedCategories.has(group.name)
               return (
                 <div key={group.name} style={{ marginBottom: 20 }}>
                   {/* Category header */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                    <div style={{ height: 1, flex: 1, background: 'var(--border)' }} />
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
-                      color: groupDone ? '#10b981' : accent,
-                      padding: '0 6px', whiteSpace: 'nowrap',
-                    }}>
-                      {group.name} {groupDone ? '✓' : `${groupChecked}/${group.items.length}`}
+                  <button
+                    onClick={() => toggleCategory(group.name)}
+                    style={{
+                      width: '100%', display: 'flex', justifyContent: 'space-between',
+                      alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer',
+                      padding: '6px 0', marginBottom: isCollapsed ? 0 : 6,
+                    }}
+                  >
+                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                      letterSpacing: '0.08em', color: accent }}>
+                      {group.name} {groupChecked}/{group.items.length}
                     </span>
-                    <div style={{ height: 1, flex: 1, background: 'var(--border)' }} />
-                  </div>
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                      {isCollapsed ? '▶' : '▼'}
+                    </span>
+                  </button>
 
-                  {/* Items */}
-                  {group.items.map(item => (
+                  {/* Items — only when expanded */}
+                  {!isCollapsed && group.items.map(item => (
                     <div key={item.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 4px', borderBottom: '1px solid var(--border-subtle)' }}>
                       {/* Checkbox */}
                       <button
@@ -1093,6 +1213,47 @@ export default function MyTasksPage() {
                 </div>
               )
             })}
+
+            {/* Supplies Used */}
+            <div style={{ marginTop: 8, marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                  letterSpacing: '0.08em', color: 'var(--text-muted)' }}>Supplies Used</span>
+                <button onClick={() => setShowSupplyPicker(p => !p)}
+                  style={{ fontSize: 11, color: accent, background: 'none', border: 'none', cursor: 'pointer' }}>
+                  + Add item
+                </button>
+              </div>
+              {supplyItems.map(item => (
+                <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '6px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <span style={{ fontSize: 13, color: 'var(--text-primary)', flex: 1 }}>{item.name}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <button onClick={() => setSupplyItems(p => p.map(i => i.id === item.id ? {...i, qty: Math.max(0, i.qty - 1)} : i))}
+                      style={stepperBtn}>−</button>
+                    <span style={{ fontSize: 13, minWidth: 24, textAlign: 'center' }}>{item.qty}</span>
+                    <button onClick={() => setSupplyItems(p => p.map(i => i.id === item.id ? {...i, qty: i.qty + 1} : i))}
+                      style={stepperBtn}>+</button>
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.unit}</span>
+                    <button onClick={() => setSupplyItems(p => p.filter(i => i.id !== item.id))}
+                      style={{ fontSize: 14, color: 'var(--text-subtle)', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+                  </div>
+                </div>
+              ))}
+              {showSupplyPicker && (
+                <div style={{ marginTop: 8, border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+                  {STOCK_ITEMS.filter(s => !supplyItems.find(i => i.id === s.id)).map(s => (
+                    <button key={s.id}
+                      onClick={() => { setSupplyItems(p => [...p, { id: s.id, name: s.name, unit: s.unit, qty: 1 }]); setShowSupplyPicker(false) }}
+                      style={{ width: '100%', textAlign: 'left', padding: '10px 14px', fontSize: 13,
+                        background: 'none', border: 'none', borderBottom: '1px solid var(--border-subtle)',
+                        cursor: 'pointer', color: 'var(--text-primary)' }}>
+                      {s.name} <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>({s.unit})</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* QA Step — appears when all checklist items are checked */}
             {progressPct === 100 && (
@@ -1774,9 +1935,45 @@ export default function MyTasksPage() {
           onClose={() => setReportingJob(null)}
           propertyName={reportingJob.property}
           cleanerName={assigneeName ?? 'Cleaner'}
-          onSubmit={(_category, _note) => {
+          onSubmit={(report: ReportSubmission) => {
+            const job = reportingJob
             setReportingJob(null)
-            showToast(`Problem reported for ${reportingJob.property}`)
+            if (report.delegate && job) {
+              try {
+                const alerts = JSON.parse(localStorage.getItem('nestops_live_alerts') ?? '[]')
+                alerts.push({
+                  id: `task-delegate-${job.id}-${Date.now()}`,
+                  type: 'task_delegation_request',
+                  severity: 'warning',
+                  title: `Reassignment needed — ${job.property}`,
+                  body: `${assigneeName ?? 'Cleaner'} reported: ${report.delegateNote || report.note || report.category}. Task needs reassignment.`,
+                  propertyId: drawerCleaningJob?.id ?? job.id,
+                  assignedTo: ['supervisor', 'guest_services'],
+                  read: false,
+                  createdAt: new Date().toISOString(),
+                  actionRoute: '/app/my-tasks',
+                })
+                localStorage.setItem('nestops_live_alerts', JSON.stringify(alerts))
+              } catch {}
+              setDelegationPending(prev => new Set([...prev, job.id]))
+              showToast('Supervisor & GS notified — awaiting reassignment')
+            } else {
+              showToast(`Problem reported for ${job?.property}`)
+            }
+          }}
+        />
+      )}
+
+      {restartingJob && (
+        <RestartTaskModal
+          open
+          onClose={() => setRestartingJob(null)}
+          onConfirm={() => {
+            if (!restartingJob) return
+            const ts = new Date().toISOString()
+            setJobStartedAt(prev => ({ ...prev, [restartingJob.id]: ts }))
+            setRestartingJob(null)
+            showToast(`Timer restarted for ${restartingJob.property}`)
           }}
         />
       )}
