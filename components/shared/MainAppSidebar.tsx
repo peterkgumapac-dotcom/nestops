@@ -8,7 +8,7 @@ import { useRole } from '@/context/RoleContext'
 import { useTheme } from '@/context/ThemeContext'
 import { MAIN_APP_NAV_BY_ROLE, getStaffNav } from '@/lib/nav'
 
-const APP_VERSION = 'v3.5'
+const APP_VERSION = 'v4.0'
 const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v3.5'
 const WHATS_NEW_ITEMS = [
   'Briefing pages now have auth guards — wrong-role users are redirected immediately',

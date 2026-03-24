@@ -50,22 +50,28 @@ export default function CleanerBriefingPage() {
   useEffect(() => {
     setMounted(true)
     const stored = localStorage.getItem('nestops_user')
-    if (stored) {
-      try {
-        const user: UserProfile = JSON.parse(stored)
-        if (
-          !user.subRole?.includes('Cleaning') &&
-          !user.subRole?.includes('Cleaner') &&
-          !user.subRole?.includes('Supervisor')
-        ) {
-          router.replace('/staff/start')
-          return
-        }
-        setCurrentUser(user)
-        // Always load with 'Cleaning Team' key — no subRole ambiguity
-        const loaded = getPrefs(user.id, 'Cleaning Team', 'staff')
-        setPrefs(loaded)
-      } catch { /* ignore */ }
+    if (!stored) {
+      router.replace('/login')
+      return
+    }
+    try {
+      const user: UserProfile = JSON.parse(stored)
+      if (
+        user.jobRole !== 'cleaner' &&
+        user.jobRole !== 'supervisor' &&
+        !user.subRole?.includes('Cleaning') &&
+        !user.subRole?.includes('Cleaner') &&
+        !user.subRole?.includes('Supervisor')
+      ) {
+        router.replace('/staff/start')
+        return
+      }
+      setCurrentUser(user)
+      // Always load with 'Cleaning Team' key — no subRole ambiguity
+      const loaded = getPrefs(user.id, 'Cleaning Team', 'staff')
+      setPrefs(loaded)
+    } catch {
+      router.replace('/login')
     }
   }, [])
 

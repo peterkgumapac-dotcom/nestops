@@ -46,17 +46,21 @@ export default function MaintenanceBriefingPage() {
   useEffect(() => {
     setMounted(true)
     const stored = localStorage.getItem('nestops_user')
-    if (stored) {
-      try {
-        const user: UserProfile = JSON.parse(stored)
-        if (!user.subRole?.includes('Maintenance')) {
-          router.replace('/staff/start')
-          return
-        }
-        setCurrentUser(user)
-        const loaded = getPrefs(user.id, 'Maintenance', 'staff')
-        setPrefs(loaded)
-      } catch { /* ignore */ }
+    if (!stored) {
+      router.replace('/login')
+      return
+    }
+    try {
+      const user: UserProfile = JSON.parse(stored)
+      if (user.jobRole !== 'maintenance' && !user.subRole?.includes('Maintenance')) {
+        router.replace('/staff/start')
+        return
+      }
+      setCurrentUser(user)
+      const loaded = getPrefs(user.id, 'Maintenance', 'staff')
+      setPrefs(loaded)
+    } catch {
+      router.replace('/login')
     }
   }, [])
 

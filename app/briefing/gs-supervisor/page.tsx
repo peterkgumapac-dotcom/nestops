@@ -22,15 +22,19 @@ export default function GSSupervisorBriefingPage() {
   useEffect(() => {
     setMounted(true)
     const stored = localStorage.getItem('nestops_user')
-    if (stored) {
-      try {
-        const user: UserProfile = JSON.parse(stored)
-        if (user.jobRole !== 'gs-supervisor' && !user.subRole?.includes('GS Supervisor')) {
-          router.replace('/staff/start')
-          return
-        }
-        setCurrentUser(user)
-      } catch { /* ignore */ }
+    if (!stored) {
+      router.replace('/login')
+      return
+    }
+    try {
+      const user: UserProfile = JSON.parse(stored)
+      if (user.jobRole !== 'gs-supervisor' && !user.subRole?.includes('GS Supervisor')) {
+        router.replace('/staff/start')
+        return
+      }
+      setCurrentUser(user)
+    } catch {
+      router.replace('/login')
     }
   }, [])
 

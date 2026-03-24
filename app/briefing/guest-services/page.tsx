@@ -48,17 +48,22 @@ export default function GuestServicesBriefingPage() {
   useEffect(() => {
     setMounted(true)
     const stored = localStorage.getItem('nestops_user')
-    if (stored) {
-      try {
-        const user: UserProfile = JSON.parse(stored)
-        if (!user.subRole?.includes('Guest')) {
-          router.replace('/staff/start')
-          return
-        }
-        setCurrentUser(user)
-        const loaded = getPrefs(user.id, 'Guest Services', 'staff')
-        setPrefs(loaded)
-      } catch { /* ignore */ }
+    if (!stored) {
+      router.replace('/login')
+      return
+    }
+    try {
+      const user: UserProfile = JSON.parse(stored)
+      if (user.jobRole !== 'guest-services' && !user.subRole?.includes('Guest')) {
+        router.replace('/staff/start')
+        return
+      }
+      setCurrentUser(user)
+      const loaded = getPrefs(user.id, 'Guest Services', 'staff')
+      setPrefs(loaded)
+    } catch {
+      router.replace('/login')
+      return
     }
 
     // Load maintenance flags: merge static seed + any locally submitted flags
