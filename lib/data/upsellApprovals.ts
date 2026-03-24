@@ -22,6 +22,8 @@ export interface UpsellApprovalRequest {
   supervisorId?: string             // id of the supervisor who received the escalation
   cleanerRespondedAt?: string
   cleanerNotes?: string
+  deliveryTaskId?: string
+  deliveryScheduledFor?: string
 }
 
 export const UPSELL_APPROVAL_REQUESTS: UpsellApprovalRequest[] = [
@@ -171,5 +173,43 @@ export const UPSELL_APPROVAL_REQUESTS: UpsellApprovalRequest[] = [
     status: 'approved',
     requestedAt: '2026-03-21T09:00:00Z',
     assignedCleanerId: 's1',
+  },
+  {
+    id: 'uar9',
+    upsellRuleId: 'ur9',
+    guestVerificationId: 'gv2',
+    guestName: 'Marco Bianchi',
+    propertyId: 'p2',
+    propertyName: 'Harbor Studio',
+    checkInDate: '2026-03-24',
+    checkOutDate: '2026-03-26',
+    upsellTitle: 'Baby Equipment Add-on',
+    price: 200, currency: 'NOK',
+    calendarSignal: 'available',
+    paymentMode: 'auto_charge',
+    status: 'approved',
+    requestedAt: '2026-03-22T14:30:00Z',
+    assignedCleanerId: 's1',
+    deliveryTaskId: 'del-uar9',
+    deliveryScheduledFor: '2026-03-24T12:00:00',
+  },
+  {
+    id: 'uar10',
+    upsellRuleId: 'ur4',
+    guestVerificationId: 'gv4',
+    guestName: 'Tobias Mäkinen',
+    propertyId: 'p4',
+    propertyName: 'Downtown Loft',
+    checkInDate: '2026-03-26',
+    checkOutDate: '2026-03-28',
+    upsellTitle: 'Welcome Basket',
+    price: 250, currency: 'NOK',
+    calendarSignal: 'available',
+    paymentMode: 'auto_charge',
+    status: 'approved',
+    requestedAt: '2026-03-23T09:00:00Z',
+    assignedCleanerId: 's1',
+    deliveryTaskId: 'del-uar10',
+    deliveryScheduledFor: '2026-03-26T13:00:00',
   },
 ]

@@ -26,6 +26,10 @@ export interface UpsellRule {
   approvalType: 'auto' | 'cleaner_required'
   paymentMode:  'auto_charge' | 'auth_hold'
   cleanerVisible?: boolean  // true = appears in cleaner upsell awareness section
+  deliveryType?: 'delivery_to_property' | 'service' | 'access_change'
+  physicalItems?: { stockItemId: string; qty: number; notes?: string }[]
+  setupInstructions?: string
+  schedulingOffset?: number
 }
 
 export const PROPERTY_GROUPS = [
@@ -51,6 +55,7 @@ export const UPSELL_RULES: UpsellRule[] = [
     approvalType: 'cleaner_required',
     paymentMode:  'auth_hold',
     cleanerVisible: true,
+    deliveryType: 'access_change' as const,
   },
   {
     id: 'ur2',
@@ -68,6 +73,7 @@ export const UPSELL_RULES: UpsellRule[] = [
     approvalType: 'cleaner_required',
     paymentMode:  'auth_hold',
     cleanerVisible: true,
+    deliveryType: 'access_change' as const,
   },
   {
     id: 'ur3',
@@ -85,6 +91,7 @@ export const UPSELL_RULES: UpsellRule[] = [
     approvalType: 'auto',
     paymentMode:  'auto_charge',
     cleanerVisible: false,
+    deliveryType: 'service' as const,
   },
   {
     id: 'ur4',
@@ -104,6 +111,10 @@ export const UPSELL_RULES: UpsellRule[] = [
     approvalType: 'auto',
     paymentMode:  'auto_charge',
     cleanerVisible: true,
+    deliveryType: 'delivery_to_property' as const,
+    physicalItems: [{ stockItemId: 'u7', qty: 1 }, { stockItemId: 'u8', qty: 1 }, { stockItemId: 'u9', qty: 1 }],
+    setupInstructions: 'Place basket on kitchen counter. Chill champagne in fridge if available.',
+    schedulingOffset: 1,
   },
   {
     id: 'ur5',
@@ -123,6 +134,7 @@ export const UPSELL_RULES: UpsellRule[] = [
     approvalType: 'auto',
     paymentMode:  'auto_charge',
     cleanerVisible: false,
+    deliveryType: 'service' as const,
   },
   {
     id: 'ur6',
@@ -142,6 +154,10 @@ export const UPSELL_RULES: UpsellRule[] = [
     approvalType: 'auto',
     paymentMode:  'auto_charge',
     cleanerVisible: true,
+    deliveryType: 'delivery_to_property' as const,
+    physicalItems: [{ stockItemId: 'i1', qty: 1 }, { stockItemId: 'i4', qty: 1 }, { stockItemId: 'i5', qty: 2 }],
+    setupInstructions: 'Restock bathroom and kitchen. Replace towels.',
+    schedulingOffset: 0,
   },
   {
     id: 'ur7',
@@ -161,6 +177,7 @@ export const UPSELL_RULES: UpsellRule[] = [
     approvalType: 'auto',
     paymentMode:  'auto_charge',
     cleanerVisible: false,
+    deliveryType: 'service' as const,
   },
   {
     id: 'ur8',
@@ -178,6 +195,7 @@ export const UPSELL_RULES: UpsellRule[] = [
     approvalType: 'auto',
     paymentMode:  'auto_charge',
     cleanerVisible: false,
+    deliveryType: 'access_change' as const,
   },
   {
     id: 'ur9',
@@ -195,5 +213,69 @@ export const UPSELL_RULES: UpsellRule[] = [
     approvalType: 'auto',
     paymentMode:  'auto_charge',
     cleanerVisible: true,
+    deliveryType: 'delivery_to_property' as const,
+    physicalItems: [{ stockItemId: 'u1', qty: 1 }, { stockItemId: 'u2', qty: 1 }, { stockItemId: 'u3', qty: 1 }],
+    setupInstructions: 'Set up travel cot in bedroom. Assemble high chair at dining table. Place bath seat in bathroom.',
+    schedulingOffset: 2,
+  },
+  {
+    id: 'ur10', title: 'Extra Pillows & Blanket',
+    description: 'Extra pillows and blanket placed in bedroom before arrival.',
+    price: 150, currency: 'NOK', category: 'extras', enabled: true,
+    targeting: 'all', targetGroupIds: [], targetPropertyIds: [],
+    conditions: [], approvalType: 'auto', paymentMode: 'auto_charge',
+    cleanerVisible: true,
+    deliveryType: 'delivery_to_property',
+    physicalItems: [{ stockItemId: 'u4', qty: 2 }, { stockItemId: 'u5', qty: 1 }],
+    setupInstructions: 'Place extra pillows in bedroom wardrobe with a handwritten note.',
+    schedulingOffset: 1,
+  },
+  {
+    id: 'ur11', title: 'Romantic Package',
+    description: 'Champagne, fruit basket, and rose petals arranged before arrival.',
+    price: 450, currency: 'NOK', category: 'extras', enabled: true,
+    targeting: 'all', targetGroupIds: [], targetPropertyIds: [],
+    conditions: [], approvalType: 'auto', paymentMode: 'auto_charge',
+    cleanerVisible: true,
+    deliveryType: 'delivery_to_property',
+    physicalItems: [{ stockItemId: 'u8', qty: 1 }, { stockItemId: 'u9', qty: 1 }],
+    setupInstructions: 'Arrange rose petals on bed. Place champagne in ice bucket on table. Light candles (matches in kitchen drawer).',
+    schedulingOffset: 1,
+  },
+  {
+    id: 'ur12', title: 'Beach Kit Rental',
+    description: 'Beach umbrella, 2 chairs, and 2 towels ready for your stay.',
+    price: 300, currency: 'NOK', category: 'extras', enabled: true,
+    targeting: 'groups', targetGroupIds: ['g2'], targetPropertyIds: [],
+    conditions: [], approvalType: 'auto', paymentMode: 'auto_charge',
+    cleanerVisible: true,
+    deliveryType: 'delivery_to_property',
+    physicalItems: [{ stockItemId: 'u10', qty: 1 }],
+    setupInstructions: 'Place beach kit bag in hallway closet. Include a note with return instructions.',
+    schedulingOffset: 2,
+  },
+  {
+    id: 'ur13', title: 'Air Mattress Setup',
+    description: 'Inflated air mattress with pillow and blanket for extra guests.',
+    price: 200, currency: 'NOK', category: 'extras', enabled: true,
+    targeting: 'all', targetGroupIds: [], targetPropertyIds: [],
+    conditions: [], approvalType: 'auto', paymentMode: 'auto_charge',
+    cleanerVisible: true,
+    deliveryType: 'delivery_to_property',
+    physicalItems: [{ stockItemId: 'u6', qty: 1 }, { stockItemId: 'u4', qty: 1 }, { stockItemId: 'u5', qty: 1 }],
+    setupInstructions: 'Inflate air mattress in living room. Add pillow and blanket. Note: electric pump in storage closet.',
+    schedulingOffset: 2,
+  },
+  {
+    id: 'ur14', title: 'Late Arrival Kit',
+    description: 'Snack basket and coffee pods left out for late-arriving guests.',
+    price: 180, currency: 'NOK', category: 'arrival', enabled: true,
+    targeting: 'all', targetGroupIds: [], targetPropertyIds: [],
+    conditions: [], approvalType: 'auto', paymentMode: 'auto_charge',
+    cleanerVisible: true,
+    deliveryType: 'delivery_to_property',
+    physicalItems: [{ stockItemId: 'i4', qty: 1 }, { stockItemId: 'i12', qty: 1 }, { stockItemId: 'u9', qty: 1 }],
+    setupInstructions: 'Leave snack basket, coffee pods, and welcome note on kitchen counter.',
+    schedulingOffset: 0,
   },
 ]

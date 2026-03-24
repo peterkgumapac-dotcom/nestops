@@ -10,6 +10,68 @@ interface ChangeEntry {
 
 const CHANGELOG: ChangeEntry[] = [
   {
+    version: 'v4.0',
+    date: 'Mar 24, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'Supplies bottom sheet — "+ Add item" now opens a swipeable bottom sheet (62% → 100% snap) replacing the two-step overlay; inline per-item steppers with "+ Add" toggle, search bar, Frequently Added section, and category accordions; "Done (N items added)" button merges all pending items into the supplies list in one tap' },
+      { tag: '⚡ Feature', text: 'Available items subsection — expanded Supplies Used section now shows items not yet logged (muted, 60% opacity) with a single "+" to promote them to the active list with framer-motion layout animation' },
+      { tag: '⚡ Feature', text: 'Expandable property card — property banner in the cleaning task drawer is now tappable; expands to show WiFi SSID, masked password, door code, storage location, and cleaning notes with Copy buttons; collapsed state shows hint icons (📶 WiFi · 🔑 Access · 🅿️ Parking)' },
+      { tag: '⚡ Feature', text: 'Copy button pulse — tapping Copy on any property field triggers a scale pulse animation (1→1.15→1 over 200ms) and changes button to ✓; no toast notification per mobile UX spec' },
+      { tag: '⚡ Feature', text: 'View all property info sheet — "View all property info →" link inside expanded property card opens a full-screen slide-up sheet with accordion sections: Access, WiFi, Storage, Parking, Notes, Emergency contacts, and Appliances' },
+      { tag: '🏗 Arch', text: 'PropertyLibrary interface extended with storageLocation, storagePhotoUrl, and cleaningNotes optional fields; Harbor Studio (p2) seeded with hallway closet storage location and lavender allergy cleaning note' },
+      { tag: '🏗 Arch', text: 'SheetItemRow and LibAccordionSection extracted as file-level helper components to keep the main page component clean; AnimatePresence added to framer-motion imports for enter/exit animations on both sheets' },
+    ],
+  },
+  {
+    version: 'v3.10',
+    date: 'Mar 24, 2026',
+    items: [
+      { tag: '🐛 Fix', text: 'Supplies picker state bug — showSupplyOverlay and addingSupply were collapsed into one variable; setting addingSupply to an item id immediately closed the overlay gate; split into two independent state variables so the overlay stays open through item selection and confirm steps' },
+      { tag: '📱 Mobile', text: 'Supplies picker two-step flow — Browse step shows full-width "Select →" buttons (44px min height); Confirm step shows 48×48px stepper buttons, 28px bold qty display, and full-width 52px "Add to list" button; "← Back" returns to Browse without closing overlay' },
+      { tag: '📱 Mobile', text: 'stepperBtn touch target increased to 36×36px with borderRadius 8 and flex centering — up from 24×24px, meets WCAG minimum' },
+      { tag: '⚡ Feature', text: 'Delivery task visibility — t-d01 task now renders with an amber 📦 Delivery badge and amber left border accent in the task list; also appears in the Today\'s Cleanings card strip with "📦 Delivery run" label and amber border' },
+      { tag: '🏗 Arch', text: 'TODAYS_DELIVERIES array added alongside TODAYS_CLEANINGS; strip render combines both arrays so delivery entries appear in the prominent top card strip at shift start' },
+    ],
+  },
+  {
+    version: 'v3.9',
+    date: 'Mar 23, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'Supplies Used collapsible section added to cleaning task drawer — pre-populated from property turnover template on task open; collapsed summary shows item count and total units; steppers for each item, remove button, warehouse picker overlay for adding items not in template' },
+      { tag: '⚡ Feature', text: 'Warehouse picker overlay — two-step flow: browse by category (Consumables/Linen/Cleaning) with stock status badges, then confirm with quantity stepper; items already in the supply list are excluded from browse' },
+      { tag: '⚡ Feature', text: 'Realistic per-persona inventory — Maria (Cleaner) sees critically low soap and coffee pods; Bjorn (Maintenance) sees critical spray; Fatima (Guest Services) sees nearly-out coffee; stock overrides seed from PERSONA_STOCK_SNAPSHOTS or localStorage for persistence' },
+      { tag: '🏗 Arch', text: 'CONSUMPTION_TEMPLATES extended to Studio/1BR/2BR; template matching uses property bed count from PROPERTIES; supply consumption logged to nestops_consumption localStorage key on task submit' },
+    ],
+  },
+  {
+    version: 'v3.8',
+    date: 'Mar 23, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'Report Problem modal enriched — cleaner can specify problem type (Safety Hazard, Damage, Maintenance Required, Guest Complaint, Supply Issue), add photo evidence, and set urgency level; report saved to localStorage and visible in operator alerts' },
+      { tag: '⚡ Feature', text: 'Task delegation — cleaning tasks can be reassigned from the task drawer; "Delegate to…" dropdown shows available staff on shift with availability indicators; delegation reason required for supervisor audit trail' },
+      { tag: '🐛 Fix', text: 'Supplies logging on submit — supply items consumed during a cleaning task are now written to nestops_consumption on submit, enabling operator-side waste tracking and reorder triggers' },
+    ],
+  },
+  {
+    version: 'v3.7',
+    date: 'Mar 23, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'Cleaning task progress bar — live progress percentage calculated from checked checklist items; displayed in the drawer footer alongside the Submit button; color shifts from muted to accent as completion approaches 100%' },
+      { tag: '⚡ Feature', text: 'Report problem in task drawer — "⚠ Report" button added to the action bar inside the cleaning task drawer; opens a modal for the cleaner to log an issue without leaving the task flow' },
+      { tag: '🐛 Fix', text: 'Checklist progress was resetting on drawer close — checklistChecked state now persists per task ID in a ref map so re-opening the same task restores progress' },
+    ],
+  },
+  {
+    version: 'v3.6',
+    date: 'Mar 22, 2026',
+    items: [
+      { tag: '⚡ Feature', text: 'Maintenance task drawer — tapping a maintenance job opens a full side drawer with before/after photo upload, work item checklist, ETA picker, resolution notes, and a pipeline progress stepper (Assigned → In Progress → Blocked → Done)' },
+      { tag: '⚡ Feature', text: 'PTE notification panel — maintenance staff see a Permission to Enter panel at the top of the task drawer when PTE is required; status badge shows Granted/Pending/Denied with timestamp and granting operator name' },
+      { tag: '⚡ Feature', text: 'Maintenance task status notifications — completing a task automatically creates a resolved notification visible in the operator alerts feed; blocked tasks trigger an escalation alert' },
+      { tag: '🐛 Fix', text: 'Nav cleanup — dead /app/schedule link removed from all staff nav configurations; routes audited against existing page files' },
+    ],
+  },
+  {
     version: 'v3.5',
     date: 'Mar 22, 2026',
     items: [

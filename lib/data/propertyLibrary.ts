@@ -109,6 +109,10 @@ export interface PropertyLibrary {
 
   // Completion score (0-100)
   completionScore: number
+
+  storageLocation?: string
+  storagePhotoUrl?: string
+  cleaningNotes?: string
 }
 
 export const PROPERTY_LIBRARIES: PropertyLibrary[] = [
@@ -246,6 +250,8 @@ export const PROPERTY_LIBRARIES: PropertyLibrary[] = [
       attractions: ['Bryggen Wharf (0.2 km)', 'Bergen Fish Market (0.3 km)', 'Mount Fløyen (1 km)'],
     },
     cleaningDuration: 90,
+    storageLocation: 'Hallway closet, top shelf',
+    cleaningNotes: 'Guest allergic to lavender products. Use unscented cleaning spray.',
     bufferDays: 0,
     photos: [
       { url: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=800&q=80', caption: 'Harbor view', isPrimary: true },

@@ -1,7 +1,7 @@
 'use client'
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Filter, Camera, X, Check, ShoppingBag, Calendar, MapPin, Zap, Lock, Eye, ChevronDown } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
@@ -13,8 +13,11 @@ import { getCleaningChecklist, getMaintenanceChecklist, type ChecklistItem } fro
 import { getPTEBadge, isAccessCodeVisible } from '@/lib/utils/pteUtils'
 import { UPSELL_APPROVAL_REQUESTS, type UpsellApprovalRequest } from '@/lib/data/upsellApprovals'
 import { UPSELL_RULES } from '@/lib/data/upsells'
+import { RESERVATIONS } from '@/lib/data/reservations'
 import { STAFF_MEMBERS } from '@/lib/data/staff'
 import { STOCK_ITEMS, CONSUMPTION_TEMPLATES, STORAGE_LOCATIONS } from '@/lib/data/inventory'
+import type { StockItem } from '@/lib/data/inventory'
+import { PROPERTY_LIBRARIES } from '@/lib/data/propertyLibrary'
 import type { JobProgress } from '@/lib/data/staff'
 import CleanerApprovalSheet from '@/components/upsells/CleanerApprovalSheet'
 import { PipelineMaintenanceCard } from '@/components/tasks/maintenance/PipelineMaintenanceCard'
@@ -43,6 +46,8 @@ const TODAYS_CLEANINGS: CleaningJob[] = [
   { id: 'cl-003', type: 'Turnover',   property: 'Downtown Loft',  timeWindow: '09:00–11:00', status: 'done',        assignedTo: 'Anna K.',   checkoutTime: '09:00', checkinTime: '14:00' },
   { id: 'cl-004', type: 'Same-day',   property: 'Ocean View Apt', timeWindow: '15:00–17:00', status: 'pending',     assignedTo: 'Anna K.',   checkoutTime: '15:00', checkinTime: '16:30' },
 ]
+
+// TODAYS_DELIVERIES is defined after DERIVED_DELIVERY_TASKS below
 
 const CLEANING_TYPE_COLOR: Record<CleaningJob['type'], string> = {
   Turnover:   '#7c3aed',
@@ -106,6 +111,10 @@ interface PersonalTask {
   pteStatus?: 'not_required' | 'pending' | 'auto_granted' | 'granted' | 'denied'
   pte?: TaskPTE
   reservation?: TaskReservation
+  upsellId?: string
+  upsellItems?: { name: string; qty: number; unit: string; notes?: string }[]
+  setupInstructions?: string
+  linkedCleaningTaskId?: string
 }
 
 const ALL_TASKS: PersonalTask[] = [
@@ -185,6 +194,71 @@ const ALL_TASKS: PersonalTask[] = [
   { id: 't2',  title: 'Update guest welcome pack',                type: 'Content',     priority: 'medium', status: 'this_week', assignee: 'Fatima N.', propertyId: 'p1', propertyName: 'Sunset Villa',    propertyImage: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=100&q=80',  due: '2026-03-20', dueDisplay: 'Fri 11:00' },
 ]
 
+// Auto-derive delivery tasks from approved upsell approvals
+const DERIVED_DELIVERY_TASKS: PersonalTask[] = UPSELL_APPROVAL_REQUESTS
+  .filter(a => {
+    const rule = UPSELL_RULES.find(r => r.id === a.upsellRuleId)
+    return a.status === 'approved' && rule?.deliveryType === 'delivery_to_property'
+  })
+  .map(a => {
+    const rule = UPSELL_RULES.find(r => r.id === a.upsellRuleId)!
+    const reservation = RESERVATIONS.find(r => r.guestVerificationId === a.guestVerificationId)
+    const checkInDate = reservation?.checkInDate ?? a.checkInDate
+    const today = '2026-03-24'
+    const status: PersonalTask['status'] =
+      checkInDate === today ? 'today' :
+      checkInDate < today ? 'overdue' : 'this_week'
+    const linkedCleaning = ALL_TASKS.find(t =>
+      t.propertyId === a.propertyId &&
+      t.due === checkInDate &&
+      t.type === 'Cleaning' &&
+      !t.isDeliveryTask
+    )
+    const upsellItems = (rule.physicalItems ?? []).map(pi => {
+      const stock = STOCK_ITEMS.find(s => s.id === pi.stockItemId)
+      return { name: stock?.name ?? pi.stockItemId, qty: pi.qty, unit: stock?.unit ?? 'piece', notes: pi.notes }
+    })
+    const prop = PROPERTIES.find(p => p.id === a.propertyId)
+    const offset = rule.schedulingOffset ?? 2
+    const dueDisplay = checkInDate === today
+      ? `Today — ${offset}h before check-in`
+      : `${checkInDate} — before check-in`
+    return {
+      id: `del-${a.id}`,
+      title: `${rule.title} — ${a.propertyName}`,
+      type: 'Cleaning' as const,
+      priority: 'medium' as const,
+      status,
+      assignee: 'Maria S.',
+      propertyId: a.propertyId,
+      propertyName: a.propertyName,
+      propertyImage: prop?.imageUrl ?? '',
+      due: checkInDate,
+      dueDisplay,
+      isDeliveryTask: true,
+      upsellId: a.id,
+      upsellItems,
+      setupInstructions: rule.setupInstructions,
+      linkedCleaningTaskId: linkedCleaning?.id,
+    }
+  })
+
+const EFFECTIVE_TASKS = [...ALL_TASKS, ...DERIVED_DELIVERY_TASKS]
+
+const TODAYS_DELIVERIES = DERIVED_DELIVERY_TASKS
+  .filter(t => t.status === 'today')
+  .map(t => ({
+    id: t.id,
+    type: 'Same-day' as CleaningJob['type'],
+    property: t.propertyName,
+    timeWindow: t.dueDisplay,
+    status: 'pending' as const,
+    assignedTo: t.assignee,
+    checkoutTime: t.due,
+    checkinTime: t.due,
+    isDelivery: true as const,
+  }))
+
 const USER_ASSIGNEE_MAP: Record<string, string> = {
   'Maria S.': 'Maria S.', 'Bjorn L.': 'Bjorn L.', 'Fatima N.': 'Fatima N.', 'Peter K.': 'Peter K.', 'Anna K.': 'Anna K.',
 }
@@ -200,6 +274,62 @@ const STATUS_GROUPS: { key: string; label: string; color: string }[] = [
   { key: 'upcoming',  label: 'Upcoming',  color: '#6b7280' },
   { key: 'completed', label: 'Completed', color: '#10b981' },
 ]
+
+function SheetItemRow({ item, sheetQtys, setSheetQtys, accent }: {
+  item: StockItem
+  sheetQtys: Record<string, number>
+  setSheetQtys: React.Dispatch<React.SetStateAction<Record<string, number>>>
+  accent: string
+}) {
+  const qty = sheetQtys[item.id] ?? 0
+  const statusColor = item.status === 'ok' ? '#10b981' : item.status === 'low' ? '#d97706' : item.status === 'critical' ? '#f97316' : '#ef4444'
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 0', borderBottom:'1px solid var(--border-subtle)' }}>
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ fontSize:14, fontWeight:600, color:'var(--text-primary)' }}>{item.name}</div>
+        <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:1 }}>
+          {item.inStock} in stock · <span style={{ color: statusColor }}>{item.status}</span>
+        </div>
+      </div>
+      <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
+        {qty === 0 ? (
+          <button
+            onClick={() => setSheetQtys(p => ({...p, [item.id]: 1}))}
+            style={{ height:40, padding:'0 16px', borderRadius:8, border:`1px solid ${accent}`, background:`${accent}15`, color: accent, fontSize:13, fontWeight:600, cursor:'pointer' }}>
+            + Add
+          </button>
+        ) : (
+          <>
+            <button onClick={() => setSheetQtys(p => ({...p, [item.id]: Math.max(0, (p[item.id]??1)-1)}))}
+              style={{ width:40, height:40, borderRadius:8, border:'1px solid var(--border)', background:'var(--bg-elevated)', color:'var(--text-primary)', fontSize:18, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>−</button>
+            <span style={{ fontSize:16, fontWeight:700, minWidth:28, textAlign:'center', color:'var(--text-primary)' }}>{qty}</span>
+            <button onClick={() => setSheetQtys(p => ({...p, [item.id]: (p[item.id]??0)+1}))}
+              style={{ width:40, height:40, borderRadius:8, border:'1px solid var(--border)', background:'var(--bg-elevated)', color:'var(--text-primary)', fontSize:18, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>+</button>
+          </>
+        )}
+        <span style={{ fontSize:11, color:'var(--text-muted)', minWidth:28 }}>{item.unit}</span>
+      </div>
+    </div>
+  )
+}
+
+function LibAccordionSection({ title, content, accent }: { title: string; content: string; accent: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div style={{ marginBottom:8, border:'1px solid var(--border)', borderRadius:8, overflow:'hidden' }}>
+      <button onClick={() => setOpen(o => !o)}
+        style={{ width:'100%', display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 14px', background:'none', border:'none', cursor:'pointer', fontSize:13, fontWeight:600, color:'var(--text-primary)' }}>
+        {title}
+        <span style={{ fontSize:11, color:'var(--text-muted)' }}>{open ? '▼' : '▶'}</span>
+      </button>
+      {open && (
+        <div style={{ padding:'0 14px 12px', fontSize:13, color:'var(--text-muted)', whiteSpace:'pre-line', lineHeight:1.6, borderTop:'1px solid var(--border-subtle)' }}>
+          {content}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function MyTasksPage() {
   const { accent } = useRole()
@@ -264,8 +394,14 @@ export default function MyTasksPage() {
   // Supplies Used
   const [supplyItems, setSupplyItems] = useState<{ id: string; name: string; unit: string; qty: number }[]>([])
   const [suppliesOpen, setSuppliesOpen] = useState(false)
-  const [addingSupply, setAddingSupply] = useState<string | null>(null)
-  const [pendingQty, setPendingQty] = useState(1)
+  const [showAddSheet, setShowAddSheet]   = useState(false)
+  const [sheetSearch, setSheetSearch]     = useState('')
+  const [sheetQtys, setSheetQtys]         = useState<Record<string, number>>({})
+  const [sheetCatOpen, setSheetCatOpen]   = useState<Record<string, boolean>>({ Bathroom: true })
+  const [sheetY, setSheetY]               = useState<'partial' | 'full'>('partial')
+  const [propCardOpen, setPropCardOpen]   = useState(false)
+  const [propLibOpen, setPropLibOpen]     = useState(false)
+  const [copiedField, setCopiedField]     = useState<string | null>(null)
   const [supplyTab, setSupplyTab] = useState('Consumables')
 
   // Feature 3: Start a Task
@@ -286,6 +422,12 @@ export default function MyTasksPage() {
   const [addType, setAddType] = useState<CleaningJob['type']>('Turnover')
   const [addTimeStart, setAddTimeStart] = useState('')
   const [addTimeEnd, setAddTimeEnd] = useState('')
+
+  const copyToClipboard = (text: string, fieldKey: string) => {
+    navigator.clipboard.writeText(text).catch(() => {})
+    setCopiedField(fieldKey)
+    setTimeout(() => setCopiedField(null), 1500)
+  }
 
   // Drawer cleaning job match (for progress bar + report button)
   const drawerCleaningJob = selectedTask?.type === 'Cleaning'
@@ -422,8 +564,11 @@ export default function MyTasksPage() {
       setSupplyItems([])
     }
     setSuppliesOpen(false)
-    setAddingSupply(null)
-    setPendingQty(1)
+    setShowAddSheet(false)
+    setSheetSearch('')
+    setSheetQtys({})
+    setPropCardOpen(false)
+    setPropLibOpen(false)
     setSupplyTab('Consumables')
   }, [selectedTask?.id])
 
@@ -474,7 +619,7 @@ export default function MyTasksPage() {
   const isMaintenance   = jobRole === 'maintenance'
   const isGuestServices = jobRole === 'guest-services'
 
-  const filteredTasks = ALL_TASKS.filter(task => {
+  const filteredTasks = EFFECTIVE_TASKS.filter(task => {
     // Supervisor sees all team cleaning tasks; cleaner sees only their own
     const matchesAssignee = isSupervisor ? true : (!assigneeName || task.assignee === assigneeName)
     let matchesType = true
@@ -529,9 +674,9 @@ export default function MyTasksPage() {
   }
 
   const stepperBtn: React.CSSProperties = {
-    width: 24, height: 24, borderRadius: 6, border: '1px solid var(--border)',
+    width: 36, height: 36, borderRadius: 8, border: '1px solid var(--border)',
     background: 'var(--bg-elevated)', color: 'var(--text-primary)',
-    fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
     lineHeight: 1,
   }
 
@@ -630,7 +775,9 @@ export default function MyTasksPage() {
           ? TODAYS_CLEANINGS
           : TODAYS_CLEANINGS.filter(c => c.assignedTo === assigneeName)
         ).concat(extraCleanings.filter(c => isSupervisor || c.assignedTo === assigneeName))
-        if (myCleanings.length === 0) return null
+        const myDeliveries = TODAYS_DELIVERIES.filter(d => isSupervisor || d.assignedTo === assigneeName)
+        const allJobs = [...myCleanings, ...myDeliveries]
+        if (allJobs.length === 0) return null
         return (
           <div style={{ marginBottom: 28 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
@@ -639,18 +786,19 @@ export default function MyTasksPage() {
                 Today&apos;s Cleanings
               </span>
               <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 10, background: '#7c3aed20', color: '#7c3aed', fontWeight: 600 }}>
-                {myCleanings.length}
+                {allJobs.length}
               </span>
               <button onClick={() => setShowAddCleaning(true)} style={{ marginLeft: 'auto', fontSize: 18, color: '#7c3aed', background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1, padding: '0 2px' }}>+</button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {myCleanings.map(job => {
+              {allJobs.map(job => {
+                const isDelivery = (job as typeof TODAYS_DELIVERIES[0]).isDelivery === true
                 const [windowStart] = job.timeWindow.split('–')
-                const tight = hasTightGap(job.checkoutTime, windowStart)
-                const typeColor = CLEANING_TYPE_COLOR[job.type]
+                const tight = !isDelivery && hasTightGap(job.checkoutTime, windowStart)
+                const typeColor = isDelivery ? '#d97706' : CLEANING_TYPE_COLOR[job.type]
                 const effectiveStatus = jobStatuses[job.id] ?? job.status
                 const statusColor = CLEANING_STATUS_COLOR[effectiveStatus]
-                const matchingTask = ALL_TASKS.find(t => t.propertyName === job.property && t.type === 'Cleaning')
+                const matchingTask = !isDelivery && ALL_TASKS.find(t => t.propertyName === job.property && t.type === 'Cleaning')
                 // Feature 4: timer
                 const startedAt = jobStartedAt[job.id]
                 const [winStart, winEnd] = job.timeWindow.split('–')
@@ -671,7 +819,7 @@ export default function MyTasksPage() {
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: `${typeColor}18`, color: typeColor, border: `1px solid ${typeColor}30` }}>{job.type}</span>
+                          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: `${typeColor}18`, color: typeColor, border: `1px solid ${typeColor}30` }}>{isDelivery ? '📦 Delivery run' : job.type}</span>
                           <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{job.property}</span>
                           {tight && effectiveStatus !== 'done' && (
                             <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: '#d9770618', color: '#d97706', border: '1px solid #d9770630' }}>⚡ Tight gap</span>
@@ -698,7 +846,7 @@ export default function MyTasksPage() {
                               setJobStatuses(prev => ({ ...prev, [job.id]: 'in-progress' }))
                               setJobStartedAt(prev => ({ ...prev, [job.id]: ts }))
                             }}
-                            style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 10, background: '#7c3aed', color: '#fff', border: 'none', cursor: 'pointer', marginTop: 2 }}
+                            style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 10, background: isDelivery ? '#d97706' : '#7c3aed', color: '#fff', border: 'none', cursor: 'pointer', marginTop: 2 }}
                           >
                             ▶ Start
                           </button>
@@ -921,7 +1069,7 @@ export default function MyTasksPage() {
                   onClick={() => !completedIds.has(task.id) && setSelectedTask(task)}
                   style={{
                     background: 'var(--bg-card)', border: '1px solid var(--border)',
-                    borderLeft: `4px solid ${PRIORITY_BORDER[task.priority]}`,
+                    borderLeft: `4px solid ${task.isDeliveryTask ? '#d97706' : PRIORITY_BORDER[task.priority]}`,
                     borderRadius: 10, padding: '14px 16px', marginBottom: 8,
                     opacity: completedIds.has(task.id) ? 0.5 : 1,
                     cursor: completedIds.has(task.id) ? 'default' : 'pointer',
@@ -930,10 +1078,13 @@ export default function MyTasksPage() {
                 >
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
                         <span style={{ fontSize: 13, fontWeight: 600, color: completedIds.has(task.id) ? 'var(--text-subtle)' : 'var(--text-primary)', textDecoration: completedIds.has(task.id) ? 'line-through' : 'none' }}>
                           {task.title}
                         </span>
+                        {task.isDeliveryTask && (
+                          <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: '#d9770618', color: '#d97706', border: '1px solid #d9770630' }}>📦 Delivery</span>
+                        )}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                         <img src={task.propertyImage} alt="" style={{ width: 24, height: 24, borderRadius: 4, objectFit: 'cover' }} />
@@ -1131,22 +1282,108 @@ export default function MyTasksPage() {
               </div>
             )}
 
-            {/* Property info banner */}
+            {/* Property info card — expandable */}
             {(() => {
               const prop = PROPERTIES.find(p => p.id === selectedTask.propertyId)
-              return prop ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: `${accent}08`, border: `1px solid ${accent}20`, borderRadius: 8, marginBottom: 16 }}>
-                  {prop.imageUrl && <img src={prop.imageUrl} alt="" style={{ width: 48, height: 36, borderRadius: 5, objectFit: 'cover', flexShrink: 0 }} />}
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{prop.name}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                      {prop.beds} bed · {prop.baths} bath
-                      {prop.amenities && prop.amenities.length > 0 && ` · ${prop.amenities.length} special areas`}
+              const lib  = PROPERTY_LIBRARIES.find(l => l.propertyId === selectedTask.propertyId)
+              if (!prop) return null
+              const hints = [
+                lib?.wifiName    ? '📶 WiFi'    : null,
+                lib?.accessCode  ? '🔑 Access'  : null,
+                lib?.parkingInfo ? '🅿️ Parking' : null,
+              ].filter(Boolean) as string[]
+              return (
+                <motion.div layout
+                  transition={{ layout: { duration: 0.25, ease: [0.25, 0.1, 0.25, 1] } }}
+                  style={{ marginBottom: 16, background: `${accent}08`, border: `1px solid ${accent}20`, borderRadius: 10, overflow: 'hidden', cursor: 'pointer' }}
+                  onClick={() => setPropCardOpen(o => !o)}
+                >
+                  <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px' }}>
+                    {prop.imageUrl && <img src={prop.imageUrl} alt="" style={{ width:48, height:36, borderRadius:5, objectFit:'cover', flexShrink:0 }} />}
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontSize:13, fontWeight:600, color:'var(--text-primary)' }}>{prop.name}</div>
+                      <div style={{ fontSize:11, color:'var(--text-muted)' }}>
+                        {prop.beds} bed · {prop.baths} bath
+                        {prop.amenities && prop.amenities.length > 0 && ` · ${prop.amenities.length} special areas`}
+                      </div>
+                      {!propCardOpen && hints.length > 0 && (
+                        <div style={{ fontSize:10, color:'var(--text-subtle)', marginTop:2 }}>{hints.join(' · ')}</div>
+                      )}
                     </div>
+                    <span style={{ fontSize:11, color:'var(--text-muted)', flexShrink:0 }}>{propCardOpen ? '▾' : '▸'}</span>
                   </div>
-                </div>
-              ) : null
+                  {propCardOpen && lib && (
+                    <div style={{ borderTop:`1px solid ${accent}20`, padding:'12px 14px' }} onClick={e => e.stopPropagation()}>
+                      {([
+                        lib.wifiName     ? { icon:'📶', label:'WiFi',      value: lib.wifiName,         key:'wifi-ssid',  copy: true,  masked: false } : null,
+                        lib.wifiPassword ? { icon:'',   label:'Password',  value: lib.wifiPassword,     key:'wifi-pw',   copy: true,  masked: true  } : null,
+                        lib.accessCode   ? { icon:'🔑', label:'Door Code', value: lib.accessCode,       key:'door-code', copy: true,  masked: false } : null,
+                        lib.storageLocation ? { icon:'📦', label:'Storage', value: lib.storageLocation, key:'storage', copy: false, masked: false } : null,
+                        lib.cleaningNotes   ? { icon:'📝', label:'Notes',   value: lib.cleaningNotes,   key:'notes',   copy: false, masked: false } : null,
+                      ] as const).filter(Boolean).map((row: any) => (
+                        <div key={row.key} style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 0', borderBottom:'1px solid var(--border-subtle)' }}>
+                          <span style={{ fontSize:14, width:20, flexShrink:0 }}>{row.icon}</span>
+                          <span style={{ fontSize:11, color:'var(--text-muted)', width:64, flexShrink:0 }}>{row.label}</span>
+                          <span style={{ flex:1, fontSize:12, color:'var(--text-primary)', fontFamily: row.key==='door-code' ? 'monospace' : undefined }}>
+                            {row.masked ? '••••••••' : row.value}
+                          </span>
+                          {row.copy && (
+                            <motion.button
+                              animate={copiedField === row.key ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+                              transition={{ duration: 0.2 }}
+                              onClick={(e) => { e.stopPropagation(); copyToClipboard(row.value, row.key) }}
+                              style={{ fontSize:10, padding:'3px 8px', borderRadius:6, border:'1px solid var(--border)', background:'var(--bg-elevated)', color: copiedField === row.key ? '#10b981' : 'var(--text-muted)', cursor:'pointer', flexShrink:0, minWidth:44, minHeight:28 }}>
+                              {copiedField === row.key ? '✓' : 'Copy'}
+                            </motion.button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setPropLibOpen(true) }}
+                        style={{ marginTop:10, fontSize:12, color: accent, background:'none', border:'none', cursor:'pointer', padding:0 }}>
+                        View all property info →
+                      </button>
+                    </div>
+                  )}
+                </motion.div>
+              )
             })()}
+
+            {/* Upsell delivery items — only for delivery tasks */}
+            {selectedTask.isDeliveryTask && (
+              <div style={{ marginBottom: 16, padding: '12px 14px', background: '#d9770610', border: '1px solid #d9770630', borderRadius: 10 }}>
+                {selectedTask.upsellId && (() => {
+                  const approval = UPSELL_APPROVAL_REQUESTS.find(a => a.id === selectedTask.upsellId)
+                  const reservation = approval ? RESERVATIONS.find(r => r.guestVerificationId === approval.guestVerificationId) : null
+                  return approval ? (
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#d97706', marginBottom: 4 }}>📦 Upsell Delivery</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                        {approval.guestName} · Check-in {approval.checkInDate}
+                        {reservation ? ` · ${reservation.guestsCount} guest${reservation.guestsCount !== 1 ? 's' : ''}` : ''}
+                      </div>
+                      {selectedTask.linkedCleaningTaskId && (
+                        <div style={{ fontSize: 11, color: '#10b981', marginTop: 3 }}>✓ Linked with same-day cleaning</div>
+                      )}
+                    </div>
+                  ) : null
+                })()}
+                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: 8 }}>Items to Deliver</div>
+                {(selectedTask.upsellItems ?? []).map((item, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                    <span style={{ fontSize: 14 }}>📦</span>
+                    <span style={{ flex: 1, fontSize: 13, color: 'var(--text-primary)' }}>{item.name}</span>
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{item.qty} {item.unit}</span>
+                  </div>
+                ))}
+                {selectedTask.setupInstructions && (
+                  <div style={{ marginTop: 12, padding: '10px 12px', background: 'var(--bg-elevated)', borderRadius: 8, fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Setup: </span>
+                    {selectedTask.setupInstructions}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Checklist by category */}
             {checklistGroups.map(group => {
@@ -1257,8 +1494,8 @@ export default function MyTasksPage() {
                       <span style={{ fontSize: 11, color: 'var(--text-subtle)', marginLeft: 4 }}>none logged yet</span>
                     )}
                     <button
-                      onClick={e => { e.stopPropagation(); setAddingSupply('__picker__'); setSuppliesOpen(true) }}
-                      style={{ marginLeft: 'auto', fontSize: 11, color: accent, background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}
+                      onClick={e => { e.stopPropagation(); setShowAddSheet(true); setSheetSearch(''); setSheetQtys({}); setSheetY('partial'); setSuppliesOpen(true) }}
+                      style={{ marginLeft: 'auto', fontSize: 11, color: accent, background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, padding: '4px 10px' }}
                     >
                       + Add item
                     </button>
@@ -1295,6 +1532,28 @@ export default function MyTasksPage() {
                           </div>
                         )
                       })}
+                      {/* Available items (not yet in list) */}
+                      {(() => {
+                        const availableItems = STOCK_ITEMS.filter(s => s.forGuest !== false && !supplyItems.find(i => i.id === s.id))
+                        if (availableItems.length === 0) return null
+                        return (
+                          <div style={{ marginTop: 10, borderTop: '1px dashed var(--border-subtle)', paddingTop: 8 }}>
+                            <div style={{ fontSize: 10, color: 'var(--text-subtle)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>Available</div>
+                            {availableItems.map(s => (
+                              <motion.div layout key={s.id} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding: '6px 0', opacity: 0.6 }}>
+                                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                                  {s.name} <span style={{ color:'var(--text-subtle)' }}>({s.unit})</span>
+                                </span>
+                                <button
+                                  onClick={() => setSupplyItems(p => [...p, { id: s.id, name: s.name, unit: s.unit, qty: 1 }])}
+                                  style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-muted)', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>
+                                  +
+                                </button>
+                              </motion.div>
+                            ))}
+                          </div>
+                        )
+                      })()}
                     </div>
                   )}
                 </div>
@@ -1475,140 +1734,147 @@ export default function MyTasksPage() {
         )}
       </AppDrawer>
 
-      {/* Warehouse Supply Picker Overlay */}
-      {addingSupply === '__picker__' && selectedTask?.type === 'Cleaning' && (() => {
-        const propId = selectedTask.propertyId
-        const locations = STORAGE_LOCATIONS.filter(l => l.assignedPropertyIds.includes(propId))
-        const locationLabel = locations.map(l => l.name).join(' + ') || 'Oslo Central Warehouse'
-        const categories = [...new Set(STOCK_ITEMS.map(s => s.category))]
-        const stockStatusColor = (st: string) =>
-          st === 'ok' ? '#10b981' : st === 'low' ? '#d97706' : st === 'critical' ? '#f97316' : '#ef4444'
-        const stockStatusLabel = (st: string) =>
-          st === 'ok' ? 'OK' : st === 'low' ? 'Low' : st === 'critical' ? 'Critical' : 'Out'
-        const filteredItems = STOCK_ITEMS.filter(s =>
-          s.category === supplyTab && !supplyItems.find(i => i.id === s.id)
-        )
-        // Default pendingQty for a selected item — use template qty if available
-        const prop = PROPERTIES.find(p => p.id === propId)
-        const beds = prop?.beds ?? 1
-        const templateKey = beds <= 1 ? 'Studio' : beds <= 2 ? '1BR' : '2BR'
-        const template = CONSUMPTION_TEMPLATES.find(t => t.propertyType.startsWith(templateKey))
-        return (
-          <div
-            style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
-            onClick={() => setAddingSupply(null)}
-          >
+      {/* Add Item Bottom Sheet */}
+      <AnimatePresence>
+        {showAddSheet && selectedTask?.type === 'Cleaning' && (() => {
+          const guestItems = STOCK_ITEMS.filter(s => s.forGuest !== false)
+          const allCats = [...new Set(guestItems.map(s => s.category))]
+          const FREQUENTLY_ADDED_IDS = ['i5', 'i9', 'i4', 'i18', 'i12']
+          const frequentItems = guestItems.filter(s => FREQUENTLY_ADDED_IDS.includes(s.id))
+          const filteredAll = sheetSearch.trim()
+            ? guestItems.filter(s => s.name.toLowerCase().includes(sheetSearch.toLowerCase()))
+            : null
+          const addedCount = Object.values(sheetQtys).filter(q => q > 0).length
+          return (
             <div
-              onClick={e => e.stopPropagation()}
-              style={{ width: '100%', maxWidth: 480, background: 'var(--bg-surface)', borderRadius: '16px 16px 0 0', borderTop: '1px solid var(--border)', paddingBottom: 32, maxHeight: '75vh', display: 'flex', flexDirection: 'column' }}
+              key="add-sheet-backdrop"
+              style={{ position:'fixed', inset:0, zIndex:500, background:'rgba(0,0,0,0.5)' }}
+              onClick={() => setShowAddSheet(false)}
             >
-              {/* Header */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px 12px' }}>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Add supply item</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>From: {locationLabel}</div>
+              <motion.div
+                key="add-sheet"
+                onClick={e => e.stopPropagation()}
+                drag="y"
+                dragConstraints={{ top: 0 }}
+                dragElastic={0.1}
+                onDragEnd={(_: unknown, info: { velocity: { y: number }; offset: { y: number } }) => {
+                  if (info.velocity.y > 400 || info.offset.y > 200) setShowAddSheet(false)
+                  else if (info.offset.y < -80) setSheetY('full')
+                  else setSheetY('partial')
+                }}
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                style={{
+                  position:'absolute', bottom:0, left:0, right:0,
+                  height: sheetY === 'full' ? '100dvh' : '62dvh',
+                  background:'var(--bg-surface)', borderRadius:'16px 16px 0 0',
+                  borderTop:'1px solid var(--border)', display:'flex', flexDirection:'column',
+                  transition: 'height 0.25s ease',
+                }}
+              >
+                <div style={{ display:'flex', justifyContent:'center', padding:'10px 0 6px' }}>
+                  <div style={{ width:36, height:4, borderRadius:2, background:'var(--border)' }} />
                 </div>
-                <button onClick={() => setAddingSupply(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 20, cursor: 'pointer', lineHeight: 1 }}>✕</button>
-              </div>
-
-              {/* Category tabs */}
-              <div style={{ display: 'flex', gap: 6, padding: '0 18px 12px', borderBottom: '1px solid var(--border-subtle)' }}>
-                {categories.map(cat => (
+                <div style={{ padding:'0 16px 12px' }}>
+                  <input
+                    placeholder="🔍 Search items..."
+                    value={sheetSearch}
+                    onChange={e => setSheetSearch(e.target.value)}
+                    style={{ width:'100%', padding:'9px 12px', borderRadius:10, border:'1px solid var(--border)', background:'var(--bg-elevated)', color:'var(--text-primary)', fontSize:14, outline:'none', boxSizing:'border-box' as const }}
+                  />
+                </div>
+                <div style={{ flex:1, overflowY:'auto', padding:'0 16px' }}>
+                  {filteredAll ? (
+                    filteredAll.map(s => <SheetItemRow key={s.id} item={s} sheetQtys={sheetQtys} setSheetQtys={setSheetQtys} accent={accent} />)
+                  ) : (
+                    <>
+                      <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', color:'var(--text-subtle)', marginBottom:8 }}>Frequently Added</div>
+                      {frequentItems.map(s => <SheetItemRow key={s.id} item={s} sheetQtys={sheetQtys} setSheetQtys={setSheetQtys} accent={accent} />)}
+                      {allCats.map(cat => {
+                        const open = sheetCatOpen[cat] ?? false
+                        const items = guestItems.filter(s => s.category === cat)
+                        return (
+                          <div key={cat} style={{ marginTop: 16 }}>
+                            <button
+                              onClick={() => setSheetCatOpen(p => ({...p, [cat]: !p[cat]}))}
+                              style={{ width:'100%', display:'flex', justifyContent:'space-between', alignItems:'center', background:'none', border:'none', cursor:'pointer', padding:'6px 0', fontSize:10, fontWeight:700, textTransform:'uppercase' as const, letterSpacing:'0.08em', color:'var(--text-subtle)' }}>
+                              {cat}
+                              <span>{open ? '▼' : '▶'}</span>
+                            </button>
+                            {open && items.map(s => <SheetItemRow key={s.id} item={s} sheetQtys={sheetQtys} setSheetQtys={setSheetQtys} accent={accent} />)}
+                          </div>
+                        )
+                      })}
+                    </>
+                  )}
+                </div>
+                <div style={{ padding:'12px 16px 24px' }}>
                   <button
-                    key={cat}
-                    onClick={() => { setSupplyTab(cat); setAddingSupply('__picker__') }}
-                    style={{
-                      padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: 'pointer',
-                      border: `1px solid ${supplyTab === cat ? accent : 'var(--border)'}`,
-                      background: supplyTab === cat ? `${accent}1a` : 'transparent',
-                      color: supplyTab === cat ? accent : 'var(--text-muted)',
+                    onClick={() => {
+                      const itemsToAdd = Object.entries(sheetQtys).filter(([, qty]) => qty > 0)
+                      itemsToAdd.forEach(([id, qty]) => {
+                        const s = STOCK_ITEMS.find(x => x.id === id)
+                        if (!s) return
+                        setSupplyItems(p => {
+                          const exists = p.find(i => i.id === id)
+                          if (exists) return p.map(i => i.id === id ? {...i, qty: i.qty + qty} : i)
+                          return [...p, { id: s.id, name: s.name, unit: s.unit, qty }]
+                        })
+                      })
+                      setShowAddSheet(false)
+                      setSheetQtys({})
                     }}
-                  >
-                    {cat}
+                    style={{ width:'100%', height:52, borderRadius:12, background: accent, color:'#fff', fontSize:15, fontWeight:700, border:'none', cursor:'pointer' }}>
+                    {addedCount > 0 ? `Done (${addedCount} item${addedCount !== 1 ? 's' : ''} added)` : 'Done'}
                   </button>
+                </div>
+              </motion.div>
+            </div>
+          )
+        })()}
+      </AnimatePresence>
+
+      {/* Property Library Full-Screen Sheet */}
+      <AnimatePresence>
+        {propLibOpen && selectedTask && (() => {
+          const lib = PROPERTY_LIBRARIES.find(l => l.propertyId === selectedTask.propertyId)
+          if (!lib) return null
+          const libAny = lib as any
+          const sections = [
+            { title: 'Access',     content: lib.accessCode ? `Code: ${lib.accessCode}\n${lib.accessInstructions ?? ''}` : (lib.accessInstructions ?? '') },
+            { title: 'WiFi',       content: lib.wifiName ? `SSID: ${lib.wifiName}\nPassword: ${lib.wifiPassword ?? ''}` : '' },
+            { title: 'Storage',    content: libAny.storageLocation ?? '' },
+            { title: 'Parking',    content: lib.parkingInfo ?? '' },
+            { title: 'Notes',      content: libAny.cleaningNotes ?? lib.internalNotes ?? '' },
+            { title: 'Emergency',  content: lib.emergency.contacts.map((c: { name: string; phone?: string }) => `${c.name}: ${c.phone ?? ''}`).join('\n') + (lib.emergency.nearestHospital ? `\nHospital: ${lib.emergency.nearestHospital}` : '') },
+            { title: 'Appliances', content: lib.appliances.map((a: { name: string; brand?: string; notes?: string; location?: string }) => `${a.name}${a.brand ? ` (${a.brand})` : ''}: ${a.notes ?? a.location ?? ''}`).join('\n') },
+          ].filter(s => s.content.trim())
+          return (
+            <motion.div
+              key="prop-lib-sheet"
+              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              transition={{ type:'spring', damping: 25, stiffness: 280 }}
+              style={{ position:'fixed', inset:0, zIndex:600, background:'var(--bg-surface)', display:'flex', flexDirection:'column' }}
+            >
+              <div style={{ display:'flex', alignItems:'center', padding:'16px 18px', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
+                <button onClick={() => setPropLibOpen(false)}
+                  style={{ background:'none', border:'none', color: accent, fontSize:13, fontWeight:500, cursor:'pointer', padding:0, whiteSpace:'nowrap' as const }}>
+                  ← Back to task
+                </button>
+                <span style={{ flex:1, fontSize:14, fontWeight:700, color:'var(--text-primary)', textAlign:'center' }}>Property Info</span>
+                <span style={{ width:90 }} />
+              </div>
+              <div style={{ flex:1, overflowY:'auto', padding:'16px 18px' }}>
+                {sections.map(section => (
+                  <LibAccordionSection key={section.title} title={section.title} content={section.content} accent={accent} />
                 ))}
               </div>
-
-              {/* Items list */}
-              <div style={{ overflowY: 'auto', flex: 1 }}>
-                {filteredItems.length === 0 && (
-                  <div style={{ padding: '20px 18px', fontSize: 13, color: 'var(--text-subtle)', fontStyle: 'italic' }}>
-                    All {supplyTab.toLowerCase()} items already added
-                  </div>
-                )}
-                {filteredItems.map(s => {
-                  const isSelecting = addingSupply === s.id
-                  const templateQty = template?.items.find(ti => ti.stockItemId === s.id)?.qtyPerTurnover ?? 1
-                  return (
-                    <div key={s.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      {/* Item row */}
-                      <div style={{ display: 'flex', alignItems: 'center', padding: '11px 18px', gap: 10 }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{s.name}</div>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{s.inStock} in stock</div>
-                        </div>
-                        <span style={{
-                          fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 10,
-                          background: `${stockStatusColor(s.status)}18`,
-                          color: stockStatusColor(s.status),
-                          border: `1px solid ${stockStatusColor(s.status)}30`,
-                          flexShrink: 0,
-                        }}>
-                          {stockStatusLabel(s.status)}
-                        </span>
-                        <button
-                          onClick={() => {
-                            if (isSelecting) {
-                              setAddingSupply('__picker__')
-                            } else {
-                              setAddingSupply(s.id)
-                              setPendingQty(templateQty)
-                            }
-                          }}
-                          style={{
-                            fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 8,
-                            border: `1px solid ${isSelecting ? accent : 'var(--border)'}`,
-                            background: isSelecting ? `${accent}18` : 'var(--bg-elevated)',
-                            color: isSelecting ? accent : 'var(--text-muted)',
-                            cursor: 'pointer', flexShrink: 0,
-                          }}
-                        >
-                          {isSelecting ? 'Cancel' : 'Select →'}
-                        </button>
-                      </div>
-
-                      {/* Confirm step — inline below the row */}
-                      {isSelecting && (
-                        <div style={{ padding: '10px 18px 14px', background: `${accent}06`, borderTop: `1px solid ${accent}20` }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                            <span style={{ fontSize: 12, color: 'var(--text-muted)', minWidth: 30 }}>Qty:</span>
-                            <button onClick={() => setPendingQty(q => Math.max(1, q - 1))} style={stepperBtn}>−</button>
-                            <span style={{ fontSize: 14, fontWeight: 700, minWidth: 28, textAlign: 'center', color: 'var(--text-primary)' }}>{pendingQty}</span>
-                            <button onClick={() => setPendingQty(q => q + 1)} style={stepperBtn}>+</button>
-                            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{s.unit}</span>
-                          </div>
-                          <button
-                            onClick={() => {
-                              setSupplyItems(p => [...p, { id: s.id, name: s.name, unit: s.unit, qty: pendingQty }])
-                              setAddingSupply(null)
-                            }}
-                            style={{
-                              width: '100%', padding: '9px', borderRadius: 8, border: 'none',
-                              background: accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                            }}
-                          >
-                            Add to list
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-        )
-      })()}
+            </motion.div>
+          )
+        })()}
+      </AnimatePresence>
 
       {/* Maintenance Task Drawer */}
       {(() => {
