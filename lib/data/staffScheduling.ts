@@ -63,7 +63,7 @@ export interface StaffAvailability {
 }
 
 // Week of 2026-03-16 (Mon) to 2026-03-22 (Sun)
-export const WEEK_START = '2026-03-16'
+export const WEEK_START = '2026-03-23'
 
 export const SHIFTS: Shift[] = [
   // Monday 2026-03-16
@@ -101,6 +101,33 @@ export const SHIFTS: Shift[] = [
   // Sunday 2026-03-22
   { id: 'sh-19', staffId: 's1', propertyId: 'p2', date: '2026-03-22', day: 'Sun', startTime: '11:00', endTime: '14:00', type: 'cleaning',     status: 'scheduled',  notes: 'Sunday deep clean',                jobIds: ['j4'] },
   { id: 'sh-20', staffId: 's3', propertyId: 'p5', date: '2026-03-22', day: 'Sun', startTime: '10:00', endTime: '13:00', type: 'maintenance',  status: 'scheduled',  notes: 'Cabin heating system',             jobIds: [] },
+
+  // Monday 2026-03-23
+  { id: 'sh-23', staffId: 's1', propertyId: 'p3', date: '2026-03-23', day: 'Mon', startTime: '09:00', endTime: '12:00', type: 'cleaning',     status: 'completed',  notes: 'Checkout turnover',                jobIds: ['j1'] },
+  { id: 'sh-24', staffId: 's2', propertyId: 'p1', date: '2026-03-23', day: 'Mon', startTime: '10:00', endTime: '12:00', type: 'inspection',   status: 'completed',  notes: 'Pre-arrival check',                jobIds: [] },
+  { id: 'sh-25', staffId: 's3', propertyId: 'p4', date: '2026-03-23', day: 'Mon', startTime: '13:00', endTime: '16:00', type: 'maintenance',  status: 'completed',  notes: 'HVAC filter check',                jobIds: ['j2'] },
+
+  // Tuesday 2026-03-24 (TODAY)
+  { id: 'sh-26', staffId: 's1', propertyId: 'p2', date: '2026-03-24', day: 'Tue', startTime: '10:00', endTime: '14:00', type: 'cleaning',     status: 'confirmed',  notes: 'Deep clean — guest arrives tonight', jobIds: ['j4'] },
+  { id: 'sh-27', staffId: 's2', propertyId: 'p4', date: '2026-03-24', day: 'Tue', startTime: '14:00', endTime: '16:00', type: 'inspection',   status: 'confirmed',  notes: 'Post-clean QA check',              jobIds: [] },
+  { id: 'sh-28', staffId: 's3', propertyId: 'p3', date: '2026-03-24', day: 'Tue', startTime: '09:00', endTime: '11:00', type: 'maintenance',  status: 'confirmed',  notes: 'Tap repair follow-up',             jobIds: ['j7'] },
+  { id: 'sh-29', staffId: 's4', propertyId: 'p1', date: '2026-03-24', day: 'Tue', startTime: '09:00', endTime: '17:00', type: 'standby',      status: 'confirmed',  notes: 'Guest services coverage',          jobIds: [] },
+
+  // Wednesday 2026-03-25
+  { id: 'sh-30', staffId: 's1', propertyId: 'p1', date: '2026-03-25', day: 'Wed', startTime: '08:00', endTime: '12:00', type: 'cleaning',     status: 'scheduled',  notes: 'Mid-stay refresh',                 jobIds: [] },
+  { id: 'sh-31', staffId: 's2', propertyId: 'p2', date: '2026-03-25', day: 'Wed', startTime: '13:00', endTime: '15:00', type: 'inspection',   status: 'scheduled',  notes: 'Departure inspection',             jobIds: [] },
+
+  // Thursday 2026-03-26
+  { id: 'sh-32', staffId: 's1', propertyId: 'p4', date: '2026-03-26', day: 'Thu', startTime: '09:00', endTime: '13:00', type: 'cleaning',     status: 'scheduled',  notes: 'Turnover — 2 checkouts',           jobIds: [] },
+  { id: 'sh-33', staffId: 's2', propertyId: 'p3', date: '2026-03-26', day: 'Thu', startTime: '10:00', endTime: '12:00', type: 'inspection',   status: 'scheduled',  notes: 'Pre-arrival walkthrough',          jobIds: [] },
+
+  // Friday 2026-03-27
+  { id: 'sh-34', staffId: 's1', propertyId: 'p3', date: '2026-03-27', day: 'Fri', startTime: '08:00', endTime: '13:00', type: 'cleaning',     status: 'scheduled',  notes: 'Weekend prep turnover',            jobIds: [] },
+  { id: 'sh-35', staffId: 's2', propertyId: 'p5', date: '2026-03-27', day: 'Fri', startTime: '14:00', endTime: '16:00', type: 'inspection',   status: 'scheduled',  notes: 'Cabin readiness check',            jobIds: [] },
+
+  // Saturday 2026-03-28
+  { id: 'sh-36', staffId: 's1', propertyId: 'p5', date: '2026-03-28', day: 'Sat', startTime: '10:00', endTime: '14:00', type: 'cleaning',     status: 'scheduled',  notes: 'Weekend deep clean',               jobIds: ['j5'] },
+  { id: 'sh-37', staffId: 's2', propertyId: 'p1', date: '2026-03-28', day: 'Sat', startTime: '09:00', endTime: '11:00', type: 'inspection',   status: 'scheduled',  notes: 'Saturday arrival check',           jobIds: [] },
 ]
 
 export const AVAILABILITY: StaffAvailability[] = [

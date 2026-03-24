@@ -42,7 +42,7 @@ interface CleaningJob {
 }
 
 const TODAYS_CLEANINGS: CleaningJob[] = [
-  { id: 'cl-001', type: 'Deep Clean', property: 'Harbor Studio',  timeWindow: '11:00–14:00', status: 'pending',     assignedTo: 'Maria S.',  checkoutTime: '11:00', checkinTime: '15:00' },
+  { id: 'cl-001', type: 'Deep Clean', property: 'Harbor Studio',  timeWindow: '10:00–14:00', status: 'pending',     assignedTo: 'Maria S.',  checkoutTime: '10:00', checkinTime: '18:00' },
   { id: 'cl-003', type: 'Turnover',   property: 'Downtown Loft',  timeWindow: '09:00–11:00', status: 'done',        assignedTo: 'Anna K.',   checkoutTime: '09:00', checkinTime: '14:00' },
   { id: 'cl-004', type: 'Same-day',   property: 'Ocean View Apt', timeWindow: '15:00–17:00', status: 'pending',     assignedTo: 'Anna K.',   checkoutTime: '15:00', checkinTime: '16:30' },
 ]
@@ -755,7 +755,7 @@ export default function MyTasksPage() {
       />
 
       {/* Filters */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
           <Filter size={13} style={{ color: 'var(--text-muted)' }} />
           {statusPills.map(p => (
@@ -779,7 +779,7 @@ export default function MyTasksPage() {
         const allJobs = [...myCleanings, ...myDeliveries]
         if (allJobs.length === 0) return null
         return (
-          <div style={{ marginBottom: 28 }}>
+          <div className="section-block">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
               <Zap size={14} style={{ color: '#7c3aed' }} />
               <span style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
@@ -802,8 +802,8 @@ export default function MyTasksPage() {
                 // Feature 4: timer
                 const startedAt = jobStartedAt[job.id]
                 const [winStart, winEnd] = job.timeWindow.split('–')
-                const [sh, sm] = winStart.split(':').map(Number)
-                const [eh, em] = winEnd.split(':').map(Number)
+                const [sh, sm] = (winStart ?? '00:00').split(':').map(Number)
+                const [eh, em] = (winEnd ?? winStart ?? '00:00').split(':').map(Number)
                 const windowMins = (eh * 60 + em) - (sh * 60 + sm)
                 const elapsedMs = startedAt ? now.getTime() - new Date(startedAt).getTime() : 0
                 const elapsedMins = Math.floor(elapsedMs / 60_000)
@@ -814,7 +814,8 @@ export default function MyTasksPage() {
                   <div
                     key={job.id}
                     onClick={() => matchingTask && effectiveStatus !== 'done' && setSelectedTask(matchingTask)}
-                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderLeft: `4px solid ${typeColor}`, borderRadius: 10, padding: '12px 14px', opacity: effectiveStatus === 'done' ? 0.6 : 1, cursor: effectiveStatus === 'done' ? 'default' : 'pointer' }}
+                    className="task-card-inner"
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderLeft: `4px solid ${typeColor}`, borderRadius: 10, opacity: effectiveStatus === 'done' ? 0.6 : 1, cursor: (effectiveStatus === 'done' || (!matchingTask && !isDelivery)) ? 'default' : 'pointer' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
                       <div style={{ flex: 1 }}>
@@ -846,7 +847,8 @@ export default function MyTasksPage() {
                               setJobStatuses(prev => ({ ...prev, [job.id]: 'in-progress' }))
                               setJobStartedAt(prev => ({ ...prev, [job.id]: ts }))
                             }}
-                            style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 10, background: isDelivery ? '#d97706' : '#7c3aed', color: '#fff', border: 'none', cursor: 'pointer', marginTop: 2 }}
+                            className="touch-btn"
+                            style={{ fontWeight: 600, borderRadius: 10, background: isDelivery ? '#d97706' : '#7c3aed', color: '#fff', border: 'none', cursor: 'pointer', marginTop: 2 }}
                           >
                             ▶ Start
                           </button>
@@ -867,7 +869,8 @@ export default function MyTasksPage() {
                         {matchingTask && effectiveStatus !== 'done' && (
                           <button
                             onClick={e => { e.stopPropagation(); setReportingJob(job) }}
-                            style={{ fontSize: 11, color: '#d97706', fontWeight: 500, border: '1px solid #d9770630', borderRadius: 6, padding: '2px 8px', background: '#d9770610', cursor: 'pointer' }}
+                            className="touch-btn"
+                            style={{ color: '#d97706', fontWeight: 500, border: '1px solid #d9770630', borderRadius: 6, background: '#d9770610', cursor: 'pointer' }}
                           >
                             ⚠ Report
                           </button>
@@ -884,7 +887,7 @@ export default function MyTasksPage() {
 
       {/* Cleaner Upsell Awareness — read-only, no actions */}
       {jobRole === 'cleaner' && (
-        <div style={{ marginBottom: 28 }}>
+        <div className="section-block">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <ShoppingBag size={14} style={{ color: '#d97706' }} />
             <span style={{ fontSize: 12, fontWeight: 700, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
@@ -952,7 +955,7 @@ export default function MyTasksPage() {
 
       {/* Upsell Approvals Section */}
       {(isSupervisor || isGSSupervisor) && upsellApprovalRequests.length > 0 && (
-        <div style={{ marginBottom: 28 }}>
+        <div className="section-block">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <ShoppingBag size={14} style={{ color: '#d97706' }} />
             <span style={{ fontSize: 12, fontWeight: 700, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.06em' }}>

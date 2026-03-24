@@ -78,6 +78,11 @@ export default function BriefingPage() {
     if (stored) {
       try {
         const user: UserProfile = JSON.parse(stored)
+        // Redirect supervisors before checking subRole (Anna K. is "Cleaning Supervisor" but should go to /briefing/supervisor)
+        if (user.role === 'staff' && (user.jobRole === 'supervisor' || user.jobRole === 'gs-supervisor')) {
+          router.replace(user.jobRole === 'gs-supervisor' ? '/briefing/gs-supervisor' : '/briefing/supervisor')
+          return
+        }
         // Redirect cleaning staff to dedicated briefing page
         if (user.role === 'staff' &&
             (user.subRole?.includes('Cleaner') || user.subRole?.includes('Cleaning'))) {

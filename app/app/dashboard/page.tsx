@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { ChevronRight, Plus, Check, Building2, Users, Ticket, Package, Sparkles, ListTodo, Clock, CreditCard } from 'lucide-react'
+import { ChevronRight, Plus, Check, Building2, Users, Ticket, Package, Sparkles, ListTodo, Clock, CreditCard, Moon, AlertTriangle, Circle } from 'lucide-react'
 import Link from 'next/link'
 import { useRole } from '@/context/RoleContext'
 import type { UserProfile } from '@/context/RoleContext'
@@ -140,8 +140,8 @@ const GS_PENDING_PTE = [
 ]
 
 const NEEDS_ACTION_ITEMS = [
-  { id: 'na1', text: '⚠️ Noise complaint unassigned · Downtown Loft', action: 'Assign Now' },
-  { id: 'na2', text: '⚠️ Bjorn L. 18 min late · not clocked in', action: 'Send Reminder' },
+  { id: 'na1', text: 'Noise complaint unassigned · Downtown Loft', action: 'Assign Now',     urgency: 'urgent' as const },
+  { id: 'na2', text: 'Bjorn L. 18 min late · not clocked in',      action: 'Send Reminder', urgency: 'high'   as const },
 ]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -1255,32 +1255,14 @@ export default function AppDashboard() {
             )
           })()}
 
-          {/* 8 stat cards */}
+          {/* 8 stat cards — ops row first, portfolio row second */}
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: C.muted, marginBottom: 6 }}>TODAY&apos;S OPS</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 10 }}>
             {[
-              { label: 'Properties',   value: PROPERTIES.length,                                                              icon: <Building2 size={18} strokeWidth={1.5} />, href: '/operator/properties' },
-              { label: 'Owners',       value: OWNERS.length,                                                                   icon: <Users size={18} strokeWidth={1.5} />,     href: '/owner' },
-              { label: 'Requests',     value: REQUESTS.filter(r => r.status === 'open' || r.status === 'pending').length,      icon: <Ticket size={18} strokeWidth={1.5} />,    href: '/operator/tickets' },
-              { label: 'Low Stock',    value: 4,                                                                               icon: <Package size={18} strokeWidth={1.5} />,   href: '/operator/inventory' },
-            ].map(stat => (
-              <Link key={stat.label} href={stat.href} style={{ textDecoration: 'none' }}>
-                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '14px 16px', cursor: 'pointer', transition: 'all 0.15s' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.12)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ''; (e.currentTarget as HTMLDivElement).style.borderColor = C.border; }}
-                >
-                  <div style={{ color: C.muted, marginBottom: 8 }}>{stat.icon}</div>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 1 }}>{stat.value}</div>
-                  <div style={{ fontSize: 11, color: C.muted, fontWeight: 500 }}>{stat.label}</div>
-                </div>
-              </Link>
-            ))}
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 24 }}>
-            {[
-              { label: 'Cleanings Today',  value: TODAY_CHECKINS.length,                                                       icon: <Sparkles size={18} strokeWidth={1.5} />,  href: '/operator/cleaning' },
-              { label: 'Tasks In Motion',  value: 6,                                                                           icon: <ListTodo size={18} strokeWidth={1.5} />,  href: '/operator/operations' },
-              { label: 'Needs Attention',  value: 2,                                                                           icon: <Clock size={18} strokeWidth={1.5} />,     href: '/operator/operations', alert: true },
-              { label: 'Approvals',        value: APPROVALS.filter(a => approvalStatuses[a.id] === 'pending').length,          icon: <CreditCard size={18} strokeWidth={1.5} />, href: '/operator/tickets', alert: APPROVALS.filter(a => approvalStatuses[a.id] === 'pending').length > 0 },
+              { label: 'Cleanings Today',  value: TODAY_CHECKINS.length,                                                       icon: <Sparkles size={20} strokeWidth={1.5} />,   href: '/operator/cleaning' },
+              { label: 'Tasks In Motion',  value: 6,                                                                           icon: <ListTodo size={20} strokeWidth={1.5} />,   href: '/operator/operations' },
+              { label: 'Needs Attention',  value: 2,                                                                           icon: <Clock size={20} strokeWidth={1.5} />,      href: '/operator/operations', alert: true },
+              { label: 'Approvals',        value: APPROVALS.filter(a => approvalStatuses[a.id] === 'pending').length,          icon: <CreditCard size={20} strokeWidth={1.5} />, href: '/operator/tickets', alert: APPROVALS.filter(a => approvalStatuses[a.id] === 'pending').length > 0 },
             ].map(stat => (
               <Link key={stat.label} href={stat.href} style={{ textDecoration: 'none' }}>
                 <div style={{ background: C.card, border: `1px solid ${(stat as {alert?: boolean}).alert ? 'rgba(239,68,68,0.4)' : C.border}`, borderRadius: 10, padding: '14px 16px', cursor: 'pointer', transition: 'all 0.15s' }}
@@ -1289,6 +1271,26 @@ export default function AppDashboard() {
                 >
                   <div style={{ color: (stat as {alert?: boolean}).alert ? '#ef4444' : C.muted, marginBottom: 8 }}>{stat.icon}</div>
                   <div style={{ fontSize: 22, fontWeight: 800, color: (stat as {alert?: boolean}).alert ? '#ef4444' : C.text, marginBottom: 1 }}>{stat.value}</div>
+                  <div style={{ fontSize: 11, color: C.muted, fontWeight: 500 }}>{stat.label}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: C.muted, marginBottom: 6 }}>PORTFOLIO</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 24 }}>
+            {[
+              { label: 'Properties',   value: PROPERTIES.length,                                                              icon: <Building2 size={20} strokeWidth={1.5} />, href: '/operator/properties' },
+              { label: 'Owners',       value: OWNERS.length,                                                                   icon: <Users size={20} strokeWidth={1.5} />,     href: '/owner' },
+              { label: 'Requests',     value: REQUESTS.filter(r => r.status === 'open' || r.status === 'pending').length,      icon: <Ticket size={20} strokeWidth={1.5} />,    href: '/operator/tickets' },
+              { label: 'Low Stock',    value: 4,                                                                               icon: <Package size={20} strokeWidth={1.5} />,   href: '/operator/inventory' },
+            ].map(stat => (
+              <Link key={stat.label} href={stat.href} style={{ textDecoration: 'none' }}>
+                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '14px 16px', cursor: 'pointer', transition: 'all 0.15s' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.12)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ''; (e.currentTarget as HTMLDivElement).style.borderColor = C.border; }}
+                >
+                  <div style={{ color: C.muted, marginBottom: 8 }}>{stat.icon}</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 1 }}>{stat.value}</div>
                   <div style={{ fontSize: 11, color: C.muted, fontWeight: 500 }}>{stat.label}</div>
                 </div>
               </Link>
@@ -1318,6 +1320,8 @@ export default function AppDashboard() {
                   display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, padding: '9px 10px',
                   borderRadius: 8, marginBottom: i < TEAM_CLOCK_STATUS.length - 1 ? 6 : 0,
                   background: isActuallyLate ? 'rgba(217,119,6,0.08)' : 'transparent',
+                  borderLeft: `3px solid ${member.clockedIn ? C.green : isActuallyLate ? C.amber : C.border}`,
+                  paddingLeft: 12,
                 }}>
                   <div style={{ width: 34, height: 34, borderRadius: '50%', background: member.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
                     {member.initials}
@@ -1326,15 +1330,15 @@ export default function AppDashboard() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: C.text, minWidth: 60 }}>{member.name}</span>
                       {member.clockedIn
-                        ? <span style={{ fontSize: 11, color: C.green }}>● Clocked in {member.clockInTime}</span>
+                        ? <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: C.green }}><Circle size={7} fill={C.green} strokeWidth={0} />{' '}Clocked in {member.clockInTime}</span>
                         : isActuallyLate
                           ? (
                             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <motion.span animate={prefersReducedMotion ? undefined : { opacity: [1, 0.4, 1] }} transition={{ duration: 1.2, repeat: Infinity }} style={{ fontSize: 11, color: C.amber }}>⚠️</motion.span>
+                              <motion.span animate={prefersReducedMotion ? undefined : { opacity: [1, 0.4, 1] }} transition={{ duration: 1.2, repeat: Infinity }} style={{ display: 'flex', color: C.amber }}><AlertTriangle size={11} /></motion.span>
                               <span style={{ fontSize: 11, color: C.amber }}>{minsLate} min late</span>
                             </span>
                           )
-                          : <span style={{ fontSize: 11, color: C.muted }}>○ Shift starts {member.shiftStart}</span>
+                          : <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: C.muted }}><Circle size={7} strokeWidth={1.5} />{' '}Shift starts {member.shiftStart}</span>
                       }
                     </div>
                     <div style={{ fontSize: 11, color: C.muted }}>{member.role} · {member.property}</div>
@@ -1349,7 +1353,7 @@ export default function AppDashboard() {
           <SectionLabel label="Last Night" />
           <Card>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>🌙 LAST NIGHT</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: C.text }}><Moon size={12} />LAST NIGHT</span>
               <span style={{ fontSize: 12, color: C.muted }}>{todayReport?.issues.length ?? 0} incidents</span>
             </div>
             {(todayReport?.issues ?? []).map((issue, i) => (
@@ -1376,7 +1380,11 @@ export default function AppDashboard() {
               <span style={{ fontSize: 12, color: C.muted }}>{NEEDS_ACTION_ITEMS.length} items</span>
             </div>
             {NEEDS_ACTION_ITEMS.map((item, i) => (
-              <div key={item.id} style={i < NEEDS_ACTION_ITEMS.length - 1 ? { paddingBottom: 10, marginBottom: 10, borderBottom: `1px solid ${C.border}` } : {}}>
+              <div key={item.id} style={{
+                paddingLeft: 10,
+                borderLeft: `3px solid ${item.urgency === 'urgent' ? '#ef4444' : item.urgency === 'high' ? C.amber : 'transparent'}`,
+                ...(i < NEEDS_ACTION_ITEMS.length - 1 ? { paddingBottom: 10, marginBottom: 10, borderBottom: `1px solid ${C.border}` } : {}),
+              }}>
                 <div style={{ fontSize: 13, color: C.text, marginBottom: 4 }}>{item.text}</div>
                 <ActionBtn label={item.action} />
               </div>
@@ -1396,6 +1404,21 @@ export default function AppDashboard() {
 
           {/* Meetings */}
           <SectionLabel label="My Meetings Today" />
+          {(() => {
+            const now = new Date()
+            const next = MEETINGS.map(m => {
+              const [h, min] = m.time.split(':').map(Number)
+              const t = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, min)
+              return { ...m, minsUntil: Math.round((t.getTime() - now.getTime()) / 60000) }
+            }).find(m => m.minsUntil > 0 && m.minsUntil <= 120)
+            return next ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20, background: 'rgba(99,102,241,0.15)', color: '#6366f1' }}>
+                  {next.title} · in {next.minsUntil} min
+                </span>
+              </div>
+            ) : null
+          })()}
           <Card>
             {MEETINGS.map((m, i) => (
               <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: i < MEETINGS.length - 1 ? `1px solid ${C.border}` : 'none' }}>
@@ -1409,7 +1432,7 @@ export default function AppDashboard() {
           </div>{/* end left column */}
 
           {/* Right column */}
-          <div>
+          <div style={{ position: 'sticky', top: 0, maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
             {/* Owner Approvals */}
             <SectionLabel label="Pending Owner Approvals" />
             <div style={{ marginBottom: 12 }}>

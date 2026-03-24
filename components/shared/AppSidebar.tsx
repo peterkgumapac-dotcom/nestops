@@ -11,8 +11,8 @@ import { useRole } from '@/context/RoleContext'
 import { useTheme } from '@/context/ThemeContext'
 import { NAV_BY_ROLE, getStaffNav } from '@/lib/nav'
 
-const APP_VERSION = 'v3.1'
-const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v3.1'
+const APP_VERSION = 'v4.0'
+const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v4.0'
 
 const WHATS_NEW_ITEMS = [
   'Demo persona switcher — floating button in-app lets you switch between all 7 personas instantly',
@@ -38,10 +38,10 @@ const PORTAL_OPTIONS = [
 ]
 
 const QUICK_ACTIONS = [
-  { label: 'New Issue',      Icon: AlertCircle,  href: '#new-issue' },
-  { label: 'Schedule Clean', Icon: CalendarPlus, href: '#schedule-clean' },
-  { label: 'New Task',       Icon: PlusSquare,   href: '#new-task' },
-  { label: 'Log Incident',   Icon: Flag,         href: '#log-incident' },
+  { label: 'New Issue',      Icon: AlertCircle,  href: '/operator/guest-services/issues' },
+  { label: 'Schedule Clean', Icon: CalendarPlus, href: '/operator/cleaning' },
+  { label: 'New Task',       Icon: PlusSquare,   href: '/operator/operations' },
+  { label: 'Log Incident',   Icon: Flag,         href: '/operator/tickets' },
 ]
 
 interface StoredUser { id?: string; name?: string; role?: string; subRole?: string; jobRole?: string }

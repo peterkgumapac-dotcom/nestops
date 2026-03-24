@@ -17,10 +17,11 @@ const DEMO_SWITCHER_PERSONAS = [
   { userId: 'bl', initials: 'BL', name: 'Bjorn L.',   role: 'staff'    as Role, subRole: 'Maintenance',         jobRole: 'maintenance'     as UserProfile['jobRole'], avatarBg: '#378ADD', emoji: '🔧', label: 'Maintenance' },
   { userId: 'fn', initials: 'FN', name: 'Fatima N.',  role: 'staff'    as Role, subRole: 'Guest Services',      jobRole: 'guest-services'  as UserProfile['jobRole'], avatarBg: '#ec4899', emoji: '🛎️', label: 'Guest Svc' },
   { userId: 'ak', initials: 'AK', name: 'Anna K.',    role: 'staff'    as Role, subRole: 'Cleaning Supervisor', jobRole: 'supervisor'      as UserProfile['jobRole'], avatarBg: '#06b6d4', emoji: '👷', label: 'Supervisor' },
+  { userId: 'cm', initials: 'CM', name: 'Carlos M.',  role: 'staff'    as Role, subRole: 'GS Supervisor',        jobRole: 'gs-supervisor'   as UserProfile['jobRole'], avatarBg: '#8b5cf6', emoji: '🎧', label: 'GS Supervisor' },
   { userId: 'sj', initials: 'SJ', name: 'Sarah J.',   role: 'owner'    as Role,                                                                                  avatarBg: '#7F77DD', emoji: '🏠', label: 'Owner' },
   { userId: 'mc', initials: 'MC', name: 'Michael C.', role: 'owner'    as Role,                                                                                  avatarBg: '#15d492', emoji: '🏠', label: 'Owner' },
 ]
-const USER_ID_MAP: Record<string, string> = { pk: 'u1', ms: 'u3', bl: 'u4', fn: 'u5', ak: 'u7', sj: 'u2', mc: 'u6' }
+const USER_ID_MAP: Record<string, string> = { pk: 'u1', ms: 'u3', bl: 'u4', fn: 'u5', ak: 'u7', cm: 'u8', sj: 'u2', mc: 'u6' }
 
 function fmtAlertTime(date: Date): string {
   const mins = Math.floor((Date.now() - date.getTime()) / 60000)
@@ -110,7 +111,7 @@ export default function MainAppShell({ children }: { children: React.ReactNode }
             {alertsOpen && (
               <>
                 <div style={{ position: 'fixed', inset: 0, zIndex: 199 }} onClick={() => setAlertsOpen(false)} />
-                <div style={{ position: 'absolute', top: 40, right: 0, width: 320, background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.2)', zIndex: 200, overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: 40, right: 0, width: 'min(320px, calc(100vw - 32px))', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.2)', zIndex: 200, overflow: 'hidden' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
                     <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Alerts</span>
                     {activeAlerts.length > 0 && (
@@ -148,14 +149,14 @@ export default function MainAppShell({ children }: { children: React.ReactNode }
           </div>
         </div>
 
-        <main style={{ flex: 1, overflowY: 'auto', padding: 24, position: 'relative', zIndex: 1 }}>
+        <main className="main-content" style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 1 }}>
           {children}
         </main>
       </div>
       <CommandPalette />
 
       {/* Floating demo persona switcher */}
-      <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 300 }}>
+      <div style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 300 }}>
         <AnimatePresence>
           {demoOpen && (
             <motion.div
@@ -166,7 +167,7 @@ export default function MainAppShell({ children }: { children: React.ReactNode }
               style={{
                 background: 'var(--bg-elevated)', border: '1px solid var(--border)',
                 borderRadius: 14, padding: '12px 14px', marginBottom: 10,
-                minWidth: 220, boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                minWidth: 'min(220px, calc(100vw - 32px))', boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
               }}
             >
               <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>

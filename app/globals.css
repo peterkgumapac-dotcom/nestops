@@ -297,6 +297,42 @@ html {
   flex-shrink:0;
 }
 
+/* ── Mobile-first responsive layout ─────────────────────────── */
+.main-content {
+  padding: 16px;
+}
+@media (min-width: 640px) {
+  .main-content { padding: 24px; }
+}
+
+.section-block {
+  margin-bottom: 20px;
+}
+@media (min-width: 640px) {
+  .section-block { margin-bottom: 28px; }
+}
+
+.task-card-inner {
+  padding: 10px 12px;
+}
+@media (min-width: 640px) {
+  .task-card-inner { padding: 12px 14px; }
+}
+
+/* Touch-friendly minimum target (44px height) */
+.touch-btn {
+  min-height: 36px;
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+}
+@media (min-width: 640px) {
+  .touch-btn {
+    min-height: unset;
+    padding: 3px 10px !important;
+    font-size: 11px !important;
+  }
+}
+
 /* ── Dashboard 2-col layout ─────────────────────────────────────────────────── */
 .dash-grid {
   display:grid;
@@ -313,7 +349,7 @@ html {
   body { overflow-x: hidden; }
 
   /* Ensure tap targets are large enough */
-  button { min-height: 36px; }
+  button { min-height: 44px; }
 
   /* Tables scroll horizontally on mobile */
   .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
