@@ -98,14 +98,17 @@ export const STORAGE_LOCATIONS: StorageLocation[] = [
 ]
 
 export const STOCK_ITEMS: StockItem[] = [
-  { id: 'i1', name: 'Toilet Paper (12-pack)', category: 'Consumables', unit: 'pack', inStock: 3, minLevel: 5, warehouseId: 'w1', status: 'low', vendorIds: ['v1', 'v3'], costs: [{ vendorId: 'v1', price: 129 }, { vendorId: 'v3', price: 119 }] },
-  { id: 'i2', name: 'Hand Soap', category: 'Consumables', unit: 'bottle', inStock: 0, minLevel: 4, warehouseId: 'w1', status: 'out', vendorIds: ['v1'], costs: [{ vendorId: 'v1', price: 49 }] },
-  { id: 'i3', name: 'Dishwasher Tablets', category: 'Consumables', unit: 'box', inStock: 8, minLevel: 3, warehouseId: 'w1', status: 'ok', vendorIds: ['v1'], costs: [{ vendorId: 'v1', price: 89 }] },
-  { id: 'i4', name: 'Coffee Pods (Nespresso)', category: 'Consumables', unit: 'box', inStock: 2, minLevel: 5, warehouseId: 'w1', status: 'critical', vendorIds: ['v3'], costs: [{ vendorId: 'v3', price: 89 }] },
-  { id: 'i5', name: 'Bath Towels', category: 'Linen', unit: 'piece', inStock: 12, minLevel: 10, warehouseId: 'w1', status: 'ok', vendorIds: ['v2'], costs: [{ vendorId: 'v2', price: 189 }] },
-  { id: 'i6', name: 'Hand Towels', category: 'Linen', unit: 'piece', inStock: 4, minLevel: 8, warehouseId: 'w1', status: 'critical', vendorIds: ['v2'], costs: [{ vendorId: 'v2', price: 89 }] },
-  { id: 'i7', name: 'Pillow Protectors', category: 'Linen', unit: 'piece', inStock: 16, minLevel: 10, warehouseId: 'w1', status: 'ok', vendorIds: ['v2'], costs: [{ vendorId: 'v2', price: 59 }] },
-  { id: 'i8', name: 'Cleaning Spray (Multi)', category: 'Cleaning', unit: 'bottle', inStock: 6, minLevel: 4, warehouseId: 'w1', status: 'ok', vendorIds: ['v1'], costs: [{ vendorId: 'v1', price: 79 }] },
+  // Consumables — 4 properties × ~4 turns/month; warehouse holds ~1 month supply
+  { id: 'i1', name: 'Toilet Paper (12-pack)', category: 'Consumables', unit: 'pack',   inStock: 18, minLevel: 6,  warehouseId: 'w1', status: 'ok',       vendorIds: ['v1', 'v3'], costs: [{ vendorId: 'v1', price: 129 }, { vendorId: 'v3', price: 119 }] },
+  { id: 'i2', name: 'Hand Soap',              category: 'Consumables', unit: 'bottle', inStock: 12, minLevel: 6,  warehouseId: 'w1', status: 'ok',       vendorIds: ['v1'],       costs: [{ vendorId: 'v1', price: 49 }] },
+  { id: 'i3', name: 'Dishwasher Tablets',     category: 'Consumables', unit: 'box',    inStock: 24, minLevel: 4,  warehouseId: 'w1', status: 'ok',       vendorIds: ['v1'],       costs: [{ vendorId: 'v1', price: 89 }] },
+  { id: 'i4', name: 'Coffee Pods (Nespresso)',category: 'Consumables', unit: 'box',    inStock: 30, minLevel: 8,  warehouseId: 'w1', status: 'ok',       vendorIds: ['v3'],       costs: [{ vendorId: 'v3', price: 89 }] },
+  // Linen — replace cycle ~3 months; 5 sets per property × 4 properties
+  { id: 'i5', name: 'Bath Towels',            category: 'Linen',       unit: 'piece',  inStock: 20, minLevel: 10, warehouseId: 'w1', status: 'ok',       vendorIds: ['v2'],       costs: [{ vendorId: 'v2', price: 189 }] },
+  { id: 'i6', name: 'Hand Towels',            category: 'Linen',       unit: 'piece',  inStock: 16, minLevel: 8,  warehouseId: 'w1', status: 'ok',       vendorIds: ['v2'],       costs: [{ vendorId: 'v2', price: 89 }] },
+  { id: 'i7', name: 'Pillow Protectors',      category: 'Linen',       unit: 'piece',  inStock: 20, minLevel: 10, warehouseId: 'w1', status: 'ok',       vendorIds: ['v2'],       costs: [{ vendorId: 'v2', price: 59 }] },
+  // Cleaning
+  { id: 'i8', name: 'Cleaning Spray (Multi)', category: 'Cleaning',    unit: 'bottle', inStock: 10, minLevel: 4,  warehouseId: 'w1', status: 'ok',       vendorIds: ['v1'],       costs: [{ vendorId: 'v1', price: 79 }] },
 ]
 
 export const PURCHASE_ORDERS: PurchaseOrder[] = [
@@ -145,21 +148,32 @@ export const CONSUMPTION_TEMPLATES: ConsumptionTemplate[] = [
   {
     id: 'tmpl1', name: 'Studio Standard', propertyType: 'Studio',
     items: [
-      { stockItemId: 'i1', qtyPerTurnover: 1 },
-      { stockItemId: 'i2', qtyPerTurnover: 1 },
-      { stockItemId: 'i4', qtyPerTurnover: 2 },
-      { stockItemId: 'i8', qtyPerTurnover: 1 },
+      { stockItemId: 'i1', qtyPerTurnover: 1 },  // 1 pack TP
+      { stockItemId: 'i2', qtyPerTurnover: 1 },  // 1 hand soap
+      { stockItemId: 'i4', qtyPerTurnover: 2 },  // 2 coffee pod boxes
+      { stockItemId: 'i8', qtyPerTurnover: 1 },  // 1 cleaning spray
+    ],
+  },
+  {
+    id: 'tmpl3', name: '1BR Standard', propertyType: '1BR',
+    items: [
+      { stockItemId: 'i1', qtyPerTurnover: 1 },  // 1 pack TP
+      { stockItemId: 'i2', qtyPerTurnover: 1 },  // 1 hand soap
+      { stockItemId: 'i5', qtyPerTurnover: 2 },  // 2 bath towels
+      { stockItemId: 'i6', qtyPerTurnover: 2 },  // 2 hand towels
+      { stockItemId: 'i4', qtyPerTurnover: 2 },  // 2 coffee pod boxes
+      { stockItemId: 'i8', qtyPerTurnover: 1 },  // 1 cleaning spray
     ],
   },
   {
     id: 'tmpl2', name: '2BR Standard', propertyType: '2BR',
     items: [
-      { stockItemId: 'i1', qtyPerTurnover: 2 },
-      { stockItemId: 'i2', qtyPerTurnover: 2 },
-      { stockItemId: 'i5', qtyPerTurnover: 4 },
-      { stockItemId: 'i6', qtyPerTurnover: 4 },
-      { stockItemId: 'i4', qtyPerTurnover: 4 },
-      { stockItemId: 'i8', qtyPerTurnover: 1 },
+      { stockItemId: 'i1', qtyPerTurnover: 2 },  // 2 packs TP
+      { stockItemId: 'i2', qtyPerTurnover: 2 },  // 2 hand soaps
+      { stockItemId: 'i5', qtyPerTurnover: 4 },  // 4 bath towels
+      { stockItemId: 'i6', qtyPerTurnover: 4 },  // 4 hand towels
+      { stockItemId: 'i4', qtyPerTurnover: 4 },  // 4 coffee pod boxes
+      { stockItemId: 'i8', qtyPerTurnover: 1 },  // 1 cleaning spray
     ],
   },
 ]
@@ -196,10 +210,11 @@ const USER_STOCK_FILTER: Record<string, string[]> = {
 
 // Per-persona stock overrides — gives each persona a distinct starting reality
 const PERSONA_STOCK_SNAPSHOTS: Record<string, { id: string; inStock: number; status: StockStatus }[]> = {
-  u3: [ // Maria (Cleaner) — nearly out of everything
-    { id: 'i1', inStock: 2, status: 'critical' },
-    { id: 'i2', inStock: 0, status: 'out' },
-    { id: 'i6', inStock: 2, status: 'critical' },
+  u3: [ // Maria (Cleaner) — mid-week stock; some items running low on her cart
+    { id: 'i1', inStock: 4,  status: 'low' },      // 4 packs left — below reorder
+    { id: 'i2', inStock: 2,  status: 'critical' },  // nearly out of soap
+    { id: 'i4', inStock: 3,  status: 'critical' },  // coffee pods nearly gone
+    { id: 'i6', inStock: 3,  status: 'critical' },  // hand towels low
   ],
   u4: [ // Bjorn (Maintenance) — low on spray, protectors critical
     { id: 'i8', inStock: 1, status: 'critical' },

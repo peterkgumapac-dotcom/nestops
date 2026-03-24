@@ -14,7 +14,7 @@ import { getPTEBadge, isAccessCodeVisible } from '@/lib/utils/pteUtils'
 import { UPSELL_APPROVAL_REQUESTS, type UpsellApprovalRequest } from '@/lib/data/upsellApprovals'
 import { UPSELL_RULES } from '@/lib/data/upsells'
 import { STAFF_MEMBERS } from '@/lib/data/staff'
-import { STOCK_ITEMS, CONSUMPTION_TEMPLATES } from '@/lib/data/inventory'
+import { STOCK_ITEMS, CONSUMPTION_TEMPLATES, STORAGE_LOCATIONS } from '@/lib/data/inventory'
 import type { JobProgress } from '@/lib/data/staff'
 import CleanerApprovalSheet from '@/components/upsells/CleanerApprovalSheet'
 import { PipelineMaintenanceCard } from '@/components/tasks/maintenance/PipelineMaintenanceCard'
@@ -99,6 +99,7 @@ interface PersonalTask {
   propertyId: string
   propertyImage: string
   due: string
+  isDeliveryTask?: boolean
   dueDisplay: string
   description?: string
   pteRequired?: boolean
@@ -122,6 +123,7 @@ const ALL_TASKS: PersonalTask[] = [
   { id: 't8',  title: 'Quarterly inspection — Ocean View',        type: 'Inspection',  priority: 'medium', status: 'this_week', assignee: 'Maria S.',  propertyId: 'p3', propertyName: 'Ocean View Apt',  propertyImage: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=100&q=80',  due: '2026-03-20', dueDisplay: 'Fri 10:00' },
   { id: 't11', title: 'Turnover clean — Downtown Loft',           type: 'Cleaning',    priority: 'medium', status: 'this_week', assignee: 'Maria S.',  propertyId: 'p4', propertyName: 'Downtown Loft',   propertyImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=100&q=80',     due: '2026-03-21', dueDisplay: 'Sat 11:00' },
   { id: 't6',  title: 'Restock toiletry kits — Sunset Villa',     type: 'Inventory',   priority: 'low',    status: 'completed', assignee: 'Maria S.',  propertyId: 'p1', propertyName: 'Sunset Villa',    propertyImage: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=100&q=80',  due: '2026-03-18', dueDisplay: 'Completed Mar 18' },
+  { id: 't-d01', title: 'Deliver extra towels + toiletries', type: 'Cleaning', priority: 'medium', status: 'today', assignee: 'Maria S.', propertyId: 'p2', propertyName: 'Harbor Studio', propertyImage: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=100&q=80', due: '2026-03-23', dueDisplay: 'Today 14:00', isDeliveryTask: true },
   // Anna K. — Cleaning Supervisor (s2) — team tasks
   { id: 't12', title: 'Turnover clean — Downtown Loft',           type: 'Cleaning',    priority: 'high',   status: 'today',     assignee: 'Anna K.',   propertyId: 'p4', propertyName: 'Downtown Loft',   propertyImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=100&q=80',     due: '2026-03-22', dueDisplay: 'Today 09:00' },
   { id: 't13', title: 'Pre-arrival inspection — Harbor Studio',   type: 'Inspection',  priority: 'high',   status: 'today',     assignee: 'Anna K.',   propertyId: 'p2', propertyName: 'Harbor Studio',   propertyImage: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=100&q=80', due: '2026-03-22', dueDisplay: 'Today 16:00' },
@@ -261,7 +263,10 @@ export default function MyTasksPage() {
 
   // Supplies Used
   const [supplyItems, setSupplyItems] = useState<{ id: string; name: string; unit: string; qty: number }[]>([])
-  const [showSupplyPicker, setShowSupplyPicker] = useState(false)
+  const [suppliesOpen, setSuppliesOpen] = useState(false)
+  const [addingSupply, setAddingSupply] = useState<string | null>(null)
+  const [pendingQty, setPendingQty] = useState(1)
+  const [supplyTab, setSupplyTab] = useState('Consumables')
 
   // Feature 3: Start a Task
   const [jobStatuses, setJobStatuses] = useState<Record<string, 'pending' | 'in-progress' | 'done'>>({})
@@ -398,20 +403,28 @@ export default function MyTasksPage() {
     setQaNotes('')
     setShowAccessCode(false)
     setCollapsedCategories(new Set())
-    // Pre-populate supply items from consumption template
-    const prop = PROPERTIES.find(p => p.id === selectedTask?.propertyId)
-    const beds = prop?.beds ?? 1
-    const templateKey = beds <= 1 ? 'Studio' : beds <= 2 ? '1BR' : '2BR'
-    const template = CONSUMPTION_TEMPLATES.find(t => t.propertyType.startsWith(templateKey))
-    if (template) {
-      setSupplyItems(template.items.map(ti => {
-        const stock = STOCK_ITEMS.find(s => s.id === ti.stockItemId)
-        return { id: ti.stockItemId, name: stock?.name ?? ti.stockItemId, unit: stock?.unit ?? 'unit', qty: ti.qtyPerTurnover }
-      }))
+    // Pre-populate supply items from consumption template (skip for delivery tasks)
+    const isDelivery = selectedTask?.isDeliveryTask ?? false
+    if (!isDelivery) {
+      const prop = PROPERTIES.find(p => p.id === selectedTask?.propertyId)
+      const beds = prop?.beds ?? 1
+      const templateKey = beds <= 1 ? 'Studio' : beds <= 2 ? '1BR' : '2BR'
+      const template = CONSUMPTION_TEMPLATES.find(t => t.propertyType.startsWith(templateKey))
+      if (template) {
+        setSupplyItems(template.items.map(ti => {
+          const stock = STOCK_ITEMS.find(s => s.id === ti.stockItemId)
+          return { id: ti.stockItemId, name: stock?.name ?? ti.stockItemId, unit: stock?.unit ?? 'unit', qty: ti.qtyPerTurnover }
+        }))
+      } else {
+        setSupplyItems([])
+      }
     } else {
       setSupplyItems([])
     }
-    setShowSupplyPicker(false)
+    setSuppliesOpen(false)
+    setAddingSupply(null)
+    setPendingQty(1)
+    setSupplyTab('Consumables')
   }, [selectedTask?.id])
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
@@ -1214,46 +1227,79 @@ export default function MyTasksPage() {
               )
             })}
 
-            {/* Supplies Used */}
-            <div style={{ marginTop: 8, marginBottom: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
-                  letterSpacing: '0.08em', color: 'var(--text-muted)' }}>Supplies Used</span>
-                <button onClick={() => setShowSupplyPicker(p => !p)}
-                  style={{ fontSize: 11, color: accent, background: 'none', border: 'none', cursor: 'pointer' }}>
-                  + Add item
-                </button>
-              </div>
-              {supplyItems.map(item => (
-                <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '6px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                  <span style={{ fontSize: 13, color: 'var(--text-primary)', flex: 1 }}>{item.name}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <button onClick={() => setSupplyItems(p => p.map(i => i.id === item.id ? {...i, qty: Math.max(0, i.qty - 1)} : i))}
-                      style={stepperBtn}>−</button>
-                    <span style={{ fontSize: 13, minWidth: 24, textAlign: 'center' }}>{item.qty}</span>
-                    <button onClick={() => setSupplyItems(p => p.map(i => i.id === item.id ? {...i, qty: i.qty + 1} : i))}
-                      style={stepperBtn}>+</button>
-                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.unit}</span>
-                    <button onClick={() => setSupplyItems(p => p.filter(i => i.id !== item.id))}
-                      style={{ fontSize: 14, color: 'var(--text-subtle)', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
-                  </div>
-                </div>
-              ))}
-              {showSupplyPicker && (
-                <div style={{ marginTop: 8, border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
-                  {STOCK_ITEMS.filter(s => !supplyItems.find(i => i.id === s.id)).map(s => (
-                    <button key={s.id}
-                      onClick={() => { setSupplyItems(p => [...p, { id: s.id, name: s.name, unit: s.unit, qty: 1 }]); setShowSupplyPicker(false) }}
-                      style={{ width: '100%', textAlign: 'left', padding: '10px 14px', fontSize: 13,
-                        background: 'none', border: 'none', borderBottom: '1px solid var(--border-subtle)',
-                        cursor: 'pointer', color: 'var(--text-primary)' }}>
-                      {s.name} <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>({s.unit})</span>
+            {/* Supplies Used / Items to Deliver — collapsible */}
+            {(() => {
+              const isDelivery = selectedTask.isDeliveryTask ?? false
+              const sectionLabel = isDelivery ? 'Items to Deliver' : 'Supplies Used'
+              const stockStatusColor = (s: string) =>
+                s === 'ok' ? '#10b981' : s === 'low' ? '#d97706' : s === 'critical' ? '#f97316' : '#ef4444'
+              const totalQty = supplyItems.reduce((sum, i) => sum + i.qty, 0)
+              return (
+                <div style={{ marginTop: 8, marginBottom: 16, border: '1px solid var(--border)', borderRadius: 10, overflow: 'visible' }}>
+                  {/* Collapsible header */}
+                  <button
+                    onClick={() => setSuppliesOpen(o => !o)}
+                    style={{
+                      width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer',
+                    }}
+                  >
+                    <ChevronDown size={13} style={{ color: 'var(--text-muted)', transform: suppliesOpen ? 'none' : 'rotate(-90deg)', transition: 'transform 0.2s', flexShrink: 0 }} />
+                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>
+                      {sectionLabel}
+                    </span>
+                    {!suppliesOpen && supplyItems.length > 0 && (
+                      <span style={{ fontSize: 11, color: 'var(--text-subtle)', marginLeft: 4 }}>
+                        {supplyItems.length} item{supplyItems.length !== 1 ? 's' : ''} · {totalQty} {totalQty === 1 ? 'unit' : 'units'}
+                      </span>
+                    )}
+                    {!suppliesOpen && supplyItems.length === 0 && (
+                      <span style={{ fontSize: 11, color: 'var(--text-subtle)', marginLeft: 4 }}>none logged yet</span>
+                    )}
+                    <button
+                      onClick={e => { e.stopPropagation(); setAddingSupply('__picker__'); setSuppliesOpen(true) }}
+                      style={{ marginLeft: 'auto', fontSize: 11, color: accent, background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}
+                    >
+                      + Add item
                     </button>
-                  ))}
+                  </button>
+
+                  {/* Expanded content */}
+                  {suppliesOpen && (
+                    <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '8px 14px 12px' }}>
+                      {supplyItems.length === 0 && (
+                        <div style={{ fontSize: 12, color: 'var(--text-subtle)', fontStyle: 'italic', padding: '8px 0' }}>
+                          No items logged — tap "+ Add item" to select from warehouse
+                        </div>
+                      )}
+                      {supplyItems.map(item => {
+                        const stockItem = STOCK_ITEMS.find(s => s.id === item.id)
+                        const statusColor = stockStatusColor(stockItem?.status ?? 'ok')
+                        return (
+                          <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>{item.name}</span>
+                              {stockItem && (
+                                <span style={{ fontSize: 10, color: statusColor, marginLeft: 6 }}>
+                                  ({stockItem.inStock} in stock · {stockItem.status})
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                              <button onClick={() => setSupplyItems(p => p.map(i => i.id === item.id ? {...i, qty: Math.max(0, i.qty - 1)} : i))} style={stepperBtn}>−</button>
+                              <span style={{ fontSize: 13, minWidth: 22, textAlign: 'center', fontWeight: 600 }}>{item.qty}</span>
+                              <button onClick={() => setSupplyItems(p => p.map(i => i.id === item.id ? {...i, qty: i.qty + 1} : i))} style={stepperBtn}>+</button>
+                              <span style={{ fontSize: 11, color: 'var(--text-muted)', minWidth: 30 }}>{item.unit}</span>
+                              <button onClick={() => setSupplyItems(p => p.filter(i => i.id !== item.id))} style={{ fontSize: 14, color: 'var(--text-subtle)', background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>×</button>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              )
+            })()}
 
             {/* QA Step — appears when all checklist items are checked */}
             {progressPct === 100 && (
@@ -1428,6 +1474,141 @@ export default function MyTasksPage() {
           </div>
         )}
       </AppDrawer>
+
+      {/* Warehouse Supply Picker Overlay */}
+      {addingSupply === '__picker__' && selectedTask?.type === 'Cleaning' && (() => {
+        const propId = selectedTask.propertyId
+        const locations = STORAGE_LOCATIONS.filter(l => l.assignedPropertyIds.includes(propId))
+        const locationLabel = locations.map(l => l.name).join(' + ') || 'Oslo Central Warehouse'
+        const categories = [...new Set(STOCK_ITEMS.map(s => s.category))]
+        const stockStatusColor = (st: string) =>
+          st === 'ok' ? '#10b981' : st === 'low' ? '#d97706' : st === 'critical' ? '#f97316' : '#ef4444'
+        const stockStatusLabel = (st: string) =>
+          st === 'ok' ? 'OK' : st === 'low' ? 'Low' : st === 'critical' ? 'Critical' : 'Out'
+        const filteredItems = STOCK_ITEMS.filter(s =>
+          s.category === supplyTab && !supplyItems.find(i => i.id === s.id)
+        )
+        // Default pendingQty for a selected item — use template qty if available
+        const prop = PROPERTIES.find(p => p.id === propId)
+        const beds = prop?.beds ?? 1
+        const templateKey = beds <= 1 ? 'Studio' : beds <= 2 ? '1BR' : '2BR'
+        const template = CONSUMPTION_TEMPLATES.find(t => t.propertyType.startsWith(templateKey))
+        return (
+          <div
+            style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+            onClick={() => setAddingSupply(null)}
+          >
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{ width: '100%', maxWidth: 480, background: 'var(--bg-surface)', borderRadius: '16px 16px 0 0', borderTop: '1px solid var(--border)', paddingBottom: 32, maxHeight: '75vh', display: 'flex', flexDirection: 'column' }}
+            >
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px 12px' }}>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Add supply item</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>From: {locationLabel}</div>
+                </div>
+                <button onClick={() => setAddingSupply(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 20, cursor: 'pointer', lineHeight: 1 }}>✕</button>
+              </div>
+
+              {/* Category tabs */}
+              <div style={{ display: 'flex', gap: 6, padding: '0 18px 12px', borderBottom: '1px solid var(--border-subtle)' }}>
+                {categories.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => { setSupplyTab(cat); setAddingSupply('__picker__') }}
+                    style={{
+                      padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: 'pointer',
+                      border: `1px solid ${supplyTab === cat ? accent : 'var(--border)'}`,
+                      background: supplyTab === cat ? `${accent}1a` : 'transparent',
+                      color: supplyTab === cat ? accent : 'var(--text-muted)',
+                    }}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              {/* Items list */}
+              <div style={{ overflowY: 'auto', flex: 1 }}>
+                {filteredItems.length === 0 && (
+                  <div style={{ padding: '20px 18px', fontSize: 13, color: 'var(--text-subtle)', fontStyle: 'italic' }}>
+                    All {supplyTab.toLowerCase()} items already added
+                  </div>
+                )}
+                {filteredItems.map(s => {
+                  const isSelecting = addingSupply === s.id
+                  const templateQty = template?.items.find(ti => ti.stockItemId === s.id)?.qtyPerTurnover ?? 1
+                  return (
+                    <div key={s.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      {/* Item row */}
+                      <div style={{ display: 'flex', alignItems: 'center', padding: '11px 18px', gap: 10 }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{s.name}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{s.inStock} in stock</div>
+                        </div>
+                        <span style={{
+                          fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 10,
+                          background: `${stockStatusColor(s.status)}18`,
+                          color: stockStatusColor(s.status),
+                          border: `1px solid ${stockStatusColor(s.status)}30`,
+                          flexShrink: 0,
+                        }}>
+                          {stockStatusLabel(s.status)}
+                        </span>
+                        <button
+                          onClick={() => {
+                            if (isSelecting) {
+                              setAddingSupply('__picker__')
+                            } else {
+                              setAddingSupply(s.id)
+                              setPendingQty(templateQty)
+                            }
+                          }}
+                          style={{
+                            fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 8,
+                            border: `1px solid ${isSelecting ? accent : 'var(--border)'}`,
+                            background: isSelecting ? `${accent}18` : 'var(--bg-elevated)',
+                            color: isSelecting ? accent : 'var(--text-muted)',
+                            cursor: 'pointer', flexShrink: 0,
+                          }}
+                        >
+                          {isSelecting ? 'Cancel' : 'Select →'}
+                        </button>
+                      </div>
+
+                      {/* Confirm step — inline below the row */}
+                      {isSelecting && (
+                        <div style={{ padding: '10px 18px 14px', background: `${accent}06`, borderTop: `1px solid ${accent}20` }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                            <span style={{ fontSize: 12, color: 'var(--text-muted)', minWidth: 30 }}>Qty:</span>
+                            <button onClick={() => setPendingQty(q => Math.max(1, q - 1))} style={stepperBtn}>−</button>
+                            <span style={{ fontSize: 14, fontWeight: 700, minWidth: 28, textAlign: 'center', color: 'var(--text-primary)' }}>{pendingQty}</span>
+                            <button onClick={() => setPendingQty(q => q + 1)} style={stepperBtn}>+</button>
+                            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{s.unit}</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setSupplyItems(p => [...p, { id: s.id, name: s.name, unit: s.unit, qty: pendingQty }])
+                              setAddingSupply(null)
+                            }}
+                            style={{
+                              width: '100%', padding: '9px', borderRadius: 8, border: 'none',
+                              background: accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                            }}
+                          >
+                            Add to list
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Maintenance Task Drawer */}
       {(() => {
