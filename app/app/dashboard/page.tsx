@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { ChevronRight, Plus, Check } from 'lucide-react'
+import { ChevronRight, Plus, Check, Building2, Users, Ticket, Package, Sparkles, ListTodo, Clock, CreditCard } from 'lucide-react'
 import Link from 'next/link'
 import { useRole } from '@/context/RoleContext'
 import type { UserProfile } from '@/context/RoleContext'
@@ -1258,14 +1258,17 @@ export default function AppDashboard() {
           {/* 8 stat cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 10 }}>
             {[
-              { label: 'Properties',    value: PROPERTIES.length,                                              icon: '🏠', href: '/operator/properties' },
-              { label: 'Owners',        value: OWNERS.length,                                                  icon: '👤', href: '/owner' },
-              { label: 'Requests',      value: REQUESTS.filter(r => r.status === 'open' || r.status === 'pending').length, icon: '🎫', href: '/operator/tickets' },
-              { label: 'Stock Alerts',  value: 4,                                                              icon: '📦', href: '/operator/inventory' },
+              { label: 'Properties',   value: PROPERTIES.length,                                                              icon: <Building2 size={18} strokeWidth={1.5} />, href: '/operator/properties' },
+              { label: 'Owners',       value: OWNERS.length,                                                                   icon: <Users size={18} strokeWidth={1.5} />,     href: '/owner' },
+              { label: 'Requests',     value: REQUESTS.filter(r => r.status === 'open' || r.status === 'pending').length,      icon: <Ticket size={18} strokeWidth={1.5} />,    href: '/operator/tickets' },
+              { label: 'Low Stock',    value: 4,                                                                               icon: <Package size={18} strokeWidth={1.5} />,   href: '/operator/inventory' },
             ].map(stat => (
               <Link key={stat.label} href={stat.href} style={{ textDecoration: 'none' }}>
-                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '14px 16px', cursor: 'pointer', transition: 'border-color 0.15s' }}>
-                  <div style={{ fontSize: 16, marginBottom: 6 }}>{stat.icon}</div>
+                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '14px 16px', cursor: 'pointer', transition: 'all 0.15s' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.12)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ''; (e.currentTarget as HTMLDivElement).style.borderColor = C.border; }}
+                >
+                  <div style={{ color: C.muted, marginBottom: 8 }}>{stat.icon}</div>
                   <div style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 1 }}>{stat.value}</div>
                   <div style={{ fontSize: 11, color: C.muted, fontWeight: 500 }}>{stat.label}</div>
                 </div>
@@ -1274,14 +1277,17 @@ export default function AppDashboard() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 24 }}>
             {[
-              { label: 'Cleanings Today', value: TODAY_CHECKINS.length,                                       icon: '🧹', href: '/operator/cleaning' },
-              { label: 'Open Tasks',      value: 6,                                                            icon: '✅', href: '/operator/operations' },
-              { label: 'Overdue',         value: 2,                                                            icon: '⏰', href: '/operator/operations', alert: true },
-              { label: 'Approvals',       value: APPROVALS.filter(a => approvalStatuses[a.id] === 'pending').length, icon: '💳', href: '/operator/tickets', alert: APPROVALS.filter(a => approvalStatuses[a.id] === 'pending').length > 0 },
+              { label: 'Cleanings Today',  value: TODAY_CHECKINS.length,                                                       icon: <Sparkles size={18} strokeWidth={1.5} />,  href: '/operator/cleaning' },
+              { label: 'Tasks In Motion',  value: 6,                                                                           icon: <ListTodo size={18} strokeWidth={1.5} />,  href: '/operator/operations' },
+              { label: 'Needs Attention',  value: 2,                                                                           icon: <Clock size={18} strokeWidth={1.5} />,     href: '/operator/operations', alert: true },
+              { label: 'Approvals',        value: APPROVALS.filter(a => approvalStatuses[a.id] === 'pending').length,          icon: <CreditCard size={18} strokeWidth={1.5} />, href: '/operator/tickets', alert: APPROVALS.filter(a => approvalStatuses[a.id] === 'pending').length > 0 },
             ].map(stat => (
               <Link key={stat.label} href={stat.href} style={{ textDecoration: 'none' }}>
-                <div style={{ background: C.card, border: `1px solid ${(stat as {alert?: boolean}).alert ? 'rgba(239,68,68,0.4)' : C.border}`, borderRadius: 10, padding: '14px 16px', cursor: 'pointer' }}>
-                  <div style={{ fontSize: 16, marginBottom: 6 }}>{stat.icon}</div>
+                <div style={{ background: C.card, border: `1px solid ${(stat as {alert?: boolean}).alert ? 'rgba(239,68,68,0.4)' : C.border}`, borderRadius: 10, padding: '14px 16px', cursor: 'pointer', transition: 'all 0.15s' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ''; }}
+                >
+                  <div style={{ color: (stat as {alert?: boolean}).alert ? '#ef4444' : C.muted, marginBottom: 8 }}>{stat.icon}</div>
                   <div style={{ fontSize: 22, fontWeight: 800, color: (stat as {alert?: boolean}).alert ? '#ef4444' : C.text, marginBottom: 1 }}>{stat.value}</div>
                   <div style={{ fontSize: 11, color: C.muted, fontWeight: 500 }}>{stat.label}</div>
                 </div>
@@ -1524,7 +1530,10 @@ export default function AppDashboard() {
                       padding: '10px 14px',
                       borderBottom: i < arr.length - 1 ? `1px solid ${C.border}` : 'none',
                     }}>
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: item.color, flexShrink: 0, marginTop: 5 }} />
+                      {i === 0
+                        ? <div className="live-dot" style={{ flexShrink: 0, marginTop: 5 }} />
+                        : <div style={{ width: 6, height: 6, borderRadius: '50%', background: item.color, flexShrink: 0, marginTop: 5 }} />
+                      }
                       <div style={{ flex: 1, minWidth: 0 }}>
                         {isRich ? (
                           <>

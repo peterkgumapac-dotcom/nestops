@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NestOps — Your PMS runs bookings. NestOps runs everything after.</title>
+<meta name="description" content="NestOps is the operations platform for short-term rental teams. Replace Breezeway, SuiteOp, Asana, Notion, and WhatsApp with one platform that knows your properties, your guests, and your team.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://nestops.io/landing.html">
+<meta property="og:title" content="NestOps — Your PMS runs bookings. NestOps runs everything after.">
+<meta property="og:description" content="Replace 5+ tools with one operations platform built for STR teams. PTE system, daily briefing, inventory auto-deduction, owner payments. 12 features no competitor has.">
+<meta property="og:image" content="https://nestops.io/og-image.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#080b12;--bg2:#0f1219;--bg3:#161b26;--card:#111722;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.1);--text:#e8e6e1;--text2:#9ca3af;--text3:#5a5f6b;--green:#1D9E75;--green2:#15d492;--green-bg:rgba(29,158,117,0.08);--green-border:rgba(29,158,117,0.2);--red:#e24b4a;--red-bg:rgba(226,75,74,0.08);--amber:#ef9f27;--blue:#378ADD;--sans:'Outfit',system-ui,sans-serif;--mono:'JetBrains Mono',monospace}
@@ -37,7 +45,7 @@ nav.scrolled{background:rgba(8,11,18,0.85);backdrop-filter:blur(12px);border-bot
 
 /* Section */
 .section{padding:100px 0;position:relative}
-.section-divider{height:1px;background:var(--border);max-width:1120px;margin:0 auto}
+.section-divider{height:1px;background:linear-gradient(90deg,transparent 0%,rgba(29,158,117,0.45) 30%,rgba(21,212,146,0.65) 50%,rgba(29,158,117,0.45) 70%,transparent 100%);max-width:1120px;margin:0 auto}
 
 /* Hero */
 .hero{padding:140px 0 80px;text-align:center;position:relative;overflow:hidden}
@@ -105,7 +113,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 .cta-ghost:hover{border-color:var(--border2);color:var(--text)}
 
 /* Social Proof */
-.proof{text-align:center;padding:40px 0}
+.proof{text-align:center;padding:24px 0}
 .proof-line{font-size:13px;color:var(--text3);line-height:1.7}
 .proof-line strong{color:var(--text2);font-weight:500}
 
@@ -218,7 +226,7 @@ footer p{font-size:12px;color:var(--text3)}
 .marquee-wrap::before{left:0;background:linear-gradient(90deg,var(--bg),transparent)}
 .marquee-wrap::after{right:0;background:linear-gradient(270deg,var(--bg),transparent)}
 .marquee-label{text-align:center;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:14px}
-.marquee-track{display:flex;gap:48px;animation:marqueeScroll 30s linear infinite;width:max-content}
+.marquee-track{display:flex;gap:48px;animation:marqueeScroll 30s linear infinite;width:max-content;will-change:transform}
 .marquee-track:hover{animation-play-state:paused}
 @keyframes marqueeScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .marquee-item{display:flex;align-items:center;gap:8px;white-space:nowrap;font-size:13px;color:var(--text3);font-weight:500;flex-shrink:0;opacity:0.5;transition:opacity 0.2s}
@@ -486,6 +494,9 @@ footer p{font-size:12px;color:var(--text3)}
 .calc-card{padding:20px}
 /* Container tighter */
 .container{padding:0 16px}
+/* Touch targets */
+.feat-cta{padding:11px 20px;font-size:13px}
+.chat-btn{padding:9px 16px;font-size:12px;min-height:40px}
 }
 @media(max-width:480px){
 /* Nav CTA compact */
@@ -497,7 +508,57 @@ footer p{font-size:12px;color:var(--text3)}
 /* MB phone smaller */
 .mb-phone{width:240px;height:420px}
 .mb-filmbar{width:240px}
+/* Tighter padding */
+.mb-wrap{padding:0 16px}
+.sm-side{min-height:200px}
 }
+
+/* Hamburger button */
+.nav-hamburger{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:44px;height:44px;background:none;border:none;cursor:pointer;padding:0;border-radius:8px;flex-shrink:0}
+.nav-hamburger span{display:block;width:20px;height:2px;background:var(--text);border-radius:2px;transition:all 0.25s ease}
+.nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.nav-hamburger.open span:nth-child(2){opacity:0}
+.nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+/* Mobile nav drawer */
+.nav-mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:var(--bg2);border-bottom:1px solid var(--border2);z-index:99;padding:16px 20px;flex-direction:column;gap:4px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.nav-mobile-menu.open{display:flex}
+.nav-mobile-menu a{display:block;padding:12px 14px;border-radius:10px;font-size:15px;color:var(--text);text-decoration:none;transition:background .15s}
+.nav-mobile-menu a:hover{background:var(--bg3)}
+.nav-mobile-menu .nav-mobile-cta{display:block;margin-top:8px;padding:13px 14px;border-radius:10px;background:var(--green);color:#fff;font-weight:600;font-size:15px;text-align:center;text-decoration:none}
+
+/* Range slider touch target */
+input[type=range]{padding:12px 0;height:auto;cursor:pointer}
+
+@media(max-width:768px){
+.nav-hamburger{display:flex}
+.nav-cta{display:none}
+}
+
+/* ── Numbers bar ── */
+@media(max-width:640px){
+  .numbers-bar-item{border-right:none !important;border-bottom:1px solid var(--border)}
+  .numbers-bar-item:last-child{border-bottom:none}
+}
+
+/* ── Moats section ── */
+.moats-section{padding:80px 0;position:relative}
+.moats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:40px}
+.moat-card{padding:20px 22px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);transition:border-color .15s}
+.moat-card:hover{border-color:rgba(29,158,117,0.3)}
+.moat-icon{font-size:18px;margin-bottom:10px}
+.moat-title{font-size:14px;font-weight:600;color:#fff;margin-bottom:6px;letter-spacing:-0.01em}
+.moat-desc{font-size:12px;color:var(--text2);line-height:1.6}
+@media(max-width:768px){.moats-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.moats-grid{grid-template-columns:1fr}}
+
+/* ── PTE badge statuses ── */
+.pte-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.pte-pending{background:rgba(239,159,39,.15);color:#ef9f27}
+.pte-locked{background:rgba(226,75,74,.15);color:#e24b4a}
+.pte-granted{background:rgba(29,158,117,.15);color:#15d492}
+.pte-expired{background:rgba(100,100,120,.15);color:#7878a0}
+.pte-timer{font-family:var(--mono);font-size:36px;font-weight:700;letter-spacing:-0.02em;line-height:1}
 </style>
 </head>
 <body>
@@ -510,16 +571,27 @@ footer p{font-size:12px;color:var(--text3)}
 <div class="nav-left">
 <div class="nav-logo">N</div>
 <span class="nav-name">NestOps</span>
-<span class="nav-tag">v3.1</span>
+<span class="nav-tag">v4.0</span>
 </div>
 <div class="nav-links">
-<a onclick="window.open('nestops-features.html','_blank');return false" href="javascript:void(0)">Features</a>
-<a onclick="window.open('nestops-pricing.html','_blank');return false" href="javascript:void(0)">Pricing</a>
+<a href="#features">Features</a>
+<a href="#pricing">Pricing</a>
 <a href="/login" style="color:var(--text)">Sign in</a>
 </div>
 <a href="/login" class="nav-cta">Try free</a>
+<button class="nav-hamburger" id="navHamburger" aria-label="Open navigation menu" aria-expanded="false">
+  <span></span><span></span><span></span>
+</button>
 </div>
 </nav>
+
+<!-- Mobile nav menu -->
+<div class="nav-mobile-menu" id="navMobileMenu" role="navigation" aria-label="Mobile navigation">
+  <a href="#features" onclick="closeMobileNav()">Features</a>
+  <a href="#pricing" onclick="closeMobileNav()">Pricing</a>
+  <a href="/login" onclick="closeMobileNav()" style="color:var(--text)">Sign in</a>
+  <a href="/login" class="nav-mobile-cta" onclick="closeMobileNav()">Try free →</a>
+</div>
 
 <!-- HERO -->
 <section class="hero">
@@ -527,8 +599,8 @@ footer p{font-size:12px;color:var(--text3)}
 <div class="dot-grid"></div>
 <div class="container" style="position:relative;z-index:1">
 <div class="hero-badge"><span class="pulse"></span>Your PMS runs bookings. NestOps runs everything after.</div>
-<h1>Your tools don't talk<br><span>to each other.</span></h1>
-<p class="hero-sub">Select your current stack. See what NestOps replaces — and what it costs you today.</p>
+<h1>Your PMS runs bookings.<br><span>NestOps runs everything after.</span></h1>
+<p class="hero-sub">Right now you're spending $300–600/month on tools that don't talk to each other. NestOps replaces them — and does 12 things none of them can.</p>
 
 <!-- CALCULATOR -->
 <div class="calc-wrap">
@@ -557,6 +629,8 @@ footer p{font-size:12px;color:var(--text3)}
 </div>
 </section>
 
+<div class="section-divider"></div>
+
 <!-- SOCIAL PROOF -->
 <div class="proof"><div class="container">
 <p class="proof-line">Built by a COO who manages thousands of listings globally. <strong>We know your pain and struggles.</strong></p>
@@ -569,6 +643,34 @@ footer p{font-size:12px;color:var(--text3)}
 <div class="replaces-badge"><span class="x">&#x2715;</span> SuiteOp <span class="arrow">&#8594;</span> Guest Experience</div>
 </div>
 </div></div>
+
+<div class="section-divider"></div>
+
+<!-- NUMBERS BAR -->
+<div style="padding:20px 0;text-align:center">
+<div class="container">
+<div style="display:flex;justify-content:center;gap:0;flex-wrap:wrap;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg3)">
+<div style="flex:1;min-width:140px;padding:16px 20px;border-right:1px solid var(--border);text-align:center">
+<div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--green2);letter-spacing:-0.02em">$189–585</div>
+<div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.4">per month on tools<br>that don't talk to each other</div>
+</div>
+<div style="flex:1;min-width:140px;padding:16px 20px;border-right:1px solid var(--border);text-align:center">
+<div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--green2);letter-spacing:-0.02em">123 min</div>
+<div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.4">lost per day<br>before a room is cleaned</div>
+</div>
+<div style="flex:1;min-width:140px;padding:16px 20px;border-right:1px solid var(--border);text-align:center">
+<div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--green2);letter-spacing:-0.02em">12</div>
+<div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.4">features no competitor<br>offers — even partially</div>
+</div>
+<div style="flex:1;min-width:140px;padding:16px 20px;text-align:center">
+<div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--green2);letter-spacing:-0.02em">5+</div>
+<div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.4">tools replaced<br>by one platform</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="section-divider"></div>
 
 <!-- INTEGRATIONS MARQUEE -->
 <div class="marquee-wrap">
@@ -716,6 +818,120 @@ footer p{font-size:12px;color:var(--text3)}
 </div>
 </div>
 </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── PTE: Property-Tech Entry ─────────────────────────────────────────── -->
+<section class="mb-section reveal" id="feat-pte">
+<div class="mb-wrap">
+
+<!-- Left: copy -->
+<div class="mb-left">
+<div class="mb-eyebrow">PTE &mdash; Property Tech Entry</div>
+<h2 class="mb-h2">Your tech is at the door.<br><span style="color:var(--green)">A guest is inside.</span><br>Does your software know?</h2>
+<p class="mb-desc">Maria arrives at Ocean View Apt at 9am. There&rsquo;s a late checkout guest inside. NestOps automatically holds her access code, flags the conflict in her briefing, and notifies the guest &mdash; without a single message from you.</p>
+<div class="mb-stat">
+<div class="mb-stat-dot" style="background:var(--red)"></div>
+<div>
+<div class="mb-stat-num" style="color:var(--text)">0</div>
+<div class="mb-stat-label">competitors have this.<br><strong style="color:var(--text)">The 30-second demo that closes deals.</strong></div>
+</div>
+</div>
+<a href="/login" class="feat-cta">See PTE in action <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"><path d="M6 3l5 5-5 5"/></svg></a>
+</div>
+
+<!-- Right: phone mockup -->
+<div class="mb-right">
+<div class="mb-phone-glow" id="pte-glow" style="background:radial-gradient(ellipse,rgba(226,75,74,.06) 0%,transparent 65%)"></div>
+<div class="mb-phone">
+<div class="mb-notch"></div>
+<div class="mb-island"></div>
+
+<!-- Slide 1: Task + PENDING (PTE scan running) -->
+<div class="mb-slide mb-nos on" id="pte-s1">
+<div class="mb-nos-hdr">
+<div class="mb-nos-wm"><div class="mb-nos-logo" style="background:var(--green)">N</div><span class="mb-nos-nm">NestOps</span><span class="mb-nos-vr">PTE</span></div>
+<div class="mb-nos-greet">Maria&rsquo;s Day</div>
+<div class="mb-nos-rolerow"><span class="mb-nos-badge" style="background:var(--green)">Cleaner</span><span class="mb-nos-meta">Ocean View Apt &middot; 09:00</span></div>
+</div>
+<div class="mb-nos-cards">
+<div class="mb-nc mb-nc-amber show">
+<div class="mb-nc-t">Checking guest status&hellip;</div>
+<div class="mb-nc-s" style="margin-top:2px">Ocean View Apt &middot; PTE scan running</div>
+<div style="display:flex;align-items:center;gap:5px;margin-top:5px"><span class="pte-badge pte-pending">PENDING</span></div>
+</div>
+<div class="mb-nc mb-nc-dark show" style="margin-top:4px">
+<div class="mb-nc-t">Access Code</div>
+<div style="font-size:18px;font-weight:700;color:#374151;letter-spacing:6px;margin-top:3px;font-family:var(--mono)">&#9679;&#9679;&#9679;&#9679;</div>
+<div class="mb-nc-s">Verifying guest status first</div>
+</div>
+</div>
+</div>
+
+<!-- Slide 2: Code LOCKED — guest detected -->
+<div class="mb-slide mb-nos" id="pte-s2">
+<div style="background:var(--bg2);height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center">
+<div style="width:64px;height:64px;border-radius:50%;background:rgba(226,75,74,.12);border:2px solid rgba(226,75,74,.35);display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e24b4a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+</div>
+<span class="pte-badge pte-locked" style="font-size:12px;padding:5px 14px;margin-bottom:10px">ACCESS RESTRICTED</span>
+<div style="font-size:11px;color:#e24b4a;font-weight:600;margin-bottom:6px">Active guest detected</div>
+<div style="font-size:10px;color:#6b7280;line-height:1.5">Late checkout: 11:00am<br>Maria S. &mdash; entry held</div>
+<div style="margin-top:12px;padding:10px 14px;border-radius:8px;background:#111827;border:1px solid #1f2937;width:100%">
+<div style="font-size:8px;color:#4b5563;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Access Code</div>
+<div style="font-size:22px;font-weight:700;letter-spacing:6px;color:#374151;font-family:var(--mono)">&#9679;&#9679;&#9679;&#9679;</div>
+<div style="font-size:8px;color:#e24b4a;margin-top:3px">Locked until resolved</div>
+</div>
+</div>
+</div>
+
+<!-- Slide 3: Guest APPROVED → code revealed -->
+<div class="mb-slide mb-nos" id="pte-s3">
+<div style="background:var(--bg2);height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center">
+<div style="width:64px;height:64px;border-radius:50%;background:rgba(29,158,117,.12);border:2px solid rgba(29,158,117,.35);display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#15d492" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+</div>
+<span class="pte-badge pte-granted" style="font-size:12px;padding:5px 14px;margin-bottom:10px">GUEST APPROVED</span>
+<div style="font-size:11px;color:var(--green2);font-weight:600;margin-bottom:6px">Window: 09:45 &ndash; 11:00</div>
+<div style="font-size:10px;color:#6b7280;line-height:1.5">Guest extended +1 hr<br>Maria S. &mdash; go now</div>
+<div style="margin-top:12px;padding:10px 14px;border-radius:8px;background:rgba(29,158,117,.06);border:1px solid rgba(29,158,117,.25);width:100%">
+<div style="font-size:8px;color:var(--green);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Access Code</div>
+<div style="font-size:22px;font-weight:700;letter-spacing:4px;color:var(--green2);font-family:var(--mono)">4821</div>
+<div style="font-size:8px;color:#4b5563;margin-top:3px">Active for 1 hr 15 min</div>
+</div>
+</div>
+</div>
+
+<!-- Slide 4: Timer → EXPIRED → re-locks -->
+<div class="mb-slide mb-nos" id="pte-s4">
+<div style="background:var(--bg2);height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center">
+<div style="margin-bottom:16px">
+<div style="font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:#4b5563;margin-bottom:6px">Window closing</div>
+<div class="pte-timer" id="pte-countdown" style="color:var(--amber)">00:00:08</div>
+<div style="height:4px;border-radius:2px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:8px;width:180px">
+<div id="pte-progbar" style="height:100%;width:100%;background:var(--amber);border-radius:2px;transition:width .8s linear"></div>
+</div>
+</div>
+<div id="pte-lock-icon" style="width:64px;height:64px;border-radius:50%;background:rgba(100,100,120,.12);border:2px solid rgba(100,100,120,.25);display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+<svg id="pte-lock-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7878a0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+</div>
+<span class="pte-badge pte-expired" id="pte-exp-badge" style="font-size:12px;padding:5px 14px;margin-bottom:10px;display:none">EXPIRED &middot; CODE RE-LOCKED</span>
+<div style="font-size:10px;color:#6b7280;line-height:1.5">Window closes automatically.<br>No action needed from you.</div>
+</div>
+</div>
+
+</div><!-- /mb-phone -->
+
+<!-- Play overlay -->
+<div class="mb-overlay" id="pte-overlay">
+<div style="font-size:28px;line-height:1">🔐</div>
+<div style="font-size:12px;font-weight:600;color:#fff;text-align:center;line-height:1.6">Maria is at the door<br><span style="font-size:10px;color:#6b7280;font-weight:400">A guest is inside &mdash; 20 seconds</span></div>
+<button class="mb-play-btn" onclick="pteStart()">&#9654; Watch PTE</button>
+</div>
+
+</div><!-- /mb-right -->
+</div><!-- /mb-wrap -->
 </section>
 
 <div class="section-divider"></div>
@@ -928,7 +1144,7 @@ footer p{font-size:12px;color:var(--text3)}
 <div style="display:flex;gap:6px;align-items:center"><span style="font-size:10px;color:var(--text3)">🔍</span><span style="font-size:10px;color:var(--text3)">🔔</span></div>
 </div>
 <!-- Real screenshot -->
-<img src="dashboard-screenshot.jpg" alt="NestOps Dashboard — Operator view" style="width:100%;display:block;" />
+<img src="dashboard-screenshot.jpg" alt="NestOps Dashboard — Operator view" loading="lazy" style="width:100%;display:block;" />
 </div><!-- /browser -->
 </div><!-- /padding -->
 </div><!-- /sm-dash-panel -->
@@ -941,6 +1157,51 @@ footer p{font-size:12px;color:var(--text3)}
 <button onclick="smRestart()" id="sm-replay" style="padding:7px 16px;border-radius:8px;background:transparent;color:var(--text3);font-family:var(--sans);font-size:11px;font-weight:500;border:1px solid var(--border);cursor:pointer;display:none;transition:border-color .15s,color .15s">↺ Replay</button>
 </div>
 <div style="text-align:center;margin-top:16px"><a href="/login" class="feat-cta">Start free trial <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"><path d="M6 3l5 5-5 5"/></svg></a></div>
+</div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- WHY NESTOPS — COMPETITIVE MOATS -->
+<section class="moats-section reveal">
+<div class="container">
+<div style="text-align:center">
+  <div class="feat-label" style="text-align:center">Why NestOps wins</div>
+  <div class="feat-title" style="text-align:center;max-width:580px;margin:0 auto">12 things NestOps does. No competitor does any of them.</div>
+  <div class="feat-desc" style="text-align:center;max-width:480px;margin:8px auto 0">Every feature ships because we ran the operation first. That's not a tagline — it's why the product works.</div>
+</div>
+<div class="moats-grid">
+  <div class="moat-card">
+    <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+    <div class="moat-title">Role-aware, not role-limited</div>
+    <div class="moat-desc">Cleaners see their 3 properties. Maintenance sees 4 jobs. Supervisors see the full team. One platform, zero confusion.</div>
+  </div>
+  <div class="moat-card">
+    <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+    <div class="moat-title">Automation that knows STR</div>
+    <div class="moat-desc">Rules that understand turnovers, PTE windows, and check-in logic — not generic if/then bolted onto a task app.</div>
+  </div>
+  <div class="moat-card">
+    <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+    <div class="moat-title">End-to-end audit trail</div>
+    <div class="moat-desc">Briefing → Task → Inventory → Access Code → Owner Payment. One thread, no tool-hopping, no data gaps.</div>
+  </div>
+  <div class="moat-card">
+    <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+    <div class="moat-title">No per-seat pricing. Ever.</div>
+    <div class="moat-desc">$5/property flat. Add your whole team free. Scales down as fast as it scales up — unlike Breezeway or SuiteOp.</div>
+  </div>
+  <div class="moat-card">
+    <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+    <div class="moat-title">Built by operators</div>
+    <div class="moat-desc">Our founding team runs 1,000+ listings. Every feature ships because we lived the problem first, not because a PM spec'd it.</div>
+  </div>
+  <div class="moat-card">
+    <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
+    <div class="moat-title">PMS-agnostic by design</div>
+    <div class="moat-desc">Works with Hostaway, Guesty, Lodgify, OwnerRez. Bring your PMS. We handle everything that happens after a booking lands.</div>
+  </div>
+</div>
 </div>
 </section>
 
@@ -1009,7 +1270,7 @@ footer p{font-size:12px;color:var(--text3)}
 <div class="section-divider"></div>
 <section class="final-cta reveal">
 <div class="container">
-<h2>Ready for a quieter morning?</h2>
+<h2>You built this business.<br>You shouldn't be texting cleaners at 7am.</h2>
 <p>14-day free trial. No credit card required. Cancel anytime.</p>
 <button class="cta-primary" onclick="location.href='/login'">Start free trial</button>
 </div>
@@ -1989,6 +2250,96 @@ var pre=ivEl('iv-preplay');if(pre)pre.style.display='block';
 var play=ivEl('iv-playing');if(play)play.style.display='none';
 };
 })();
+
+// Hamburger menu
+var navBtn=document.getElementById('navHamburger');
+var navMenu=document.getElementById('navMobileMenu');
+function closeMobileNav(){if(navBtn&&navMenu){navBtn.classList.remove('open');navMenu.classList.remove('open');navBtn.setAttribute('aria-expanded','false');}}
+if(navBtn&&navMenu){
+  navBtn.addEventListener('click',function(){
+    var isOpen=navMenu.classList.toggle('open');
+    navBtn.classList.toggle('open',isOpen);
+    navBtn.setAttribute('aria-expanded',isOpen?'true':'false');
+  });
+  // Close on anchor click
+  navMenu.querySelectorAll('a[href^="#"]').forEach(function(a){
+    a.addEventListener('click',function(){closeMobileNav();});
+  });
+  // Close on outside click
+  document.addEventListener('click',function(e){
+    if(!navBtn.contains(e.target)&&!navMenu.contains(e.target))closeMobileNav();
+  });
+}
+
+// ── PTE Demo ──────────────────────────────────────────────────────────────────
+var pteTimers=[];
+function pteClear(){pteTimers.forEach(clearTimeout);pteTimers=[];}
+function pteQ(fn,ms){pteTimers.push(setTimeout(fn,ms));}
+var pteCountIv=null;
+function pteSlide(n){
+  ['pte-s1','pte-s2','pte-s3','pte-s4'].forEach(function(id,i){
+    var el=document.getElementById(id);if(el)el.classList.toggle('on',i+1===n);
+  });
+}
+function pteStart(){
+  var overlay=document.getElementById('pte-overlay');
+  var glow=document.getElementById('pte-glow');
+  if(overlay)overlay.style.display='none';
+  pteClear();if(pteCountIv)clearInterval(pteCountIv);
+  // Slide 1: PENDING scan
+  pteSlide(1);
+  if(glow)glow.style.background='radial-gradient(ellipse,rgba(239,159,39,.08) 0%,transparent 65%)';
+  // Slide 2: LOCKED — guest detected
+  pteQ(function(){
+    pteSlide(2);
+    if(glow)glow.style.background='radial-gradient(ellipse,rgba(226,75,74,.1) 0%,transparent 65%)';
+  },2000);
+  // Slide 3: GRANTED — code revealed
+  pteQ(function(){
+    pteSlide(3);
+    if(glow)glow.style.background='radial-gradient(ellipse,rgba(29,158,117,.1) 0%,transparent 65%)';
+  },4200);
+  // Slide 4: Timer countdown → EXPIRED
+  pteQ(function(){
+    pteSlide(4);
+    if(glow)glow.style.background='radial-gradient(ellipse,rgba(239,159,39,.08) 0%,transparent 65%)';
+    var cd=document.getElementById('pte-countdown');
+    var pb=document.getElementById('pte-progbar');
+    var lockIcon=document.getElementById('pte-lock-icon');
+    var lockSvg=document.getElementById('pte-lock-svg');
+    var expBadge=document.getElementById('pte-exp-badge');
+    if(expBadge)expBadge.style.display='none';
+    if(cd){cd.textContent='00:00:08';cd.style.color='var(--amber)';}
+    if(pb)pb.style.width='100%';
+    var s=8;
+    pteCountIv=setInterval(function(){
+      s--;
+      var ss=s<10?'0'+s:''+s;
+      if(cd)cd.textContent='00:00:'+ss;
+      if(pb)pb.style.width=(s/8*100)+'%';
+      if(s<=0){
+        clearInterval(pteCountIv);
+        if(cd){cd.textContent='00:00:00';cd.style.color='#7878a0';}
+        if(pb)pb.style.width='0%';
+        if(lockIcon){lockIcon.style.background='rgba(226,75,74,.12)';lockIcon.style.borderColor='rgba(226,75,74,.35)';}
+        if(lockSvg)lockSvg.setAttribute('stroke','#e24b4a');
+        if(expBadge)expBadge.style.display='inline-flex';
+        if(glow)glow.style.background='radial-gradient(ellipse,rgba(226,75,74,.08) 0%,transparent 65%)';
+        // Reset after 2.5s
+        pteQ(function(){
+          if(cd){cd.textContent='00:00:08';cd.style.color='var(--amber)';}
+          if(pb)pb.style.width='100%';
+          if(expBadge)expBadge.style.display='none';
+          if(lockIcon){lockIcon.style.background='rgba(100,100,120,.12)';lockIcon.style.borderColor='rgba(100,100,120,.25)';}
+          if(lockSvg)lockSvg.setAttribute('stroke','#7878a0');
+          if(glow)glow.style.background='radial-gradient(ellipse,rgba(226,75,74,.06) 0%,transparent 65%)';
+          pteSlide(1);
+          if(overlay)overlay.style.display='';
+        },2500);
+      }
+    },1000);
+  },6400);
+}
 
 </script>
 </body>
