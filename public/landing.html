@@ -729,7 +729,7 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
     <div class="gs-eyebrow">How it fits together</div>
     <h2 class="gs-heading">Every module connected.<br>One system that runs itself.</h2>
     <p class="gs-sub">Tasks, cleaning, guest services, inventory, owner portal, and compliance — not six tools talking past each other. One platform where each module feeds the next.</p>
-    <p class="gs-hint">Drag to rotate · Hover modules to explore connections</p>
+    <p class="gs-hint">Drag to rotate · Click any module to explore</p>
   </div>
   <div class="globe-container">
     <canvas id="globe"></canvas>
@@ -742,6 +742,7 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
   <div class="gt-h"><div class="gt-i" id="gt-i"></div><div class="gt-n" id="gt-n"></div></div>
   <div class="gt-d" id="gt-d"></div>
   <div class="gt-f" id="gt-f"></div>
+  <div class="gt-cta" id="gt-cta" style="margin-top:6px;font-size:10px;color:var(--green2);font-weight:500;opacity:.7;display:none">Click to explore →</div>
 </div>
 
 <div class="section-divider"></div>
@@ -2494,17 +2495,6 @@ function pteStart(){
 (function(){
 const cvs = document.getElementById('globe');
 if (!cvs) return;
-
-var tip = document.getElementById('globe-tip');
-var gtI = document.getElementById('gt-i');
-var gtN = document.getElementById('gt-n');
-var gtD = document.getElementById('gt-d');
-var gtF = document.getElementById('gt-f');
-
-// ── Motion preference ─────────────────────────────────────────────────────────
-var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-// ── Brand colors ──────────────────────────────────────────────────────────────
 const ctx = cvs.getContext('2d');
 const tip = document.getElementById('tip');
 
@@ -2530,12 +2520,12 @@ const hA = (h,a) => { const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),
 
 // ── MODULES ──
 const M = [
-  { n:'Work Orders',     icon:'📋', col:'#3B82F6', d:'Create, assign, and track maintenance and operational tasks.', fl:'Auto-created from guest issues & compliance alerts', t:0.5, p:0.55 },
-  { n:'Guest Services',  icon:'💬', col:'#F59E0B', d:'Issue tracking, refund calculator, red flags, guest communication.', fl:'Triggers cleaning on checkout → escalates to owners', t:1.8, p:1.1 },
-  { n:'Cleaning',        icon:'🧹', col:'#22C55E', d:'Turnover scheduling synced with PMS check-in/check-out.', fl:'Checks inventory post-clean → updates owner portal', t:3.3, p:0.45 },
-  { n:'Inventory',       icon:'📦', col:'#8B5CF6', d:'Track supplies per property, reorder points, purchase orders.', fl:'Auto-creates reorder tasks when stock runs low', t:4.6, p:1.2 },
-  { n:'Owner Portal',    icon:'👤', col:'#06B6D4', d:'White-label dashboard with financial and ops reports.', fl:'Receives updates from every module automatically', t:1.0, p:2.1 },
-  { n:'Compliance',      icon:'🛡', col:'#EF4444', d:'License tracking, permits, tax filings, deadline alerts.', fl:'Flags expiring permits → auto-creates tasks', t:4.0, p:2.0 },
+  { n:'Work Orders',    icon:'📋', col:'#3B82F6', d:'Assign, track, and verify tasks with standard procedures. Auto-created from check-ins, guest issues, and compliance alerts.', fl:'Guest reports issue → task auto-created → vendor notified', s:'#features',       t:0.5, p:0.55 },
+  { n:'Guest Services', icon:'💬', col:'#F59E0B', d:'Issue tracking, refund calculator, guest verification, and the guest portal — from check-in to checkout.',                fl:'Guest issue → staff notified → resolved in 47 min, not 6 hours', s:'#access-window',  t:1.8, p:1.1  },
+  { n:'Cleaning',       icon:'🧹', col:'#22C55E', d:'Turnover scheduling synced with your PMS. Cleaners see their day, access codes, and inventory checklists — no texts needed.', fl:'Checkout 11am → cleaning auto-scheduled → team notified → inventory checked', s:'#features',       t:3.3, p:0.45 },
+  { n:'Inventory',      icon:'📦', col:'#8B5CF6', d:'Track supplies per property. Auto-deducts on every clean. AI drafts vendor orders before you get the panic text.',          fl:'Clean completed → stock auto-deducted → reorder alert → AI drafts PO',    s:'#inventory-demo', t:4.6, p:1.2  },
+  { n:'Owner Portal',   icon:'👤', col:'#06B6D4', d:'White-label dashboard for property owners. Revenue, tasks, issues, cleaning — one view, zero manual updates.',             fl:'Task completed → owner auto-updated → monthly statement generated',        s:'#dashboard-demo', t:1.0, p:2.1  },
+  { n:'Compliance',     icon:'🛡',  col:'#EF4444', d:'License tracking, permit renewals, and regulatory deadline alerts. Auto-pauses listings if non-compliant.',                fl:'Permit expires in 30 days → renewal task created → listing paused if missed', s:'.moats-section',  t:4.0, p:2.0  },
 ];
 
 const CN = [{a:0,b:1},{a:1,b:2},{a:2,b:3},{a:3,b:0},{a:0,b:4},{a:5,b:0},{a:1,b:4},{a:2,b:4},{a:3,b:5}];
@@ -2551,14 +2541,28 @@ CN.forEach((_,i)=>{parts.push({ci:i,off:Math.random(),sp:.07+Math.random()*.04})
 
 // State
 let aY=0,aX=.12,vY=0,vX=0,autoR=.003,drag=false,lmx=0,lmy=0,hov=-1,mx=-999,my=-999,time=0;
+let clickStart={x:0,y:0,time:0},clickedNode=-1,clickAnimTime=0,lastNsp=[],lastHp=null;
 
-cvs.onmousedown=e=>{drag=true;lmx=e.clientX;lmy=e.clientY;autoR=0;};
+cvs.onmousedown=e=>{drag=true;lmx=e.clientX;lmy=e.clientY;autoR=0;clickStart={x:e.clientX,y:e.clientY,time:Date.now()};};
 window.onmousemove=e=>{mx=e.clientX;my=e.clientY;if(drag){vY+=(e.clientX-lmx)*.004;vX+=(e.clientY-lmy)*.002;lmx=e.clientX;lmy=e.clientY;}};
-window.onmouseup=()=>{drag=false;setTimeout(()=>{autoR=.003;},2000);};
+window.onmouseup=e=>{const dx=e.clientX-clickStart.x,dy=e.clientY-clickStart.y,dt=Date.now()-clickStart.time;drag=false;setTimeout(()=>{autoR=.003;},2000);if(Math.abs(dx)<5&&Math.abs(dy)<5&&dt<300)handleClick(e.clientX,e.clientY);};
 cvs.onmouseleave=()=>{hov=-1;tip.classList.remove('show');};
-cvs.ontouchstart=e=>{drag=true;lmx=e.touches[0].clientX;lmy=e.touches[0].clientY;autoR=0;};
+cvs.ontouchstart=e=>{drag=true;lmx=e.touches[0].clientX;lmy=e.touches[0].clientY;autoR=0;clickStart={x:e.touches[0].clientX,y:e.touches[0].clientY,time:Date.now()};};
 cvs.ontouchmove=e=>{if(!drag)return;vY+=(e.touches[0].clientX-lmx)*.004;vX+=(e.touches[0].clientY-lmy)*.002;lmx=e.touches[0].clientX;lmy=e.touches[0].clientY;};
-cvs.ontouchend=()=>{drag=false;setTimeout(()=>{autoR=.003;},2000);};
+cvs.ontouchend=e=>{const t=e.changedTouches[0],dx=t.clientX-clickStart.x,dy=t.clientY-clickStart.y,dt=Date.now()-clickStart.time;drag=false;setTimeout(()=>{autoR=.003;},2000);if(Math.abs(dx)<10&&Math.abs(dy)<10&&dt<300)handleClick(t.clientX,t.clientY);};
+
+function handleClick(cx2,cy2){
+  const cr=cvs.getBoundingClientRect(),lx=cx2-cr.left,ly=cy2-cr.top;
+  let hitNode=-1,minD=44;
+  lastNsp.forEach((sp2,i)=>{if(!sp2.vis)return;const d=Math.sqrt((sp2.x-lx)**2+(sp2.y-ly)**2);if(d<minD){minD=d;hitNode=i;}});
+  if(hitNode>=0){
+    clickedNode=hitNode;clickAnimTime=Date.now();
+    const target=document.querySelector(M[hitNode].s);
+    if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
+    return;
+  }
+  if(lastHp){const d=Math.sqrt((lastHp.x-lx)**2+(lastHp.y-ly)**2);if(d<38)window.scrollTo({top:0,behavior:'smooth'});}
+}
 
 function arcPts(p1,p2,n){const pts=[],md=[(p1[0]+p2[0])/2,(p1[1]+p2[1])/2,(p1[2]+p2[2])/2],ln=Math.sqrt(md[0]**2+md[1]**2+md[2]**2)||1,ds=Math.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2+(p1[2]-p2[2])**2),lift=1+ds*.22,cp=[md[0]/ln*lift,md[1]/ln*lift,md[2]/ln*lift];for(let i=0;i<=n;i++){const t=i/n,u=1-t;pts.push([u*u*p1[0]+2*u*t*cp[0]+t*t*p2[0],u*u*p1[1]+2*u*t*cp[1]+t*t*p2[1],u*u*p1[2]+2*u*t*cp[2]+t*t*p2[2]]);}return pts;}
 
@@ -2619,9 +2623,11 @@ function draw(){
 
   // NODE POSITIONS
   const nsp=M.map(m=>{const [sx,sy,sz]=sp(m.t,m.p);const [rx,ry,rz]=xf(sx,sy,sz);const p=pr(rx,ry,rz,cx,cy,R);return {...p,vis:rz>-.08};});
+  lastNsp=nsp;
 
   // GREEN N HUB + SONAR
   const [hx,hy,hz]=xf(0,0,0);const hp=pr(hx,hy,hz,cx,cy,R);
+  lastHp=hp;
 
   for(let pi=0;pi<3;pi++){const off=pi,prog=((time+off)%3)/3,rad=28+prog*90,al=(1-prog)*.22;
     if(al>.01){c.beginPath();c.arc(hp.x,hp.y,rad,0,Math.PI*2);c.strokeStyle=`rgba(29,158,117,${al})`;c.lineWidth=2-prog*1.5;c.stroke();}}
@@ -2680,6 +2686,7 @@ function draw(){
     c.fillStyle=isH?'rgba(8,11,18,0.95)':'rgba(8,11,18,0.88)';c.beginPath();c.roundRect(sp2.x-tw/2-lp,ly-12,tw+lp*2,26,13);c.fill();
     c.strokeStyle=hA(m.col,isH?.55:.28);c.lineWidth=1;c.beginPath();c.roundRect(sp2.x-tw/2-lp,ly-12,tw+lp*2,26,13);c.stroke();
     c.fillStyle=isH?'#FFF':'#CBD5E1';c.textBaseline='middle';c.fillText(m.n,sp2.x,ly+1);
+    if(clickedNode===i){const el=(Date.now()-clickAnimTime)/1000;if(el<.8){const p1=el/.8,r1=sz*(1.5+p1*3);c.beginPath();c.arc(sp2.x,sp2.y,r1,0,Math.PI*2);c.strokeStyle=hA(m.col,(1-p1)*.5);c.lineWidth=2.5*(1-p1);c.stroke();if(el>.1){const p2=(el-.1)/.7,r2=sz*(1.3+p2*2.5);c.beginPath();c.arc(sp2.x,sp2.y,r2,0,Math.PI*2);c.strokeStyle=hA(m.col,(1-p2)*.3);c.lineWidth=1.5*(1-p2);c.stroke();}}else clickedNode=-1;}
   });
 
   // HOVER
@@ -2687,8 +2694,8 @@ function draw(){
     const cr=cvs.getBoundingClientRect(),lx=mx-cr.left,ly=my-cr.top;let found=-1,minD=40;
     nsp.forEach((sp2,i)=>{if(!sp2.vis)return;const d=Math.sqrt((sp2.x-lx)**2+(sp2.y-ly)**2);if(d<minD){minD=d;found=i;}});
     if(found!==hov){hov=found;
-      if(hov>=0){const m=M[hov];document.getElementById('gt-i').textContent=m.icon;document.getElementById('gt-i').style.background=m.col;document.getElementById('gt-n').textContent=m.n;document.getElementById('gt-d').textContent=m.d;document.getElementById('gt-f').textContent='⚡ '+m.fl;tip.classList.add('show');cvs.style.cursor='pointer';}
-      else{tip.classList.remove('show');cvs.style.cursor='grab';}}
+      if(hov>=0){const m=M[hov];document.getElementById('gt-i').textContent=m.icon;document.getElementById('gt-i').style.background=m.col;document.getElementById('gt-n').textContent=m.n;document.getElementById('gt-d').textContent=m.d;document.getElementById('gt-f').textContent='⚡ '+m.fl;document.getElementById('gt-cta').style.display='block';tip.classList.add('show');cvs.style.cursor='pointer';}
+      else{document.getElementById('gt-cta').style.display='none';tip.classList.remove('show');cvs.style.cursor='grab';}}
     if(hov>=0){tip.style.left=(mx+18)+'px';tip.style.top=(my-10)+'px';}}
 }
 draw();
