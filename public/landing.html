@@ -649,41 +649,26 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
   to { transform: translateX(-100%); }
 }
 
-/* ── Globe component ─────────────────────────────────── */
-.globe-container {
-  position: relative;
-  width: 100%;
-  max-width: 640px;
-  aspect-ratio: 1;
-  margin: 0 auto;
-}
-.globe-container canvas {
-  width: 100%;
-  height: 100%;
-  display: block;
-  cursor: grab;
-}
-.globe-container canvas:active { cursor: grabbing; }
-
-.globe-tip {
-  position: fixed;
-  pointer-events: none;
-  z-index: 200;
-  background: rgba(10, 20, 35, 0.95);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 12px;
-  padding: 14px 18px;
-  opacity: 0;
-  transition: opacity 0.15s;
-  max-width: 260px;
-}
-.globe-tip.show { opacity: 1; }
-.globe-tip .gt-h { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-.globe-tip .gt-i { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
-.globe-tip .gt-n { font-size: 14px; font-weight: 600; color: #F1F5F9; }
-.globe-tip .gt-d { font-size: 11px; color: #94A3B8; line-height: 1.5; }
-.globe-tip .gt-f { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 10px; color: #1D9E75; }
+/* ── Globe section ──────────────────────────────────────────────────────── */
+.globe-section{padding:80px 0 40px;position:relative;text-align:center}
+.gs-eyebrow{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--green2);margin-bottom:16px}
+.gs-heading{font-size:clamp(28px,4vw,48px);font-weight:700;letter-spacing:-0.03em;line-height:1.15;color:#fff;margin-bottom:14px}
+.gs-sub{font-size:clamp(14px,1.6vw,17px);color:var(--text2);max-width:580px;margin:0 auto 8px;line-height:1.7}
+.gs-hint{font-size:11px;color:var(--text3);margin-bottom:0;opacity:0.6}
+.globe-container{position:relative;width:100%;max-width:720px;aspect-ratio:1;margin:0 auto}
+.globe-container canvas{width:100%;height:100%;display:block;cursor:grab}
+.globe-container canvas:active{cursor:grabbing}
+.gs-cta-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:8px}
+.gs-cta{padding:10px 28px;border-radius:8px;background:var(--green);color:#fff;font-size:13px;font-weight:500;font-family:var(--sans);border:none;cursor:pointer;text-decoration:none;transition:all 0.15s}
+.gs-cta:hover{background:var(--green2);transform:translateY(-1px)}
+.globe-tip{position:fixed;pointer-events:none;z-index:200;background:rgba(15,18,25,0.95);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px 18px;opacity:0;transition:opacity 0.12s;max-width:260px;box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+.globe-tip.show{opacity:1}
+.globe-tip .gt-h{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.globe-tip .gt-i{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.globe-tip .gt-n{font-size:14px;font-weight:600;color:#f1f5f9}
+.globe-tip .gt-d{font-size:11px;color:#9ca3af;line-height:1.5}
+.globe-tip .gt-f{margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05);font-size:10px;color:var(--green2)}
+@media(max-width:768px){.globe-section{padding:60px 0 32px}.globe-container{max-width:400px}}
 </style>
 </head>
 <body>
@@ -730,37 +715,39 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <h1>Your PMS runs bookings.<br><span>NestOps runs everything after.</span></h1>
 <p class="hero-sub">Right now you're spending $300–600/month on tools that don't talk to each other. NestOps replaces them — and does 12 things none of them can.</p>
 
-<!-- CALCULATOR -->
-<div class="calc-wrap">
-<div class="calc-card">
-<div class="sliders">
-<div class="sl"><div class="sl-top"><span class="sl-label">Properties</span><span class="sl-val" id="pv">10</span></div><input type="range" min="1" max="75" value="10" step="1" id="ps" oninput="U()"></div>
-<div class="sl"><div class="sl-top"><span class="sl-label">Team size</span><span class="sl-val" id="tv">5</span></div><input type="range" min="1" max="20" value="5" step="1" id="ts" oninput="U()"></div>
-</div>
-<div class="tool-grid" id="tgrid"></div>
-<div class="results" id="res">
-<div class="res-empty">Select tools above to see your savings</div>
-<div class="res-content">
-<div class="bar-row"><span class="bar-label">Your stack</span><div class="bar-track"><div class="bar-fill red" id="b1"><span class="bar-amt" id="b1t"></span></div></div></div>
-<div class="bar-row"><span class="bar-label">NestOps</span><div class="bar-track"><div class="bar-fill grn" id="b2"><span class="bar-amt" id="b2t"></span></div></div></div>
-<div class="save-row">
-<div><div class="save-label">You save</div><div class="save-sub" id="ss"></div></div>
-<div style="text-align:right"><div class="save-amt" id="sv"></div><div class="save-yr" id="sy"></div></div>
-</div>
-<div class="tags" id="tg"></div>
-<button class="cta-primary" id="mainCta" onclick="location.href='/login'"><span class="btn-swap"><span>Start free trial</span><span>Start free trial</span></span></button>
-<button class="cta-ghost" onclick="location.href='/login'">Get detailed savings report</button>
-</div>
-</div>
-</div>
+<div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-top:32px;flex-wrap:wrap">
+<a href="/login" class="nav-cta" style="padding:12px 32px;font-size:14px">Start free trial</a>
+<a href="#proof" style="font-size:13px;color:var(--text2);text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:color .15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">See what it replaces <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3l5 5-5 5"/></svg></a>
 </div>
 </div>
 </section>
 
 <div class="section-divider"></div>
 
+<section class="globe-section">
+  <div class="container">
+    <div class="gs-eyebrow">How it fits together</div>
+    <h2 class="gs-heading">Every module connected.<br>One system that runs itself.</h2>
+    <p class="gs-sub">Tasks, cleaning, guest services, inventory, owner portal, and compliance — not six tools talking past each other. One platform where each module feeds the next.</p>
+    <p class="gs-hint">Drag to rotate · Hover modules to explore connections</p>
+  </div>
+  <div class="globe-container">
+    <canvas id="globe"></canvas>
+  </div>
+  <div class="gs-cta-row">
+    <a href="/login" class="gs-cta">Start free trial</a>
+  </div>
+</section>
+<div class="globe-tip" id="tip">
+  <div class="gt-h"><div class="gt-i" id="gt-i"></div><div class="gt-n" id="gt-n"></div></div>
+  <div class="gt-d" id="gt-d"></div>
+  <div class="gt-f" id="gt-f"></div>
+</div>
+
+<div class="section-divider"></div>
+
 <!-- SOCIAL PROOF -->
-<div class="proof"><div class="container">
+<div id="proof" class="proof"><div class="container">
 <p class="proof-line">Built by a COO who manages thousands of listings globally. <strong>We know your pain and struggles.</strong></p>
 <div class="replaces-row">
 <div class="replaces-badge"><span class="x">&#x2715;</span> Breezeway <span class="arrow">&#8594;</span> Ops Hub</div>
@@ -1296,41 +1283,6 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 </div>
 </section>
 
-<section id="platform-globe" style="padding:100px 0 80px;overflow:hidden;position:relative">
-  <!-- Background glow blob -->
-  <div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 50% at 50% 60%,rgba(29,158,117,0.06),transparent)"></div>
-
-  <!-- Heading block -->
-  <div class="container" style="text-align:center;margin-bottom:56px">
-    <div class="feat-label" style="text-align:center">How It Fits Together</div>
-    <h2 class="text-gradient" style="font-size:clamp(28px,3.5vw,44px);font-weight:700;letter-spacing:-0.03em;margin-bottom:14px;max-width:680px;margin-left:auto;margin-right:auto">
-      Every module connected.<br>One system that runs itself.
-    </h2>
-    <p style="font-size:15px;color:var(--text2);max-width:480px;margin:0 auto;line-height:1.7">
-      Tasks, cleaning, guest services, inventory, owner portal, and compliance — not six tools talking past each other. One platform where each module feeds the next.
-    </p>
-  </div>
-
-  <!-- Hint text (above globe per UX guidance) -->
-  <p style="text-align:center;font-size:11px;color:var(--text3);margin-bottom:16px;letter-spacing:0.04em">
-    Drag to rotate · Hover modules to explore connections
-  </p>
-
-  <!-- Globe -->
-  <div class="globe-container">
-    <canvas id="nestops-globe"></canvas>
-  </div>
-
-  <!-- Tooltip -->
-  <div class="globe-tip" id="globe-tip">
-    <div class="gt-h"><div class="gt-i" id="gt-i"></div><div class="gt-n" id="gt-n"></div></div>
-    <div class="gt-d" id="gt-d"></div>
-    <div class="gt-f" id="gt-f"></div>
-  </div>
-</section>
-
-<div class="section-divider"></div>
-
 <!-- CTA MARQUEE -->
 <section style="padding:48px 0;overflow:hidden;background:linear-gradient(180deg,transparent,rgba(29,158,117,0.04),transparent)">
 <div class="cta-marquee-track" style="display:flex;gap:0;white-space:nowrap">
@@ -1362,6 +1314,40 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
     <span class="cta-mq-item">One system. Runs itself.</span>
     <span class="cta-mq-sep">✦</span>
   </div>
+</div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SAVINGS CALCULATOR -->
+<section class="section reveal" style="padding:80px 0 40px">
+<div class="container" style="text-align:center">
+<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--green2);margin-bottom:16px">See your savings</div>
+<h2 style="font-size:clamp(28px,4vw,48px);font-weight:700;letter-spacing:-0.03em;line-height:1.15;color:#fff;margin-bottom:14px">How much are you overpaying?</h2>
+<p style="font-size:clamp(14px,1.6vw,17px);color:var(--text2);max-width:560px;margin:0 auto 32px;line-height:1.7">Select your current stack. See what NestOps replaces — and what it costs you today.</p>
+<div class="calc-wrap">
+<div class="calc-card">
+<div class="sliders">
+<div class="sl"><div class="sl-top"><span class="sl-label">Properties</span><span class="sl-val" id="pv">10</span></div><input type="range" min="1" max="75" value="10" step="1" id="ps" oninput="U()"></div>
+<div class="sl"><div class="sl-top"><span class="sl-label">Team size</span><span class="sl-val" id="tv">5</span></div><input type="range" min="1" max="20" value="5" step="1" id="ts" oninput="U()"></div>
+</div>
+<div class="tool-grid" id="tgrid"></div>
+<div class="results" id="res">
+<div class="res-empty">Select tools above to see your savings</div>
+<div class="res-content">
+<div class="bar-row"><span class="bar-label">Your stack</span><div class="bar-track"><div class="bar-fill red" id="b1"><span class="bar-amt" id="b1t"></span></div></div></div>
+<div class="bar-row"><span class="bar-label">NestOps</span><div class="bar-track"><div class="bar-fill grn" id="b2"><span class="bar-amt" id="b2t"></span></div></div></div>
+<div class="save-row">
+<div><div class="save-label">You save</div><div class="save-sub" id="ss"></div></div>
+<div style="text-align:right"><div class="save-amt" id="sv"></div><div class="save-yr" id="sy"></div></div>
+</div>
+<div class="tags" id="tg"></div>
+<button class="cta-primary" id="mainCta" onclick="location.href='/login'"><span class="btn-swap"><span>Start free trial</span><span>Start free trial</span></span></button>
+<button class="cta-ghost" onclick="location.href='/login'">Get detailed savings report</button>
+</div>
+</div>
+</div>
+</div>
 </div>
 </section>
 
@@ -2506,10 +2492,8 @@ function pteStart(){
 <!-- ── NestOps Operational Globe ──────────────────────────────────────────── -->
 <script>
 (function(){
-'use strict';
-
-var canvas = document.getElementById('nestops-globe');
-if (!canvas) return;
+const cvs = document.getElementById('globe');
+if (!cvs) return;
 
 var tip = document.getElementById('globe-tip');
 var gtI = document.getElementById('gt-i');
@@ -2521,404 +2505,196 @@ var gtF = document.getElementById('gt-f');
 var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ── Brand colors ──────────────────────────────────────────────────────────────
-var BRAND  = '#1D9E75';
-var BRAND2 = 'rgba(29,158,117,'; // close with alpha + ')'
-
-// ── 6 NestOps modules ─────────────────────────────────────────────────────────
-var MODS = [
-  { emoji:'🗂️', name:'Work Orders',    color:'#378ADD', lat: 35,  lon: 40,
-    desc:'Assign, track, and close every task from one queue. Staff get push notifications immediately.',
-    flow:'Triggers → Guest Services & Cleaning' },
-  { emoji:'✨',  name:'Cleaning',        color:BRAND,     lat:-20,  lon:130,
-    desc:'Turnover schedules sync automatically with your PMS check-in and check-out times.',
-    flow:'Triggers → Inventory deduction' },
-  { emoji:'💬', name:'Guest Services',   color:'#ef9f27', lat: 52,  lon:-55,
-    desc:'PTE access windows, guest issue tracking, and automated messaging in one place.',
-    flow:'Triggers → Owner Portal alerts' },
-  { emoji:'📦', name:'Inventory',        color:'#a78bfa', lat:-42,  lon:-105,
-    desc:'Auto-deduct consumables on every checkout. Low-stock alerts go straight to work orders.',
-    flow:'Triggers → Work Order creation' },
-  { emoji:'🏠', name:'Owner Portal',     color:'#10b981', lat: 12,  lon:178,
-    desc:'Owners approve expenses, view statements, and track property performance live.',
-    flow:'Triggers → Compliance checks' },
-  { emoji:'🛡️', name:'Compliance',       color:'#f97316', lat:-62,  lon: 65,
-    desc:'Track certificates, fire checks, and audit documents. Alerts fire before anything expires.',
-    flow:'Triggers → Cleaning & Work Orders' },
-];
-
-// ── State ─────────────────────────────────────────────────────────────────────
-var rotX = 0.28, rotY = 0.0;
-var velX = 0,    velY = 0;
-var dragging = false;
-var dragLX = 0,  dragLY = 0;
-var autoR  = true;
-var stopTimer = null;
-var hov = -1;
-var pulse = 0;
-var rect;
-
-// ── Particles (one per module arc) ────────────────────────────────────────────
-var PARTS = MODS.map(function(){ return { t: Math.random(), speed: 0.003 + Math.random() * 0.002 }; });
-
-// ── Math helpers ──────────────────────────────────────────────────────────────
-function ll2xyz(lat, lon) {
-  var phi   = (90 - lat) * Math.PI / 180;
-  var theta = lon * Math.PI / 180;
-  return {
-    x:  Math.sin(phi) * Math.cos(theta),
-    y:  Math.cos(phi),
-    z:  Math.sin(phi) * Math.sin(theta)
-  };
-}
-
-function rot3(p) {
-  var x = p.x, y = p.y, z = p.z;
-  // Y-axis
-  var x1 =  x * Math.cos(rotY) - z * Math.sin(rotY);
-  var z1 =  x * Math.sin(rotY) + z * Math.cos(rotY);
-  // X-axis
-  var y2 =  y * Math.cos(rotX) - z1 * Math.sin(rotX);
-  var z2 =  y * Math.sin(rotX) + z1 * Math.cos(rotX);
-  return { x: x1, y: y2, z: z2 };
-}
-
-function proj(r, R, cx, cy) {
-  var fov = 2.4;
-  var sc  = R * fov / (fov + r.z + 1);
-  return { px: cx + r.x * sc, py: cy + r.y * sc, depth: r.z };
-}
-
-// ── Setup canvas ──────────────────────────────────────────────────────────────
-var ctx;
-var w, h;
+const ctx = cvs.getContext('2d');
+const tip = document.getElementById('tip');
 
 function setup() {
-  var parent = canvas.parentElement;
-  var r      = parent.getBoundingClientRect();
-  var dpr    = Math.min(window.devicePixelRatio || 1, 2);
-  canvas.width  = Math.round(r.width  * dpr);
-  canvas.height = Math.round(r.height * dpr);
-  ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-  w = r.width;
-  h = r.height;
-  rect = canvas.getBoundingClientRect();
+  const r = cvs.getBoundingClientRect();
+  const d = Math.min(window.devicePixelRatio || 1, 2);
+  cvs.width = r.width * d;
+  cvs.height = r.height * d;
+  ctx.setTransform(d, 0, 0, d, 0, 0);
+  return r;
 }
+let rect = setup();
+window.addEventListener('resize', () => { rect = setup(); });
 
-setup();
-window.addEventListener('resize', function(){ setup(); });
+const c = ctx;
 
-// ── Rounded rect helper (compat) ──────────────────────────────────────────────
-function rrect(x, y, bw, bh, br) {
-  ctx.beginPath();
-  ctx.moveTo(x + br, y);
-  ctx.lineTo(x + bw - br, y);
-  ctx.arcTo(x + bw, y, x + bw, y + br, br);
-  ctx.lineTo(x + bw, y + bh - br);
-  ctx.arcTo(x + bw, y + bh, x + bw - br, y + bh, br);
-  ctx.lineTo(x + br, y + bh);
-  ctx.arcTo(x, y + bh, x, y + bh - br, br);
-  ctx.lineTo(x, y + br);
-  ctx.arcTo(x, y, x + br, y, br);
-  ctx.closePath();
-}
+// ── 3D MATH ──
+const rY = (x,y,z,a) => { const co=Math.cos(a),si=Math.sin(a); return [x*co+z*si,y,-x*si+z*co]; };
+const rX = (x,y,z,a) => { const co=Math.cos(a),si=Math.sin(a); return [x,y*co-z*si,y*si+z*co]; };
+const pr = (x,y,z,cx,cy,R) => { const f=4,s=f/(f+z); return {x:cx+x*s*R*.4,y:cy+y*s*R*.4,s,z}; };
+const sp = (t,p) => [Math.sin(p)*Math.cos(t),Math.cos(p),Math.sin(p)*Math.sin(t)];
+const hA = (h,a) => { const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16); return `rgba(${r},${g},${b},${a})`; };
 
-// ── Draw loop ─────────────────────────────────────────────────────────────────
-function draw() {
-  ctx.clearRect(0, 0, w, h);
-  var cx = w / 2, cy = h / 2;
-  var R  = Math.min(w, h) * 0.42;
+// ── MODULES ──
+const M = [
+  { n:'Work Orders',     icon:'📋', col:'#3B82F6', d:'Create, assign, and track maintenance and operational tasks.', fl:'Auto-created from guest issues & compliance alerts', t:0.5, p:0.55 },
+  { n:'Guest Services',  icon:'💬', col:'#F59E0B', d:'Issue tracking, refund calculator, red flags, guest communication.', fl:'Triggers cleaning on checkout → escalates to owners', t:1.8, p:1.1 },
+  { n:'Cleaning',        icon:'🧹', col:'#22C55E', d:'Turnover scheduling synced with PMS check-in/check-out.', fl:'Checks inventory post-clean → updates owner portal', t:3.3, p:0.45 },
+  { n:'Inventory',       icon:'📦', col:'#8B5CF6', d:'Track supplies per property, reorder points, purchase orders.', fl:'Auto-creates reorder tasks when stock runs low', t:4.6, p:1.2 },
+  { n:'Owner Portal',    icon:'👤', col:'#06B6D4', d:'White-label dashboard with financial and ops reports.', fl:'Receives updates from every module automatically', t:1.0, p:2.1 },
+  { n:'Compliance',      icon:'🛡', col:'#EF4444', d:'License tracking, permits, tax filings, deadline alerts.', fl:'Flags expiring permits → auto-creates tasks', t:4.0, p:2.0 },
+];
 
-  // ── Wireframe sphere ──────────────────────────────────────────────────────
-  ctx.save();
-  // Latitude lines
-  for (var lat = -60; lat <= 60; lat += 30) {
-    var prevP = null;
-    for (var lon = 0; lon <= 362; lon += 3) {
-      var r3 = rot3(ll2xyz(lat, lon));
-      var p  = proj(r3, R, cx, cy);
-      var a  = Math.max(0, (r3.z + 1) / 2) * 0.16;
-      if (prevP) {
-        ctx.beginPath();
-        ctx.moveTo(prevP.px, prevP.py);
-        ctx.lineTo(p.px, p.py);
-        ctx.strokeStyle = 'rgba(255,255,255,' + a + ')';
-        ctx.lineWidth = 0.5;
-        ctx.stroke();
-      }
-      prevP = p;
-    }
-  }
-  // Longitude lines
-  for (var lon2 = 0; lon2 < 360; lon2 += 45) {
-    var prevP2 = null;
-    for (var lat2 = -88; lat2 <= 90; lat2 += 3) {
-      var r3b = rot3(ll2xyz(lat2, lon2));
-      var pb  = proj(r3b, R, cx, cy);
-      var ab  = Math.max(0, (r3b.z + 1) / 2) * 0.16;
-      if (prevP2) {
-        ctx.beginPath();
-        ctx.moveTo(prevP2.px, prevP2.py);
-        ctx.lineTo(pb.px, pb.py);
-        ctx.strokeStyle = 'rgba(255,255,255,' + ab + ')';
-        ctx.lineWidth = 0.5;
-        ctx.stroke();
-      }
-      prevP2 = pb;
-    }
-  }
-  ctx.restore();
+const CN = [{a:0,b:1},{a:1,b:2},{a:2,b:3},{a:3,b:0},{a:0,b:4},{a:5,b:0},{a:1,b:4},{a:2,b:4},{a:3,b:5}];
 
-  // ── Sonar pulse (skip if reduced motion) ──────────────────────────────────
-  if (!REDUCE) {
-    pulse = (pulse + 0.011) % 1;
-    var pr1 = R * 0.075 + pulse * R * 0.20;
-    var pa1 = (1 - pulse) * 0.32;
-    ctx.beginPath();
-    ctx.arc(cx, cy, pr1, 0, Math.PI * 2);
-    ctx.strokeStyle = BRAND2 + pa1 + ')';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    var p2off = (pulse + 0.45) % 1;
-    var pr2   = R * 0.075 + p2off * R * 0.20;
-    var pa2   = (1 - p2off) * 0.22;
-    ctx.beginPath();
-    ctx.arc(cx, cy, pr2, 0, Math.PI * 2);
-    ctx.strokeStyle = BRAND2 + pa2 + ')';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  }
+// Dots
+const DOTS=1600, dots=[];
+const ga=Math.PI*(3-Math.sqrt(5));
+for(let i=0;i<DOTS;i++){const y=1-(i/(DOTS-1))*2,r=Math.sqrt(1-y*y),t=ga*i;dots.push([Math.cos(t)*r,y,Math.sin(t)*r]);}
 
-  // ── Project all module positions ──────────────────────────────────────────
-  var pmods = MODS.map(function(m){
-    var r3 = rot3(ll2xyz(m.lat, m.lon));
-    return proj(r3, R, cx, cy);
-  });
+// Particles
+const parts=[];
+CN.forEach((_,i)=>{parts.push({ci:i,off:Math.random(),sp:.07+Math.random()*.04});parts.push({ci:i,off:(Math.random()+.5)%1,sp:.05+Math.random()*.03});});
 
-  // ── Arcs + particles (hub → each module) ─────────────────────────────────
-  pmods.forEach(function(pm, i){
-    var isHov   = hov === i;
-    var alpha   = Math.max(0, (pm.depth + 0.4) / 1.4);
-    if (alpha < 0.01) return;
+// State
+let aY=0,aX=.12,vY=0,vX=0,autoR=.003,drag=false,lmx=0,lmy=0,hov=-1,mx=-999,my=-999,time=0;
 
-    // Control point lifts arc toward viewer
-    var mx = (cx + pm.px) / 2;
-    var my = (cy + pm.py) / 2 - R * 0.24;
+cvs.onmousedown=e=>{drag=true;lmx=e.clientX;lmy=e.clientY;autoR=0;};
+window.onmousemove=e=>{mx=e.clientX;my=e.clientY;if(drag){vY+=(e.clientX-lmx)*.004;vX+=(e.clientY-lmy)*.002;lmx=e.clientX;lmy=e.clientY;}};
+window.onmouseup=()=>{drag=false;setTimeout(()=>{autoR=.003;},2000);};
+cvs.onmouseleave=()=>{hov=-1;tip.classList.remove('show');};
+cvs.ontouchstart=e=>{drag=true;lmx=e.touches[0].clientX;lmy=e.touches[0].clientY;autoR=0;};
+cvs.ontouchmove=e=>{if(!drag)return;vY+=(e.touches[0].clientX-lmx)*.004;vX+=(e.touches[0].clientY-lmy)*.002;lmx=e.touches[0].clientX;lmy=e.touches[0].clientY;};
+cvs.ontouchend=()=>{drag=false;setTimeout(()=>{autoR=.003;},2000);};
 
-    // Arc line
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.quadraticCurveTo(mx, my, pm.px, pm.py);
-    ctx.strokeStyle = isHov
-      ? BRAND2 + (0.75 * alpha) + ')'
-      : 'rgba(255,255,255,' + (0.12 * alpha) + ')';
-    ctx.lineWidth = isHov ? 1.5 : 0.7;
-    ctx.stroke();
-    ctx.restore();
+function arcPts(p1,p2,n){const pts=[],md=[(p1[0]+p2[0])/2,(p1[1]+p2[1])/2,(p1[2]+p2[2])/2],ln=Math.sqrt(md[0]**2+md[1]**2+md[2]**2)||1,ds=Math.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2+(p1[2]-p2[2])**2),lift=1+ds*.22,cp=[md[0]/ln*lift,md[1]/ln*lift,md[2]/ln*lift];for(let i=0;i<=n;i++){const t=i/n,u=1-t;pts.push([u*u*p1[0]+2*u*t*cp[0]+t*t*p2[0],u*u*p1[1]+2*u*t*cp[1]+t*t*p2[1],u*u*p1[2]+2*u*t*cp[2]+t*t*p2[2]]);}return pts;}
 
-    // Traveling particle (skip if reduced motion)
-    if (!REDUCE) {
-      var pt = PARTS[i];
-      pt.t = (pt.t + pt.speed) % 1;
-      var t  = pt.t;
-      var bx = (1-t)*(1-t)*cx + 2*(1-t)*t*mx + t*t*pm.px;
-      var by = (1-t)*(1-t)*cy + 2*(1-t)*t*my + t*t*pm.py;
-      var pa = Math.sin(t * Math.PI) * 0.85 * alpha;
-      ctx.beginPath();
-      ctx.arc(bx, by, 2.5, 0, Math.PI * 2);
-      ctx.fillStyle = BRAND2 + pa + ')';
-      ctx.fill();
-    }
-  });
-
-  // ── Module nodes (sorted back-to-front) ───────────────────────────────────
-  var sorted = pmods.map(function(pm, i){ return { px: pm.px, py: pm.py, depth: pm.depth, i: i }; });
-  sorted.sort(function(a, b){ return a.depth - b.depth; });
-
-  sorted.forEach(function(item){
-    var i = item.i;
-    var mod = MODS[i];
-    var alpha = Math.max(0, (item.depth + 0.4) / 1.4);
-    if (alpha < 0.02) return;
-
-    var isHov = hov === i;
-    var nr = isHov ? 22 : 18;
-    var fs = Math.round(nr * 0.62);
-
-    // Glow on hover
-    ctx.save();
-    if (isHov) {
-      ctx.shadowBlur  = 20;
-      ctx.shadowColor = mod.color;
-    }
-    // Node circle
-    var hexA = Math.round(alpha * (isHov ? 255 : 200)).toString(16).padStart(2, '0');
-    ctx.beginPath();
-    ctx.arc(item.px, item.py, nr, 0, Math.PI * 2);
-    ctx.fillStyle = mod.color + hexA;
-    ctx.fill();
-    ctx.restore();
-
-    // Emoji icon
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.font = fs + 'px sans-serif';
-    ctx.textAlign    = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(mod.emoji, item.px, item.py);
-    ctx.restore();
-
-    // Label pill below node (only when alpha > 0.4)
-    if (alpha > 0.4) {
-      ctx.save();
-      ctx.globalAlpha = alpha * (isHov ? 1 : 0.75);
-      var labelFs = Math.max(9, Math.round(fs * 0.66));
-      ctx.font = '600 ' + labelFs + 'px Outfit, sans-serif';
-      var tw  = ctx.measureText(mod.name).width;
-      var lw  = tw + 14, lh = 16;
-      var lx  = item.px - lw / 2, ly = item.py + nr + 5;
-      ctx.fillStyle = 'rgba(8,11,18,0.88)';
-      rrect(lx, ly, lw, lh, 4);
-      ctx.fill();
-      ctx.fillStyle  = '#e8e6e1';
-      ctx.textAlign    = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(mod.name, item.px, ly + lh / 2);
-      ctx.restore();
-    }
-  });
-
-  // ── Hub (always at screen center) ─────────────────────────────────────────
-  var hs = Math.round(R * 0.11);
-  ctx.save();
-  ctx.shadowBlur  = 22;
-  ctx.shadowColor = BRAND;
-  var grad = ctx.createLinearGradient(cx - hs, cy - hs, cx + hs, cy + hs);
-  grad.addColorStop(0, 'rgba(29,158,117,1)');
-  grad.addColorStop(1, 'rgba(21,140,100,1)');
-  ctx.fillStyle = grad;
-  var br = Math.round(hs * 0.3);
-  rrect(cx - hs, cy - hs, hs * 2, hs * 2, br);
-  ctx.fill();
-  ctx.restore();
-
-  ctx.save();
-  ctx.font = '700 32px Outfit, sans-serif';
-  ctx.fillStyle    = '#fff';
-  ctx.textAlign    = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.shadowBlur   = 0;
-  ctx.fillText('N', cx, cy + 1);
-  ctx.restore();
-
-  // ── Auto-rotation + inertia ───────────────────────────────────────────────
-  if (!dragging) {
-    if (!REDUCE && autoR) rotY += 0.004;
-    rotX += velX;
-    rotY += velY;
-    velX *= 0.93;
-    velY *= 0.93;
-    rotX = Math.max(-1.2, Math.min(1.2, rotX));
-  }
-
+function draw(){
   requestAnimationFrame(draw);
-}
+  time+=.016;
+  const W=rect.width,H=rect.height,cx=W/2,cy=H/2,R=Math.min(W,H)*.44;
+  c.clearRect(0,0,W,H);
+  aY+=autoR+vY;aX+=vX;aX=Math.max(-.45,Math.min(.45,aX));vY*=.94;vX*=.94;
+  const xf=(x,y,z)=>{const p=rX(x,y,z,aX);return rY(p[0],p[1],p[2],aY);};
+  const gR=R*.4*(4/(4+0));
 
-// ── Input handlers ────────────────────────────────────────────────────────────
-function evtPos(e) {
-  if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-  return { x: e.clientX, y: e.clientY };
-}
+  // ATMOSPHERE
+  const ag=c.createRadialGradient(cx,cy,gR*.7,cx,cy,gR*1.35);
+  ag.addColorStop(0,'rgba(29,158,117,0)');ag.addColorStop(.6,'rgba(29,158,117,0.05)');ag.addColorStop(.8,'rgba(55,138,221,0.03)');ag.addColorStop(1,'rgba(55,138,221,0)');
+  c.beginPath();c.arc(cx,cy,gR*1.35,0,Math.PI*2);c.fillStyle=ag;c.fill();
 
-function onDown(e) {
-  dragging = true;
-  autoR    = false;
-  clearTimeout(stopTimer);
-  var p = evtPos(e);
-  dragLX = p.x; dragLY = p.y;
-  velX = 0; velY = 0;
-  e.preventDefault();
-}
+  // GLOBE BODY
+  const sg=c.createRadialGradient(cx-gR*.15,cy-gR*.2,gR*.05,cx,cy,gR);
+  sg.addColorStop(0,'#11202F');sg.addColorStop(.35,'#0D1826');sg.addColorStop(.7,'#0A1120');sg.addColorStop(1,'#070C16');
+  c.beginPath();c.arc(cx,cy,gR,0,Math.PI*2);c.fillStyle=sg;c.fill();
 
-function hitTest(mx, my) {
-  rect = canvas.getBoundingClientRect();
-  var cx = rect.width / 2, cy = rect.height / 2;
-  var R  = Math.min(rect.width, rect.height) * 0.42;
-  for (var i = 0; i < MODS.length; i++) {
-    var r3 = rot3(ll2xyz(MODS[i].lat, MODS[i].lon));
-    var pm = proj(r3, R, cx, cy);
-    var dx = mx - pm.px, dy = my - pm.py;
-    if (Math.sqrt(dx*dx + dy*dy) < 26) return i;
-  }
-  return -1;
-}
+  // Rim lights
+  c.save();c.beginPath();c.arc(cx,cy,gR,0,Math.PI*2);c.clip();
+  const rl1=c.createRadialGradient(cx+gR*.8,cy-gR*.15,0,cx+gR*.8,cy-gR*.15,gR*.55);
+  rl1.addColorStop(0,'rgba(29,158,117,0.18)');rl1.addColorStop(1,'rgba(29,158,117,0)');
+  c.fillStyle=rl1;c.fillRect(cx-gR,cy-gR,gR*2,gR*2);
+  const rl2=c.createRadialGradient(cx-gR*.75,cy+gR*.25,0,cx-gR*.75,cy+gR*.25,gR*.45);
+  rl2.addColorStop(0,'rgba(55,138,221,0.1)');rl2.addColorStop(1,'rgba(55,138,221,0)');
+  c.fillStyle=rl2;c.fillRect(cx-gR,cy-gR,gR*2,gR*2);
+  c.restore();
 
-function onMove(e) {
-  var p = evtPos(e);
-  if (dragging) {
-    var dx = p.x - dragLX;
-    var dy = p.y - dragLY;
-    velY = dx * 0.006;
-    velX = dy * 0.006;
-    rotY += velY;
-    rotX += velX;
-    rotX = Math.max(-1.2, Math.min(1.2, rotX));
-    dragLX = p.x; dragLY = p.y;
-  }
-  // Hover / tap detection
-  rect = canvas.getBoundingClientRect();
-  var mx = p.x - rect.left;
-  var my = p.y - rect.top;
-  var found = hitTest(mx, my);
-  if (found !== hov) {
-    hov = found;
-    if (found >= 0) showTip(found, e); else hideTip();
-  } else if (found >= 0) {
-    moveTip(e);
-  }
-}
+  // Edge ring
+  c.beginPath();c.arc(cx,cy,gR,0,Math.PI*2);
+  c.strokeStyle='rgba(55,100,160,0.18)';c.lineWidth=1.5;c.stroke();
 
-function onUp() {
-  dragging  = false;
-  stopTimer = setTimeout(function(){ autoR = true; }, 2000);
-}
+  // SURFACE DOTS
+  dots.forEach(d=>{
+    const [rx,ry,rz]=xf(d[0],d[1],d[2]);
+    if(rz<-.05) return;
+    const p=pr(rx,ry,rz,cx,cy,R);
+    const al=.06+Math.max(0,rz)*.4;
+    c.beginPath();c.arc(p.x,p.y,Math.max(.9,1.5*p.s),0,Math.PI*2);
+    c.fillStyle=`rgba(70,140,210,${al})`;c.fill();
+  });
 
-canvas.addEventListener('mousedown',  onDown, { passive: false });
-window.addEventListener('mousemove',  onMove);
-window.addEventListener('mouseup',    onUp);
-canvas.addEventListener('touchstart', onDown, { passive: false });
-window.addEventListener('touchmove',  onMove, { passive: true });
-window.addEventListener('touchend',   onUp);
+  // LATITUDE RINGS
+  [-.75,-.4,0,.4,.75].forEach(yn=>{
+    const r2=Math.sqrt(1-yn*yn);c.beginPath();let st=false;
+    for(let i=0;i<=120;i++){const a=(i/120)*Math.PI*2;const [rx,ry,rz]=xf(Math.cos(a)*r2,yn,Math.sin(a)*r2);if(rz<-.15){st=false;continue;}const p=pr(rx,ry,rz,cx,cy,R);if(!st){c.moveTo(p.x,p.y);st=true;}else c.lineTo(p.x,p.y);}
+    c.strokeStyle=`rgba(60,110,170,${yn===0?.22:.14})`;c.lineWidth=yn===0?1:.6;c.stroke();
+  });
 
-// ── Tooltip ───────────────────────────────────────────────────────────────────
-function showTip(i, e) {
-  var mod = MODS[i];
-  gtI.textContent = mod.emoji;
-  gtI.style.background = mod.color + '2e';
-  gtN.textContent = mod.name;
-  gtD.textContent = mod.desc;
-  gtF.textContent = mod.flow;
-  tip.classList.add('show');
-  moveTip(e);
-}
-function hideTip() {
-  tip.classList.remove('show');
-}
-function moveTip(e) {
-  var p  = e.touches && e.touches.length ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
-  var tw = tip.offsetWidth  || 260;
-  var th = tip.offsetHeight || 120;
-  var tx = p.x + 18, ty = p.y - 24;
-  if (tx + tw > window.innerWidth  - 16) tx = p.x - tw - 18;
-  if (ty + th > window.innerHeight - 16) ty = window.innerHeight - th - 16;
-  if (ty < 8) ty = 8;
-  tip.style.left = tx + 'px';
-  tip.style.top  = ty + 'px';
-}
+  // LONGITUDE LINES
+  for(let li=0;li<8;li++){const la=(li/8)*Math.PI*2;c.beginPath();let st=false;
+    for(let j=0;j<=64;j++){const phi=(j/64)*Math.PI;const [rx,ry,rz]=xf(Math.sin(phi)*Math.cos(la),Math.cos(phi),Math.sin(phi)*Math.sin(la));if(rz<-.15){st=false;continue;}const p=pr(rx,ry,rz,cx,cy,R);if(!st){c.moveTo(p.x,p.y);st=true;}else c.lineTo(p.x,p.y);}
+    c.strokeStyle='rgba(60,110,170,0.09)';c.lineWidth=.5;c.stroke();}
 
-// ── Boot ──────────────────────────────────────────────────────────────────────
+  // NODE POSITIONS
+  const nsp=M.map(m=>{const [sx,sy,sz]=sp(m.t,m.p);const [rx,ry,rz]=xf(sx,sy,sz);const p=pr(rx,ry,rz,cx,cy,R);return {...p,vis:rz>-.08};});
+
+  // GREEN N HUB + SONAR
+  const [hx,hy,hz]=xf(0,0,0);const hp=pr(hx,hy,hz,cx,cy,R);
+
+  for(let pi=0;pi<3;pi++){const off=pi,prog=((time+off)%3)/3,rad=28+prog*90,al=(1-prog)*.22;
+    if(al>.01){c.beginPath();c.arc(hp.x,hp.y,rad,0,Math.PI*2);c.strokeStyle=`rgba(29,158,117,${al})`;c.lineWidth=2-prog*1.5;c.stroke();}}
+
+  const hg1=c.createRadialGradient(hp.x,hp.y,0,hp.x,hp.y,80);hg1.addColorStop(0,'rgba(29,158,117,0.08)');hg1.addColorStop(.5,'rgba(29,158,117,0.03)');hg1.addColorStop(1,'rgba(29,158,117,0)');
+  c.beginPath();c.arc(hp.x,hp.y,80,0,Math.PI*2);c.fillStyle=hg1;c.fill();
+
+  const sq=28,sqR=9;
+  c.save();c.shadowColor='rgba(29,158,117,0.5)';c.shadowBlur=28;
+  c.beginPath();c.roundRect(hp.x-sq,hp.y-sq,sq*2,sq*2,sqR);c.fillStyle='#1D9E75';c.fill();
+  c.shadowBlur=0;
+  const sqG=c.createLinearGradient(hp.x,hp.y-sq,hp.x,hp.y+sq);sqG.addColorStop(0,'#1D9E75');sqG.addColorStop(1,'#178558');
+  c.beginPath();c.roundRect(hp.x-sq,hp.y-sq,sq*2,sq*2,sqR);c.fillStyle=sqG;c.fill();
+  const sqH=c.createLinearGradient(hp.x-sq,hp.y-sq,hp.x+sq,hp.y+sq);sqH.addColorStop(0,'rgba(255,255,255,0.18)');sqH.addColorStop(.5,'rgba(255,255,255,0)');sqH.addColorStop(1,'rgba(0,0,0,0.12)');
+  c.beginPath();c.roundRect(hp.x-sq,hp.y-sq,sq*2,sq*2,sqR);c.fillStyle=sqH;c.fill();
+  c.beginPath();c.roundRect(hp.x-sq,hp.y-sq,sq*2,sq*2,sqR);c.strokeStyle='rgba(255,255,255,0.1)';c.lineWidth=1;c.stroke();
+  c.restore();
+  c.save();c.font='700 34px Outfit, sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#FFF';c.fillText('N',hp.x,hp.y+1);c.restore();
+
+  nsp.forEach((np,i)=>{if(!np.vis)return;c.beginPath();c.moveTo(hp.x,hp.y);c.lineTo(np.x,np.y);c.strokeStyle=hov===i?'rgba(29,158,117,0.12)':'rgba(29,158,117,0.04)';c.lineWidth=.6;c.stroke();});
+
+  // ARCS
+  CN.forEach((cn,ci)=>{
+    const s1=sp(M[cn.a].t,M[cn.a].p),s2=sp(M[cn.b].t,M[cn.b].p);
+    const ap=arcPts(s1,s2,60);
+    const pA=ap.map(pt=>{const [rx,ry,rz]=xf(pt[0],pt[1],pt[2]);return pr(rx,ry,rz,cx,cy,R);});
+    const isH=hov>=0&&(cn.a===hov||cn.b===hov);
+    const al=hov>=0?(isH?.4:.03):.16;
+    c.beginPath();pA.forEach((p,i)=>{if(i===0)c.moveTo(p.x,p.y);else c.lineTo(p.x,p.y);});
+    c.strokeStyle=`rgba(21,212,146,${al})`;c.lineWidth=isH?2:1.2;c.stroke();
+    parts.filter(p=>p.ci===ci).forEach(pt=>{
+      const prog=((time*pt.sp+pt.off)%1),idx=Math.floor(prog*(pA.length-1)),pp=pA[idx];if(!pp)return;
+      const fade=Math.sin(prog*Math.PI),pAl=(hov>=0&&!isH)?fade*.05:fade*.9,sz=isH?4:3;
+      c.beginPath();c.arc(pp.x,pp.y,sz*3.5,0,Math.PI*2);c.fillStyle=`rgba(21,212,146,${pAl*.1})`;c.fill();
+      c.beginPath();c.arc(pp.x,pp.y,sz*pp.s,0,Math.PI*2);c.fillStyle=`rgba(21,212,146,${pAl})`;c.fill();
+    });
+  });
+
+  // NODES
+  const sorted=M.map((m,i)=>({m,i,sp2:nsp[i]})).sort((a,b)=>a.sp2.z-b.sp2.z);
+  sorted.forEach(({m,i,sp2})=>{
+    if(!sp2.vis)return;const isH=hov===i,sz=(isH?26:21)*sp2.s;
+    const pulse=1+.35*Math.sin(time*2.5+i*1.2),ringR=sz*1.5*pulse;
+    c.beginPath();c.arc(sp2.x,sp2.y,ringR,0,Math.PI*2);c.strokeStyle=hA(m.col,isH?.4:.18);c.lineWidth=1;c.stroke();
+    const gg=c.createRadialGradient(sp2.x,sp2.y,sz*.3,sp2.x,sp2.y,sz*2.2);gg.addColorStop(0,hA(m.col,isH?.25:.12));gg.addColorStop(1,hA(m.col,0));
+    c.beginPath();c.arc(sp2.x,sp2.y,sz*2.2,0,Math.PI*2);c.fillStyle=gg;c.fill();
+    c.beginPath();c.arc(sp2.x,sp2.y,sz,0,Math.PI*2);
+    const cg=c.createRadialGradient(sp2.x,sp2.y-sz*.3,0,sp2.x,sp2.y,sz);cg.addColorStop(0,hA(m.col,1));cg.addColorStop(1,hA(m.col,.75));
+    c.fillStyle=cg;c.fill();
+    c.beginPath();c.arc(sp2.x,sp2.y-sz*.2,sz*.45,0,Math.PI*2);c.fillStyle='rgba(255,255,255,0.1)';c.fill();
+    c.beginPath();c.arc(sp2.x,sp2.y,sz,0,Math.PI*2);c.strokeStyle='rgba(255,255,255,0.2)';c.lineWidth=1.2;c.stroke();
+    c.font=`${sz*.85}px serif`;c.textAlign='center';c.textBaseline='middle';c.fillText(m.icon,sp2.x,sp2.y+1);
+    const fs=Math.max(11,13*sp2.s);c.font=`600 ${fs}px Outfit, sans-serif`;
+    const tw=c.measureText(m.n).width,lp=14,ly=sp2.y+sz+18;
+    c.fillStyle='rgba(0,0,0,0.35)';c.beginPath();c.roundRect(sp2.x-tw/2-lp+1,ly-12+1,tw+lp*2,26,13);c.fill();
+    c.fillStyle=isH?'rgba(8,11,18,0.95)':'rgba(8,11,18,0.88)';c.beginPath();c.roundRect(sp2.x-tw/2-lp,ly-12,tw+lp*2,26,13);c.fill();
+    c.strokeStyle=hA(m.col,isH?.55:.28);c.lineWidth=1;c.beginPath();c.roundRect(sp2.x-tw/2-lp,ly-12,tw+lp*2,26,13);c.stroke();
+    c.fillStyle=isH?'#FFF':'#CBD5E1';c.textBaseline='middle';c.fillText(m.n,sp2.x,ly+1);
+  });
+
+  // HOVER
+  if(!drag){
+    const cr=cvs.getBoundingClientRect(),lx=mx-cr.left,ly=my-cr.top;let found=-1,minD=40;
+    nsp.forEach((sp2,i)=>{if(!sp2.vis)return;const d=Math.sqrt((sp2.x-lx)**2+(sp2.y-ly)**2);if(d<minD){minD=d;found=i;}});
+    if(found!==hov){hov=found;
+      if(hov>=0){const m=M[hov];document.getElementById('gt-i').textContent=m.icon;document.getElementById('gt-i').style.background=m.col;document.getElementById('gt-n').textContent=m.n;document.getElementById('gt-d').textContent=m.d;document.getElementById('gt-f').textContent='⚡ '+m.fl;tip.classList.add('show');cvs.style.cursor='pointer';}
+      else{tip.classList.remove('show');cvs.style.cursor='grab';}}
+    if(hov>=0){tip.style.left=(mx+18)+'px';tip.style.top=(my-10)+'px';}}
+}
 draw();
+
+
+
 
 })();
 </script>
