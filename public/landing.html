@@ -292,6 +292,7 @@ footer p{font-size:12px;color:var(--text3)}
 .tool-grid{grid-template-columns:1fr}
 .feat-grid,.feat-grid.reverse{grid-template-columns:1fr;text-align:center;direction:ltr}
 .feat-grid > *{direction:ltr}
+#access-window .pte-roles-grid{grid-template-columns:1fr !important}
 .feat-text{max-width:100%}
 .pricing-grid{grid-template-columns:1fr}
 .dash-body{grid-template-columns:1fr}
@@ -559,6 +560,94 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 .pte-granted{background:rgba(29,158,117,.15);color:#15d492}
 .pte-expired{background:rgba(100,100,120,.15);color:#7878a0}
 .pte-timer{font-family:var(--mono);font-size:36px;font-weight:700;letter-spacing:-0.02em;line-height:1}
+
+/* Gradient headings (Orizon-inspired) */
+.text-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, #9ca3af 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Button text-swap hover (Orizon-inspired) */
+.cta-primary, .feat-cta, .mb-play-btn {
+  overflow: hidden;
+  position: relative;
+}
+.btn-swap {
+  display: inline-flex;
+  flex-direction: column;
+  height: 1em;
+  overflow: hidden;
+  vertical-align: middle;
+}
+.btn-swap span {
+  display: block;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  line-height: 1;
+}
+.btn-swap span:last-child {
+  position: absolute;
+  top: 100%;
+}
+.cta-primary:hover .btn-swap span,
+.feat-cta:hover .btn-swap span {
+  transform: translateY(-100%);
+}
+
+/* Hero blobs (Orizon-inspired) */
+.hero-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  animation: blob-pulse 8s ease-in-out infinite;
+}
+.hero-blob-1 {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(29,158,117,0.12) 0%, transparent 70%);
+  top: -80px; left: 50%; transform: translateX(-50%);
+  animation-delay: 0s;
+}
+.hero-blob-2 {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
+  top: 20%; left: 5%;
+  animation-delay: -3s;
+}
+.hero-blob-3 {
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(139,92,246,0.07) 0%, transparent 70%);
+  top: 10%; right: 5%;
+  animation-delay: -6s;
+}
+@keyframes blob-pulse {
+  0%, 100% { transform: scale(1) translateX(0); opacity: 0.8; }
+  33% { transform: scale(1.15) translateX(10px); opacity: 1; }
+  66% { transform: scale(0.9) translateX(-10px); opacity: 0.6; }
+}
+
+/* CTA Marquee (Orizon-inspired) */
+.cta-marquee-track { display: flex; overflow: hidden; }
+.cta-mq-item {
+  font-size: clamp(18px, 2.5vw, 28px);
+  font-weight: 700;
+  color: var(--text2);
+  padding: 0 20px;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+.cta-mq-sep {
+  font-size: 14px;
+  color: var(--green);
+  padding: 0 4px;
+  align-self: center;
+  flex-shrink: 0;
+}
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
 </style>
 </head>
 <body>
@@ -822,127 +911,13 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 
 <div class="section-divider"></div>
 
-<!-- ── PTE: Property-Tech Entry ─────────────────────────────────────────── -->
-<section class="mb-section reveal" id="feat-pte">
-<div class="mb-wrap">
-
-<!-- Left: copy -->
-<div class="mb-left">
-<div class="mb-eyebrow">PTE &mdash; Property Tech Entry</div>
-<h2 class="mb-h2">Your tech is at the door.<br><span style="color:var(--green)">A guest is inside.</span><br>Does your software know?</h2>
-<p class="mb-desc">Maria arrives at Ocean View Apt at 9am. There&rsquo;s a late checkout guest inside. NestOps automatically holds her access code, flags the conflict in her briefing, and notifies the guest &mdash; without a single message from you.</p>
-<div class="mb-stat">
-<div class="mb-stat-dot" style="background:var(--red)"></div>
-<div>
-<div class="mb-stat-num" style="color:var(--text)">0</div>
-<div class="mb-stat-label">competitors have this.<br><strong style="color:var(--text)">The 30-second demo that closes deals.</strong></div>
-</div>
-</div>
-<a href="/login" class="feat-cta">See PTE in action <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"><path d="M6 3l5 5-5 5"/></svg></a>
-</div>
-
-<!-- Right: phone mockup -->
-<div class="mb-right">
-<div class="mb-phone-glow" id="pte-glow" style="background:radial-gradient(ellipse,rgba(226,75,74,.06) 0%,transparent 65%)"></div>
-<div class="mb-phone">
-<div class="mb-notch"></div>
-<div class="mb-island"></div>
-
-<!-- Slide 1: Task + PENDING (PTE scan running) -->
-<div class="mb-slide mb-nos on" id="pte-s1">
-<div class="mb-nos-hdr">
-<div class="mb-nos-wm"><div class="mb-nos-logo" style="background:var(--green)">N</div><span class="mb-nos-nm">NestOps</span><span class="mb-nos-vr">PTE</span></div>
-<div class="mb-nos-greet">Maria&rsquo;s Day</div>
-<div class="mb-nos-rolerow"><span class="mb-nos-badge" style="background:var(--green)">Cleaner</span><span class="mb-nos-meta">Ocean View Apt &middot; 09:00</span></div>
-</div>
-<div class="mb-nos-cards">
-<div class="mb-nc mb-nc-amber show">
-<div class="mb-nc-t">Checking guest status&hellip;</div>
-<div class="mb-nc-s" style="margin-top:2px">Ocean View Apt &middot; PTE scan running</div>
-<div style="display:flex;align-items:center;gap:5px;margin-top:5px"><span class="pte-badge pte-pending">PENDING</span></div>
-</div>
-<div class="mb-nc mb-nc-dark show" style="margin-top:4px">
-<div class="mb-nc-t">Access Code</div>
-<div style="font-size:18px;font-weight:700;color:#374151;letter-spacing:6px;margin-top:3px;font-family:var(--mono)">&#9679;&#9679;&#9679;&#9679;</div>
-<div class="mb-nc-s">Verifying guest status first</div>
-</div>
-</div>
-</div>
-
-<!-- Slide 2: Code LOCKED — guest detected -->
-<div class="mb-slide mb-nos" id="pte-s2">
-<div style="background:var(--bg2);height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center">
-<div style="width:64px;height:64px;border-radius:50%;background:rgba(226,75,74,.12);border:2px solid rgba(226,75,74,.35);display:flex;align-items:center;justify-content:center;margin-bottom:14px">
-<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e24b4a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-</div>
-<span class="pte-badge pte-locked" style="font-size:12px;padding:5px 14px;margin-bottom:10px">ACCESS RESTRICTED</span>
-<div style="font-size:11px;color:#e24b4a;font-weight:600;margin-bottom:6px">Active guest detected</div>
-<div style="font-size:10px;color:#6b7280;line-height:1.5">Late checkout: 11:00am<br>Maria S. &mdash; entry held</div>
-<div style="margin-top:12px;padding:10px 14px;border-radius:8px;background:#111827;border:1px solid #1f2937;width:100%">
-<div style="font-size:8px;color:#4b5563;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Access Code</div>
-<div style="font-size:22px;font-weight:700;letter-spacing:6px;color:#374151;font-family:var(--mono)">&#9679;&#9679;&#9679;&#9679;</div>
-<div style="font-size:8px;color:#e24b4a;margin-top:3px">Locked until resolved</div>
-</div>
-</div>
-</div>
-
-<!-- Slide 3: Guest APPROVED → code revealed -->
-<div class="mb-slide mb-nos" id="pte-s3">
-<div style="background:var(--bg2);height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center">
-<div style="width:64px;height:64px;border-radius:50%;background:rgba(29,158,117,.12);border:2px solid rgba(29,158,117,.35);display:flex;align-items:center;justify-content:center;margin-bottom:14px">
-<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#15d492" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
-</div>
-<span class="pte-badge pte-granted" style="font-size:12px;padding:5px 14px;margin-bottom:10px">GUEST APPROVED</span>
-<div style="font-size:11px;color:var(--green2);font-weight:600;margin-bottom:6px">Window: 09:45 &ndash; 11:00</div>
-<div style="font-size:10px;color:#6b7280;line-height:1.5">Guest extended +1 hr<br>Maria S. &mdash; go now</div>
-<div style="margin-top:12px;padding:10px 14px;border-radius:8px;background:rgba(29,158,117,.06);border:1px solid rgba(29,158,117,.25);width:100%">
-<div style="font-size:8px;color:var(--green);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Access Code</div>
-<div style="font-size:22px;font-weight:700;letter-spacing:4px;color:var(--green2);font-family:var(--mono)">4821</div>
-<div style="font-size:8px;color:#4b5563;margin-top:3px">Active for 1 hr 15 min</div>
-</div>
-</div>
-</div>
-
-<!-- Slide 4: Timer → EXPIRED → re-locks -->
-<div class="mb-slide mb-nos" id="pte-s4">
-<div style="background:var(--bg2);height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center">
-<div style="margin-bottom:16px">
-<div style="font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:#4b5563;margin-bottom:6px">Window closing</div>
-<div class="pte-timer" id="pte-countdown" style="color:var(--amber)">00:00:08</div>
-<div style="height:4px;border-radius:2px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:8px;width:180px">
-<div id="pte-progbar" style="height:100%;width:100%;background:var(--amber);border-radius:2px;transition:width .8s linear"></div>
-</div>
-</div>
-<div id="pte-lock-icon" style="width:64px;height:64px;border-radius:50%;background:rgba(100,100,120,.12);border:2px solid rgba(100,100,120,.25);display:flex;align-items:center;justify-content:center;margin-bottom:14px">
-<svg id="pte-lock-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7878a0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
-</div>
-<span class="pte-badge pte-expired" id="pte-exp-badge" style="font-size:12px;padding:5px 14px;margin-bottom:10px;display:none">EXPIRED &middot; CODE RE-LOCKED</span>
-<div style="font-size:10px;color:#6b7280;line-height:1.5">Window closes automatically.<br>No action needed from you.</div>
-</div>
-</div>
-
-</div><!-- /mb-phone -->
-
-<!-- Play overlay -->
-<div class="mb-overlay" id="pte-overlay">
-<div style="font-size:28px;line-height:1">🔐</div>
-<div style="font-size:12px;font-weight:600;color:#fff;text-align:center;line-height:1.6">Maria is at the door<br><span style="font-size:10px;color:#6b7280;font-weight:400">A guest is inside &mdash; 20 seconds</span></div>
-<button class="mb-play-btn" onclick="pteStart()">&#9654; Watch PTE</button>
-</div>
-
-</div><!-- /mb-right -->
-</div><!-- /mb-wrap -->
-</section>
-
-<div class="section-divider"></div>
-
 <!-- FEATURE: ACCESS WINDOW — FULL PLAYABLE DEMO -->
 <section class="feat reveal" id="access-window">
 <div class="container">
 <div style="text-align:center;margin-bottom:40px">
-<div class="feat-label" style="text-align:center">Access Window</div>
+<div class="feat-label" style="text-align:center">PTE &middot; Access Window</div>
 <div class="feat-title" style="text-align:center;max-width:600px;margin:0 auto">17 messages. 6 hours.<br>1-star review.<br>Or: one time window.</div>
-<div class="feat-desc" style="text-align:center;max-width:520px;margin:12px auto 0">Guest grants a time window. NestOps creates the task, assigns your tech, unlocks the access code — and deactivates it automatically when the window closes. Zero back-and-forth.</div>
+<div class="feat-desc" style="text-align:center;max-width:520px;margin:12px auto 0">A guest is inside. Your cleaner has a job to do. Instead of 17 messages across 3 apps &mdash; NestOps routes one request. Guest Services contacts the guest, the guest approves a window, the code unlocks. When the window closes, it re-locks. Every role moves forward. No calls. No delays.</div>
 </div>
 <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:24px">
 <div class="feat-stat"><div class="feat-stat-num" style="color:var(--red)">17</div><div class="feat-stat-label">messages · 6 hours<br>without NestOps</div></div>
@@ -971,6 +946,83 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <button class="aw-cb" id="aw-b3" onclick="awGo('resolve')" style="padding:6px 14px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2);transition:all .12s;font-family:var(--sans)">With NestOps</button>
 </div>
 </div>
+<!-- Role cards 2×2 -->
+<div class="pte-roles-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:800px;margin:40px auto 0">
+
+<!-- Cleaner -->
+<div style="background:#111827;border:1px solid #1f2937;border-radius:12px;padding:20px 22px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+<span style="font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.05em;background:rgba(217,119,6,.15);color:#f59e0b;border:1px solid rgba(217,119,6,.25)">Cleaner</span>
+</div>
+<div style="font-size:15px;font-weight:700;color:#f9fafb;line-height:1.35;margin-bottom:10px">Vacant? Code shows immediately. Occupied? You see exactly when to go.</div>
+<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px">
+<li style="font-size:12px;color:#9ca3af;display:flex;align-items:flex-start;gap:6px"><span style="color:#f59e0b;flex-shrink:0;margin-top:1px">&#10003;</span>Vacant = auto-granted, code shows immediately</li>
+<li style="font-size:12px;color:#9ca3af;display:flex;align-items:flex-start;gap:6px"><span style="color:#f59e0b;flex-shrink:0;margin-top:1px">&#10003;</span>Occupied = PTE pending, window shown on briefing card</li>
+<li style="font-size:12px;color:#9ca3af;display:flex;align-items:flex-start;gap:6px"><span style="color:#f59e0b;flex-shrink:0;margin-top:1px">&#10003;</span>Day sorted by who you can enter right now</li>
+</ul>
+<div style="margin-top:12px"><span class="pte-badge pte-granted">PTE GRANTED</span></div>
+</div>
+
+<!-- Maintenance -->
+<div style="background:#111827;border:1px solid #1f2937;border-radius:12px;padding:20px 22px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+<span style="font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.05em;background:rgba(59,130,246,.12);color:#60a5fa;border:1px solid rgba(59,130,246,.25)">Maintenance</span>
+</div>
+<div style="font-size:15px;font-weight:700;color:#f9fafb;line-height:1.35;margin-bottom:10px">Every job shows its entry status before you leave the depot.</div>
+<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px">
+<li style="font-size:12px;color:#9ca3af;display:flex;align-items:flex-start;gap:6px"><span style="color:#3b82f6;flex-shrink:0;margin-top:1px">&#10003;</span>PTE badge on each task card</li>
+<li style="font-size:12px;color:#9ca3af;display:flex;align-items:flex-start;gap:6px"><span style="color:#3b82f6;flex-shrink:0;margin-top:1px">&#10003;</span>Window time visible before dispatch</li>
+<li style="font-size:12px;color:#9ca3af;display:flex;align-items:flex-start;gap:6px"><span style="color:#3b82f6;flex-shrink:0;margin-top:1px">&#10003;</span>No surprise lockouts mid-job</li>
+</ul>
+<div style="margin-top:12px"><span class="pte-badge pte-pending">WINDOW: 11:00&ndash;13:00</span></div>
+</div>
+
+<!-- Guest Services -->
+<div style="background:#111827;border:1px solid #1f2937;border-radius:12px;padding:20px 22px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+<span style="font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.05em;background:rgba(29,158,117,.12);color:var(--green2);border:1px solid rgba(29,158,117,.3)">Guest Svc</span>
+</div>
+<div style="font-size:15px;font-weight:700;color:#f9fafb;line-height:1.35;margin-bottom:10px">Request lands in your queue. You contact the guest. One tap grants it.</div>
+<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px">
+<li style="font-size:12px;color:#9ca3af;display:flex;align-items:flex-start;gap:6px"><span style="color:var(--green);flex-shrink:0;margin-top:1px">&#10003;</span>PTE queue in dashboard</li>
+<li style="font-size:12px;color:#9ca3af;display:flex;align-items:flex-start;gap:6px"><span style="color:var(--green);flex-shrink:0;margin-top:1px">&#10003;</span>One action to grant, no back-and-forth with staff</li>
+<li style="font-size:12px;color:#9ca3af;display:flex;align-items:flex-start;gap:6px"><span style="color:var(--green);flex-shrink:0;margin-top:1px">&#10003;</span>Escalation auto-alerts if no action taken</li>
+</ul>
+<div style="margin-top:12px"><span class="pte-badge pte-granted">PTE GRANTED</span></div>
+</div>
+
+<!-- Guest -->
+<div style="background:#111827;border:1px solid #1f2937;border-radius:12px;padding:20px 22px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+<span style="font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.05em;background:rgba(139,92,246,.12);color:#a78bfa;border:1px solid rgba(139,92,246,.25)">Guest</span>
+</div>
+<div style="font-size:15px;font-weight:700;color:#f9fafb;line-height:1.35;margin-bottom:10px">You get one notification. Approve or decline. That&rsquo;s your whole involvement.</div>
+<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px">
+<li style="font-size:12px;color:#9ca3af;display:flex;align-items:flex-start;gap:6px"><span style="color:#8b5cf6;flex-shrink:0;margin-top:1px">&#10003;</span>Push via Guest Portal</li>
+<li style="font-size:12px;color:#9ca3af;display:flex;align-items:flex-start;gap:6px"><span style="color:#8b5cf6;flex-shrink:0;margin-top:1px">&#10003;</span>Approve or decline window in one tap</li>
+<li style="font-size:12px;color:#9ca3af;display:flex;align-items:flex-start;gap:6px"><span style="color:#8b5cf6;flex-shrink:0;margin-top:1px">&#10003;</span>Code auto-expires &mdash; no follow-up needed</li>
+</ul>
+<div style="margin-top:12px"><span class="pte-badge pte-granted">APPROVED</span></div>
+</div>
+
+</div><!-- /role card grid -->
+
+<!-- Flow chain (PRD Diagram 4) -->
+<div style="max-width:800px;margin:32px auto 0;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap">
+<div style="padding:8px 16px;border-radius:8px;background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.18);font-size:12px;font-weight:600;color:var(--green2)">Staff requests PTE</div>
+<span style="font-size:16px;color:#374151;font-weight:700">&rarr;</span>
+<div style="padding:8px 16px;border-radius:8px;background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.18);font-size:12px;font-weight:600;color:var(--green2)">GS contacts guest</div>
+<span style="font-size:16px;color:#374151;font-weight:700">&rarr;</span>
+<div style="padding:8px 16px;border-radius:8px;background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.18);font-size:12px;font-weight:600;color:var(--green2)">Guest approves window</div>
+<span style="font-size:16px;color:#374151;font-weight:700">&rarr;</span>
+<div style="padding:8px 16px;border-radius:8px;background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.18);font-size:12px;font-weight:600;color:var(--green2)">Code unlocks</div>
+<span style="font-size:16px;color:#374151;font-weight:700">&rarr;</span>
+<div style="padding:8px 16px;border-radius:8px;background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.18);font-size:12px;font-weight:600;color:var(--green2)">Window expires &rarr; re-locks</div>
+</div>
+
+<!-- Footer tagline -->
+<p style="text-align:center;margin-top:20px;font-size:13px;font-weight:600;color:var(--text3)">0 phone calls. 0 manual updates. The whole chain runs itself.</p>
+
 <div style="text-align:center;margin-top:20px"><button class="cta-primary" style="display:inline-block;width:auto;padding:14px 40px" onclick="location.href='/login'">Start free trial</button></div>
 </div>
 </section>

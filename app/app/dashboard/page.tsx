@@ -1255,99 +1255,76 @@ export default function AppDashboard() {
             )
           })()}
 
-          {/* 8 stat cards — ops row first, portfolio row second */}
-          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: C.muted, marginBottom: 6 }}>TODAY&apos;S OPS</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 10 }}>
-            {[
-              { label: 'Cleanings Today',  value: TODAY_CHECKINS.length,                                                       icon: <Sparkles size={20} strokeWidth={1.5} />,   href: '/operator/cleaning' },
-              { label: 'Tasks In Motion',  value: 6,                                                                           icon: <ListTodo size={20} strokeWidth={1.5} />,   href: '/operator/operations' },
-              { label: 'Needs Attention',  value: 2,                                                                           icon: <Clock size={20} strokeWidth={1.5} />,      href: '/operator/operations', alert: true },
-              { label: 'Approvals',        value: APPROVALS.filter(a => approvalStatuses[a.id] === 'pending').length,          icon: <CreditCard size={20} strokeWidth={1.5} />, href: '/operator/tickets', alert: APPROVALS.filter(a => approvalStatuses[a.id] === 'pending').length > 0 },
-            ].map(stat => (
-              <Link key={stat.label} href={stat.href} style={{ textDecoration: 'none' }}>
-                <div style={{ background: C.card, border: `1px solid ${(stat as {alert?: boolean}).alert ? 'rgba(239,68,68,0.4)' : C.border}`, borderRadius: 10, padding: '14px 16px', cursor: 'pointer', transition: 'all 0.15s' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ''; }}
-                >
-                  <div style={{ color: (stat as {alert?: boolean}).alert ? '#ef4444' : C.muted, marginBottom: 8 }}>{stat.icon}</div>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: (stat as {alert?: boolean}).alert ? '#ef4444' : C.text, marginBottom: 1 }}>{stat.value}</div>
-                  <div style={{ fontSize: 11, color: C.muted, fontWeight: 500 }}>{stat.label}</div>
-                </div>
-              </Link>
-            ))}
+          {/* Compact inline stats strip */}
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 16px', marginBottom: 14 }}>
+            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap', paddingRight: 24, borderRight: `1px solid ${C.border}` }}>
+                <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: C.muted }}>OPS</span>
+                {[
+                  { label: 'Cleanings',  value: TODAY_CHECKINS.length, icon: <Sparkles size={13} strokeWidth={1.5} />, href: '/operator/cleaning' },
+                  { label: 'Tasks',      value: 6,                     icon: <ListTodo size={13} strokeWidth={1.5} />, href: '/operator/operations' },
+                  { label: 'Attention',  value: 2,                     icon: <Clock size={13} strokeWidth={1.5} />,    href: '/operator/operations', alert: true },
+                  { label: 'Approvals',  value: APPROVALS.filter(a => approvalStatuses[a.id] === 'pending').length, icon: <CreditCard size={13} strokeWidth={1.5} />, href: '/operator/tickets', alert: APPROVALS.filter(a => approvalStatuses[a.id] === 'pending').length > 0 },
+                ].map(s => (
+                  <Link key={s.label} href={s.href} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ color: (s as {alert?: boolean}).alert ? '#ef4444' : C.muted }}>{s.icon}</span>
+                    <span style={{ fontSize: 18, fontWeight: 800, color: (s as {alert?: boolean}).alert ? '#ef4444' : C.text, lineHeight: 1 }}>{s.value}</span>
+                    <span style={{ fontSize: 11, color: C.muted }}>{s.label}</span>
+                  </Link>
+                ))}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: C.muted }}>PORTFOLIO</span>
+                {[
+                  { label: 'Properties', value: PROPERTIES.length,                                                            icon: <Building2 size={13} strokeWidth={1.5} />, href: '/operator/properties' },
+                  { label: 'Owners',     value: OWNERS.length,                                                                 icon: <Users size={13} strokeWidth={1.5} />,     href: '/owner' },
+                  { label: 'Requests',   value: REQUESTS.filter(r => r.status === 'open' || r.status === 'pending').length,    icon: <Ticket size={13} strokeWidth={1.5} />,    href: '/operator/tickets' },
+                  { label: 'Low Stock',  value: 4,                                                                             icon: <Package size={13} strokeWidth={1.5} />,   href: '/operator/inventory' },
+                ].map(s => (
+                  <Link key={s.label} href={s.href} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ color: C.muted }}>{s.icon}</span>
+                    <span style={{ fontSize: 18, fontWeight: 800, color: C.text, lineHeight: 1 }}>{s.value}</span>
+                    <span style={{ fontSize: 11, color: C.muted }}>{s.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
           </div>
-          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: C.muted, marginBottom: 6 }}>PORTFOLIO</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 24 }}>
-            {[
-              { label: 'Properties',   value: PROPERTIES.length,                                                              icon: <Building2 size={20} strokeWidth={1.5} />, href: '/operator/properties' },
-              { label: 'Owners',       value: OWNERS.length,                                                                   icon: <Users size={20} strokeWidth={1.5} />,     href: '/owner' },
-              { label: 'Requests',     value: REQUESTS.filter(r => r.status === 'open' || r.status === 'pending').length,      icon: <Ticket size={20} strokeWidth={1.5} />,    href: '/operator/tickets' },
-              { label: 'Low Stock',    value: 4,                                                                               icon: <Package size={20} strokeWidth={1.5} />,   href: '/operator/inventory' },
-            ].map(stat => (
-              <Link key={stat.label} href={stat.href} style={{ textDecoration: 'none' }}>
-                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '14px 16px', cursor: 'pointer', transition: 'all 0.15s' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.12)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ''; (e.currentTarget as HTMLDivElement).style.borderColor = C.border; }}
-                >
-                  <div style={{ color: C.muted, marginBottom: 8 }}>{stat.icon}</div>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 1 }}>{stat.value}</div>
-                  <div style={{ fontSize: 11, color: C.muted, fontWeight: 500 }}>{stat.label}</div>
-                </div>
-              </Link>
-            ))}
+
+          {/* Compact team strip */}
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 16px', marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: C.muted, flexShrink: 0 }}>TEAM</span>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flex: 1 }}>
+                {TEAM_CLOCK_STATUS.map(member => {
+                  const now2 = new Date()
+                  const [sh2, sm2] = member.shiftStart.split(':').map(Number)
+                  const shiftMs2 = new Date(now2.getFullYear(), now2.getMonth(), now2.getDate(), sh2, sm2).getTime()
+                  const minsLate2 = !member.clockedIn ? Math.round((Date.now() - shiftMs2) / 60000) : 0
+                  const isLate2 = member.late && minsLate2 > 0
+                  return (
+                    <div key={member.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 20, background: isLate2 ? 'rgba(217,119,6,0.1)' : 'rgba(255,255,255,0.04)', border: `1px solid ${isLate2 ? 'rgba(217,119,6,0.35)' : C.border}` }}>
+                      <div style={{ width: 22, height: 22, borderRadius: '50%', background: member.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#fff' }}>{member.initials}</div>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: C.text }}>{member.name}</span>
+                      {member.clockedIn
+                        ? <Circle size={6} fill={C.green} strokeWidth={0} style={{ color: C.green }} />
+                        : isLate2
+                          ? <motion.span animate={prefersReducedMotion ? undefined : { opacity: [1, 0.4, 1] }} transition={{ duration: 1.2, repeat: Infinity }} style={{ display: 'flex' }}><AlertTriangle size={10} color={C.amber} /></motion.span>
+                          : <Circle size={6} strokeWidth={1.5} style={{ color: C.muted }} />
+                      }
+                      {isLate2 && <span style={{ fontSize: 10, color: C.amber, fontWeight: 600 }}>{minsLate2}m late</span>}
+                    </div>
+                  )
+                })}
+              </div>
+              <span style={{ fontSize: 12, color: C.muted, flexShrink: 0 }}>{TEAM_CLOCK_STATUS.filter(m => m.clockedIn).length}/{TEAM_CLOCK_STATUS.length} on shift</span>
+            </div>
           </div>
 
           {/* 2-column layout */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24, alignItems: 'start' }}>
           {/* Left column */}
           <div>
-
-          {/* Team status */}
-          <SectionLabel label="Team Today" />
-          <Card>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>TEAM TODAY</span>
-              <span style={{ fontSize: 12, color: C.muted }}>{TEAM_CLOCK_STATUS.filter(m => m.clockedIn).length} on shift</span>
-            </div>
-            {TEAM_CLOCK_STATUS.map((member, i) => {
-              const now = new Date()
-              const [sh, sm] = member.shiftStart.split(':').map(Number)
-              const shiftMs = new Date(now.getFullYear(), now.getMonth(), now.getDate(), sh, sm).getTime()
-              const minsLate = !member.clockedIn ? Math.round((Date.now() - shiftMs) / 60000) : 0
-              const isActuallyLate = member.late && minsLate > 0
-              return (
-                <div key={member.id} style={{
-                  display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, padding: '9px 10px',
-                  borderRadius: 8, marginBottom: i < TEAM_CLOCK_STATUS.length - 1 ? 6 : 0,
-                  background: isActuallyLate ? 'rgba(217,119,6,0.08)' : 'transparent',
-                  borderLeft: `3px solid ${member.clockedIn ? C.green : isActuallyLate ? C.amber : C.border}`,
-                  paddingLeft: 12,
-                }}>
-                  <div style={{ width: 34, height: 34, borderRadius: '50%', background: member.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                    {member.initials}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 140 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: C.text, minWidth: 60 }}>{member.name}</span>
-                      {member.clockedIn
-                        ? <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: C.green }}><Circle size={7} fill={C.green} strokeWidth={0} />{' '}Clocked in {member.clockInTime}</span>
-                        : isActuallyLate
-                          ? (
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <motion.span animate={prefersReducedMotion ? undefined : { opacity: [1, 0.4, 1] }} transition={{ duration: 1.2, repeat: Infinity }} style={{ display: 'flex', color: C.amber }}><AlertTriangle size={11} /></motion.span>
-                              <span style={{ fontSize: 11, color: C.amber }}>{minsLate} min late</span>
-                            </span>
-                          )
-                          : <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: C.muted }}><Circle size={7} strokeWidth={1.5} />{' '}Shift starts {member.shiftStart}</span>
-                      }
-                    </div>
-                    <div style={{ fontSize: 11, color: C.muted }}>{member.role} · {member.property}</div>
-                  </div>
-                  {isActuallyLate && <ActionBtn label="Remind" />}
-                </div>
-              )
-            })}
-          </Card>
 
           {/* Overnight incidents */}
           <SectionLabel label="Last Night" />
@@ -1433,92 +1410,6 @@ export default function AppDashboard() {
 
           {/* Right column */}
           <div style={{ position: 'sticky', top: 0, maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
-            {/* Owner Approvals */}
-            <SectionLabel label="Pending Owner Approvals" />
-            <div style={{ marginBottom: 12 }}>
-              {APPROVALS.map(approval => {
-                const status = approvalStatuses[approval.id]
-                const isPending = status === 'pending'
-                return (
-                  <div key={approval.id} style={{
-                    background: C.card, border: `1px solid ${isPending ? 'rgba(217,119,6,0.35)' : C.border}`,
-                    borderRadius: 10, padding: '14px 16px', marginBottom: 10,
-                    borderLeft: `4px solid ${isPending ? '#d97706' : status === 'card' ? '#10b981' : status === 'invoice' ? '#6366f1' : '#374151'}`,
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 8 }}>
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{approval.title}</div>
-                        <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{approval.property} · {approval.category}</div>
-                      </div>
-                      <span style={{ fontSize: 14, fontWeight: 800, color: isPending ? '#d97706' : '#10b981', flexShrink: 0 }}>
-                        {approval.amount.toLocaleString()} {approval.currency}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: 12, color: C.muted, marginBottom: 10 }}>{approval.description}</div>
-                    {isPending ? (
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <button onClick={() => handleApprove(approval.id, 'card')} style={{ flex: 1, padding: '6px 0', borderRadius: 6, border: 'none', background: '#10b981', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
-                          Approve (Pay by Card)
-                        </button>
-                        <button onClick={() => handleApprove(approval.id, 'invoice')} style={{ flex: 1, padding: '6px 0', borderRadius: 6, border: '1px solid #6366f140', background: '#6366f115', color: '#6366f1', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
-                          Approve (Invoice Later)
-                        </button>
-                        {!followUpSent[approval.id] && (
-                          <button onClick={() => handleFollowUp(approval.id)} style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid rgba(217,119,6,0.3)', background: 'rgba(217,119,6,0.1)', color: '#d97706', fontSize: 11, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
-                            Follow-Up
-                          </button>
-                        )}
-                      </div>
-                    ) : (
-                      <div style={{ padding: '5px 10px', borderRadius: 6, background: status === 'card' ? 'rgba(16,185,129,0.1)' : 'rgba(99,102,241,0.1)', textAlign: 'center' }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: status === 'card' ? '#10b981' : '#6366f1' }}>
-                          {status === 'card' ? '✓ Charged to card on file' : '✓ Added to owner statement'}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* Check-ins */}
-            <SectionLabel label="Today's Check-ins" />
-            <Card>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>CHECK-INS TODAY</span>
-                <span style={{ fontSize: 12, color: C.muted }}>{TODAY_CHECKINS.length} arrivals</span>
-              </div>
-              {TODAY_CHECKINS.map((ci, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: i < TODAY_CHECKINS.length - 1 ? `1px solid ${C.border}` : 'none' }}>
-                  <div>
-                    <span style={{ fontSize: 13, color: C.text }}>{ci.time} · {ci.propertyName}</span>
-                    {ci.readinessNote && <div style={{ fontSize: 11, color: C.amber }}>{ci.readinessNote}</div>}
-                  </div>
-                  <span style={{
-                    fontSize: 11, fontWeight: 600, padding: '2px 7px', borderRadius: 4,
-                    background: ci.readiness === 'ok' ? 'rgba(22,163,74,0.15)' : 'rgba(217,119,6,0.15)',
-                    color: ci.readiness === 'ok' ? C.green : C.amber,
-                  }}>
-                    {ci.readiness === 'ok' ? '✓ Ready' : '⚠️ At risk'}
-                  </span>
-                </div>
-              ))}
-            </Card>
-
-            {/* Compact Countdown */}
-            <SectionLabel label="First Check-in Countdown" />
-            <Card style={{ padding: '12px 16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>FIRST CHECK-IN</span>
-                <CountdownTimer
-                  targetTime={`${today}T15:00:00`}
-                  label=""
-                  compact
-                />
-              </div>
-              <div style={{ fontSize: 12, color: C.muted, marginTop: 6 }}>Lars Eriksen · Sunset Villa · 15:00</div>
-            </Card>
-
             {/* Activity Feed */}
             <SectionLabel label="Activity Feed" />
             <Card style={{ padding: 0, overflow: 'hidden' }}>
@@ -1591,6 +1482,78 @@ export default function AppDashboard() {
                 })}
               </div>
             </Card>
+
+            {/* Check-ins */}
+            <SectionLabel label="Today's Check-ins" />
+            <Card>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>CHECK-INS TODAY</span>
+                <span style={{ fontSize: 12, color: C.muted }}>{TODAY_CHECKINS.length} arrivals</span>
+              </div>
+              {TODAY_CHECKINS.map((ci, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: i < TODAY_CHECKINS.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                  <div>
+                    <span style={{ fontSize: 13, color: C.text }}>{ci.time} · {ci.propertyName}</span>
+                    {ci.readinessNote && <div style={{ fontSize: 11, color: C.amber }}>{ci.readinessNote}</div>}
+                  </div>
+                  <span style={{
+                    fontSize: 11, fontWeight: 600, padding: '2px 7px', borderRadius: 4,
+                    background: ci.readiness === 'ok' ? 'rgba(22,163,74,0.15)' : 'rgba(217,119,6,0.15)',
+                    color: ci.readiness === 'ok' ? C.green : C.amber,
+                  }}>
+                    {ci.readiness === 'ok' ? '✓ Ready' : '⚠️ At risk'}
+                  </span>
+                </div>
+              ))}
+            </Card>
+
+            {/* Owner Approvals */}
+            <SectionLabel label="Pending Owner Approvals" />
+            <div style={{ marginBottom: 12 }}>
+              {APPROVALS.map(approval => {
+                const status = approvalStatuses[approval.id]
+                const isPending = status === 'pending'
+                return (
+                  <div key={approval.id} style={{
+                    background: C.card, border: `1px solid ${isPending ? 'rgba(217,119,6,0.35)' : C.border}`,
+                    borderRadius: 10, padding: '14px 16px', marginBottom: 10,
+                    borderLeft: `4px solid ${isPending ? '#d97706' : status === 'card' ? '#10b981' : status === 'invoice' ? '#6366f1' : '#374151'}`,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 8 }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{approval.title}</div>
+                        <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{approval.property} · {approval.category}</div>
+                      </div>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: isPending ? '#d97706' : '#10b981', flexShrink: 0 }}>
+                        {approval.amount.toLocaleString()} {approval.currency}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 12, color: C.muted, marginBottom: 10 }}>{approval.description}</div>
+                    {isPending ? (
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button onClick={() => handleApprove(approval.id, 'card')} style={{ flex: 1, padding: '6px 0', borderRadius: 6, border: 'none', background: '#10b981', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                          Approve (Pay by Card)
+                        </button>
+                        <button onClick={() => handleApprove(approval.id, 'invoice')} style={{ flex: 1, padding: '6px 0', borderRadius: 6, border: '1px solid #6366f140', background: '#6366f115', color: '#6366f1', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                          Approve (Invoice Later)
+                        </button>
+                        {!followUpSent[approval.id] && (
+                          <button onClick={() => handleFollowUp(approval.id)} style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid rgba(217,119,6,0.3)', background: 'rgba(217,119,6,0.1)', color: '#d97706', fontSize: 11, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
+                            Follow-Up
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div style={{ padding: '5px 10px', borderRadius: 6, background: status === 'card' ? 'rgba(16,185,129,0.1)' : 'rgba(99,102,241,0.1)', textAlign: 'center' }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: status === 'card' ? '#10b981' : '#6366f1' }}>
+                          {status === 'card' ? '✓ Charged to card on file' : '✓ Added to owner statement'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
 
             {/* Quick Links */}
             <SectionLabel label="Quick Links" />
