@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { MessageSquare, Wrench, ShoppingCart, HelpCircle, Send, Sparkles, Plus } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
@@ -7,7 +7,7 @@ import DataTable from '@/components/shared/DataTable'
 import AppDrawer from '@/components/shared/AppDrawer'
 import Tabs from '@/components/shared/Tabs'
 import type { Column } from '@/components/shared/DataTable'
-import { REQUESTS, type Request } from '@/lib/data/requests'
+import { REQUESTS, type Request, type RequestSource } from '@/lib/data/requests'
 import { PROPERTIES } from '@/lib/data/properties'
 import { OWNERS } from '@/lib/data/owners'
 import { useRole } from '@/context/RoleContext'
@@ -19,6 +19,20 @@ const TYPE_ICONS = {
   maintenance: Wrench,
   purchase: ShoppingCart,
   inquiry: HelpCircle,
+}
+
+const SOURCE_COLORS: Record<RequestSource, string> = {
+  guest:  '#3b82f6',
+  staff:  '#6b7280',
+  owner:  '#059669',
+  system: '#7c3aed',
+}
+
+const SOURCE_LABELS: Record<RequestSource, string> = {
+  guest:  'Guest',
+  staff:  'Staff',
+  owner:  'Owner',
+  system: 'System',
 }
 
 const STAFF_OPTIONS = ['Johan Larsson', 'Anna Kowalski', 'Bjorn Larsen']
@@ -38,16 +52,28 @@ export default function TicketsPage() {
   const [requests, setRequests] = useState<Request[]>(REQUESTS)
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all')
   const [typeFilter, setTypeFilter] = useState<FilterType>('all')
+  const [sourceFilter, setSourceFilter] = useState<RequestSource | 'all'>('all')
   const [selectedRequest, setSelectedRequest] = useState<EnrichedRequest | null>(null)
   const [comment, setComment] = useState('')
   const [suggesting, setSuggesting] = useState(false)
   const [toast, setToast] = useState('')
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
-  // New Request drawer
+  // Pre-populate source filter from query param
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const src = params.get('source')
+    if (src && ['guest', 'staff', 'owner', 'system'].includes(src)) {
+      setSourceFilter(src as RequestSource)
+    }
+  }, [])
+
+  // New Ticket drawer
   const [newDrawer, setNewDrawer] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newType, setNewType] = useState<'maintenance' | 'purchase' | 'inquiry'>('maintenance')
+  const [newSource, setNewSource] = useState<RequestSource>('staff')
   const [newPropertyId, setNewPropertyId] = useState(PROPERTIES[0]?.id ?? 'p1')
   const [newDescription, setNewDescription] = useState('')
   const [newPriority, setNewPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium')
@@ -56,12 +82,13 @@ export default function TicketsPage() {
   const [assigningId, setAssigningId] = useState<string | null>(null)
   const [assignedStaff, setAssignedStaff] = useState<Record<string, string>>({})
 
-  const enriched = enrichRequests(requests)
+  const enriched = useMemo(() => enrichRequests(requests), [requests])
 
-  const filtered = enriched.filter(r =>
+  const filtered = useMemo(() => enriched.filter(r =>
     (statusFilter === 'all' || r.status === statusFilter) &&
-    (typeFilter === 'all' || r.type === typeFilter)
-  )
+    (typeFilter === 'all' || r.type === typeFilter) &&
+    (sourceFilter === 'all' || r.source === sourceFilter)
+  ), [enriched, statusFilter, typeFilter, sourceFilter])
 
   const columns: Column<EnrichedRequest>[] = [
     {
@@ -73,10 +100,27 @@ export default function TicketsPage() {
             <div style={{ width: 28, height: 28, borderRadius: 6, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Icon size={14} style={{ color: accent }} />
             </div>
-            <span style={{ fontWeight: 500 }}>{r.title}</span>
+            <div>
+              <span style={{ fontWeight: 500 }}>{r.title}</span>
+              {r.reporterName && (
+                <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{r.reporterName}</div>
+              )}
+            </div>
           </div>
         )
       },
+    },
+    {
+      key: 'source', label: 'Source',
+      render: r => (
+        <span style={{
+          fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20,
+          background: `${SOURCE_COLORS[r.source]}18`,
+          color: SOURCE_COLORS[r.source],
+        }}>
+          {SOURCE_LABELS[r.source]}
+        </span>
+      ),
     },
     { key: 'priority', label: 'Priority', render: r => <StatusBadge status={r.priority} /> },
     { key: 'propertyName', label: 'Property', sortable: true, render: r => <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{r.propertyName}</span> },
@@ -104,6 +148,7 @@ export default function TicketsPage() {
   ]
 
   const typePills: FilterType[] = ['all', 'maintenance', 'purchase', 'inquiry']
+  const sourcePills: Array<RequestSource | 'all'> = ['all', 'guest', 'staff', 'owner', 'system']
 
   const handleSuggestReply = async () => {
     if (!selectedRequest) return
@@ -126,15 +171,14 @@ export default function TicketsPage() {
   const updateStatus = (id: string, status: Request['status']) => {
     setRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r))
     setSelectedRequest(null)
-    showToast(status === 'resolved' ? 'Request resolved' : status === 'pending' ? 'Request approved' : 'Request declined')
+    showToast(status === 'resolved' ? 'Ticket resolved' : status === 'pending' ? 'Ticket approved' : 'Ticket declined')
   }
 
-  const handleNewRequest = () => {
+  const handleNewTicket = () => {
     const prop = PROPERTIES.find(p => p.id === newPropertyId)
-    const owner = OWNERS.find(o => o.id === prop?.ownerId)
     const newReq: Request = {
       id: `req-${Date.now()}`,
-      title: newTitle || 'New request',
+      title: newTitle || 'New ticket',
       type: newType,
       propertyId: newPropertyId,
       ownerId: prop?.ownerId ?? 'o1',
@@ -142,13 +186,14 @@ export default function TicketsPage() {
       priority: newPriority,
       date: new Date().toISOString().split('T')[0],
       description: newDescription,
+      source: newSource,
       comments: [],
     }
     setRequests(prev => [newReq, ...prev])
     setNewDrawer(false)
     setNewTitle('')
     setNewDescription('')
-    showToast('Request created')
+    showToast('Ticket created')
   }
 
   const handleAssign = (requestId: string, staff: string) => {
@@ -161,9 +206,9 @@ export default function TicketsPage() {
 
   return (
     <div>
-      <PageHeader title="Requests" subtitle="All property requests and tickets" action={
+      <PageHeader title="Tickets" subtitle="All property tickets and requests" action={
         <button onClick={() => setNewDrawer(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
-          <Plus size={14} /> New Request
+          <Plus size={14} /> New Ticket
         </button>
       } />
 
@@ -175,11 +220,7 @@ export default function TicketsPage() {
               key={t}
               onClick={() => setTypeFilter(t)}
               style={{
-                padding: '5px 12px',
-                borderRadius: 20,
-                fontSize: 12,
-                fontWeight: 500,
-                cursor: 'pointer',
+                padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: 'pointer',
                 border: `1px solid ${typeFilter === t ? accent : 'var(--border)'}`,
                 background: typeFilter === t ? `${accent}1a` : 'transparent',
                 color: typeFilter === t ? accent : 'var(--text-muted)',
@@ -190,6 +231,29 @@ export default function TicketsPage() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Source filter pills */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 16, marginTop: 8 }}>
+        {sourcePills.map(s => {
+          const color = s === 'all' ? accent : SOURCE_COLORS[s as RequestSource]
+          const active = sourceFilter === s
+          return (
+            <button
+              key={s}
+              onClick={() => setSourceFilter(s)}
+              style={{
+                padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: 'pointer',
+                border: `1px solid ${active ? color : 'var(--border)'}`,
+                background: active ? `${color}1a` : 'transparent',
+                color: active ? color : 'var(--text-muted)',
+                textTransform: 'capitalize',
+              }}
+            >
+              {s === 'all' ? 'All Sources' : SOURCE_LABELS[s as RequestSource]}
+            </button>
+          )
+        })}
       </div>
 
       <DataTable columns={columns} data={filtered} onRowClick={r => setSelectedRequest(r)} />
@@ -236,6 +300,7 @@ export default function TicketsPage() {
               {[
                 ['Status', <StatusBadge key="s" status={selectedRequest.status} />],
                 ['Priority', <StatusBadge key="p" status={selectedRequest.priority} />],
+                ['Source', <span key="src" style={{ fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: `${SOURCE_COLORS[selectedRequest.source]}18`, color: SOURCE_COLORS[selectedRequest.source] }}>{SOURCE_LABELS[selectedRequest.source]}</span>],
                 ['Property', PROPERTIES.find(p => p.id === selectedRequest.propertyId)?.name],
                 ['Owner', OWNERS.find(o => o.id === selectedRequest.ownerId)?.name],
                 ['Date', selectedRequest.date],
@@ -307,19 +372,39 @@ export default function TicketsPage() {
         )}
       </AppDrawer>
 
-      {/* New Request Drawer */}
+      {/* New Ticket Drawer */}
       <AppDrawer
         open={newDrawer}
         onClose={() => setNewDrawer(false)}
-        title="New Request"
+        title="New Ticket"
         footer={
           <div style={{ display: 'flex', gap: 8, width: '100%' }}>
             <button onClick={() => setNewDrawer(false)} style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
-            <button onClick={handleNewRequest} style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Create</button>
+            <button onClick={handleNewTicket} style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Create</button>
           </div>
         }
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>Source</label>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {(['guest', 'staff', 'owner'] as RequestSource[]).map(s => (
+                <button
+                  key={s}
+                  onClick={() => setNewSource(s)}
+                  style={{
+                    flex: 1, padding: '7px', borderRadius: 8, cursor: 'pointer',
+                    border: `1px solid ${newSource === s ? SOURCE_COLORS[s] : 'var(--border)'}`,
+                    background: newSource === s ? `${SOURCE_COLORS[s]}1a` : 'transparent',
+                    color: newSource === s ? SOURCE_COLORS[s] : 'var(--text-muted)',
+                    fontSize: 13, fontWeight: 500, textTransform: 'capitalize',
+                  }}
+                >
+                  {SOURCE_LABELS[s]}
+                </button>
+              ))}
+            </div>
+          </div>
           <div>
             <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>Type</label>
             <select style={inputStyle} value={newType} onChange={e => setNewType(e.target.value as typeof newType)}>

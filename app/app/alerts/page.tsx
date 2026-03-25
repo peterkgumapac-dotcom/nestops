@@ -1,10 +1,12 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Bell } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
+import AppDrawer from '@/components/shared/AppDrawer'
 import { FIELD_ALERTS, type FieldAlert, type FieldAlertType } from '@/lib/data/fieldAlerts'
+import { STAFF_MEMBERS } from '@/lib/data/staff'
 import type { UserProfile } from '@/context/RoleContext'
 
 const SEVERITY_COLORS: Record<string, string> = {
@@ -26,6 +28,7 @@ const TYPE_LABELS: Record<FieldAlertType, string> = {
   apartment_dirty: 'Cleaner Report',
   needs_consumables: 'Consumables',
   upsell_escalation: 'Upsell',
+  maintenance_issue: 'Maintenance Issue',
 }
 
 const TYPE_ICONS: Record<FieldAlertType, string> = {
@@ -35,6 +38,7 @@ const TYPE_ICONS: Record<FieldAlertType, string> = {
   apartment_dirty: '⚠️',
   needs_consumables: '🧴',
   upsell_escalation: '⬆',
+  maintenance_issue: '🔧',
 }
 
 function timeAgo(iso: string): string {
@@ -60,6 +64,15 @@ export default function AlertsPage() {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
   const [alerts, setAlerts] = useState<FieldAlert[]>([])
   const [filter, setFilter] = useState('all')
+
+  // Work order drawer state
+  const [convertAlert, setConvertAlert] = useState<FieldAlert | null>(null)
+  const [convertStep, setConvertStep] = useState<'form' | 'success'>('form')
+  const [woAssignee, setWoAssignee] = useState('s3')
+  const [woDate, setWoDate] = useState(new Date().toISOString().split('T')[0])
+  const [woTime, setWoTime] = useState('10:00')
+  const [woNotes, setWoNotes] = useState('')
+  const [convertedAlerts, setConvertedAlerts] = useState<Record<string, string>>({})
 
   useEffect(() => {
     const stored = localStorage.getItem('nestops_user')
@@ -95,6 +108,40 @@ export default function AlertsPage() {
   const markRead = (id: string, actionRoute?: string) => {
     setAlerts(prev => prev.map(a => a.id === id ? { ...a, read: true } : a))
     if (actionRoute) router.push(actionRoute)
+  }
+
+  const handleOpenConvert = (alert: FieldAlert) => {
+    setConvertAlert(alert)
+    setWoNotes(alert.body)
+    setWoAssignee('s3')
+    setWoDate(new Date().toISOString().split('T')[0])
+    setWoTime('10:00')
+    setConvertStep('form')
+  }
+
+  const handleCreateWorkOrder = () => {
+    if (!convertAlert) return
+    const woId = `WO-${Date.now().toString().slice(-4)}`
+    const workOrder = {
+      id: woId,
+      alertId: convertAlert.id,
+      title: convertAlert.title,
+      propertyName: convertAlert.propertyName,
+      propertyId: convertAlert.propertyId,
+      assigneeId: woAssignee,
+      assigneeName: STAFF_MEMBERS.find(s => s.id === woAssignee)?.name ?? 'Unassigned',
+      scheduledDate: woDate,
+      scheduledTime: woTime,
+      notes: woNotes,
+      priority: convertAlert.severity === 'urgent' ? 'urgent' : 'standard',
+      createdAt: new Date().toISOString(),
+    }
+    try {
+      const existing = JSON.parse(localStorage.getItem('nestops_work_orders') || '[]')
+      localStorage.setItem('nestops_work_orders', JSON.stringify([...existing, workOrder]))
+    } catch {}
+    setConvertedAlerts(prev => ({ ...prev, [convertAlert.id]: woId }))
+    setConvertStep('success')
   }
 
   // Group: urgent first, then by today vs earlier
@@ -160,6 +207,23 @@ export default function AlertsPage() {
                 </span>
               )}
             </div>
+
+            {/* Work order CTA */}
+            {(alert.type === 'maintenance_issue' || alert.type === 'apartment_dirty') && (
+              convertedAlerts[alert.id]
+                ? <div style={{ marginTop: 8, fontSize: 11, fontWeight: 600, color: '#16a34a',
+                                display: 'flex', alignItems: 'center', gap: 4 }}>
+                    ✓ Work Order Created · {convertedAlerts[alert.id]}
+                  </div>
+                : <button
+                    onClick={e => { e.stopPropagation(); handleOpenConvert(alert) }}
+                    style={{ marginTop: 10, padding: '6px 14px', borderRadius: 7, border: '1px solid #3b82f6',
+                             background: 'rgba(59,130,246,0.1)', color: '#3b82f6', fontSize: 12,
+                             fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    Create Work Order →
+                  </button>
+            )}
           </div>
         </div>
       </motion.div>
@@ -167,6 +231,10 @@ export default function AlertsPage() {
   }
 
   const isSupervisor = currentUser?.subRole?.includes('Supervisor')
+
+  const maintenanceStaff = STAFF_MEMBERS.filter(
+    s => s.role.toLowerCase().includes('maintenance') || s.role.toLowerCase().includes('tech')
+  )
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -227,6 +295,149 @@ export default function AlertsPage() {
           )}
         </>
       )}
+
+      {/* Create Work Order Drawer */}
+      <AppDrawer
+        open={!!convertAlert}
+        onClose={() => { setConvertAlert(null); setConvertStep('form') }}
+        title={convertStep === 'form' ? 'Create Work Order' : 'Work Order Created'}
+        subtitle={convertStep === 'form'
+          ? (convertAlert?.propertyName ?? '') + ' · ' + (convertAlert?.title ?? '')
+          : undefined}
+        footer={convertStep === 'form'
+          ? <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+              <button onClick={() => setConvertAlert(null)}
+                style={{ flex: 1, padding: 9, borderRadius: 8, border: '1px solid var(--border)',
+                         background: 'transparent', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>
+                Cancel
+              </button>
+              <button onClick={handleCreateWorkOrder}
+                style={{ flex: 2, padding: 9, borderRadius: 8, border: 'none', background: '#3b82f6',
+                         color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                Create Work Order
+              </button>
+            </div>
+          : <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+              <button onClick={() => { setConvertAlert(null); setConvertStep('form') }}
+                style={{ flex: 1, padding: 9, borderRadius: 8, border: '1px solid var(--border)',
+                         background: 'transparent', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>
+                Done
+              </button>
+              <button onClick={() => { setConvertAlert(null); setConvertStep('form'); router.push('/app/my-tasks') }}
+                style={{ flex: 2, padding: 9, borderRadius: 8, border: 'none', background: '#16a34a',
+                         color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                View in Tasks →
+              </button>
+            </div>
+        }
+      >
+        <AnimatePresence mode="wait">
+          {convertStep === 'form' && convertAlert ? (
+            <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+              {/* Pre-filled read-only info */}
+              <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(59,130,246,0.06)',
+                            border: '1px solid rgba(59,130,246,0.2)' }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>
+                  {convertAlert.title}
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{convertAlert.propertyName}</div>
+              </div>
+
+              {/* Assign to */}
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>
+                  Assign to
+                </label>
+                <select value={woAssignee} onChange={e => setWoAssignee(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)',
+                           background: '#1f2937', color: 'var(--text-primary)', fontSize: 14, outline: 'none' }}>
+                  {maintenanceStaff.map(s => (
+                    <option key={s.id} value={s.id}>{s.name} · {s.role}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Date + Time row */}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>
+                    Scheduled Date
+                  </label>
+                  <input type="date" value={woDate} onChange={e => setWoDate(e.target.value)}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)',
+                             background: '#1f2937', color: 'var(--text-primary)', fontSize: 14, outline: 'none' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>
+                    Due Time
+                  </label>
+                  <input type="time" value={woTime} onChange={e => setWoTime(e.target.value)}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)',
+                             background: '#1f2937', color: 'var(--text-primary)', fontSize: 14, outline: 'none' }} />
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>
+                  Notes
+                </label>
+                <textarea value={woNotes} onChange={e => setWoNotes(e.target.value)}
+                  style={{ width: '100%', minHeight: 80, padding: '10px 12px', borderRadius: 8,
+                           border: '1px solid var(--border)', background: '#1f2937',
+                           color: 'var(--text-primary)', fontSize: 13, resize: 'vertical', outline: 'none' }} />
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div key="success" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, paddingTop: 24 }}>
+
+              {/* Checkmark */}
+              <motion.div initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.05, type: 'spring', stiffness: 300, damping: 20 }}
+                style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(22,163,74,0.15)',
+                         border: '2px solid #16a34a', display: 'flex', alignItems: 'center',
+                         justifyContent: 'center', fontSize: 24 }}>
+                ✓
+              </motion.div>
+
+              {/* WO reference */}
+              <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+                style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: '#16a34a',
+                         padding: '3px 10px', borderRadius: 20, border: '1px solid rgba(22,163,74,0.3)',
+                         background: 'rgba(22,163,74,0.08)' }}>
+                {convertedAlerts[convertAlert?.id ?? ''] ?? 'WO-XXXX'}
+              </motion.div>
+
+              {/* Detail chips */}
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
+                style={{ width: '100%', borderRadius: 10, border: '1px solid var(--border)',
+                         background: 'var(--bg-card)', overflow: 'hidden' }}>
+                {([
+                  ['Property', convertAlert?.propertyName],
+                  ['Assigned to', STAFF_MEMBERS.find(s => s.id === woAssignee)?.name],
+                  ['Scheduled', `${woDate} at ${woTime}`],
+                ] as [string, string | undefined][]).map(([label, value]) => (
+                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                            padding: '10px 14px', borderBottom: '1px solid var(--border)' }}>
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{value}</span>
+                  </div>
+                ))}
+              </motion.div>
+
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+                style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.6 }}>
+                {STAFF_MEMBERS.find(s => s.id === woAssignee)?.name} has been assigned.
+                They&apos;ll see it on their briefing card.
+              </motion.p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </AppDrawer>
     </motion.div>
   )
 }

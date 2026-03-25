@@ -21,55 +21,30 @@ export interface NavItem {
 export interface NavSection {
   label: string
   items: NavItem[]
+  collapsible?: boolean
 }
 
 export const OPERATOR_NAV: NavSection[] = [
   {
     label: 'Overview',
     items: [
-      { label: 'Dashboard', href: '/operator', icon: LayoutDashboard },
-    ],
-  },
-  {
-    label: 'Properties',
-    items: [
-      { label: 'Properties',   href: '/operator/properties',   icon: Building2 },
-      { label: 'Schedules',    href: '/operator/cleaning',     icon: CalendarCheck },
-      { label: 'Contractors',  href: '/operator/contractors',  icon: HardHat },
-    ],
-  },
-  {
-    label: 'Operations',
-    items: [
-      { label: 'Operations',     href: '/operator/operations',     icon: ClipboardList },
-      { label: 'Guest Services', href: '/operator/guest-services', icon: Headphones },
-      { label: 'Requests',       href: '/operator/tickets',        icon: Ticket,    badge: 5 },
-      { label: 'Inventory',      href: '/operator/inventory',      icon: Package },
-      { label: 'Fixed Assets',   href: '/operator/assets',         icon: HardDrive },
-    ],
-  },
-  {
-    label: 'Team',
-    items: [
-      { label: 'Staff', href: '/operator/team', icon: UserCheck },
+      { label: 'Dashboard',   href: '/operator',            icon: LayoutDashboard },
+      { label: 'Properties',  href: '/operator/properties', icon: Building2 },
+      { label: 'Operations',  href: '/operator/operations', icon: ClipboardList },
+      { label: 'Tickets',     href: '/operator/tickets',    icon: Ticket, badge: 5 },
+      { label: 'Team',        href: '/operator/team',       icon: UserCheck },
     ],
   },
   {
     label: 'Platform',
+    collapsible: true,
     items: [
       { label: 'Guest Experience', href: '/operator/guest-experience', icon: Globe },
-      { label: 'Guidebooks',    href: '/operator/guidebooks',    icon: BookOpen },
-      { label: 'Upsells',       href: '/operator/upsells',       icon: ShoppingBag },
-      { label: 'Compliance',    href: '/operator/compliance',    icon: ShieldCheck },
-      { label: 'Automations',   href: '/operator/automations',   icon: Zap },
-      { label: 'Alerts',        href: '/operator/alerts',        icon: Bell },
-    ],
-  },
-  {
-    label: 'Account',
-    items: [
-      { label: 'Settings',  href: '/operator/settings',   icon: Settings },
-      { label: 'Changelog', href: '/operator/changelog',  icon: History },
+      { label: 'Upsells',          href: '/operator/upsells',          icon: ShoppingBag },
+      { label: 'Compliance',       href: '/operator/compliance',       icon: ShieldCheck },
+      { label: 'Automations',      href: '/operator/automations',      icon: Zap },
+      { label: 'Alerts',           href: '/operator/alerts',           icon: Bell },
+      { label: 'Settings',         href: '/operator/settings',         icon: Settings },
     ],
   },
 ]

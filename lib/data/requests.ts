@@ -1,6 +1,7 @@
 export type RequestType = 'maintenance' | 'purchase' | 'inquiry'
 export type RequestStatus = 'open' | 'pending' | 'resolved'
 export type RequestPriority = 'low' | 'medium' | 'high' | 'urgent'
+export type RequestSource = 'guest' | 'staff' | 'owner' | 'system'
 
 export interface RequestComment {
   id: string
@@ -25,6 +26,8 @@ export interface Request {
   comments: RequestComment[]
   assignedTo?: string
   requiresOwnerApproval?: boolean
+  source: RequestSource
+  reporterName?: string
 }
 
 export const REQUESTS: Request[] = [
@@ -38,6 +41,7 @@ export const REQUESTS: Request[] = [
     ownerId: 'o1',
     date: '2026-03-14',
     description: 'Guests reported the dishwasher is not draining properly. Standing water remains after cycle completes.',
+    source: 'staff',
     comments: [
       { id: 'c1', author: 'Sarah Johnson', role: 'owner', message: 'Guest called about this this morning. Needs urgent fix before next checkin Saturday.', timestamp: '2026-03-14T09:00:00Z' },
       { id: 'c2', author: 'Operations Team', role: 'operator', message: 'Dispatching plumber. Will confirm appointment shortly.', timestamp: '2026-03-14T10:30:00Z' },
@@ -55,6 +59,7 @@ export const REQUESTS: Request[] = [
     description: 'Current towel set is worn. Request to purchase 2 new sets (bath + hand + face cloths) for Harbor Studio.',
     amount: 890,
     currency: 'NOK',
+    source: 'staff',
     comments: [
       { id: 'c3', author: 'Operations Team', role: 'operator', message: 'Reviewing purchase request. Will approve once we confirm budget.', timestamp: '2026-03-12T14:00:00Z' },
     ],
@@ -69,6 +74,7 @@ export const REQUESTS: Request[] = [
     ownerId: 'o2',
     date: '2026-03-08',
     description: 'Owner asked about upgrading the WiFi router to improve connection speed for remote workers.',
+    source: 'staff',
     comments: [
       { id: 'c4', author: 'Michael Chen', role: 'owner', message: 'We have had 3 complaints about slow WiFi this month.', timestamp: '2026-03-08T11:00:00Z' },
       { id: 'c5', author: 'Operations Team', role: 'operator', message: 'We recommend upgrading to mesh system. Cost approx 2,400 NOK. Shall we proceed?', timestamp: '2026-03-09T09:00:00Z' },
@@ -86,6 +92,7 @@ export const REQUESTS: Request[] = [
     ownerId: 'o3',
     date: '2026-03-15',
     description: 'Current guests report loud banging noise from heating radiators at night. Temperature also inconsistent.',
+    source: 'staff',
     comments: [],
   },
   {
@@ -100,6 +107,49 @@ export const REQUESTS: Request[] = [
     description: 'Current coffee machine is broken. Request to replace with Nespresso Vertuo Next.',
     amount: 1290,
     currency: 'NOK',
+    source: 'staff',
+    comments: [],
+  },
+  {
+    id: 'r6',
+    title: 'AC not cooling — guest complaint',
+    type: 'maintenance',
+    status: 'open',
+    priority: 'urgent',
+    propertyId: 'p1',
+    ownerId: 'o1',
+    date: '2026-03-19',
+    description: 'Guest Camilla Dahl reports AC not cooling in bedroom. Check-out in 2 days.',
+    source: 'guest',
+    reporterName: 'Camilla Dahl',
+    comments: [],
+  },
+  {
+    id: 'r7',
+    title: 'Cleanliness complaint on arrival',
+    type: 'inquiry',
+    status: 'open',
+    priority: 'high',
+    propertyId: 'p3',
+    ownerId: 'o2',
+    date: '2026-03-18',
+    description: 'Guest reported property was not clean on arrival. Requesting partial refund.',
+    source: 'guest',
+    reporterName: 'Lars Eriksen',
+    comments: [],
+  },
+  {
+    id: 'r8',
+    title: 'Heating inspection — owner request',
+    type: 'maintenance',
+    status: 'pending',
+    priority: 'medium',
+    propertyId: 'p2',
+    ownerId: 'o1',
+    date: '2026-03-17',
+    description: 'Owner Sarah Johnson has requested a full heating system inspection.',
+    source: 'owner',
+    reporterName: 'Sarah Johnson',
     comments: [],
   },
 ]

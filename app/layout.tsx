@@ -1,13 +1,12 @@
 import type { Metadata } from 'next'
-import { Inter, Outfit, JetBrains_Mono } from 'next/font/google'
+import { DM_Sans, DM_Mono } from 'next/font/google'
 import './globals.css'
 import { RoleProvider } from '@/context/RoleContext'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { AlertsProvider } from '@/context/AlertsContext'
 
-const inter = Inter({ subsets: ['latin'] })
-const outfit = Outfit({ subsets: ['latin'], variable: '--font-sans' })
-const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' })
+const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-sans', weight: ['300', '400', '500', '600'] })
+const mono = DM_Mono({ subsets: ['latin'], variable: '--font-mono', weight: ['400', '500'] })
 
 export const metadata: Metadata = {
   title: 'NestOps',
@@ -17,7 +16,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${outfit.variable} ${mono.variable} ${inter.className}`}>
+      <body className={`${dmSans.variable} ${mono.variable}`}>
         <ThemeProvider>
           <RoleProvider>
             <AlertsProvider>

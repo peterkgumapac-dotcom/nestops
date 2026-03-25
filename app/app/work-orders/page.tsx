@@ -66,6 +66,7 @@ export default function WorkOrdersPage() {
       date: new Date().toISOString().split('T')[0],
       description: newDescription + (newVendor ? `\nVendor: ${newVendor}` : ''),
       comments: [],
+      source: 'staff' as const,
       requiresOwnerApproval: involveOwner,
       ...(newAmount ? { amount: parseFloat(newAmount), currency: 'NOK' } : {}),
     }

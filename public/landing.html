@@ -648,6 +648,42 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
   from { transform: translateX(0); }
   to { transform: translateX(-100%); }
 }
+
+/* ── Globe component ─────────────────────────────────── */
+.globe-container {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 1;
+  margin: 0 auto;
+}
+.globe-container canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+}
+.globe-container canvas:active { cursor: grabbing; }
+
+.globe-tip {
+  position: fixed;
+  pointer-events: none;
+  z-index: 200;
+  background: rgba(10, 20, 35, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 14px 18px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  max-width: 260px;
+}
+.globe-tip.show { opacity: 1; }
+.globe-tip .gt-h { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.globe-tip .gt-i { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.globe-tip .gt-n { font-size: 14px; font-weight: 600; color: #F1F5F9; }
+.globe-tip .gt-d { font-size: 11px; color: #94A3B8; line-height: 1.5; }
+.globe-tip .gt-f { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 10px; color: #1D9E75; }
 </style>
 </head>
 <body>
@@ -1258,6 +1294,39 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
   </div>
 </div>
 </div>
+</section>
+
+<section id="platform-globe" style="padding:100px 0 80px;overflow:hidden;position:relative">
+  <!-- Background glow blob -->
+  <div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 50% at 50% 60%,rgba(29,158,117,0.06),transparent)"></div>
+
+  <!-- Heading block -->
+  <div class="container" style="text-align:center;margin-bottom:56px">
+    <div class="feat-label" style="text-align:center">How It Fits Together</div>
+    <h2 class="text-gradient" style="font-size:clamp(28px,3.5vw,44px);font-weight:700;letter-spacing:-0.03em;margin-bottom:14px;max-width:680px;margin-left:auto;margin-right:auto">
+      Every module connected.<br>One system that runs itself.
+    </h2>
+    <p style="font-size:15px;color:var(--text2);max-width:480px;margin:0 auto;line-height:1.7">
+      Tasks, cleaning, guest services, inventory, owner portal, and compliance — not six tools talking past each other. One platform where each module feeds the next.
+    </p>
+  </div>
+
+  <!-- Hint text (above globe per UX guidance) -->
+  <p style="text-align:center;font-size:11px;color:var(--text3);margin-bottom:16px;letter-spacing:0.04em">
+    Drag to rotate · Hover modules to explore connections
+  </p>
+
+  <!-- Globe -->
+  <div class="globe-container">
+    <canvas id="nestops-globe"></canvas>
+  </div>
+
+  <!-- Tooltip -->
+  <div class="globe-tip" id="globe-tip">
+    <div class="gt-h"><div class="gt-i" id="gt-i"></div><div class="gt-n" id="gt-n"></div></div>
+    <div class="gt-d" id="gt-d"></div>
+    <div class="gt-f" id="gt-f"></div>
+  </div>
 </section>
 
 <div class="section-divider"></div>
@@ -2432,6 +2501,426 @@ function pteStart(){
   },6400);
 }
 
+</script>
+
+<!-- ── NestOps Operational Globe ──────────────────────────────────────────── -->
+<script>
+(function(){
+'use strict';
+
+var canvas = document.getElementById('nestops-globe');
+if (!canvas) return;
+
+var tip = document.getElementById('globe-tip');
+var gtI = document.getElementById('gt-i');
+var gtN = document.getElementById('gt-n');
+var gtD = document.getElementById('gt-d');
+var gtF = document.getElementById('gt-f');
+
+// ── Motion preference ─────────────────────────────────────────────────────────
+var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ── Brand colors ──────────────────────────────────────────────────────────────
+var BRAND  = '#1D9E75';
+var BRAND2 = 'rgba(29,158,117,'; // close with alpha + ')'
+
+// ── 6 NestOps modules ─────────────────────────────────────────────────────────
+var MODS = [
+  { emoji:'🗂️', name:'Work Orders',    color:'#378ADD', lat: 35,  lon: 40,
+    desc:'Assign, track, and close every task from one queue. Staff get push notifications immediately.',
+    flow:'Triggers → Guest Services & Cleaning' },
+  { emoji:'✨',  name:'Cleaning',        color:BRAND,     lat:-20,  lon:130,
+    desc:'Turnover schedules sync automatically with your PMS check-in and check-out times.',
+    flow:'Triggers → Inventory deduction' },
+  { emoji:'💬', name:'Guest Services',   color:'#ef9f27', lat: 52,  lon:-55,
+    desc:'PTE access windows, guest issue tracking, and automated messaging in one place.',
+    flow:'Triggers → Owner Portal alerts' },
+  { emoji:'📦', name:'Inventory',        color:'#a78bfa', lat:-42,  lon:-105,
+    desc:'Auto-deduct consumables on every checkout. Low-stock alerts go straight to work orders.',
+    flow:'Triggers → Work Order creation' },
+  { emoji:'🏠', name:'Owner Portal',     color:'#10b981', lat: 12,  lon:178,
+    desc:'Owners approve expenses, view statements, and track property performance live.',
+    flow:'Triggers → Compliance checks' },
+  { emoji:'🛡️', name:'Compliance',       color:'#f97316', lat:-62,  lon: 65,
+    desc:'Track certificates, fire checks, and audit documents. Alerts fire before anything expires.',
+    flow:'Triggers → Cleaning & Work Orders' },
+];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+var rotX = 0.28, rotY = 0.0;
+var velX = 0,    velY = 0;
+var dragging = false;
+var dragLX = 0,  dragLY = 0;
+var autoR  = true;
+var stopTimer = null;
+var hov = -1;
+var pulse = 0;
+var rect;
+
+// ── Particles (one per module arc) ────────────────────────────────────────────
+var PARTS = MODS.map(function(){ return { t: Math.random(), speed: 0.003 + Math.random() * 0.002 }; });
+
+// ── Math helpers ──────────────────────────────────────────────────────────────
+function ll2xyz(lat, lon) {
+  var phi   = (90 - lat) * Math.PI / 180;
+  var theta = lon * Math.PI / 180;
+  return {
+    x:  Math.sin(phi) * Math.cos(theta),
+    y:  Math.cos(phi),
+    z:  Math.sin(phi) * Math.sin(theta)
+  };
+}
+
+function rot3(p) {
+  var x = p.x, y = p.y, z = p.z;
+  // Y-axis
+  var x1 =  x * Math.cos(rotY) - z * Math.sin(rotY);
+  var z1 =  x * Math.sin(rotY) + z * Math.cos(rotY);
+  // X-axis
+  var y2 =  y * Math.cos(rotX) - z1 * Math.sin(rotX);
+  var z2 =  y * Math.sin(rotX) + z1 * Math.cos(rotX);
+  return { x: x1, y: y2, z: z2 };
+}
+
+function proj(r, R, cx, cy) {
+  var fov = 2.4;
+  var sc  = R * fov / (fov + r.z + 1);
+  return { px: cx + r.x * sc, py: cy + r.y * sc, depth: r.z };
+}
+
+// ── Setup canvas ──────────────────────────────────────────────────────────────
+var ctx;
+var w, h;
+
+function setup() {
+  var parent = canvas.parentElement;
+  var r      = parent.getBoundingClientRect();
+  var dpr    = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width  = Math.round(r.width  * dpr);
+  canvas.height = Math.round(r.height * dpr);
+  ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  w = r.width;
+  h = r.height;
+  rect = canvas.getBoundingClientRect();
+}
+
+setup();
+window.addEventListener('resize', function(){ setup(); });
+
+// ── Rounded rect helper (compat) ──────────────────────────────────────────────
+function rrect(x, y, bw, bh, br) {
+  ctx.beginPath();
+  ctx.moveTo(x + br, y);
+  ctx.lineTo(x + bw - br, y);
+  ctx.arcTo(x + bw, y, x + bw, y + br, br);
+  ctx.lineTo(x + bw, y + bh - br);
+  ctx.arcTo(x + bw, y + bh, x + bw - br, y + bh, br);
+  ctx.lineTo(x + br, y + bh);
+  ctx.arcTo(x, y + bh, x, y + bh - br, br);
+  ctx.lineTo(x, y + br);
+  ctx.arcTo(x, y, x + br, y, br);
+  ctx.closePath();
+}
+
+// ── Draw loop ─────────────────────────────────────────────────────────────────
+function draw() {
+  ctx.clearRect(0, 0, w, h);
+  var cx = w / 2, cy = h / 2;
+  var R  = Math.min(w, h) * 0.42;
+
+  // ── Wireframe sphere ──────────────────────────────────────────────────────
+  ctx.save();
+  // Latitude lines
+  for (var lat = -60; lat <= 60; lat += 30) {
+    var prevP = null;
+    for (var lon = 0; lon <= 362; lon += 3) {
+      var r3 = rot3(ll2xyz(lat, lon));
+      var p  = proj(r3, R, cx, cy);
+      var a  = Math.max(0, (r3.z + 1) / 2) * 0.16;
+      if (prevP) {
+        ctx.beginPath();
+        ctx.moveTo(prevP.px, prevP.py);
+        ctx.lineTo(p.px, p.py);
+        ctx.strokeStyle = 'rgba(255,255,255,' + a + ')';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+      prevP = p;
+    }
+  }
+  // Longitude lines
+  for (var lon2 = 0; lon2 < 360; lon2 += 45) {
+    var prevP2 = null;
+    for (var lat2 = -88; lat2 <= 90; lat2 += 3) {
+      var r3b = rot3(ll2xyz(lat2, lon2));
+      var pb  = proj(r3b, R, cx, cy);
+      var ab  = Math.max(0, (r3b.z + 1) / 2) * 0.16;
+      if (prevP2) {
+        ctx.beginPath();
+        ctx.moveTo(prevP2.px, prevP2.py);
+        ctx.lineTo(pb.px, pb.py);
+        ctx.strokeStyle = 'rgba(255,255,255,' + ab + ')';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+      prevP2 = pb;
+    }
+  }
+  ctx.restore();
+
+  // ── Sonar pulse (skip if reduced motion) ──────────────────────────────────
+  if (!REDUCE) {
+    pulse = (pulse + 0.011) % 1;
+    var pr1 = R * 0.075 + pulse * R * 0.20;
+    var pa1 = (1 - pulse) * 0.32;
+    ctx.beginPath();
+    ctx.arc(cx, cy, pr1, 0, Math.PI * 2);
+    ctx.strokeStyle = BRAND2 + pa1 + ')';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    var p2off = (pulse + 0.45) % 1;
+    var pr2   = R * 0.075 + p2off * R * 0.20;
+    var pa2   = (1 - p2off) * 0.22;
+    ctx.beginPath();
+    ctx.arc(cx, cy, pr2, 0, Math.PI * 2);
+    ctx.strokeStyle = BRAND2 + pa2 + ')';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // ── Project all module positions ──────────────────────────────────────────
+  var pmods = MODS.map(function(m){
+    var r3 = rot3(ll2xyz(m.lat, m.lon));
+    return proj(r3, R, cx, cy);
+  });
+
+  // ── Arcs + particles (hub → each module) ─────────────────────────────────
+  pmods.forEach(function(pm, i){
+    var isHov   = hov === i;
+    var alpha   = Math.max(0, (pm.depth + 0.4) / 1.4);
+    if (alpha < 0.01) return;
+
+    // Control point lifts arc toward viewer
+    var mx = (cx + pm.px) / 2;
+    var my = (cy + pm.py) / 2 - R * 0.24;
+
+    // Arc line
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.quadraticCurveTo(mx, my, pm.px, pm.py);
+    ctx.strokeStyle = isHov
+      ? BRAND2 + (0.75 * alpha) + ')'
+      : 'rgba(255,255,255,' + (0.12 * alpha) + ')';
+    ctx.lineWidth = isHov ? 1.5 : 0.7;
+    ctx.stroke();
+    ctx.restore();
+
+    // Traveling particle (skip if reduced motion)
+    if (!REDUCE) {
+      var pt = PARTS[i];
+      pt.t = (pt.t + pt.speed) % 1;
+      var t  = pt.t;
+      var bx = (1-t)*(1-t)*cx + 2*(1-t)*t*mx + t*t*pm.px;
+      var by = (1-t)*(1-t)*cy + 2*(1-t)*t*my + t*t*pm.py;
+      var pa = Math.sin(t * Math.PI) * 0.85 * alpha;
+      ctx.beginPath();
+      ctx.arc(bx, by, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = BRAND2 + pa + ')';
+      ctx.fill();
+    }
+  });
+
+  // ── Module nodes (sorted back-to-front) ───────────────────────────────────
+  var sorted = pmods.map(function(pm, i){ return { px: pm.px, py: pm.py, depth: pm.depth, i: i }; });
+  sorted.sort(function(a, b){ return a.depth - b.depth; });
+
+  sorted.forEach(function(item){
+    var i = item.i;
+    var mod = MODS[i];
+    var alpha = Math.max(0, (item.depth + 0.4) / 1.4);
+    if (alpha < 0.02) return;
+
+    var isHov = hov === i;
+    var nr = isHov ? 22 : 18;
+    var fs = Math.round(nr * 0.62);
+
+    // Glow on hover
+    ctx.save();
+    if (isHov) {
+      ctx.shadowBlur  = 20;
+      ctx.shadowColor = mod.color;
+    }
+    // Node circle
+    var hexA = Math.round(alpha * (isHov ? 255 : 200)).toString(16).padStart(2, '0');
+    ctx.beginPath();
+    ctx.arc(item.px, item.py, nr, 0, Math.PI * 2);
+    ctx.fillStyle = mod.color + hexA;
+    ctx.fill();
+    ctx.restore();
+
+    // Emoji icon
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.font = fs + 'px sans-serif';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(mod.emoji, item.px, item.py);
+    ctx.restore();
+
+    // Label pill below node (only when alpha > 0.4)
+    if (alpha > 0.4) {
+      ctx.save();
+      ctx.globalAlpha = alpha * (isHov ? 1 : 0.75);
+      var labelFs = Math.max(9, Math.round(fs * 0.66));
+      ctx.font = '600 ' + labelFs + 'px Outfit, sans-serif';
+      var tw  = ctx.measureText(mod.name).width;
+      var lw  = tw + 14, lh = 16;
+      var lx  = item.px - lw / 2, ly = item.py + nr + 5;
+      ctx.fillStyle = 'rgba(8,11,18,0.88)';
+      rrect(lx, ly, lw, lh, 4);
+      ctx.fill();
+      ctx.fillStyle  = '#e8e6e1';
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(mod.name, item.px, ly + lh / 2);
+      ctx.restore();
+    }
+  });
+
+  // ── Hub (always at screen center) ─────────────────────────────────────────
+  var hs = Math.round(R * 0.11);
+  ctx.save();
+  ctx.shadowBlur  = 22;
+  ctx.shadowColor = BRAND;
+  var grad = ctx.createLinearGradient(cx - hs, cy - hs, cx + hs, cy + hs);
+  grad.addColorStop(0, 'rgba(29,158,117,1)');
+  grad.addColorStop(1, 'rgba(21,140,100,1)');
+  ctx.fillStyle = grad;
+  var br = Math.round(hs * 0.3);
+  rrect(cx - hs, cy - hs, hs * 2, hs * 2, br);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  ctx.font = '700 32px Outfit, sans-serif';
+  ctx.fillStyle    = '#fff';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowBlur   = 0;
+  ctx.fillText('N', cx, cy + 1);
+  ctx.restore();
+
+  // ── Auto-rotation + inertia ───────────────────────────────────────────────
+  if (!dragging) {
+    if (!REDUCE && autoR) rotY += 0.004;
+    rotX += velX;
+    rotY += velY;
+    velX *= 0.93;
+    velY *= 0.93;
+    rotX = Math.max(-1.2, Math.min(1.2, rotX));
+  }
+
+  requestAnimationFrame(draw);
+}
+
+// ── Input handlers ────────────────────────────────────────────────────────────
+function evtPos(e) {
+  if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  return { x: e.clientX, y: e.clientY };
+}
+
+function onDown(e) {
+  dragging = true;
+  autoR    = false;
+  clearTimeout(stopTimer);
+  var p = evtPos(e);
+  dragLX = p.x; dragLY = p.y;
+  velX = 0; velY = 0;
+  e.preventDefault();
+}
+
+function hitTest(mx, my) {
+  rect = canvas.getBoundingClientRect();
+  var cx = rect.width / 2, cy = rect.height / 2;
+  var R  = Math.min(rect.width, rect.height) * 0.42;
+  for (var i = 0; i < MODS.length; i++) {
+    var r3 = rot3(ll2xyz(MODS[i].lat, MODS[i].lon));
+    var pm = proj(r3, R, cx, cy);
+    var dx = mx - pm.px, dy = my - pm.py;
+    if (Math.sqrt(dx*dx + dy*dy) < 26) return i;
+  }
+  return -1;
+}
+
+function onMove(e) {
+  var p = evtPos(e);
+  if (dragging) {
+    var dx = p.x - dragLX;
+    var dy = p.y - dragLY;
+    velY = dx * 0.006;
+    velX = dy * 0.006;
+    rotY += velY;
+    rotX += velX;
+    rotX = Math.max(-1.2, Math.min(1.2, rotX));
+    dragLX = p.x; dragLY = p.y;
+  }
+  // Hover / tap detection
+  rect = canvas.getBoundingClientRect();
+  var mx = p.x - rect.left;
+  var my = p.y - rect.top;
+  var found = hitTest(mx, my);
+  if (found !== hov) {
+    hov = found;
+    if (found >= 0) showTip(found, e); else hideTip();
+  } else if (found >= 0) {
+    moveTip(e);
+  }
+}
+
+function onUp() {
+  dragging  = false;
+  stopTimer = setTimeout(function(){ autoR = true; }, 2000);
+}
+
+canvas.addEventListener('mousedown',  onDown, { passive: false });
+window.addEventListener('mousemove',  onMove);
+window.addEventListener('mouseup',    onUp);
+canvas.addEventListener('touchstart', onDown, { passive: false });
+window.addEventListener('touchmove',  onMove, { passive: true });
+window.addEventListener('touchend',   onUp);
+
+// ── Tooltip ───────────────────────────────────────────────────────────────────
+function showTip(i, e) {
+  var mod = MODS[i];
+  gtI.textContent = mod.emoji;
+  gtI.style.background = mod.color + '2e';
+  gtN.textContent = mod.name;
+  gtD.textContent = mod.desc;
+  gtF.textContent = mod.flow;
+  tip.classList.add('show');
+  moveTip(e);
+}
+function hideTip() {
+  tip.classList.remove('show');
+}
+function moveTip(e) {
+  var p  = e.touches && e.touches.length ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
+  var tw = tip.offsetWidth  || 260;
+  var th = tip.offsetHeight || 120;
+  var tx = p.x + 18, ty = p.y - 24;
+  if (tx + tw > window.innerWidth  - 16) tx = p.x - tw - 18;
+  if (ty + th > window.innerHeight - 16) ty = window.innerHeight - th - 16;
+  if (ty < 8) ty = 8;
+  tip.style.left = tx + 'px';
+  tip.style.top  = ty + 'px';
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+draw();
+
+})();
 </script>
 </body>
 </html>

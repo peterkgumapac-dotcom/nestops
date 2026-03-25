@@ -64,6 +64,7 @@ export default function OwnerRequestsPage() {
       priority: 'medium' as const,
       date: new Date().toISOString().split('T')[0],
       description: details || '',
+      source: 'owner' as const,
       comments: [],
     }
     setRequests(prev => [newRequest, ...prev])

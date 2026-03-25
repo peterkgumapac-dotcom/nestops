@@ -4,8 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  X, Sun, Moon, Sparkles,
-  AlertCircle, CalendarPlus, PlusSquare, Flag,
+  X, Sun, Moon, Sparkles, ChevronDown,
 } from 'lucide-react'
 import { useRole } from '@/context/RoleContext'
 import { useTheme } from '@/context/ThemeContext'
@@ -37,13 +36,6 @@ const PORTAL_OPTIONS = [
   { role: 'staff'    as const, label: 'Staff Portal',    color: '#d97706', href: '/staff' },
 ]
 
-const QUICK_ACTIONS = [
-  { label: 'New Issue',      Icon: AlertCircle,  href: '/operator/guest-services/issues' },
-  { label: 'Schedule Clean', Icon: CalendarPlus, href: '/operator/cleaning' },
-  { label: 'New Task',       Icon: PlusSquare,   href: '/operator/operations' },
-  { label: 'Log Incident',   Icon: Flag,         href: '/operator/tickets' },
-]
-
 interface StoredUser { id?: string; name?: string; role?: string; subRole?: string; jobRole?: string }
 
 export default function AppSidebar({ isOpen, onClose, collapsed = false }: AppSidebarProps) {
@@ -57,6 +49,10 @@ export default function AppSidebar({ isOpen, onClose, collapsed = false }: AppSi
   const [whatsNewBanner, setWhatsNewBanner] = useState(false)
   const [switchedTo, setSwitchedTo] = useState<string | null>(null)
   const switcherRef = useRef<HTMLDivElement>(null)
+  // Collapsible section state: keyed by section label, default collapsed for 'Platform'
+  const [sectionExpanded, setSectionExpanded] = useState<Record<string, boolean>>({
+    Platform: false,
+  })
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -88,6 +84,22 @@ export default function AppSidebar({ isOpen, onClose, collapsed = false }: AppSi
   const sections = role === 'staff'
     ? getStaffNav(storedUser?.jobRole, storedUser?.subRole)
     : NAV_BY_ROLE[role]
+
+  // Auto-expand collapsible sections when current path matches
+  useEffect(() => {
+    const updates: Record<string, boolean> = {}
+    sections.forEach(section => {
+      if (section.collapsible) {
+        const isActive = section.items.some(item =>
+          pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href + '/'))
+        )
+        if (isActive) updates[section.label] = true
+      }
+    })
+    if (Object.keys(updates).length > 0) {
+      setSectionExpanded(prev => ({ ...prev, ...updates }))
+    }
+  }, [pathname, sections])
 
   let globalIndex = 0
 
@@ -184,26 +196,52 @@ export default function AppSidebar({ isOpen, onClose, collapsed = false }: AppSi
       <nav style={{ flex: 1, padding: '0 8px', overflowY: 'auto', overflowX: 'hidden' }}>
         {sections.map((section, sIdx) => {
           const showLabel = section.label !== '' && !collapsed
+          const isCollapsible = section.collapsible && !collapsed
+          const isExpanded = !isCollapsible || sectionExpanded[section.label] !== false
           const sectionEl = (
             <div key={sIdx} style={{ marginBottom: 4 }}>
               {showLabel && (
-                <div style={{
-                  fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
-                  color: 'var(--text-subtle)', padding: '10px 8px 4px',
-                  borderTop: sIdx > 0 ? '1px solid var(--border-subtle)' : 'none',
-                  marginTop: sIdx > 0 ? 6 : 0,
-                }}>
-                  {section.label}
-                </div>
+                isCollapsible ? (
+                  <button
+                    onClick={() => setSectionExpanded(prev => ({ ...prev, [section.label]: !isExpanded }))}
+                    style={{
+                      width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
+                      color: 'var(--text-subtle)', padding: '10px 8px 4px',
+                      borderTop: sIdx > 0 ? '1px solid var(--border-subtle)' : 'none',
+                      marginTop: sIdx > 0 ? 6 : 0,
+                      background: 'none', border: 'none', cursor: 'pointer',
+                    }}
+                  >
+                    <span>{section.label}</span>
+                    <ChevronDown
+                      size={12}
+                      style={{
+                        transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.2s ease',
+                        flexShrink: 0,
+                      }}
+                    />
+                  </button>
+                ) : (
+                  <div style={{
+                    fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
+                    color: 'var(--text-subtle)', padding: '10px 8px 4px',
+                    borderTop: sIdx > 0 ? '1px solid var(--border-subtle)' : 'none',
+                    marginTop: sIdx > 0 ? 6 : 0,
+                  }}>
+                    {section.label}
+                  </div>
+                )
               )}
               {sIdx > 0 && !showLabel && collapsed && (
                 <div style={{ height: 1, background: 'var(--border-subtle)', margin: '6px 4px' }} />
               )}
-              {section.items.map(item => {
+              {(!isCollapsible || isExpanded) && section.items.map(item => {
                 const Icon = item.icon
                 const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href + '/'))
                 const itemIndex = globalIndex++
-                const isRequests = item.label === 'Requests'
+                const isTickets = item.label === 'Tickets'
                 return (
                   <motion.div
                     key={item.href}
@@ -230,7 +268,7 @@ export default function AppSidebar({ isOpen, onClose, collapsed = false }: AppSi
                     >
                       <div style={{ position: 'relative', flexShrink: 0 }}>
                         <Icon size={16} strokeWidth={1.5} />
-                        {collapsed && isRequests && item.badge ? (
+                        {collapsed && isTickets && item.badge ? (
                           <span style={{
                             position: 'absolute', top: -2, right: -2,
                             width: 6, height: 6, borderRadius: '50%',
@@ -258,44 +296,6 @@ export default function AppSidebar({ isOpen, onClose, collapsed = false }: AppSi
           return sectionEl
         })}
       </nav>
-
-      {/* Quick actions */}
-      <div style={{ padding: '6px 8px', borderTop: '1px solid var(--border-subtle)', flexShrink: 0 }}>
-        {QUICK_ACTIONS.map(({ label, Icon, href }) => (
-          <Link
-            key={label}
-            href={href}
-            title={collapsed ? label : undefined}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              padding: collapsed ? '7px 0' : '6px 8px',
-              justifyContent: collapsed ? 'center' : 'flex-start',
-              borderRadius: 7, marginBottom: 1,
-              color: 'var(--text-muted)',
-              background: 'transparent',
-              borderLeft: '2px solid transparent',
-              textDecoration: 'none', fontSize: 13,
-              transition: 'background 0.15s, color 0.15s',
-              whiteSpace: 'nowrap', overflow: 'hidden',
-            }}
-            onMouseEnter={e => {
-              const el = e.currentTarget as HTMLAnchorElement
-              el.style.background = 'var(--bg-elevated)'
-              el.style.color = 'var(--text-primary)'
-            }}
-            onMouseLeave={e => {
-              const el = e.currentTarget as HTMLAnchorElement
-              el.style.background = 'transparent'
-              el.style.color = 'var(--text-muted)'
-            }}
-          >
-            <Icon size={16} strokeWidth={1.5} style={{ flexShrink: 0 }} />
-            <span style={{ opacity: collapsed ? 0 : 1, transition: 'opacity 0.15s ease', pointerEvents: 'none' }}>
-              {label}
-            </span>
-          </Link>
-        ))}
-      </div>
 
       {/* Footer */}
       <div style={{ padding: '8px', flexShrink: 0, borderTop: '1px solid var(--border-subtle)' }} ref={switcherRef}>

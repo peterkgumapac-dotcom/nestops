@@ -1,6 +1,7 @@
 export type FieldAlertType =
   | 'new_task' | 'schedule_change' | 'backjob'
   | 'apartment_dirty' | 'needs_consumables' | 'upsell_escalation'
+  | 'maintenance_issue'
 
 export type FieldAlertSeverity = 'urgent' | 'warning' | 'info'
 
@@ -167,5 +168,29 @@ export const FIELD_ALERTS: FieldAlert[] = [
     assignedTo: ['s3'],
     createdAt: '2026-03-19T06:30:00Z',
     read: true,
+  },
+  {
+    id: 'fa13',
+    type: 'maintenance_issue',
+    severity: 'urgent',
+    title: 'Broken boiler — no hot water',
+    body: 'Cleaner Maria reported the boiler is not heating at Ocean View Apt. Guest checks in at 17:00. Urgent fix needed.',
+    propertyId: 'p3',
+    propertyName: 'Ocean View Apt',
+    assignedTo: ['s2'],
+    createdAt: '2026-03-19T09:30:00Z',
+    read: false,
+  },
+  {
+    id: 'fa14',
+    type: 'maintenance_issue',
+    severity: 'warning',
+    title: 'Dripping tap — master bathroom',
+    body: 'Reported by cleaner during turnover at Sunset Villa. Tap drips continuously. No guest until tomorrow.',
+    propertyId: 'p1',
+    propertyName: 'Sunset Villa',
+    assignedTo: ['s2'],
+    createdAt: '2026-03-19T08:10:00Z',
+    read: false,
   },
 ]
