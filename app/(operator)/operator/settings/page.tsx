@@ -191,9 +191,9 @@ export default function SettingsPage() {
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   // Brand tab
-  const [companyName, setCompanyName] = useState('NestOps Management')
-  const [supportEmail, setSupportEmail] = useState('support@nestops.no')
-  const [website, setWebsite] = useState('https://nestops.no')
+  const [companyName, setCompanyName] = useState('AfterStay Management')
+  const [supportEmail, setSupportEmail] = useState('support@afterstay.no')
+  const [website, setWebsite] = useState('https://afterstay.no')
 
   // Warehouses tab
   const [warehouses, setWarehouses] = useState(INITIAL_WAREHOUSES)

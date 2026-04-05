@@ -45,7 +45,7 @@ export default function WorkOrdersPage() {
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   useEffect(() => {
-    const stored = localStorage.getItem('nestops_user')
+    const stored = localStorage.getItem('afterstay_user')
     if (stored) { try { setCurrentUser(JSON.parse(stored)) } catch {} }
   }, [])
 
@@ -73,7 +73,7 @@ export default function WorkOrdersPage() {
     setRequests(prev => [newReq, ...prev])
     if (involveOwner) {
       try {
-        const existing = JSON.parse(localStorage.getItem('nestops_owner_work_orders') ?? '[]')
+        const existing = JSON.parse(localStorage.getItem('afterstay_owner_work_orders') ?? '[]')
         existing.push({
           id: newReq.id,
           title: newReq.title,
@@ -86,7 +86,7 @@ export default function WorkOrdersPage() {
           requestedDate: newReq.date,
           status: 'pending',
         })
-        localStorage.setItem('nestops_owner_work_orders', JSON.stringify(existing))
+        localStorage.setItem('afterstay_owner_work_orders', JSON.stringify(existing))
       } catch {}
     }
     setNewDrawer(false)

@@ -73,7 +73,7 @@ export default function SopDetailPage() {
           <div className="label-upper" style={{ marginBottom: 16 }}>SOP Content</div>
           <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>1. Purpose</h3>
           <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.7, marginBottom: 20 }}>
-            This procedure ensures all guests receive a consistent, professional check-in experience across all NestOps properties. Staff should follow each step in sequence and document any deviations.
+            This procedure ensures all guests receive a consistent, professional check-in experience across all AfterStay properties. Staff should follow each step in sequence and document any deviations.
           </p>
           <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>2. Scope</h3>
           <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.7, marginBottom: 20 }}>
@@ -81,7 +81,7 @@ export default function SopDetailPage() {
           </p>
           <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>3. Procedure</h3>
           <ol style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.9, paddingLeft: 20 }}>
-            <li>Confirm booking details in NestOps 24 hours before arrival.</li>
+            <li>Confirm booking details in AfterStay 24 hours before arrival.</li>
             <li>Send check-in instructions via the guest messaging template.</li>
             <li>Verify the lockbox code is active and tested.</li>
             <li>Complete the pre-arrival inspection checklist.</li>

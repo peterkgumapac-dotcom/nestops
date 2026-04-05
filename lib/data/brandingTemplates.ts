@@ -29,10 +29,10 @@ export interface VerificationTemplate {
 export const BRANDING_TEMPLATES: BrandingTemplate[] = [
   {
     id: 'bt1',
-    name: 'NestOps Default',
+    name: 'AfterStay Default',
     scope: 'portal',
     brandColor: '#7c3aed',
-    brandName: 'NestOps',
+    brandName: 'AfterStay',
     requiresVerification: false,
     doorCodeRevealMode: 'verified_only',
   },

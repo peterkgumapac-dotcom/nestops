@@ -468,8 +468,8 @@ export default function MyTasksPage() {
     setSelectedApprovalRequest(null)
     // Persist decision so operator Guest Services portal picks it up
     try {
-      const existing = JSON.parse(localStorage.getItem('nestops_upsell_decisions') ?? '[]')
-      localStorage.setItem('nestops_upsell_decisions', JSON.stringify([
+      const existing = JSON.parse(localStorage.getItem('afterstay_upsell_decisions') ?? '[]')
+      localStorage.setItem('afterstay_upsell_decisions', JSON.stringify([
         ...existing.filter((d: {id: string}) => d.id !== id),
         { id, status: 'approved', guestName: req?.guestName, upsellTitle: req?.upsellTitle, propertyName: req?.propertyName, decidedAt: new Date().toISOString() },
       ]))
@@ -483,8 +483,8 @@ export default function MyTasksPage() {
     setSelectedApprovalRequest(null)
     // Persist decision so operator Guest Services portal picks it up
     try {
-      const existing = JSON.parse(localStorage.getItem('nestops_upsell_decisions') ?? '[]')
-      localStorage.setItem('nestops_upsell_decisions', JSON.stringify([
+      const existing = JSON.parse(localStorage.getItem('afterstay_upsell_decisions') ?? '[]')
+      localStorage.setItem('afterstay_upsell_decisions', JSON.stringify([
         ...existing.filter((d: {id: string}) => d.id !== id),
         { id, status: 'declined', guestName: req?.guestName, upsellTitle: req?.upsellTitle, propertyName: req?.propertyName, notes, decidedAt: new Date().toISOString() },
       ]))
@@ -500,17 +500,18 @@ export default function MyTasksPage() {
   }, [])
 
   useEffect(() => {
-    const stored = localStorage.getItem('nestops_user')
+    const stored = localStorage.getItem('afterstay_user')
     if (stored) {
       try {
         const user: UserProfile = JSON.parse(stored)
         setCurrentUser(user)
         // Set role identifier in URL
         const params = new URLSearchParams(window.location.search)
-        if (!params.get('role') && user.jobRole) {
-          router.replace(`/app/my-tasks?role=${user.jobRole}`)
+        const roleParam = user.jobRole ?? (user.accessTier === 'guest-services' ? 'guest-services' : null)
+        if (!params.get('role') && roleParam) {
+          router.replace(`/app/my-tasks?role=${roleParam}`)
         }
-        const isSup = user.jobRole === 'supervisor' || user.jobRole === 'gs-supervisor'
+        const isSup = user.jobRole === 'supervisor' || (user.role === 'operator' && user.accessTier === 'guest-services' && user.subRole?.includes('Supervisor'))
         const staffId = USER_TO_STAFF[user.id] ?? null
         // Only supervisor/gs-supervisor see upsell approvals; all other roles get empty list
         const requests = isSup ? UPSELL_APPROVAL_REQUESTS.filter(r =>
@@ -615,9 +616,9 @@ export default function MyTasksPage() {
   const subRole = currentUser?.subRole ?? ''
   const jobRole = currentUser?.jobRole ?? ''
   const isSupervisor    = jobRole === 'supervisor'
-  const isGSSupervisor  = jobRole === 'gs-supervisor'
+  const isGSSupervisor  = currentUser?.role === 'operator' && currentUser?.accessTier === 'guest-services' && (currentUser?.subRole?.includes('Supervisor') ?? false)
   const isMaintenance   = jobRole === 'maintenance'
-  const isGuestServices = jobRole === 'guest-services'
+  const isGuestServices = currentUser?.role === 'operator' && currentUser?.accessTier === 'guest-services' && !isGSSupervisor
 
   const filteredTasks = EFFECTIVE_TASKS.filter(task => {
     // Supervisor sees all team cleaning tasks; cleaner sees only their own
@@ -684,7 +685,7 @@ export default function MyTasksPage() {
     if (!selectedTask) return
     if (isCleaningComplete && qaRating > 0) {
       try {
-        const existing = JSON.parse(localStorage.getItem('nestops_qa_pending') || '[]')
+        const existing = JSON.parse(localStorage.getItem('afterstay_qa_pending') || '[]')
         existing.push({
           id: Date.now().toString(),
           taskId: selectedTask.id,
@@ -697,12 +698,12 @@ export default function MyTasksPage() {
           submittedAt: new Date().toISOString(),
           qaStatus: 'pending',
         })
-        localStorage.setItem('nestops_qa_pending', JSON.stringify(existing))
+        localStorage.setItem('afterstay_qa_pending', JSON.stringify(existing))
       } catch {}
     }
     if (selectedTask.type === 'Cleaning' && supplyItems.length > 0) {
       try {
-        const log = JSON.parse(localStorage.getItem('nestops_supply_consumption') ?? '[]')
+        const log = JSON.parse(localStorage.getItem('afterstay_supply_consumption') ?? '[]')
         log.push({
           taskId: selectedTask.id,
           property: selectedTask.propertyName,
@@ -711,12 +712,12 @@ export default function MyTasksPage() {
           items: supplyItems.filter(i => i.qty > 0),
           loggedAt: new Date().toISOString(),
         })
-        localStorage.setItem('nestops_supply_consumption', JSON.stringify(log))
-        const overrides = JSON.parse(localStorage.getItem('nestops_stock_overrides') ?? '{}')
+        localStorage.setItem('afterstay_supply_consumption', JSON.stringify(log))
+        const overrides = JSON.parse(localStorage.getItem('afterstay_stock_overrides') ?? '{}')
         supplyItems.forEach(item => {
           overrides[item.id] = (overrides[item.id] ?? 0) + item.qty
         })
-        localStorage.setItem('nestops_stock_overrides', JSON.stringify(overrides))
+        localStorage.setItem('afterstay_stock_overrides', JSON.stringify(overrides))
       } catch {}
     }
     setCompletedIds(prev => new Set([...prev, selectedTask.id]))
@@ -1906,7 +1907,7 @@ export default function MyTasksPage() {
           setMaintProgress(prev => ({ ...prev, [taskId]: 'en_route' }))
           // Write live alert
           try {
-            const alerts = JSON.parse(localStorage.getItem('nestops_live_alerts') ?? '[]')
+            const alerts = JSON.parse(localStorage.getItem('afterstay_live_alerts') ?? '[]')
             alerts.push({
               id: `maint-enroute-${taskId}-${Date.now()}`,
               type: 'maintenance_enroute',
@@ -1919,11 +1920,11 @@ export default function MyTasksPage() {
               createdAt: new Date().toISOString(),
               actionRoute: '/app/my-tasks',
             })
-            localStorage.setItem('nestops_live_alerts', JSON.stringify(alerts))
+            localStorage.setItem('afterstay_live_alerts', JSON.stringify(alerts))
           } catch {}
           // Update issue store
           try {
-            const issues = JSON.parse(localStorage.getItem('nestops_issues') ?? '[]')
+            const issues = JSON.parse(localStorage.getItem('afterstay_issues') ?? '[]')
             const idx = issues.findIndex((i: { propertyId: string; type: string; status: string }) =>
               i.propertyId === mt.propertyId && i.type === 'maintenance' && i.status !== 'resolved'
             )
@@ -1931,7 +1932,7 @@ export default function MyTasksPage() {
               issues[idx].status = 'in_progress'
               issues[idx].response = `Tech en route. ETA: ${eta}`
             }
-            localStorage.setItem('nestops_issues', JSON.stringify(issues))
+            localStorage.setItem('afterstay_issues', JSON.stringify(issues))
           } catch {}
           showToast('Guest Services notified')
         }
@@ -1939,7 +1940,7 @@ export default function MyTasksPage() {
         const handleNotifyPTE = () => {
           setPteNotified(prev => new Set([...prev, taskId]))
           try {
-            const alerts = JSON.parse(localStorage.getItem('nestops_live_alerts') ?? '[]')
+            const alerts = JSON.parse(localStorage.getItem('afterstay_live_alerts') ?? '[]')
             alerts.push({
               id: `pte-followup-${taskId}-${Date.now()}`,
               type: 'pte_followup',
@@ -1951,7 +1952,7 @@ export default function MyTasksPage() {
               read: false,
               actionRoute: '/app/my-tasks',
             })
-            localStorage.setItem('nestops_live_alerts', JSON.stringify(alerts))
+            localStorage.setItem('afterstay_live_alerts', JSON.stringify(alerts))
           } catch {}
           showToast('Guest Services notified')
         }
@@ -2390,7 +2391,7 @@ export default function MyTasksPage() {
             setReportingJob(null)
             if (report.delegate && job) {
               try {
-                const alerts = JSON.parse(localStorage.getItem('nestops_live_alerts') ?? '[]')
+                const alerts = JSON.parse(localStorage.getItem('afterstay_live_alerts') ?? '[]')
                 alerts.push({
                   id: `task-delegate-${job.id}-${Date.now()}`,
                   type: 'task_delegation_request',
@@ -2403,7 +2404,7 @@ export default function MyTasksPage() {
                   createdAt: new Date().toISOString(),
                   actionRoute: '/app/my-tasks',
                 })
-                localStorage.setItem('nestops_live_alerts', JSON.stringify(alerts))
+                localStorage.setItem('afterstay_live_alerts', JSON.stringify(alerts))
               } catch {}
               setDelegationPending(prev => new Set([...prev, job.id]))
               showToast('Supervisor & GS notified — awaiting reassignment')

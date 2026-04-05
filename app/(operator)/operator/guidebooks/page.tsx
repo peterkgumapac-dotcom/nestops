@@ -574,7 +574,7 @@ export default function GuidebooksPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px' }}>
                   <label style={labelStyle}>Brand Name</label>
-                  <input style={inputStyle} value={brandName} onChange={e => setBrandName(e.target.value)} placeholder='Replaces "Powered by NestOps"' />
+                  <input style={inputStyle} value={brandName} onChange={e => setBrandName(e.target.value)} placeholder='Replaces "Powered by AfterStay"' />
                 </div>
                 <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '16px' }}>
                   <label style={labelStyle}>Primary Color</label>

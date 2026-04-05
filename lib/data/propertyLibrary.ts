@@ -159,7 +159,7 @@ export const PROPERTY_LIBRARIES: PropertyLibrary[] = [
     },
     emergency: {
       contacts: [
-        { name: 'Peter K. (Manager)', phone: '+47 900 12 345', email: 'peter@nestops.no' },
+        { name: 'Peter K. (Manager)', phone: '+47 900 12 345', email: 'peter@afterstay.no' },
         { name: 'Lars Plumbing AS', phone: '+47 901 23 456' },
       ],
       nearestHospital: 'Oslo Universitetssykehus — 2.4 km',

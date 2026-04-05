@@ -4,25 +4,25 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --bg-page: #080b12;
-  --bg-surface: #0f1219;
-  --bg-card: #111722;
-  --bg-elevated: #161b26;
-  --border: rgba(255,255,255,0.06);
-  --border-subtle: rgba(255,255,255,0.04);
-  --text-primary: #e8e6e1;
-  --text-muted: #9ca3af;
-  --text-subtle: #5a5f6b;
-  --accent-operator: #1D9E75;
+  --bg-page: #0e0a08;
+  --bg-surface: #161009;
+  --bg-card: #161009;
+  --bg-elevated: #1e1510;
+  --border: #2a1f16;
+  --border-subtle: rgba(196,98,45,0.08);
+  --text-primary: #f5ede6;
+  --text-muted: #8a6a58;
+  --text-subtle: #5a4a3b;
+  --accent-operator: #c4622d;
   --accent-owner: #059669;
   --accent-staff: #d97706;
-  --accent: #1D9E75;
+  --accent: #c4622d;
 
-  /* Brand green tokens */
-  --green: #1D9E75;
-  --green2: #15d492;
-  --green-bg: rgba(29,158,117,0.08);
-  --green-border: rgba(29,158,117,0.2);
+  /* Brand terracotta tokens */
+  --accent: #c4622d;
+  --accent-light: #e07a45;
+  --accent-bg: rgba(196,98,45,0.08);
+  --accent-border: rgba(196,98,45,0.2);
   --red: #e24b4a;
   --amber: #ef9f27;
   --blue: #378ADD;
@@ -32,8 +32,8 @@
   --status-purple-fg: #a78bfa;
   --status-amber-bg:  rgba(217, 119, 6, 0.15);
   --status-amber-fg:  #fbbf24;
-  --status-green-bg:  rgba(29, 158, 117, 0.15);
-  --status-green-fg:  #15d492;
+  --status-green-bg:  rgba(16, 185, 129, 0.15);
+  --status-green-fg:  #10b981;
   --status-red-bg:    rgba(239, 68, 68, 0.15);
   --status-red-fg:    #f87171;
   --status-blue-bg:   rgba(59, 130, 246, 0.15);
@@ -59,16 +59,16 @@
   --status-info-bg:    rgba(59,130,246,0.12);
   --status-neutral-bg: rgba(107,114,128,0.12);
 
-  /* NestOps Task Engine tokens */
-  --n-bg:#080b12; --n-bg2:#0f1219; --n-bg3:#161b26; --n-card:#111722;
-  --n-border:rgba(255,255,255,0.06); --n-border2:rgba(255,255,255,0.10);
-  --n-text:#e8e6e1; --n-text2:#9ca3af; --n-text3:#5a5f6b;
-  --n-green:#1D9E75; --n-green2:#15d492;
-  --n-green-bg:rgba(29,158,117,0.08); --n-green-border:rgba(29,158,117,0.20);
+  /* AfterStay Task Engine tokens */
+  --n-bg:#0e0a08; --n-bg2:#161009; --n-bg3:#1e1510; --n-card:#161009;
+  --n-border:#2a1f16; --n-border2:rgba(196,98,45,0.15);
+  --n-text:#f5ede6; --n-text2:#8a6a58; --n-text3:#5a4a3b;
+  --n-accent:#c4622d; --n-accent-light:#e07a45;
+  --n-accent-bg:rgba(196,98,45,0.08); --n-accent-border:rgba(196,98,45,0.20);
   --n-red:#e24b4a; --n-red-bg:rgba(226,75,74,0.08); --n-red-border:rgba(226,75,74,0.20);
   --n-amber:#ef9f27; --n-amber-bg:rgba(239,159,39,0.08); --n-amber-border:rgba(239,159,39,0.20);
   --n-blue:#378ADD; --n-blue-bg:rgba(55,138,221,0.08); --n-blue-border:rgba(55,138,221,0.20);
-  --n-mono:var(--font-mono),'DM Mono',monospace;
+  --n-mono:var(--font-mono),'JetBrains Mono',monospace;
 }
 
 .light {
@@ -77,7 +77,7 @@
   --bg-card: #ffffff;
   --bg-elevated: #f0f0f0;
   --border: #e4e4e4;
-  --border-subtle: #eeeeee;
+  --border-subtle: rgba(184, 90, 38, 0.08);
   --text-primary: #0f0f0f;
   --text-muted: #666666;
   --text-subtle: #999999;
@@ -95,8 +95,8 @@
   --status-blue-fg:   #2563eb;
   --status-muted-bg:  rgba(100, 100, 120, 0.10);
   --status-muted-fg:  #6b7280;
-  --accent: #6366f1;
-  --accent-operator: #7c3aed;
+  --accent: #b85a26;
+  --accent-operator: #b85a26;
   --accent-owner: #059669;
   --accent-staff: #0891b2;
   --accent-foreground: #ffffff;
@@ -111,7 +111,7 @@
 body {
   background: var(--bg-page);
   color: var(--text-primary);
-  font-family: var(--font-sans), 'DM Sans', system-ui, sans-serif;
+  font-family: var(--font-sans), 'Inter', system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -126,8 +126,8 @@ body {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse at 20% 20%, rgba(29, 158, 117, 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 80%, rgba(29, 158, 117, 0.04) 0%, transparent 60%);
+    radial-gradient(ellipse at 20% 20%, rgba(196, 98, 45, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(196, 98, 45, 0.04) 0%, transparent 60%);
   animation: meshMove 20s ease-in-out infinite alternate;
   pointer-events: none;
   z-index: 0;
@@ -301,13 +301,13 @@ html {
 .feed-item-enter { animation: feedIn 0.3s ease; }
 
 @keyframes livePulse {
-  0%   { box-shadow:0 0 0 0 rgba(21,212,146,0.6); }
-  70%  { box-shadow:0 0 0 5px rgba(21,212,146,0); }
-  100% { box-shadow:0 0 0 0 rgba(21,212,146,0); }
+  0%   { box-shadow:0 0 0 0 rgba(224,122,69,0.6); }
+  70%  { box-shadow:0 0 0 5px rgba(224,122,69,0); }
+  100% { box-shadow:0 0 0 0 rgba(224,122,69,0); }
 }
 .live-dot {
   width:6px; height:6px; border-radius:50%;
-  background:var(--n-green2);
+  background:var(--n-accent-light);
   animation: livePulse 1.8s ease-out infinite;
   flex-shrink:0;
 }

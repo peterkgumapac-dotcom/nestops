@@ -190,8 +190,8 @@ export function CleaningTaskDrawer({ shift, job, currentUserId, currentUserName,
     }
 
     try {
-      const existing = JSON.parse(localStorage.getItem('nestops_maintenance_flags') ?? '[]') as MaintenanceFlag[]
-      localStorage.setItem('nestops_maintenance_flags', JSON.stringify([newFlag, ...existing]))
+      const existing = JSON.parse(localStorage.getItem('afterstay_maintenance_flags') ?? '[]') as MaintenanceFlag[]
+      localStorage.setItem('afterstay_maintenance_flags', JSON.stringify([newFlag, ...existing]))
     } catch { /* ignore */ }
 
     // Alert GS users

@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'nestops_guest_issues'
+const STORAGE_KEY = 'afterstay_guest_issues'
 
 export interface GuestIssue {
   id: string

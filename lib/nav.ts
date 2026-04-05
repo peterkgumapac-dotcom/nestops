@@ -155,7 +155,7 @@ export const STAFF_MAINTENANCE_NAV: NavSection[] = [
   },
 ]
 
-export const STAFF_GUEST_SERVICES_NAV: NavSection[] = [
+export const GS_AGENT_NAV: NavSection[] = [
   {
     label: 'Overview',
     items: [
@@ -202,7 +202,7 @@ export const STAFF_GUEST_SERVICES_NAV: NavSection[] = [
   },
 ]
 
-export const STAFF_GS_SUPERVISOR_NAV: NavSection[] = [
+export const GS_SUPERVISOR_NAV: NavSection[] = [
   {
     label: 'Overview',
     items: [
@@ -272,18 +272,22 @@ export const STAFF_INSPECTOR_NAV: NavSection[] = [
 ]
 
 export function getStaffNav(jobRole?: string, subRole?: string): NavSection[] {
-  // jobRole (exact PRD IDs) takes priority over subRole string matching
   if (jobRole === 'maintenance')    return STAFF_MAINTENANCE_NAV
-  if (jobRole === 'guest-services') return STAFF_GUEST_SERVICES_NAV
-  if (jobRole === 'gs-supervisor')  return STAFF_GS_SUPERVISOR_NAV
   if (jobRole === 'supervisor')     return STAFF_CLEANING_SUPERVISOR_NAV
   if (jobRole === 'cleaner')        return STAFF_CLEANING_NAV
   // subRole fallback for backwards compatibility
   if (subRole?.includes('Maintenance')) return STAFF_MAINTENANCE_NAV
-  if (subRole?.includes('Guest'))       return STAFF_GUEST_SERVICES_NAV
   if (subRole?.includes('Inspector'))   return STAFF_INSPECTOR_NAV
   if (subRole?.includes('Supervisor'))  return STAFF_CLEANING_SUPERVISOR_NAV
   return STAFF_CLEANING_NAV
+}
+
+export function getOperatorNav(accessTier: string, subRole?: string): NavSection[] {
+  if (accessTier === 'guest-services') {
+    if (subRole?.includes('Supervisor')) return GS_SUPERVISOR_NAV
+    return GS_AGENT_NAV
+  }
+  return MAIN_APP_OPERATOR_NAV
 }
 
 export const MAIN_APP_OPERATOR_NAV: NavSection[] = [

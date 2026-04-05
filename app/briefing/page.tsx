@@ -11,8 +11,7 @@ import { OVERNIGHT_REPORTS, GUEST_ISSUES, getActiveIssues } from '@/lib/data/gue
 import { PROPERTIES } from '@/lib/data/properties'
 import { JOBS, STAFF_MEMBERS } from '@/lib/data/staff'
 import CountdownTimer from '@/components/shared/CountdownTimer'
-import WeatherWidget from '@/components/shared/WeatherWidget'
-import { getPTEBadge, sortJobsByAccessibility } from '@/lib/utils/pteUtils'
+import { sortJobsByAccessibility } from '@/lib/utils/pteUtils'
 import {
   getPrefs, savePrefs, resetPrefs,
   TOGGLE_LABELS, ALWAYS_ON,
@@ -65,7 +64,6 @@ export default function BriefingPage() {
   const [prefs, setPrefs] = useState<BriefingPrefs | null>(null)
   const [showToggles, setShowToggles] = useState(false)
   const [accessCodeVisible, setAccessCodeVisible] = useState<Record<string, boolean>>({})
-  const [clockInRecord, setClockInRecord] = useState<{ staffId: string; shiftId: string; clockInTime: string; status: string } | null>(null)
 
   useEffect(() => {
     const t = new Date().toISOString().split('T')[0]
@@ -74,13 +72,27 @@ export default function BriefingPage() {
 
   useEffect(() => {
     setMounted(true)
-    const stored = localStorage.getItem('nestops_user')
+    const stored = localStorage.getItem('afterstay_user')
     if (stored) {
       try {
         const user: UserProfile = JSON.parse(stored)
+        // Redirect GS operators to their specific briefing sub-pages
+        if (user.role === 'operator' && user.accessTier === 'guest-services') {
+          if (user.subRole?.includes('Supervisor')) {
+            router.replace('/briefing/gs-supervisor')
+          } else {
+            router.replace('/briefing/guest-services')
+          }
+          return
+        }
+        // Full operators → dedicated operator briefing
+        if (user.role === 'operator' && user.accessTier !== 'guest-services') {
+          router.replace('/briefing/operator')
+          return
+        }
         // Redirect supervisors before checking subRole (Anna K. is "Cleaning Supervisor" but should go to /briefing/supervisor)
-        if (user.role === 'staff' && (user.jobRole === 'supervisor' || user.jobRole === 'gs-supervisor')) {
-          router.replace(user.jobRole === 'gs-supervisor' ? '/briefing/gs-supervisor' : '/briefing/supervisor')
+        if (user.role === 'staff' && user.jobRole === 'supervisor') {
+          router.replace('/briefing/supervisor')
           return
         }
         // Redirect cleaning staff to dedicated briefing page
@@ -94,18 +106,10 @@ export default function BriefingPage() {
           router.replace('/briefing/maintenance')
           return
         }
-        // Redirect guest services staff to dedicated briefing page
-        if (user.role === 'staff' && user.subRole?.includes('Guest')) {
-          router.replace('/briefing/guest-services')
-          return
-        }
+        // GS users are now role:'operator' — they get redirected above
         setCurrentUser(user)
         const loaded = getPrefs(user.id, user.subRole ?? '', user.role)
         setPrefs(loaded)
-        try {
-          const clockInStored = localStorage.getItem('nestops_clockin')
-          if (clockInStored) setClockInRecord(JSON.parse(clockInStored))
-        } catch { /* ignore */ }
       } catch {
         // ignore parse errors
       }
@@ -147,7 +151,7 @@ export default function BriefingPage() {
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 40 }}>
             <div style={{ width: 44, height: 44, borderRadius: 12, background: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: 20 }}>N</div>
-            <span style={{ fontWeight: 800, color: '#fff', fontSize: 26, letterSpacing: '-0.02em' }}>NestOps</span>
+            <span style={{ fontWeight: 800, color: '#fff', fontSize: 26, letterSpacing: '-0.02em' }}>AfterStay</span>
           </div>
 
           <h1 style={{ fontSize: 28, fontWeight: 700, color: '#fff', marginBottom: 8 }}>
@@ -202,13 +206,6 @@ export default function BriefingPage() {
     ? `${today}T${firstShift.startTime}:00`
     : today ? `${today}T09:00:00` : ''
 
-  const minutesUntilShift = firstShift && today
-    ? (() => {
-        const shiftMs = new Date(`${today}T${firstShift.startTime}:00`).getTime()
-        return (shiftMs - Date.now()) / 60000
-      })()
-    : Infinity
-
   const todayReport = today
     ? (OVERNIGHT_REPORTS.find(r => r.date === today)
         ?? [...OVERNIGHT_REPORTS].sort((a, b) => b.date.localeCompare(a.date))[0])
@@ -216,20 +213,15 @@ export default function BriefingPage() {
   const activeIssues = getActiveIssues(GUEST_ISSUES)
   const urgentIssues = activeIssues.filter(i => i.severity === 'critical' || i.severity === 'high')
   const openIssues = activeIssues.filter(i => i.severity === 'medium' || i.severity === 'low')
-  const unassignedOvernightCount = todayReport?.issues.filter(i => i.status === 'unassigned').length ?? 0
-
   const rawMyJobs = staffId ? JOBS.filter(j => j.staffId === staffId) : []
   const myJobs = sortJobsByAccessibility(rawMyJobs)
   const firstAutoGrantedJob = myJobs.find(j => j.pteStatus === 'auto_granted')
 
   const pendingPTEJobs = JOBS.filter(j => j.pteStatus === 'pending')
-  const staffOnShift = today ? SHIFTS.filter(s => s.date === today).length : 0
   const shiftProperty = firstShift ? PROPERTIES.find(p => p.id === firstShift.propertyId) : null
 
-  void WeatherWidget
-
   const handleClockInAndGo = (destination: string = '/app/dashboard') => {
-    localStorage.setItem('nestops_clockin', JSON.stringify({
+    localStorage.setItem('afterstay_clockin', JSON.stringify({
       staffId: currentUser.id,
       shiftId: firstShift?.id ?? 'unknown',
       date: today,
@@ -254,28 +246,6 @@ export default function BriefingPage() {
 
   const renderCTA = () => {
     if (!currentUser) return null
-    if (currentUser.role === 'operator') {
-      return (
-        <Link href="/app/dashboard" style={{ ...primaryBtnBase, background: '#7c3aed', color: '#fff' }}>
-          Go to Dashboard →
-        </Link>
-      )
-    }
-    if (currentUser.role === 'owner') {
-      return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <button
-            onClick={() => handleClockInAndGo('/owner')}
-            style={{ ...primaryBtnBase, background: '#7F77DD', color: '#fff' }}
-          >
-            ▶ Clock In Now
-          </button>
-          <Link href="/owner" style={secondaryBtnStyle}>
-            Go to Owner Portal →
-          </Link>
-        </div>
-      )
-    }
     const accentColor = currentUser.subRole?.includes('Cleaning') ? '#d97706'
       : currentUser.subRole?.includes('Maintenance') ? '#0ea5e9'
       : '#ec4899'
@@ -310,7 +280,7 @@ export default function BriefingPage() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 28, height: 28, borderRadius: 8, background: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: 13 }}>N</div>
-          <span style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>NestOps</span>
+          <span style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>AfterStay</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button
@@ -392,150 +362,6 @@ export default function BriefingPage() {
               </div>
             )}
           </div>
-
-          {/* ── OPERATOR ── */}
-          {currentUser.role === 'operator' && (
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-
-              {/* OVERNIGHT — toggle: overnightissues */}
-              {prefs?.toggles.overnightissues && todayReport && todayReport.issues.length > 0 && (
-                <div style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.25)', borderRadius: 16, padding: '20px', marginBottom: 16 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', marginBottom: 12 }}>
-                    🌙 {todayReport.issues.length} issue{todayReport.issues.length !== 1 ? 's' : ''} reported overnight
-                  </div>
-                  {todayReport.issues.map(issue => (
-                    <div key={issue.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: issue.severity === 'high' ? '#f8717120' : '#fb923c20', color: issue.severity === 'high' ? '#f87171' : '#fb923c' }}>
-                        {issue.severity.toUpperCase()}
-                      </span>
-                      <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', minWidth: 40 }}>{issue.time}</span>
-                      <span style={{ fontSize: 13, color: '#fff', flex: 1 }}>{issue.title}</span>
-                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{issue.property}</span>
-                      <span style={{ fontSize: 11, color: issue.assignedTo ? 'rgba(255,255,255,0.5)' : '#f87171', fontWeight: issue.assignedTo ? 400 : 700 }}>
-                        {issue.assignedTo ?? '⚠️ Unassigned'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* TEAM STATUS — toggle: teamstatus */}
-              {prefs?.toggles.teamstatus && (
-                <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '20px', marginBottom: 16 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 14 }}>
-                    Team Status
-                  </div>
-                  {(() => {
-                    const todayShifts = today ? SHIFTS.filter(s => s.date === today) : []
-                    const staffShiftMap = new Map<string, typeof todayShifts[0]>()
-                    todayShifts.forEach(s => { if (!staffShiftMap.has(s.staffId)) staffShiftMap.set(s.staffId, s) })
-                    const DEMO_STATUS: Record<string, { clockedIn: boolean; time?: string; note?: string }> = {
-                      's1': { clockedIn: true, time: '08:55' },
-                      's3': { clockedIn: true, time: '07:50' },
-                      's4': { clockedIn: true, note: 'Remote' },
-                      's2': { clockedIn: false },
-                    }
-                    return STAFF_MEMBERS
-                      .filter(sm => staffShiftMap.has(sm.id))
-                      .map(sm => {
-                        const shift = staffShiftMap.get(sm.id)!
-                        const prop = PROPERTIES.find(p => p.id === shift.propertyId)
-                        const isActuallyClockedIn = clockInRecord?.staffId === sm.id
-                        const demo = DEMO_STATUS[sm.id]
-                        const isClockedIn = isActuallyClockedIn || demo?.clockedIn
-                        const clockTime = isActuallyClockedIn ? clockInRecord!.clockInTime : demo?.time
-                        const statusNote = demo?.note
-                        return (
-                          <div key={sm.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                            <div style={{ flex: 1 }}>
-                              <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{sm.name}</span>
-                              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginLeft: 8 }}>· {prop?.name ?? shift.propertyId}</span>
-                            </div>
-                            <span style={{ fontSize: 12, color: isClockedIn ? '#4ade80' : 'rgba(255,255,255,0.35)', fontWeight: isClockedIn ? 600 : 400 }}>
-                              {isClockedIn
-                                ? (statusNote ? `✓ ${statusNote}` : clockTime ? `✓ Clocked in ${clockTime}` : '✓ On shift')
-                                : '○ Not yet clocked in'}
-                            </span>
-                          </div>
-                        )
-                      })
-                  })()}
-                </div>
-              )}
-
-              {/* CHECK-IN READINESS — toggle: checkins */}
-              {prefs?.toggles.checkins && (
-                <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '20px', marginBottom: 16 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 14 }}>
-                    Check-in Readiness
-                  </div>
-                  {[
-                    { name: 'Sunset Villa',   time: '15:00', status: 'ok',   note: '✓ Cleaning scheduled' },
-                    { name: 'Ocean View Apt', time: '17:00', status: 'warn', note: '⚠️ Tight turnaround' },
-                    { name: 'Downtown Loft',  time: '—',     status: 'none', note: 'No arrivals today' },
-                  ].map((row, i, arr) => (
-                    <div key={row.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: '#fff', flex: 1 }}>{row.name}</span>
-                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', minWidth: 44, textAlign: 'right' }}>{row.time}</span>
-                      <span style={{ fontSize: 12, color: row.status === 'ok' ? '#4ade80' : row.status === 'warn' ? '#fbbf24' : 'rgba(255,255,255,0.3)', minWidth: 140, textAlign: 'right' }}>
-                        {row.note}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* FIRST CHECK-IN COUNTDOWN — toggle: firstcheckin */}
-              {prefs?.toggles.firstcheckin && today && (
-                <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '20px 24px', marginBottom: 16 }}>
-                  <CountdownTimer
-                    targetTime={`${today}T15:00:00`}
-                    label="FIRST CHECK-IN IN"
-                    context="15:00 · First guest arrival"
-                  />
-                </div>
-              )}
-
-              {/* POSITIVE EMPTY STATE */}
-              {urgentIssues.length === 0 && unassignedOvernightCount === 0 && (
-                <div style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 16, padding: '16px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 16 }}>✅</span>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: '#4ade80' }}>Zero messages needed. Team is running.</span>
-                </div>
-              )}
-
-              <div style={{ marginTop: 8 }}>{renderCTA()}</div>
-            </motion.div>
-          )}
-
-          {/* ── OWNER ── */}
-          {currentUser.role === 'owner' && (
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '20px', marginBottom: 16 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 14 }}>
-                  Your Properties
-                </div>
-                {PROPERTIES.slice(0, 2).map(prop => (
-                  <div key={prop.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                    {prop.imageUrl && (
-                      <img src={prop.imageUrl} alt={prop.name} style={{ width: 44, height: 44, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
-                    )}
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{prop.name}</div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>1 check-in today · 0 issues</div>
-                    </div>
-                  </div>
-                ))}
-                {PROPERTIES.length > 2 && (
-                  <Link href="/owner/properties" style={{ display: 'block', marginTop: 10, fontSize: 13, color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}>
-                    +{PROPERTIES.length - 2} more properties →
-                  </Link>
-                )}
-              </div>
-
-              <div style={{ marginTop: 8 }}>{renderCTA()}</div>
-            </motion.div>
-          )}
 
           {/* ── CLEANING STAFF ── */}
           {currentUser.role === 'staff' && currentUser.subRole?.includes('Cleaning') && (

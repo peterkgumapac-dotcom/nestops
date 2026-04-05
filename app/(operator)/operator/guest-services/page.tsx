@@ -130,13 +130,13 @@ export default function GuestServicesPage() {
   }, [gsClockedIn, gsClockInTime])
 
   useEffect(() => {
-    const stored = localStorage.getItem('nestops_user')
+    const stored = localStorage.getItem('afterstay_user')
     if (stored) {
       try { setCurrentUser(JSON.parse(stored)) } catch {}
     }
     // Load clock-in state
     try {
-      const ciStr = localStorage.getItem('nestops_clockin')
+      const ciStr = localStorage.getItem('afterstay_clockin')
       if (ciStr) {
         const ci = JSON.parse(ciStr)
         const today = new Date().toISOString().split('T')[0]
@@ -149,7 +149,7 @@ export default function GuestServicesPage() {
     } catch {}
     // Merge localStorage upsell decisions into feed
     try {
-      const raw = localStorage.getItem('nestops_upsell_decisions')
+      const raw = localStorage.getItem('afterstay_upsell_decisions')
       if (raw) {
         const decisions = JSON.parse(raw) as Array<{
           id: string; status: string; guestName?: string; upsellTitle?: string;
@@ -240,10 +240,10 @@ export default function GuestServicesPage() {
               <button
                 onClick={() => {
                   try {
-                    const ciStr = localStorage.getItem('nestops_clockin')
+                    const ciStr = localStorage.getItem('afterstay_clockin')
                     if (ciStr) {
                       const ci = JSON.parse(ciStr)
-                      localStorage.setItem('nestops_clockin', JSON.stringify({ ...ci, status: 'completed', clockOutTime: new Date().toISOString() }))
+                      localStorage.setItem('afterstay_clockin', JSON.stringify({ ...ci, status: 'completed', clockOutTime: new Date().toISOString() }))
                     }
                   } catch {}
                   setGsClockedIn(false); setGsClockInTime(null); setGsElapsed('')
@@ -267,7 +267,7 @@ export default function GuestServicesPage() {
                   onClick={() => {
                     const now = new Date().toISOString()
                     const record = { staffId: currentUser?.id ?? '', shiftId: `shift_${Date.now()}`, propertyId: '', date: now.split('T')[0], clockInTime: now, status: 'in_progress' }
-                    localStorage.setItem('nestops_clockin', JSON.stringify(record))
+                    localStorage.setItem('afterstay_clockin', JSON.stringify(record))
                     setGsClockedIn(true); setGsClockInTime(now); setGsElapsed(gsGetElapsed(now))
                   }}
                   style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 40 }}

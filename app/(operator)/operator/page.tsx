@@ -19,7 +19,7 @@ import { FEED_ITEMS, filterFeed, type FeedTab } from '@/lib/data/activityFeed'
 
 // ─── Team clock status (6 members) ───────────────────────────────────────────
 const TEAM_CLOCK_STATUS = [
-  { id: 'km', name: 'Kim',    initials: 'KM', avatarBg: 'var(--n-green)',  role: 'Cleaning',       property: 'Ocean View Apt', status: 'active',  task: 'Turnover clean',          clockTime: '09:05' },
+  { id: 'km', name: 'Kim',    initials: 'KM', avatarBg: 'var(--n-accent)',  role: 'Cleaning',       property: 'Ocean View Apt', status: 'active',  task: 'Turnover clean',          clockTime: '09:05' },
   { id: 'nm', name: 'Nameda', initials: 'NM', avatarBg: '#7c3aed',         role: 'Guest Services', property: 'Remote',         status: 'busy',    task: 'Handling guest request',  clockTime: '08:55' },
   { id: 'ar', name: 'Aron',   initials: 'AR', avatarBg: 'var(--n-blue)',   role: 'Maintenance',    property: 'Harbor Studio',  status: 'active',  task: 'Fixing AC unit',          clockTime: '09:15' },
   { id: 'jo', name: 'Jonas',  initials: 'JO', avatarBg: 'var(--n-amber)',  role: 'Cleaning',       property: 'Sunset Villa',   status: 'blocked', task: 'Waiting for supplies',    clockTime: null },
@@ -120,9 +120,9 @@ export default function OperatorDashboard() {
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   useEffect(() => {
-    try { const s = localStorage.getItem('nestops_field_reports'); if (s) setFieldReports(JSON.parse(s)) } catch {}
-    try { const s = localStorage.getItem('nestops_owner_work_orders'); if (s) setOwnerWorkOrders(JSON.parse(s)) } catch {}
-    try { const s = localStorage.getItem('nestops_qa_pending'); if (s) setQaPending(JSON.parse(s)) } catch {}
+    try { const s = localStorage.getItem('afterstay_field_reports'); if (s) setFieldReports(JSON.parse(s)) } catch {}
+    try { const s = localStorage.getItem('afterstay_owner_work_orders'); if (s) setOwnerWorkOrders(JSON.parse(s)) } catch {}
+    try { const s = localStorage.getItem('afterstay_qa_pending'); if (s) setQaPending(JSON.parse(s)) } catch {}
     setMounted(true)
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
     checkMobile()
@@ -138,7 +138,7 @@ export default function OperatorDashboard() {
   const handleQaAction = (id: string, action: 'approved' | 'redo') => {
     const updated = qaPending.map(q => q.id === id ? { ...q, qaStatus: action } : q).filter(q => q.qaStatus === 'pending')
     setQaPending(updated)
-    try { localStorage.setItem('nestops_qa_pending', JSON.stringify(updated)) } catch {}
+    try { localStorage.setItem('afterstay_qa_pending', JSON.stringify(updated)) } catch {}
     setQaReviewItem(null)
     showToast(action === 'approved' ? 'Cleaning approved' : 'Flag sent — cleaner notified to redo')
   }
@@ -270,8 +270,8 @@ export default function OperatorDashboard() {
 
   function feedDotColor(type: string) {
     if (type === 'blocked') return 'var(--n-red)'
-    if (type === 'in_progress') return 'var(--n-green)'
-    if (type === 'en_route') return 'var(--n-green2)'
+    if (type === 'in_progress') return 'var(--n-accent)'
+    if (type === 'en_route') return 'var(--n-accent-light)'
     return 'var(--n-text3)'
   }
   function feedStatusStyle(type: string) {
@@ -283,13 +283,13 @@ export default function OperatorDashboard() {
   const feedActive  = filterFeed(FEED_ITEMS, 'all').filter(i => i.type === 'in_progress').length
 
   function statusDotColor(status: string) {
-    if (status === 'active')  return 'var(--n-green)'
+    if (status === 'active')  return 'var(--n-accent)'
     if (status === 'blocked') return 'var(--n-red)'
     if (status === 'busy')    return 'var(--n-amber)'
     return 'var(--n-text3)'
   }
   function statusTaskColor(status: string) {
-    if (status === 'active')  return 'var(--n-green)'
+    if (status === 'active')  return 'var(--n-accent)'
     if (status === 'blocked') return 'var(--n-red)'
     return 'var(--n-text2)'
   }
@@ -297,10 +297,10 @@ export default function OperatorDashboard() {
   const STAT_CARDS = [
     { count: cProps,   label: 'Properties',    icon: Building2,     glow: 'var(--n-blue)',  sub: 'All active' },
     { count: cCleans,  label: 'Active Cleans',  icon: Sparkles,      glow: 'var(--n-text2)', sub: 'In progress' },
-    { count: cCheckin, label: 'Check-ins',      icon: CalendarCheck, glow: 'var(--n-green)', sub: 'Today' },
+    { count: cCheckin, label: 'Check-ins',      icon: CalendarCheck, glow: 'var(--n-accent)', sub: 'Today' },
     { count: cReq,     label: 'Guest Issues',   icon: AlertTriangle, glow: 'var(--n-amber)', sub: activeIssues.length > 0 ? 'Needs attention' : 'All clear' },
     { count: cOver,    label: 'Overdue',         icon: Clock,         glow: overdueCount > 0 ? 'var(--n-red)' : 'var(--n-text3)', sub: overdueCount > 0 ? `${overdueCount} urgent` : 'None' },
-    { count: cApprove, label: 'Approvals',       icon: CheckCircle,   glow: pendingApprovals.length > 0 ? 'var(--n-green)' : 'var(--n-text3)', sub: pendingApprovals.length > 0 ? `${pendingApprovals.length} pending` : 'None' },
+    { count: cApprove, label: 'Approvals',       icon: CheckCircle,   glow: pendingApprovals.length > 0 ? 'var(--n-accent)' : 'var(--n-text3)', sub: pendingApprovals.length > 0 ? `${pendingApprovals.length} pending` : 'None' },
   ]
 
   if (!mounted) return (
@@ -382,9 +382,9 @@ export default function OperatorDashboard() {
               <button style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6, background: 'var(--n-red)', color: '#fff', border: 'none', cursor: 'pointer', flexShrink: 0 }}>View Task</button>
             </div>
           )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', background: 'var(--n-green-bg)', borderLeft: '3px solid var(--n-green)', borderRadius: 8, border: '1px solid var(--n-green-border)' }}>
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="var(--n-green)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="2 7 5.5 10.5 12 3.5"/></svg>
-            <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--n-green)' }}>1 task auto-granted PTE · Properties vacant — no guest access needed</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', background: 'var(--n-accent-bg)', borderLeft: '3px solid var(--n-accent)', borderRadius: 8, border: '1px solid var(--n-accent-border)' }}>
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="var(--n-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="2 7 5.5 10.5 12 3.5"/></svg>
+            <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--n-accent)' }}>1 task auto-granted PTE · Properties vacant — no guest access needed</span>
           </div>
         </div>
 
@@ -559,7 +559,7 @@ export default function OperatorDashboard() {
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
               {feedBlocked > 0 && <span style={{ fontSize: 10, color: 'var(--n-red)', fontFamily: 'var(--n-mono)' }}>{feedBlocked} blocked</span>}
-              {feedActive > 0 && <span style={{ fontSize: 10, color: 'var(--n-green)', fontFamily: 'var(--n-mono)' }}>{feedActive} active</span>}
+              {feedActive > 0 && <span style={{ fontSize: 10, color: 'var(--n-accent)', fontFamily: 'var(--n-mono)' }}>{feedActive} active</span>}
             </div>
           </div>
           {/* Feed tab pills */}
@@ -600,7 +600,7 @@ export default function OperatorDashboard() {
                   {item.progress !== undefined && (
                     <div style={{ marginLeft: 32, display: 'flex', alignItems: 'center', gap: 6 }}>
                       <div style={{ flex: 1, height: 2, borderRadius: 2, background: 'var(--n-border2)' }}>
-                        <div style={{ width: `${item.progress}%`, height: '100%', background: 'var(--n-green)', borderRadius: 2 }} />
+                        <div style={{ width: `${item.progress}%`, height: '100%', background: 'var(--n-accent)', borderRadius: 2 }} />
                       </div>
                       <span style={{ fontSize: 9, color: 'var(--n-text3)', fontFamily: 'var(--n-mono)', flexShrink: 0 }}>{item.progress}%</span>
                     </div>
@@ -633,7 +633,7 @@ export default function OperatorDashboard() {
                     <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--n-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{job.propertyName}</div>
                     <div style={{ fontSize: 11, color: 'var(--n-text2)' }}>{job.reservation?.guestName ?? 'Guest'}</div>
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: isAtRisk ? 'var(--n-amber-bg)' : 'var(--n-green-bg)', color: isAtRisk ? 'var(--n-amber)' : 'var(--n-green)', border: `1px solid ${isAtRisk ? 'var(--n-amber-border)' : 'var(--n-green-border)'}`, flexShrink: 0 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: isAtRisk ? 'var(--n-amber-bg)' : 'var(--n-accent-bg)', color: isAtRisk ? 'var(--n-amber)' : 'var(--n-accent)', border: `1px solid ${isAtRisk ? 'var(--n-amber-border)' : 'var(--n-accent-border)'}`, flexShrink: 0 }}>
                     {isAtRisk ? 'At risk' : 'Ready'}
                   </span>
                 </div>
@@ -657,11 +657,11 @@ export default function OperatorDashboard() {
             <div key={a.id} style={{ paddingBottom: 12, marginBottom: i < pendingApprovals.length - 1 ? 12 : 0, borderBottom: i < pendingApprovals.length - 1 ? '1px solid var(--n-border)' : 'none' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 2 }}>
                 <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--n-text)', flex: 1, marginRight: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.title}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--n-green)', flexShrink: 0, fontFamily: 'var(--n-mono)' }}>{a.amount.toLocaleString()} {a.currency}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--n-accent)', flexShrink: 0, fontFamily: 'var(--n-mono)' }}>{a.amount.toLocaleString()} {a.currency}</span>
               </div>
               <div style={{ fontSize: 10.5, color: 'var(--n-text2)', marginBottom: 8 }}>{a.property} · {a.category}</div>
               <div style={{ display: 'flex', gap: 5 }}>
-                <button onClick={() => { setPendingApprovals(p => p.filter(x => x.id !== a.id)); showToast('Approved — owner notified') }} style={{ flex: 1, height: 26, borderRadius: 5, border: 'none', background: 'var(--n-green)', color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Approve</button>
+                <button onClick={() => { setPendingApprovals(p => p.filter(x => x.id !== a.id)); showToast('Approved — owner notified') }} style={{ flex: 1, height: 26, borderRadius: 5, border: 'none', background: 'var(--n-accent)', color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Approve</button>
                 <button onClick={() => showToast('Invoiced later')} style={{ flex: 1, height: 26, borderRadius: 5, border: '1px solid var(--n-blue-border)', background: 'var(--n-blue-bg)', color: 'var(--n-blue)', fontSize: 11, cursor: 'pointer' }}>Invoice Later</button>
                 <button onClick={() => showToast('Follow-up sent')} style={{ flex: 1, height: 26, borderRadius: 5, border: '1px solid var(--n-border2)', background: 'transparent', color: 'var(--n-text2)', fontSize: 11, cursor: 'pointer' }}>Follow-Up</button>
               </div>
@@ -711,14 +711,14 @@ export default function OperatorDashboard() {
           )}
           <SheetFooter>
             <button onClick={() => qaReviewItem && handleQaAction(qaReviewItem.id, 'redo')} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: '1px solid var(--n-red)', background: 'transparent', color: 'var(--n-red)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Flag for Redo</button>
-            <button onClick={() => qaReviewItem && handleQaAction(qaReviewItem.id, 'approved')} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', background: 'var(--n-green)', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Approve</button>
+            <button onClick={() => qaReviewItem && handleQaAction(qaReviewItem.id, 'approved')} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', background: 'var(--n-accent)', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Approve</button>
           </SheetFooter>
         </SheetContent>
       </Sheet>
 
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, right: 24, background: 'var(--n-green)', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+        <div style={{ position: 'fixed', bottom: 24, right: 24, background: 'var(--n-accent)', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
           {toast}
         </div>
       )}

@@ -91,7 +91,7 @@ export default function ShareFooter({ guidebook, accentColor, brandName }: Props
         <Heart size={10} style={{ color: accentColor }} fill={accentColor} />
         <span>by</span>
         <span style={{ color: G.textMuted, fontWeight: 700 }}>
-          {brandName ?? 'NestOps'}
+          {brandName ?? 'AfterStay'}
         </span>
       </div>
     </motion.div>

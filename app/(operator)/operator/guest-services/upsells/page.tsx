@@ -62,9 +62,9 @@ export default function UpsellsPage() {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem('nestops_upsell_decisions')
+      const raw = localStorage.getItem('afterstay_upsell_decisions')
       if (!raw) {
-        localStorage.setItem('nestops_upsell_decisions', JSON.stringify(PRESEED_DECISIONS))
+        localStorage.setItem('afterstay_upsell_decisions', JSON.stringify(PRESEED_DECISIONS))
         setUpsellDecisions(PRESEED_DECISIONS)
         setApprovalStatuses(prev => ({
           ...prev,

@@ -44,7 +44,7 @@ const SOPS: Sop[] = [
     category: 'Maintenance',
     date: '2026-03-10',
     acknowledged: false,
-    body: 'For minor issues, log via the NestOps app and mark priority. For urgent issues (flooding, no heating), call the operator directly and submit a high-priority ticket immediately.',
+    body: 'For minor issues, log via the AfterStay app and mark priority. For urgent issues (flooding, no heating), call the operator directly and submit a high-priority ticket immediately.',
     roles: ['Maintenance'],
   },
 ]
@@ -58,7 +58,7 @@ export default function StaffSopsPage() {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
 
   useEffect(() => {
-    const stored = localStorage.getItem('nestops_user')
+    const stored = localStorage.getItem('afterstay_user')
     if (stored) {
       try { setCurrentUser(JSON.parse(stored)) } catch { /* ignore */ }
     }

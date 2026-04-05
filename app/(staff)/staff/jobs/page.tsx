@@ -426,7 +426,7 @@ export default function JobsPage() {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('nestops_user')
+      const stored = localStorage.getItem('afterstay_user')
       const profile = stored ? JSON.parse(stored) : null
       const staffId = profile ? USER_TO_STAFF[profile.id] : null
       const staff = staffId

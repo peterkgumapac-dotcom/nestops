@@ -98,7 +98,7 @@ export default function OnboardWizard() {
   const [done, setDone] = useState(false)
   const [data, setData] = useState<WizardData>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('nestops_onboard_draft')
+      const saved = localStorage.getItem('afterstay_onboard_draft')
       if (saved) try { return JSON.parse(saved) } catch {}
     }
     return DEFAULT_DRAFT
@@ -107,7 +107,7 @@ export default function OnboardWizard() {
   const update = (patch: Partial<WizardData>) => {
     setData(d => {
       const next = { ...d, ...patch }
-      localStorage.setItem('nestops_onboard_draft', JSON.stringify(next))
+      localStorage.setItem('afterstay_onboard_draft', JSON.stringify(next))
       return next
     })
   }
@@ -118,7 +118,7 @@ export default function OnboardWizard() {
   }
 
   const handleDone = () => {
-    localStorage.removeItem('nestops_onboard_draft')
+    localStorage.removeItem('afterstay_onboard_draft')
     setDone(true)
     setTimeout(() => router.push('/app/properties'), 2500)
   }
@@ -145,7 +145,7 @@ export default function OnboardWizard() {
       <div style={{ padding: '0 24px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 28, height: 28, borderRadius: 7, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#fff', fontSize: 13 }}>N</div>
-          <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>NestOps</span>
+          <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>AfterStay</span>
         </div>
         <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Step {step} of {TOTAL_STEPS}</span>
         <button onClick={() => router.push('/app/properties')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4, fontSize: 13 }}>

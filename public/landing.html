@@ -3,22 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NestOps — Your PMS runs bookings. NestOps runs everything after.</title>
-<meta name="description" content="NestOps is the operations platform for short-term rental teams. Replace Breezeway, SuiteOp, Asana, Notion, and WhatsApp with one platform that knows your properties, your guests, and your team.">
+<title>AfterStay — Your PMS runs bookings. AfterStay runs everything after.</title>
+<meta name="description" content="AfterStay is the operations platform for short-term rental teams. Replace Breezeway, SuiteOp, Asana, Notion, and WhatsApp with one platform that knows your properties, your guests, and your team.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://nestops.io/landing.html">
-<meta property="og:title" content="NestOps — Your PMS runs bookings. NestOps runs everything after.">
+<meta property="og:url" content="https://afterstay.com/landing.html">
+<meta property="og:title" content="AfterStay — Your PMS runs bookings. AfterStay runs everything after.">
 <meta property="og:description" content="Replace 5+ tools with one operations platform built for STR teams. PTE system, daily briefing, inventory auto-deduction, owner payments. 12 features no competitor has.">
-<meta property="og:image" content="https://nestops.io/og-image.jpg">
+<meta property="og:image" content="https://afterstay.com/og-image.jpg">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#0e0a08">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#080b12;--bg2:#0f1219;--bg3:#161b26;--card:#111722;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.1);--text:#e8e6e1;--text2:#9ca3af;--text3:#5a5f6b;--green:#1D9E75;--green2:#15d492;--green-bg:rgba(29,158,117,0.08);--green-border:rgba(29,158,117,0.2);--red:#e24b4a;--red-bg:rgba(226,75,74,0.08);--amber:#ef9f27;--blue:#378ADD;--sans:'Outfit',system-ui,sans-serif;--mono:'JetBrains Mono',monospace}
+:root{--bg:#0e0a08;--bg2:#161009;--bg3:#1e1510;--card:#161009;--border:#2a1f16;--border2:rgba(196,98,45,0.15);--text:#f5ede6;--text2:#8a6a58;--text3:#5a4a3b;--accent:#c4622d;--accent-light:#e07a45;--accent-lt:#e07a45;--accent-bg:rgba(196,98,45,0.08);--accent-border:rgba(196,98,45,0.2);--red:#e24b4a;--red-bg:rgba(226,75,74,0.08);--amber:#ef9f27;--blue:#378ADD;--sans:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
-::selection{background:var(--green);color:#fff}
+::selection{background:var(--accent);color:#fff}
 
 /* Grain overlay */
 .grain{position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
@@ -28,63 +30,62 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font
 
 /* Nav */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 0;transition:background 0.3s}
-nav.scrolled{background:rgba(8,11,18,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+nav.scrolled{background:rgba(14,10,8,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
 .nav-inner{max-width:1120px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between}
 .nav-left{display:flex;align-items:center;gap:10px}
-.nav-logo{width:32px;height:32px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;color:#fff}
+.nav-logo{width:32px;height:32px;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .nav-name{font-size:16px;font-weight:600;color:var(--text);letter-spacing:-0.02em}
-.nav-tag{font-size:10px;padding:2px 8px;border-radius:6px;background:var(--bg3);color:var(--text3);font-weight:500}
 .nav-links{display:flex;align-items:center;gap:28px}
 .nav-links a{font-size:13px;color:var(--text2);text-decoration:none;transition:color 0.15s}
 .nav-links a:hover{color:var(--text)}
-.nav-cta{padding:8px 20px;border-radius:8px;background:var(--green);color:#fff;font-size:13px;font-weight:500;border:none;cursor:pointer;text-decoration:none;transition:all 0.15s}
-.nav-cta:hover{background:var(--green2);transform:translateY(-1px)}
+.nav-cta{padding:8px 20px;border-radius:8px;background:var(--accent);color:#fff;font-size:13px;font-weight:500;border:none;cursor:pointer;text-decoration:none;transition:background 0.15s,color 0.15s,border-color 0.15s}
+.nav-cta:hover{background:var(--accent-light);transform:translateY(-1px)}
 
 /* Container */
 .container{max-width:1120px;margin:0 auto;padding:0 24px}
 
 /* Section */
 .section{padding:100px 0;position:relative}
-.section-divider{height:1px;background:linear-gradient(90deg,transparent 0%,rgba(29,158,117,0.45) 30%,rgba(21,212,146,0.65) 50%,rgba(29,158,117,0.45) 70%,transparent 100%);max-width:1120px;margin:0 auto}
+.section-divider{height:1px;background:linear-gradient(90deg,transparent 0%,rgba(196,98,45,0.45) 30%,rgba(224,122,69,0.65) 50%,rgba(196,98,45,0.45) 70%,transparent 100%);max-width:1120px;margin:0 auto}
 
 /* Hero */
-.hero{padding:140px 0 80px;text-align:center;position:relative;overflow:hidden}
-.hero-glow{position:absolute;top:-200px;left:50%;transform:translateX(-50%);width:800px;height:600px;background:radial-gradient(ellipse,rgba(29,158,117,0.08) 0%,transparent 70%);pointer-events:none}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:20px;border:1px solid var(--green-border);background:var(--green-bg);font-size:12px;color:var(--green2);font-weight:500;margin-bottom:24px}
-.hero-badge .pulse{width:6px;height:6px;border-radius:50%;background:var(--green2);animation:pulse 2s ease infinite}
+.hero{padding:72px 0 36px;text-align:center;position:relative;overflow:hidden}
+.hero-glow{position:absolute;top:-200px;left:50%;transform:translateX(-50%);width:800px;height:600px;background:radial-gradient(ellipse,rgba(196,98,45,0.08) 0%,transparent 70%);pointer-events:none}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:20px;border:1px solid var(--accent-border);background:var(--accent-bg);font-size:12px;color:var(--accent-light);font-weight:500;margin-bottom:24px}
+.hero-badge .pulse{width:6px;height:6px;border-radius:50%;background:var(--accent-light);animation:pulse 2s ease infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.8)}}
-.hero h1{font-size:clamp(36px,5.5vw,64px);font-weight:700;letter-spacing:-0.035em;line-height:1.1;margin-bottom:16px;color:#fff}
+.hero h1{font-size:clamp(24px,3.5vw,44px);font-weight:700;letter-spacing:-0.035em;line-height:1.1;margin-bottom:16px;color:#fff}
 .hero h1 span{color:var(--text3)}
-.hero-sub{font-size:clamp(15px,1.8vw,18px);color:var(--text2);max-width:560px;margin:0 auto 40px;line-height:1.7}
+.hero-sub{font-size:clamp(13px,1.4vw,16px);color:var(--text2);max-width:560px;margin:0 auto 40px;line-height:1.7}
 
 /* Calculator Card */
 .calc-wrap{max-width:720px;margin:0 auto;position:relative}
-.calc-card{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:28px;position:relative;overflow:hidden}
-.calc-card::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:200px;height:1px;background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.calc-card{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:28px;position:relative;overflow:hidden}
+.calc-card::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:200px;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent)}
 .sliders{display:flex;gap:12px;margin-bottom:20px}
 .sl{flex:1;padding:12px 16px;border-radius:10px;background:var(--bg2);border:1px solid var(--border)}
 .sl-top{display:flex;justify-content:space-between;margin-bottom:8px}
 .sl-label{font-size:12px;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:0.05em}
-.sl-val{font-size:18px;font-weight:600;color:var(--green2);font-family:var(--mono)}
+.sl-val{font-size:18px;font-weight:600;color:var(--accent-light);font-family:var(--mono)}
 input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:var(--bg3);outline:none}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--green);cursor:pointer;border:2px solid var(--bg2);transition:transform 0.1s}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg2);transition:transform 0.1s}
 input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
-.grid-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);margin-bottom:8px}
+.grid-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);margin-bottom:8px}
 .tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
 .tool-col-title{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
 .tool-cards{display:flex;flex-direction:column;gap:4px}
-.tc{padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);cursor:pointer;transition:all 0.12s;display:flex;justify-content:space-between;align-items:center;user-select:none}
+.tc{padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);cursor:pointer;transition:background 0.12s,border-color 0.12s;display:flex;justify-content:space-between;align-items:center;user-select:none}
 .tc:hover{border-color:var(--border2);background:var(--bg3)}
-.tc.on{border-color:var(--green-border);background:var(--green-bg)}
+.tc.on{border-color:var(--accent-border);background:var(--accent-bg)}
 .tc-name{font-size:12px;font-weight:500;color:var(--text)}
-.tc.on .tc-name{color:var(--green2)}
-.tc-meta{font-size:10px;color:var(--text3);margin-top:1px}
+.tc.on .tc-name{color:var(--accent-light)}
+.tc-meta{font-size:11px;color:var(--text3);margin-top:1px}
 .tc-price{font-size:11px;font-weight:500;color:var(--red);white-space:nowrap}
-.tc.on .tc-price{color:var(--green2)}
+.tc.on .tc-price{color:var(--accent-light)}
 
 /* Results */
-.results{padding:20px;border-radius:12px;background:var(--bg2);border:1px solid var(--border);transition:all 0.3s}
-.results.active{border-color:var(--green-border)}
+.results{padding:20px;border-radius:12px;background:var(--bg2);border:1px solid var(--border);transition:border-color 0.3s,background 0.3s}
+.results.active{border-color:var(--accent-border)}
 .res-empty{text-align:center;padding:12px;font-size:13px;color:var(--text3)}
 .res-content{display:none}
 .results.active .res-content{display:block}
@@ -94,22 +95,22 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 .bar-track{flex:1;height:28px;border-radius:6px;background:var(--bg3);overflow:hidden;position:relative}
 .bar-fill{height:100%;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding:0 10px;transition:width 0.5s cubic-bezier(0.34,1.56,0.64,1)}
 .bar-fill.red{background:linear-gradient(90deg,rgba(226,75,74,0.15),rgba(226,75,74,0.35))}
-.bar-fill.grn{background:linear-gradient(90deg,rgba(29,158,117,0.15),rgba(29,158,117,0.4))}
+.bar-fill.grn{background:linear-gradient(90deg,rgba(196,98,45,0.15),rgba(196,98,45,0.4))}
 .bar-amt{font-size:11px;font-weight:600;font-family:var(--mono)}
 .bar-fill.red .bar-amt{color:var(--red)}
-.bar-fill.grn .bar-amt{color:var(--green2)}
+.bar-fill.grn .bar-amt{color:var(--accent-light)}
 .save-row{display:flex;justify-content:space-between;align-items:center;padding-top:16px;margin-top:16px;border-top:1px solid var(--border)}
 .save-label{font-size:13px;color:var(--text2)}
 .save-sub{font-size:11px;color:var(--text3);margin-top:2px}
-.save-amt{font-size:28px;font-weight:700;color:var(--green2);font-family:var(--mono);letter-spacing:-0.02em}
+.save-amt{font-size:28px;font-weight:700;color:var(--accent-light);font-family:var(--mono);letter-spacing:-0.02em}
 .save-yr{font-size:12px;color:var(--text2);margin-top:2px;text-align:right}
 .tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:12px}
 .tag{font-size:10px;padding:4px 8px;border-radius:6px}
-.tag.rep{background:var(--green-bg);color:var(--green2);border:1px solid var(--green-border)}
+.tag.rep{background:var(--accent-bg);color:var(--accent-light);border:1px solid var(--accent-border)}
 .tag.keep{background:var(--bg3);color:var(--text3);border:1px dashed var(--border2)}
-.cta-primary{display:block;width:100%;padding:14px;border-radius:10px;background:var(--green);color:#fff;font-size:14px;font-weight:600;text-align:center;border:none;cursor:pointer;margin-top:16px;font-family:var(--sans);transition:all 0.15s;letter-spacing:-0.01em}
-.cta-primary:hover{background:var(--green2);transform:translateY(-1px);box-shadow:0 8px 30px rgba(29,158,117,0.25)}
-.cta-ghost{display:block;width:100%;padding:10px;border-radius:10px;background:transparent;color:var(--text2);font-size:12px;text-align:center;border:1px solid var(--border);cursor:pointer;margin-top:8px;font-family:var(--sans);transition:all 0.15s}
+.cta-primary{display:block;width:100%;padding:14px;border-radius:10px;background:var(--accent);color:#fff;font-size:14px;font-weight:600;text-align:center;border:none;cursor:pointer;margin-top:16px;font-family:var(--sans);transition:background 0.15s,color 0.15s,border-color 0.15s;letter-spacing:-0.01em}
+.cta-primary:hover{background:var(--accent-light);transform:translateY(-1px);box-shadow:0 8px 30px rgba(196,98,45,0.25)}
+.cta-ghost{display:block;width:100%;padding:10px;border-radius:10px;background:transparent;color:var(--text2);font-size:12px;text-align:center;border:1px solid var(--border);cursor:pointer;margin-top:8px;font-family:var(--sans);transition:background 0.15s,color 0.15s,border-color 0.15s}
 .cta-ghost:hover{border-color:var(--border2);color:var(--text)}
 
 /* Social Proof */
@@ -123,44 +124,44 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 .feat-grid.reverse{direction:rtl}
 .feat-grid.reverse > *{direction:ltr}
 .feat-text{max-width:440px}
-.feat-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:var(--green);margin-bottom:12px}
+.feat-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);margin-bottom:12px}
 .feat-title{font-size:clamp(24px,3vw,32px);font-weight:700;letter-spacing:-0.03em;line-height:1.2;margin-bottom:12px;color:#fff}
 .feat-desc{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:20px}
 .feat-stat{display:inline-flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:var(--bg3);border:1px solid var(--border)}
-.feat-stat-num{font-size:20px;font-weight:700;font-family:var(--mono);color:var(--green2)}
+.feat-stat-num{font-size:20px;font-weight:700;font-family:var(--mono);color:var(--accent-light)}
 .feat-stat-label{font-size:12px;color:var(--text2);line-height:1.4}
-.feat-cta{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:1px solid var(--border);color:var(--text2);font-size:12px;cursor:pointer;text-decoration:none;transition:all 0.15s;margin-top:12px;background:transparent}
-.feat-cta:hover{border-color:var(--green-border);color:var(--green2)}
+.feat-cta{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:1px solid var(--border);color:var(--text2);font-size:12px;cursor:pointer;text-decoration:none;transition:background 0.15s,color 0.15s,border-color 0.15s;margin-top:12px;background:transparent}
+.feat-cta:hover{border-color:var(--accent-border);color:var(--accent-light)}
 .feat-cta svg{width:14px;height:14px}
 
 /* Phone mockup */
-.phone{width:280px;margin:0 auto;border-radius:28px;border:2px solid var(--border2);background:var(--bg2);overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.03)}
+.phone{width:280px;margin:0 auto;border-radius:20px;border:2px solid var(--border2);background:var(--bg2);overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.03)}
 .phone-notch{width:80px;height:6px;border-radius:3px;background:var(--bg3);margin:8px auto 4px}
 .phone-screen{padding:16px}
 .brief-item{padding:8px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);margin-bottom:4px;font-size:11px;color:var(--text2);opacity:0;transform:translateY(10px);animation:briefIn 0.4s ease forwards}
 @keyframes briefIn{to{opacity:1;transform:translateY(0)}}
-.brief-item.accent{color:var(--green2);background:var(--green-bg);border-color:var(--green-border)}
+.brief-item.accent{color:var(--accent-light);background:var(--accent-bg);border-color:var(--accent-border)}
 .brief-greeting{font-size:15px;font-weight:600;color:#fff;margin:6px 0 8px;opacity:0;animation:briefIn 0.4s ease 0.1s forwards}
 .brief-weather{font-size:11px;color:var(--text3);margin-bottom:6px;opacity:0;animation:briefIn 0.4s ease 0.3s forwards}
-.brief-countdown{font-size:22px;font-weight:700;color:var(--green2);text-align:center;margin:10px 0;font-family:var(--mono);opacity:0;animation:briefIn 0.4s ease 0.5s forwards}
+.brief-countdown{font-size:22px;font-weight:700;color:var(--accent-light);text-align:center;margin:10px 0;font-family:var(--mono);opacity:0;animation:briefIn 0.4s ease 0.5s forwards}
 
 /* Chat mockup */
 .chat-mock{width:300px;margin:0 auto;border-radius:20px;border:2px solid var(--border2);background:var(--bg2);overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.4)}
 .chat-head{padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
-.chat-av{width:24px;height:24px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff}
+.chat-av{width:24px;height:24px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff}
 .chat-nm{font-size:12px;font-weight:500;color:var(--text)}
 .chat-body{padding:10px;min-height:200px;display:flex;flex-direction:column;gap:4px}
 .chat-bub{padding:6px 10px;border-radius:10px;font-size:11px;max-width:82%;line-height:1.5;opacity:0;transform:translateX(-10px);animation:chatIn 0.3s ease forwards}
-.chat-bub.right{align-self:flex-end;background:var(--green);color:#fff;border-bottom-right-radius:2px;transform:translateX(10px)}
+.chat-bub.right{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:2px;transform:translateX(10px)}
 .chat-bub.left{background:var(--bg3);color:var(--text2);border-bottom-left-radius:2px}
-.chat-bub.sys{align-self:center;background:var(--green-bg);color:var(--green2);border-radius:6px;font-size:10px;font-weight:500;max-width:90%;text-align:center;transform:translateX(0);transform:scale(0.9)}
+.chat-bub.sys{align-self:center;background:var(--accent-bg);color:var(--accent-light);border-radius:6px;font-size:10px;font-weight:500;max-width:90%;text-align:center;transform:translateX(0) scale(0.9)}
 @keyframes chatIn{to{opacity:1;transform:translateX(0) scale(1)}}
 .chat-toggle{display:flex;justify-content:center;gap:4px;padding:8px}
-.chat-btn{padding:5px 12px;border-radius:6px;border:1px solid var(--border);font-size:10px;color:var(--text3);cursor:pointer;background:transparent;font-family:var(--sans);transition:all 0.12s}
-.chat-btn.active{background:var(--green-bg);color:var(--green2);border-color:var(--green-border)}
+.chat-btn{padding:5px 12px;border-radius:6px;border:1px solid var(--border);font-size:10px;color:var(--text3);cursor:pointer;background:transparent;font-family:var(--sans);transition:background 0.12s,color 0.12s,border-color 0.12s}
+.chat-btn.active{background:var(--accent-bg);color:var(--accent-light);border-color:var(--accent-border)}
 
 /* Dashboard mockup */
-.dash{border-radius:16px;border:2px solid var(--border2);background:var(--bg2);overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.4)}
+.dash{border-radius:20px;border:2px solid var(--border2);background:var(--bg2);overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.4)}
 .dash-bar{padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
 .dash-dots{display:flex;gap:4px}
 .dash-dot{width:8px;height:8px;border-radius:50%;background:var(--border2)}
@@ -175,23 +176,23 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 .tl-now{position:absolute;top:18px;bottom:0;width:1.5px;background:var(--red);left:38%}
 .staff-row{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text2);padding:3px 0}
 .staff-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.staff-dot.on{background:var(--green2)}
+.staff-dot.on{background:var(--accent-light)}
 .staff-dot.late{background:var(--red)}
 .staff-dot.off{background:var(--text3)}
 .prop-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:10px}
 .prop-name{color:var(--text2)}
 .prop-badge{padding:2px 6px;border-radius:4px;font-size:9px;font-weight:500}
-.prop-badge.ready{background:var(--green-bg);color:var(--green2)}
+.prop-badge.ready{background:var(--accent-bg);color:var(--accent-light)}
 .prop-badge.cleaning{background:rgba(55,138,221,0.1);color:var(--blue)}
 .prop-badge.risk{background:rgba(239,159,39,0.1);color:var(--amber)}
 .prop-badge.vacant{background:var(--bg2);color:var(--text3)}
 
 /* Pricing */
 .pricing-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;max-width:900px;margin:0 auto}
-.tier{padding:24px;border-radius:14px;border:1px solid var(--border);background:var(--card);transition:all 0.2s;position:relative}
+.tier{padding:24px;border-radius:14px;border:1px solid var(--border);background:var(--card);transition:border-color 0.2s,transform 0.2s;position:relative}
 .tier:hover{border-color:var(--border2);transform:translateY(-2px)}
-.tier.pop{border:2px solid var(--green-border);background:linear-gradient(180deg,rgba(29,158,117,0.04),transparent)}
-.tier-badge{position:absolute;top:-10px;right:16px;font-size:10px;font-weight:500;padding:3px 10px;border-radius:6px;background:var(--green);color:#fff;display:none}
+.tier.pop{border:2px solid var(--accent-border);background:linear-gradient(180deg,rgba(196,98,45,0.04),transparent)}
+.tier-badge{position:absolute;top:-10px;right:16px;font-size:10px;font-weight:500;padding:3px 10px;border-radius:6px;background:var(--accent);color:#fff;display:none}
 .tier.pop .tier-badge{display:block}
 .tier-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
 .tier-price{font-size:32px;font-weight:700;color:#fff;font-family:var(--mono);letter-spacing:-0.03em}
@@ -199,7 +200,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 .tier-desc{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:16px}
 .tier-list{list-style:none;display:flex;flex-direction:column;gap:6px}
 .tier-list li{font-size:11px;color:var(--text2);display:flex;align-items:flex-start;gap:6px}
-.tier-list li::before{content:'';width:14px;height:14px;border-radius:50%;background:var(--green-bg);border:1px solid var(--green-border);flex-shrink:0;margin-top:1px}
+.tier-list li::before{content:'';width:14px;height:14px;border-radius:50%;background:var(--accent-bg);border:1px solid var(--accent-border);flex-shrink:0;margin-top:1px}
 .tier .cta-primary{margin-top:20px;font-size:13px;padding:12px}
 .tier .cta-ghost{font-size:11px}
 
@@ -215,26 +216,26 @@ footer p{font-size:12px;color:var(--text3)}
 
 /* Replaces badges */
 .replaces-row{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:16px}
-.replaces-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:500;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);transition:all 0.15s}
-.replaces-badge:hover{border-color:var(--green-border);color:var(--green2)}
+.replaces-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:500;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);transition:background 0.15s,border-color 0.15s}
+.replaces-badge:hover{border-color:var(--accent-border);color:var(--accent-light)}
 .replaces-badge .x{color:var(--red);font-size:13px;line-height:1}
-.replaces-badge .arrow{color:var(--green2);font-size:11px}
+.replaces-badge .arrow{color:var(--accent-light);font-size:11px}
 
 /* Logo marquee */
 .marquee-wrap{overflow:hidden;padding:24px 0;position:relative}
 .marquee-wrap::before,.marquee-wrap::after{content:'';position:absolute;top:0;bottom:0;width:80px;z-index:2}
 .marquee-wrap::before{left:0;background:linear-gradient(90deg,var(--bg),transparent)}
 .marquee-wrap::after{right:0;background:linear-gradient(270deg,var(--bg),transparent)}
-.marquee-label{text-align:center;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:14px}
+.marquee-label{text-align:center;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:14px}
 .marquee-track{display:flex;gap:48px;animation:marqueeScroll 30s linear infinite;width:max-content;will-change:transform}
 .marquee-track:hover{animation-play-state:paused}
 @keyframes marqueeScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .marquee-item{display:flex;align-items:center;gap:8px;white-space:nowrap;font-size:13px;color:var(--text3);font-weight:500;flex-shrink:0;opacity:0.5;transition:opacity 0.2s}
 .marquee-item:hover{opacity:1}
-.marquee-icon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff;flex-shrink:0}
+.marquee-icon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:-0.02em}
 
 /* Access Window Demo */
-#aw-demo-wrap .aw-cb.on{background:var(--green)!important;color:#fff!important;border-color:transparent!important}
+#aw-demo-wrap .aw-cb.on{background:var(--accent)!important;color:#fff!important;border-color:transparent!important}
 #aw-demo-wrap .aw-cb:hover{background:var(--bg3)}
 .aw-row{display:flex;gap:5px;align-items:flex-end;max-width:84%;padding:1px 0;opacity:0}
 .aw-row.v{animation:awPL .4s cubic-bezier(.34,1.56,.64,1) forwards}
@@ -246,20 +247,20 @@ footer p{font-size:12px;color:var(--text3)}
 .aw-st{align-self:center;font-size:9px;color:var(--text3);background:rgba(255,255,255,.06);padding:3px 12px;border-radius:8px;margin:4px 0;opacity:0}
 .aw-st.v{animation:awPs .3s cubic-bezier(.34,1.56,.64,1) forwards}
 @keyframes awPs{0%{opacity:0;transform:scale(.8)}60%{opacity:1;transform:scale(1.05)}100%{opacity:1;transform:scale(1)}}
-.aw-gp{align-self:center;font-size:10px;color:var(--text3);font-style:italic;margin:6px 0;opacity:0;transition:all .4s}.aw-gp.v{opacity:1}
+.aw-gp{align-self:center;font-size:10px;color:var(--text3);font-style:italic;margin:6px 0;opacity:0;transition:opacity .4s}.aw-gp.v{opacity:1}
 .aw-bub{padding:6px 10px 3px;border-radius:10px;font-size:12.5px;line-height:1.5;position:relative;max-width:100%}
 .aw-b-ab-g{background:rgba(255,255,255,.06);color:var(--text);border-bottom-left-radius:2px}
 .aw-b-ab-h{background:#FF5A5F;color:#fff;border-bottom-right-radius:2px}
 .aw-b-wa-o{background:#25D366;color:#fff;border-bottom-right-radius:2px}
 .aw-b-wa-i{background:rgba(255,255,255,.06);color:var(--text);border-bottom-left-radius:2px}
-.aw-b-no-r{background:var(--green);color:#fff;border-bottom-right-radius:2px}
+.aw-b-no-r{background:var(--accent);color:#fff;border-bottom-right-radius:2px}
 .aw-b-ag{background:var(--red-bg);color:var(--red);border-bottom-left-radius:2px;border:1px solid rgba(226,75,74,0.2)}
-.aw-b-sy{background:var(--green-bg);color:var(--green2);border-radius:10px;padding:5px 14px;font-size:10.5px;font-weight:500;text-align:center;align-self:center;border:1px solid var(--green-border);opacity:0}
+.aw-b-sy{background:var(--accent-bg);color:var(--accent-light);border-radius:10px;padding:5px 14px;font-size:10.5px;font-weight:500;text-align:center;align-self:center;border:1px solid var(--accent-border);opacity:0}
 .aw-b-sy.v{animation:awPs .38s cubic-bezier(.34,1.56,.64,1) forwards}
 .aw-bw{font-size:8px;font-weight:500;margin-bottom:1px}
 .aw-bw-ab{color:#FF5A5F}.aw-bw-wa{color:#25D366}.aw-bw-mnt{color:var(--blue)}.aw-bw-no{color:rgba(255,255,255,.7)}.aw-bw-gl{color:#7F77DD}
 .aw-bf{display:flex;align-items:center;justify-content:flex-end;gap:3px;margin-top:1px;opacity:.4;font-size:7.5px;color:var(--text3)}
-.aw-tk{color:var(--green2);font-size:7.5px}
+.aw-tk{color:var(--accent-light);font-size:7.5px}
 .aw-rx{position:absolute;bottom:-7px;right:6px;font-size:13px;background:var(--bg3);border-radius:10px;padding:0 3px;border:1px solid var(--border);line-height:1.4;opacity:0}
 .aw-rx.v{animation:awRp .3s cubic-bezier(.34,1.56,.64,1) forwards}
 @keyframes awRp{0%{opacity:0;transform:scale(0)}60%{opacity:1;transform:scale(1.4)}100%{opacity:1;transform:scale(1)}}
@@ -272,7 +273,7 @@ footer p{font-size:12px;color:var(--text3)}
 .aw-rv.v{animation:awRvS .5s cubic-bezier(.34,1.56,.64,1) forwards}
 @keyframes awRvS{0%{opacity:0;transform:translateY(14px) scale(.9)}55%{opacity:1;transform:translateY(-3px) scale(1.02)}100%{opacity:1;transform:translateY(0) scale(1)}}
 .aw-rv-bad{background:var(--red-bg);border:1.5px solid rgba(226,75,74,0.2)}
-.aw-rv-good{background:var(--green-bg);border:1.5px solid var(--green-border)}
+.aw-rv-good{background:var(--accent-bg);border:1.5px solid var(--accent-border)}
 .aw-rv-hd{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 .aw-rv-st{font-size:16px;letter-spacing:1px}
 .aw-rv-fr{font-size:9px;color:var(--text3)}
@@ -299,19 +300,19 @@ footer p{font-size:12px;color:var(--text3)}
 }
 
 /* Scroll reveal */
-.reveal{opacity:0;transform:translateY(30px);transition:all 0.6s cubic-bezier(0.25,0.1,0.25,1)}
+.reveal{opacity:0;transform:translateY(20px);transition:opacity 0.4s cubic-bezier(0.25,0.1,0.25,1),transform 0.4s cubic-bezier(0.25,0.1,0.25,1)}
 .reveal.visible{opacity:1;transform:translateY(0)}
 
 /* ── MORNING BRIEFING INTERACTIVE (mb- prefix) ── */
 .mb-section{padding:60px 0;position:relative}
 .mb-wrap{max-width:1120px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:1fr 300px;align-items:start;gap:40px}
 .mb-left{display:flex;flex-direction:column}
-.mb-eyebrow{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--green);margin-bottom:10px}
+.mb-eyebrow{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:10px}
 .mb-h2{font-size:clamp(24px,3vw,32px);font-weight:700;letter-spacing:-.03em;line-height:1.2;margin-bottom:10px;color:#fff}
 .mb-desc{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:14px;max-width:440px;transition:opacity .3s ease}
-.mb-stat{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:14px;max-width:fit-content;transition:all .3s ease}
-.mb-stat-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;transition:background .3s}
-.mb-stat-num{font-size:20px;font-weight:700;font-family:var(--mono);color:var(--green2);transition:color .3s}
+.mb-stat{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:14px;max-width:fit-content;transition:opacity .3s ease,transform .3s ease}
+.mb-stat-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;transition:background .3s}
+.mb-stat-num{font-size:20px;font-weight:700;font-family:var(--mono);color:var(--accent-light);transition:color .3s}
 .mb-stat-label{font-size:12px;color:var(--text2);line-height:1.4}
 
 /* Role toggle */
@@ -324,9 +325,9 @@ footer p{font-size:12px;color:var(--text3)}
 .mb-cta-row{display:flex;align-items:center;gap:12px}
 
 /* Start overlay */
-.mb-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:20;background:rgba(8,11,18,.92);backdrop-filter:blur(10px);border-radius:10px;transition:opacity .4s ease}
+.mb-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:20;background:rgba(14,10,8,.92);backdrop-filter:blur(10px);border-radius:10px;transition:opacity .4s ease}
 .mb-overlay.hidden{opacity:0;pointer-events:none}
-.mb-play-btn{padding:10px 28px;border-radius:8px;background:var(--green);color:#fff;font-family:var(--sans);font-size:13px;font-weight:600;border:none;cursor:pointer;transition:opacity .15s}
+.mb-play-btn{padding:10px 28px;border-radius:8px;background:var(--accent);color:#fff;font-family:var(--sans);font-size:13px;font-weight:600;border:none;cursor:pointer;transition:opacity .15s}
 .mb-play-btn:hover{opacity:.9}
 
 /* Phone */
@@ -367,18 +368,18 @@ footer p{font-size:12px;color:var(--text3)}
 .mb-trans{background:#000;align-items:center;justify-content:center;gap:8px}
 .mb-tr1{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#374151;opacity:0;transition:opacity .6s}
 .mb-tr1.show{opacity:1}
-.mb-tr2{font-size:20px;font-style:italic;font-weight:300;color:var(--green2);opacity:0;transform:scale(.92);transition:opacity .7s,transform .7s cubic-bezier(.34,1.56,.64,1)}
+.mb-tr2{font-size:20px;font-style:italic;font-weight:300;color:var(--accent-light);opacity:0;transform:scale(.92);transition:opacity .7s,transform .7s cubic-bezier(.34,1.56,.64,1)}
 .mb-tr2.show{opacity:1;transform:scale(1)}
 .mb-tr3{font-size:9px;color:#4b5563;opacity:0;transition:opacity .5s .3s}
 .mb-tr3.show{opacity:1}
 
-/* NestOps briefing screens */
+/* AfterStay briefing screens */
 .mb-nos{background:var(--bg2);height:100%;display:flex;flex-direction:column;overflow:hidden}
 .mb-nos-hdr{padding:24px 12px 0;flex-shrink:0}
 .mb-nos-wm{display:flex;align-items:center;gap:5px;margin-bottom:6px}
 .mb-nos-logo{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff}
 .mb-nos-nm{font-size:10px;font-weight:700;color:#f9fafb}
-.mb-nos-vr{font-size:7px;background:rgba(29,158,117,.15);color:var(--green);padding:1px 4px;border-radius:3px;font-weight:600}
+.mb-nos-vr{font-size:7px;background:rgba(196,98,45,.15);color:var(--accent);padding:1px 4px;border-radius:3px;font-weight:600}
 .mb-nos-greet{font-size:14px;font-weight:700;color:#f9fafb;margin-bottom:2px}
 .mb-nos-rolerow{display:flex;align-items:center;gap:4px;margin-bottom:2px}
 .mb-nos-badge{font-size:7.5px;font-weight:700;padding:2px 6px;border-radius:3px;color:#fff;text-transform:uppercase;letter-spacing:.04em}
@@ -392,12 +393,12 @@ footer p{font-size:12px;color:var(--text3)}
 /* Briefing cards */
 .mb-nc{border-radius:8px;padding:7px 9px;opacity:0;transform:translateY(7px);transition:opacity .4s ease,transform .4s cubic-bezier(.34,1.56,.64,1)}
 .mb-nc.show{opacity:1;transform:translateY(0)}
-.mb-nc-green{background:rgba(29,158,117,.1);border:1px solid rgba(29,158,117,.25)}
+.mb-nc-green{background:rgba(196,98,45,.1);border:1px solid rgba(196,98,45,.25)}
 .mb-nc-dark{background:#111827;border:1px solid #1f2937}
 .mb-nc-amber{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)}
 .mb-nc-red{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.18)}
 .mb-nc-t{font-size:9.5px;font-weight:700;margin-bottom:1px}
-.mb-nc-green .mb-nc-t{color:#4ade80}
+.mb-nc-green .mb-nc-t{color:#e07a45}
 .mb-nc-dark .mb-nc-t{color:#f9fafb}
 .mb-nc-amber .mb-nc-t{color:var(--amber)}
 .mb-nc-red .mb-nc-t{color:#fca5a5}
@@ -412,7 +413,7 @@ footer p{font-size:12px;color:var(--text3)}
 /* Progress bar */
 .mb-filmbar{display:flex;align-items:center;gap:12px;margin-top:12px;width:270px}
 .mb-progbar{flex:1;height:2px;background:var(--border);border-radius:1px;overflow:hidden}
-.mb-progfill{height:100%;background:var(--green);border-radius:1px;width:0%;transition:width .1s linear}
+.mb-progfill{height:100%;background:var(--accent);border-radius:1px;width:0%;transition:width .1s linear}
 .mb-replay{padding:4px 10px;border-radius:10px;background:transparent;color:var(--text3);font-family:var(--sans);font-size:9px;font-weight:600;border:1px solid var(--border);cursor:pointer;opacity:0;transition:opacity .4s,border-color .15s,color .15s;white-space:nowrap}
 .mb-replay.show{opacity:1}
 .mb-replay:hover{border-color:var(--border2);color:var(--text2)}
@@ -431,37 +432,37 @@ footer p{font-size:12px;color:var(--text3)}
 /* ── SILENT MORNING SPLIT-SCREEN (sm- prefix) ── */
 .sm-section{padding:80px 0;position:relative}
 .sm-header{text-align:center;margin-bottom:40px}
-.sm-split{display:grid;grid-template-columns:1fr 1fr;max-width:1120px;margin:0 auto;border-radius:16px;overflow:hidden;border:2px solid var(--border2);box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.sm-split{display:grid;grid-template-columns:1fr 1fr;max-width:1120px;margin:0 auto;border-radius:20px;overflow:hidden;border:2px solid var(--border2);box-shadow:0 30px 80px rgba(0,0,0,.5)}
 .sm-side{position:relative;min-height:500px;padding:28px 24px;display:flex;flex-direction:column;overflow:hidden}
 .sm-chaos{background:#0c0e14;border-right:1px solid var(--border)}
 .sm-nest{background:var(--bg2)}
 .sm-side-label{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:4px 10px;border-radius:5px;display:inline-flex;align-items:center;gap:5px;margin-bottom:16px;width:fit-content}
 .sm-label-bad{background:rgba(239,68,68,.1);color:#fca5a5}
-.sm-label-good{background:rgba(29,158,117,.1);color:var(--green2)}
+.sm-label-good{background:rgba(196,98,45,.1);color:var(--accent-light)}
 .sm-clock{font-size:36px;font-weight:800;font-family:var(--mono);letter-spacing:-.02em;margin-bottom:4px;transition:color .3s}
 .sm-clock-bad{color:#fca5a5}
-.sm-clock-good{color:var(--green2)}
+.sm-clock-good{color:var(--accent-light)}
 .sm-date{font-size:10px;color:var(--text3);margin-bottom:16px}
 .sm-counter{display:flex;gap:12px;margin-bottom:20px}
 .sm-counter-item{display:flex;flex-direction:column;gap:2px;padding:8px 12px;border-radius:8px;flex:1;text-align:center}
 .sm-ci-bad{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.12)}
-.sm-ci-good{background:rgba(29,158,117,.06);border:1px solid rgba(29,158,117,.15)}
+.sm-ci-good{background:rgba(196,98,45,.06);border:1px solid rgba(196,98,45,.15)}
 .sm-ci-num{font-size:22px;font-weight:800;font-family:var(--mono);line-height:1}
 .sm-ci-label{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
 .sm-feed{display:flex;flex-direction:column;gap:4px;flex:1;overflow:hidden}
 .sm-event{padding:7px 10px;border-radius:8px;font-size:10px;line-height:1.5;opacity:0;transform:translateY(6px);transition:opacity .4s ease,transform .4s cubic-bezier(.34,1.56,.64,1)}
 .sm-event.show{opacity:1;transform:translateY(0)}
 .sm-event-bad{background:rgba(239,68,68,.04);border:1px solid rgba(239,68,68,.08);color:var(--text2)}
-.sm-event-good{background:rgba(29,158,117,.04);border:1px solid rgba(29,158,117,.1);color:var(--text2)}
+.sm-event-good{background:rgba(196,98,45,.04);border:1px solid rgba(196,98,45,.1);color:var(--text2)}
 .sm-event-time{font-size:8px;font-family:var(--mono);color:var(--text3);margin-right:6px;font-weight:600}
 .sm-event-neutral{background:var(--bg3);border:1px solid var(--border);color:var(--text2)}
 .sm-outcome{margin-top:auto;padding:12px;border-radius:10px;font-size:11px;font-weight:500;line-height:1.5;opacity:0;transition:opacity .5s ease}
 .sm-outcome.show{opacity:1}
 .sm-outcome-bad{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);color:#fca5a5}
-.sm-outcome-good{background:rgba(29,158,117,.06);border:1px solid rgba(29,158,117,.2);color:var(--green2)}
+.sm-outcome-good{background:rgba(196,98,45,.06);border:1px solid rgba(196,98,45,.2);color:var(--accent-light)}
 .sm-caption{text-align:center;margin-top:16px;font-size:12px;color:var(--text3);max-width:1120px;margin-left:auto;margin-right:auto;min-height:20px;transition:opacity .3s}
 .sm-progbar{max-width:400px;margin:12px auto 0;height:2px;background:var(--border);border-radius:1px;overflow:hidden}
-.sm-progfill{height:100%;background:var(--green);border-radius:1px;width:0%;transition:width .15s linear}
+.sm-progfill{height:100%;background:var(--accent);border-radius:1px;width:0%;transition:width .15s linear}
 @media(max-width:768px){
 .sm-split{grid-template-columns:1fr}
 .sm-chaos{border-right:none;border-bottom:1px solid var(--border)}
@@ -516,7 +517,7 @@ footer p{font-size:12px;color:var(--text3)}
 
 /* Hamburger button */
 .nav-hamburger{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:44px;height:44px;background:none;border:none;cursor:pointer;padding:0;border-radius:8px;flex-shrink:0}
-.nav-hamburger span{display:block;width:20px;height:2px;background:var(--text);border-radius:2px;transition:all 0.25s ease}
+.nav-hamburger span{display:block;width:20px;height:2px;background:var(--text);border-radius:2px;transition:transform 0.25s ease,opacity 0.25s ease}
 .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
 .nav-hamburger.open span:nth-child(2){opacity:0}
 .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
@@ -526,7 +527,7 @@ footer p{font-size:12px;color:var(--text3)}
 .nav-mobile-menu.open{display:flex}
 .nav-mobile-menu a{display:block;padding:12px 14px;border-radius:10px;font-size:15px;color:var(--text);text-decoration:none;transition:background .15s}
 .nav-mobile-menu a:hover{background:var(--bg3)}
-.nav-mobile-menu .nav-mobile-cta{display:block;margin-top:8px;padding:13px 14px;border-radius:10px;background:var(--green);color:#fff;font-weight:600;font-size:15px;text-align:center;text-decoration:none}
+.nav-mobile-menu .nav-mobile-cta{display:block;margin-top:8px;padding:13px 14px;border-radius:10px;background:var(--accent);color:#fff;font-weight:600;font-size:15px;text-align:center;text-decoration:none}
 
 /* Range slider touch target */
 input[type=range]{padding:12px 0;height:auto;cursor:pointer}
@@ -546,7 +547,7 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 .moats-section{padding:80px 0;position:relative}
 .moats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:40px}
 .moat-card{padding:20px 22px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);transition:border-color .15s}
-.moat-card:hover{border-color:rgba(29,158,117,0.3)}
+.moat-card:hover{border-color:rgba(196,98,45,0.3)}
 .moat-icon{font-size:18px;margin-bottom:10px}
 .moat-title{font-size:14px;font-weight:600;color:#fff;margin-bottom:6px;letter-spacing:-0.01em}
 .moat-desc{font-size:12px;color:var(--text2);line-height:1.6}
@@ -557,13 +558,13 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 .pte-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
 .pte-pending{background:rgba(239,159,39,.15);color:#ef9f27}
 .pte-locked{background:rgba(226,75,74,.15);color:#e24b4a}
-.pte-granted{background:rgba(29,158,117,.15);color:#15d492}
+.pte-granted{background:rgba(196,98,45,.15);color:#e07a45}
 .pte-expired{background:rgba(100,100,120,.15);color:#7878a0}
 .pte-timer{font-family:var(--mono);font-size:36px;font-weight:700;letter-spacing:-0.02em;line-height:1}
 
 /* Gradient headings (Orizon-inspired) */
 .text-gradient {
-  background: linear-gradient(135deg, #ffffff 0%, #9ca3af 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #e07a45 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -605,7 +606,7 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 }
 .hero-blob-1 {
   width: 400px; height: 400px;
-  background: radial-gradient(circle, rgba(29,158,117,0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(196,98,45,0.12) 0%, transparent 70%);
   top: -80px; left: 50%; transform: translateX(-50%);
   animation-delay: 0s;
 }
@@ -639,7 +640,7 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 }
 .cta-mq-sep {
   font-size: 14px;
-  color: var(--green);
+  color: var(--accent);
   padding: 0 4px;
   align-self: center;
   flex-shrink: 0;
@@ -650,25 +651,18 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 }
 
 /* ── Globe section ──────────────────────────────────────────────────────── */
-.globe-section{padding:80px 0 40px;position:relative;text-align:center}
-.gs-eyebrow{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--green2);margin-bottom:16px}
-.gs-heading{font-size:clamp(28px,4vw,48px);font-weight:700;letter-spacing:-0.03em;line-height:1.15;color:#fff;margin-bottom:14px}
-.gs-sub{font-size:clamp(14px,1.6vw,17px);color:var(--text2);max-width:580px;margin:0 auto 8px;line-height:1.7}
-.gs-hint{font-size:11px;color:var(--text3);margin-bottom:0;opacity:0.6}
-.globe-container{position:relative;width:100%;max-width:720px;aspect-ratio:1;margin:0 auto}
+.globe-section{padding:12px 0;position:relative;text-align:center}
+.globe-container{position:relative;width:100%;max-width:560px;aspect-ratio:1;margin:0 auto}
 .globe-container canvas{width:100%;height:100%;display:block;cursor:grab}
 .globe-container canvas:active{cursor:grabbing}
-.gs-cta-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:8px}
-.gs-cta{padding:10px 28px;border-radius:8px;background:var(--green);color:#fff;font-size:13px;font-weight:500;font-family:var(--sans);border:none;cursor:pointer;text-decoration:none;transition:all 0.15s}
-.gs-cta:hover{background:var(--green2);transform:translateY(-1px)}
 .globe-tip{position:fixed;pointer-events:none;z-index:200;background:rgba(15,18,25,0.95);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px 18px;opacity:0;transition:opacity 0.12s;max-width:260px;box-shadow:0 8px 32px rgba(0,0,0,0.4)}
 .globe-tip.show{opacity:1}
 .globe-tip .gt-h{display:flex;align-items:center;gap:10px;margin-bottom:6px}
 .globe-tip .gt-i{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px}
 .globe-tip .gt-n{font-size:14px;font-weight:600;color:#f1f5f9}
 .globe-tip .gt-d{font-size:11px;color:#9ca3af;line-height:1.5}
-.globe-tip .gt-f{margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05);font-size:10px;color:var(--green2)}
-@media(max-width:768px){.globe-section{padding:60px 0 32px}.globe-container{max-width:400px}}
+.globe-tip .gt-f{margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05);font-size:10px;color:var(--accent-light)}
+@media(max-width:768px){.globe-section{padding:8px 0}.globe-container{max-width:400px}}
 </style>
 </head>
 <body>
@@ -679,9 +673,8 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <nav id="nav">
 <div class="nav-inner">
 <div class="nav-left">
-<div class="nav-logo">N</div>
-<span class="nav-name">NestOps</span>
-<span class="nav-tag">v4.0</span>
+<div class="nav-logo"><img src="logo-icon.svg" width="32" height="32" alt="AfterStay" style="border-radius:8px"></div>
+<span class="nav-name">AfterStay</span>
 </div>
 <div class="nav-links">
 <a href="#features">Features</a>
@@ -711,9 +704,9 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <div class="hero-glow"></div>
 <div class="dot-grid"></div>
 <div class="container" style="position:relative;z-index:1">
-<div class="hero-badge"><span class="pulse"></span>Your PMS runs bookings. NestOps runs everything after.</div>
-<h1>Your PMS runs bookings.<br><span>NestOps runs everything after.</span></h1>
-<p class="hero-sub">Right now you're spending $300–600/month on tools that don't talk to each other. NestOps replaces them — and does 12 things none of them can.</p>
+<div class="hero-badge"><span class="pulse"></span>Now in early access — launching 2026</div>
+<h1>Your PMS runs bookings.<br><span>AfterStay runs everything after.</span></h1>
+<p class="hero-sub">Right now you're spending $300–600/month on tools that don't talk to each other. AfterStay replaces them — and does 12 things none of them can.</p>
 
 <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-top:32px;flex-wrap:wrap">
 <a href="/login" class="nav-cta" style="padding:12px 32px;font-size:14px">Start free trial</a>
@@ -725,31 +718,22 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <div class="section-divider"></div>
 
 <section class="globe-section">
-  <div class="container">
-    <div class="gs-eyebrow">How it fits together</div>
-    <h2 class="gs-heading">Every module connected.<br>One system that runs itself.</h2>
-    <p class="gs-sub">Tasks, cleaning, guest services, inventory, owner portal, and compliance — not six tools talking past each other. One platform where each module feeds the next.</p>
-    <p class="gs-hint">Drag to rotate · Click any module to explore</p>
-  </div>
   <div class="globe-container">
     <canvas id="globe"></canvas>
-  </div>
-  <div class="gs-cta-row">
-    <a href="/login" class="gs-cta">Start free trial</a>
   </div>
 </section>
 <div class="globe-tip" id="tip">
   <div class="gt-h"><div class="gt-i" id="gt-i"></div><div class="gt-n" id="gt-n"></div></div>
   <div class="gt-d" id="gt-d"></div>
   <div class="gt-f" id="gt-f"></div>
-  <div class="gt-cta" id="gt-cta" style="margin-top:6px;font-size:10px;color:var(--green2);font-weight:500;opacity:.7;display:none">Click to explore →</div>
+  <div class="gt-cta" id="gt-cta" style="margin-top:6px;font-size:10px;color:var(--accent-light);font-weight:500;opacity:.7;display:none">Click to explore →</div>
 </div>
 
 <div class="section-divider"></div>
 
 <!-- SOCIAL PROOF -->
 <div id="proof" class="proof"><div class="container">
-<p class="proof-line">Built by a COO who manages thousands of listings globally. <strong>We know your pain and struggles.</strong></p>
+<p class="proof-line">Designed by operators who manage thousands of listings. <strong>Built to replace the tools they outgrew.</strong></p>
 <div class="replaces-row">
 <div class="replaces-badge"><span class="x">&#x2715;</span> Breezeway <span class="arrow">&#8594;</span> Ops Hub</div>
 <div class="replaces-badge"><span class="x">&#x2715;</span> Asana <span class="arrow">&#8594;</span> Tasks + Kanban</div>
@@ -767,19 +751,19 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <div class="container">
 <div style="display:flex;justify-content:center;gap:0;flex-wrap:wrap;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg3)">
 <div style="flex:1;min-width:140px;padding:16px 20px;border-right:1px solid var(--border);text-align:center">
-<div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--green2);letter-spacing:-0.02em">$189–585</div>
+<div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--accent-light);letter-spacing:-0.02em">$189–585</div>
 <div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.4">per month on tools<br>that don't talk to each other</div>
 </div>
 <div style="flex:1;min-width:140px;padding:16px 20px;border-right:1px solid var(--border);text-align:center">
-<div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--green2);letter-spacing:-0.02em">123 min</div>
+<div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--accent-light);letter-spacing:-0.02em">123 min</div>
 <div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.4">lost per day<br>before a room is cleaned</div>
 </div>
 <div style="flex:1;min-width:140px;padding:16px 20px;border-right:1px solid var(--border);text-align:center">
-<div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--green2);letter-spacing:-0.02em">12</div>
+<div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--accent-light);letter-spacing:-0.02em">12</div>
 <div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.4">features no competitor<br>offers — even partially</div>
 </div>
 <div style="flex:1;min-width:140px;padding:16px 20px;text-align:center">
-<div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--green2);letter-spacing:-0.02em">5+</div>
+<div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--accent-light);letter-spacing:-0.02em">5+</div>
 <div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.4">tools replaced<br>by one platform</div>
 </div>
 </div>
@@ -792,31 +776,31 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <div class="marquee-wrap">
 <div class="marquee-label">Integrates with your existing stack</div>
 <div class="marquee-track">
-<div class="marquee-item"><div class="marquee-icon" style="background:#FF5A5F">A</div>Airbnb</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#3B82F6">H</div>Hostaway</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#1D4ED8">G</div>Guesty</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#6366F1">S</div>Stripe</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#4A154B">S</div>Slack</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#0F9D58">S</div>SendGrid</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#F59E0B">O</div>OwnerRez</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#059669">L</div>Lodgify</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#7C3AED">R</div>RemoteLock</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#DC2626">I</div>igloohome</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#2563EB">A</div>August</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#1D9E75">N</div>NestOps API</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#FF5A5F">Ab</div>Airbnb</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#3B82F6">Ha</div>Hostaway</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#1D4ED8">Gu</div>Guesty</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#6366F1">St</div>Stripe</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#4A154B">Sl</div>Slack</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#0F9D58">Sg</div>SendGrid</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#F59E0B">Or</div>OwnerRez</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#059669">Lo</div>Lodgify</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#7C3AED">Rl</div>RemoteLock</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#DC2626">Ig</div>igloohome</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#2563EB">Au</div>August</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#c4622d">As</div>AfterStay API</div>
 <!-- duplicate set for seamless loop -->
-<div class="marquee-item"><div class="marquee-icon" style="background:#FF5A5F">A</div>Airbnb</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#3B82F6">H</div>Hostaway</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#1D4ED8">G</div>Guesty</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#6366F1">S</div>Stripe</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#4A154B">S</div>Slack</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#0F9D58">S</div>SendGrid</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#F59E0B">O</div>OwnerRez</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#059669">L</div>Lodgify</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#7C3AED">R</div>RemoteLock</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#DC2626">I</div>igloohome</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#2563EB">A</div>August</div>
-<div class="marquee-item"><div class="marquee-icon" style="background:#1D9E75">N</div>NestOps API</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#FF5A5F">Ab</div>Airbnb</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#3B82F6">Ha</div>Hostaway</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#1D4ED8">Gu</div>Guesty</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#6366F1">St</div>Stripe</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#4A154B">Sl</div>Slack</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#0F9D58">Sg</div>SendGrid</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#F59E0B">Or</div>OwnerRez</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#059669">Lo</div>Lodgify</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#7C3AED">Rl</div>RemoteLock</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#DC2626">Ig</div>igloohome</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#2563EB">Au</div>August</div>
+<div class="marquee-item"><div class="marquee-icon" style="background:#c4622d">As</div>AfterStay API</div>
 </div>
 </div>
 <div class="section-divider"></div>
@@ -834,9 +818,9 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 </div>
 <div class="mb-toggle" id="mb-toggle">
 <div class="mb-rslider" id="mb-rslider"></div>
-<button class="mb-rbtn active" data-mbrole="operator" onclick="mbSwitch('operator')">🏠 Host / Operator</button>
-<button class="mb-rbtn" data-mbrole="maintenance" onclick="mbSwitch('maintenance')">🔧 Maintenance</button>
-<button class="mb-rbtn" data-mbrole="cleaner" onclick="mbSwitch('cleaner')">🧹 Cleaners</button>
+<button class="mb-rbtn active" data-mbrole="operator" onclick="mbSwitch('operator')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Host / Operator</button>
+<button class="mb-rbtn" data-mbrole="maintenance" onclick="mbSwitch('maintenance')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> Maintenance</button>
+<button class="mb-rbtn" data-mbrole="cleaner" onclick="mbSwitch('cleaner')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg> Cleaners</button>
 </div>
 <div class="mb-cta-row">
 <a href="/login" class="feat-cta" id="mb-cta">Start free trial <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"><path d="M6 3l5 5-5 5"/></svg></a>
@@ -844,7 +828,7 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 </div>
 
 <div class="mb-right">
-<div class="mb-phone-glow" id="mb-glow" style="background:radial-gradient(ellipse,rgba(29,158,117,.1) 0%,transparent 65%)"></div>
+<div class="mb-phone-glow" id="mb-glow" style="background:radial-gradient(ellipse,rgba(196,98,45,.1) 0%,transparent 65%)"></div>
 <div class="mb-phone" id="mb-phone">
 <div class="mb-notch"></div>
 <div class="mb-island"></div>
@@ -860,7 +844,7 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 
 <!-- SLIDE: Transition -->
 <div class="mb-slide mb-trans" id="mb-s-trans">
-<div class="mb-tr1" id="mb-tr1">without nestops</div>
+<div class="mb-tr1" id="mb-tr1">without afterstay</div>
 <div class="mb-tr2" id="mb-tr2">There's a better morning.</div>
 <div class="mb-tr3" id="mb-tr3">Pick your role ↓</div>
 </div>
@@ -869,7 +853,7 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <div class="mb-slide" id="mb-s-operator">
 <div class="mb-nos">
 <div class="mb-nos-hdr">
-<div class="mb-nos-wm"><div class="mb-nos-logo" style="background:var(--green)">N</div><span class="mb-nos-nm">NestOps</span><span class="mb-nos-vr">v3.1</span></div>
+<div class="mb-nos-wm"><div class="mb-nos-logo" style="background:var(--accent)">N</div><span class="mb-nos-nm">AfterStay</span><span class="mb-nos-vr">v3.1</span></div>
 <div class="mb-nos-greet">Good morning, Peter 👋</div>
 <div class="mb-nos-rolerow"><span class="mb-nos-badge" style="background:#378ADD">Operator</span><span class="mb-nos-meta">Saturday, March 21</span></div>
 <div class="mb-nos-meta">❄️ -3°C Oslo · Light snow · 8 properties today</div>
@@ -887,7 +871,7 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <div class="mb-slide" id="mb-s-maintenance">
 <div class="mb-nos">
 <div class="mb-nos-hdr">
-<div class="mb-nos-wm"><div class="mb-nos-logo" style="background:var(--amber)">N</div><span class="mb-nos-nm">NestOps</span><span class="mb-nos-vr">v3.1</span></div>
+<div class="mb-nos-wm"><div class="mb-nos-logo" style="background:var(--amber)">N</div><span class="mb-nos-nm">AfterStay</span><span class="mb-nos-vr">v3.1</span></div>
 <div class="mb-nos-greet">Good morning, Bjorn 🔧</div>
 <div class="mb-nos-rolerow"><span class="mb-nos-badge" style="background:var(--amber)">Maintenance</span><span class="mb-nos-meta">Saturday, March 21</span></div>
 <div class="mb-nos-meta">❄️ -3°C Oslo · Light snow · 4 jobs today</div>
@@ -905,14 +889,14 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <div class="mb-slide" id="mb-s-cleaner">
 <div class="mb-nos">
 <div class="mb-nos-hdr">
-<div class="mb-nos-wm"><div class="mb-nos-logo" style="background:var(--green)">N</div><span class="mb-nos-nm">NestOps</span><span class="mb-nos-vr">v3.1</span></div>
+<div class="mb-nos-wm"><div class="mb-nos-logo" style="background:var(--accent)">N</div><span class="mb-nos-nm">AfterStay</span><span class="mb-nos-vr">v3.1</span></div>
 <div class="mb-nos-greet">Good morning, Maria 🧹</div>
-<div class="mb-nos-rolerow"><span class="mb-nos-badge" style="background:var(--green)">Cleaner</span><span class="mb-nos-meta">Saturday, March 21</span></div>
+<div class="mb-nos-rolerow"><span class="mb-nos-badge" style="background:var(--accent)">Cleaner</span><span class="mb-nos-meta">Saturday, March 21</span></div>
 <div class="mb-nos-meta">❄️ -3°C Oslo · Light snow · 3 properties today</div>
 </div>
 <div class="mb-nos-shift">
-<div class="mb-nos-shift-lbl" style="color:var(--green)">Your shift starts in</div>
-<div class="mb-nos-shift-tm" style="color:var(--green);animation:mbTickPulse 2s infinite" id="mb-cl-timer">01:44:32</div>
+<div class="mb-nos-shift-lbl" style="color:var(--accent)">Your shift starts in</div>
+<div class="mb-nos-shift-tm" style="color:var(--accent);animation:mbTickPulse 2s infinite" id="mb-cl-timer">01:44:32</div>
 <div class="mb-nos-shift-sub">First: Ocean View Apt · Turnover clean</div>
 </div>
 <div class="mb-nos-cards" id="mb-cl-cards"></div>
@@ -923,7 +907,7 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 
 <!-- Overlay -->
 <div class="mb-overlay" id="mb-overlay">
-<div style="font-size:28px">📵</div>
+<div style="font-size:28px"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.7 3A6 6 0 0 1 18 8a21.3 21.3 0 0 0 .6 5"/><path d="M17 17H3s3-2 3-9a4.67 4.67 0 0 1 .3-1.7"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><line x1="2" y1="2" x2="22" y2="22"/></svg></div>
 <div style="font-size:12px;font-weight:600;color:#fff;text-align:center;line-height:1.6">Sound on<br><span style="font-size:10px;color:#6b7280;font-weight:400">Message pings — 18 seconds</span></div>
 <button class="mb-play-btn" onclick="mbStart()">▶ Watch the story</button>
 </div>
@@ -944,18 +928,18 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <div style="text-align:center;margin-bottom:40px">
 <div class="feat-label" style="text-align:center">PTE &middot; Access Window</div>
 <div class="feat-title text-gradient" style="text-align:center;max-width:600px;margin:0 auto">17 messages. 6 hours.<br>1-star review.<br>Or: one time window.</div>
-<div class="feat-desc" style="text-align:center;max-width:520px;margin:12px auto 0">A guest is inside. Your cleaner has a job to do. Instead of 17 messages across 3 apps &mdash; NestOps routes one request. Guest Services contacts the guest, the guest approves a window, the code unlocks. When the window closes, it re-locks. Every role moves forward. No calls. No delays.</div>
+<div class="feat-desc" style="text-align:center;max-width:520px;margin:12px auto 0">A guest is inside. Your cleaner has a job to do. Instead of 17 messages across 3 apps &mdash; AfterStay routes one request. Guest Services contacts the guest, the guest approves a window, the code unlocks. When the window closes, it re-locks. Every role moves forward. No calls. No delays.</div>
 </div>
 <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:24px">
-<div class="feat-stat"><div class="feat-stat-num" style="color:var(--red)">17</div><div class="feat-stat-label">messages · 6 hours<br>without NestOps</div></div>
-<div class="feat-stat"><div class="feat-stat-num">0</div><div class="feat-stat-label">messages · 47 min<br>with NestOps</div></div>
+<div class="feat-stat"><div class="feat-stat-num" style="color:var(--red)">17</div><div class="feat-stat-label">messages · 6 hours<br>without AfterStay</div></div>
+<div class="feat-stat"><div class="feat-stat-num">0</div><div class="feat-stat-label">messages · 47 min<br>with AfterStay</div></div>
 </div>
 <!-- Embedded playable demo -->
 <div id="aw-demo-wrap" style="max-width:460px;margin:0 auto">
 <div id="aw-scr" style="border-radius:22px;border:2px solid var(--border2);background:var(--bg2);overflow:hidden;position:relative;box-shadow:0 25px 60px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.03)">
 <!-- Play overlay -->
-<div id="aw-play-overlay" style="position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(8,11,18,.88);backdrop-filter:blur(8px);border-radius:20px;cursor:pointer" onclick="awStartDemo()">
-<div style="width:56px;height:56px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 30px rgba(29,158,117,.35);transition:transform .2s,box-shadow .2s" onmouseover="this.style.transform='scale(1.08)';this.style.boxShadow='0 12px 40px rgba(29,158,117,.45)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 8px 30px rgba(29,158,117,.35)'">
+<div id="aw-play-overlay" style="position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(14,10,8,.88);backdrop-filter:blur(8px);border-radius:20px;cursor:pointer" onclick="awStartDemo()">
+<div style="width:56px;height:56px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 30px rgba(196,98,45,.35);transition:transform .2s,box-shadow .2s" onmouseover="this.style.transform='scale(1.08)';this.style.boxShadow='0 12px 40px rgba(196,98,45,.45)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 8px 30px rgba(196,98,45,.35)'">
 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M6 4L16 10L6 16V4Z" fill="white"/></svg>
 </div>
 <div style="font-size:12px;font-weight:600;color:#fff">Watch the Access Window</div>
@@ -964,13 +948,13 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <div id="aw-tb" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg3)"></div>
 <div id="aw-fd" style="padding:10px 12px;height:470px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;scroll-behavior:smooth;transition:opacity .3s;background:var(--bg2)"></div>
 <div id="aw-trov" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;opacity:0;transition:opacity .35s;pointer-events:none;background:rgba(255,255,255,.85);backdrop-filter:blur(6px)"><div id="aw-tri" style="font-size:28px;opacity:0;transition:opacity .2s"></div><div id="aw-trt" style="font-size:12px;color:#555;margin-top:6px;opacity:0;transition:opacity .2s .1s"></div></div>
-<div id="aw-orov" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;opacity:0;transition:opacity .35s;pointer-events:none;background:var(--bg2)"><div id="aw-ort" style="font-size:56px;font-weight:500;color:var(--text);transform:scale(.5);opacity:0;transition:all .6s cubic-bezier(.34,1.56,.64,1)">Or.</div><div id="aw-orsub" style="font-size:13px;color:var(--text3);margin-top:8px;opacity:0;transition:opacity .4s .3s">Same issue. What if it ran itself?</div></div>
+<div id="aw-orov" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;opacity:0;transition:opacity .35s;pointer-events:none;background:var(--bg2)"><div id="aw-ort" style="font-size:56px;font-weight:500;color:var(--text);transform:scale(.5);opacity:0;transition:opacity .6s cubic-bezier(.34,1.56,.64,1),transform .6s cubic-bezier(.34,1.56,.64,1)">Or.</div><div id="aw-orsub" style="font-size:13px;color:var(--text3);margin-top:8px;opacity:0;transition:opacity .4s .3s">Same issue. What if it ran itself?</div></div>
 <div id="aw-ctr" style="padding:10px 14px;text-align:center;background:var(--bg3);border-top:1px solid var(--border);opacity:0;transition:opacity .5s"><div id="aw-cv" style="font-size:13px;font-weight:500"></div><div id="aw-cx" style="font-size:9.5px;color:var(--text3);margin-top:1px"></div></div>
 </div>
 <div style="display:flex;justify-content:center;gap:5px;margin-top:10px">
-<button class="aw-cb on" id="aw-b1" onclick="awGo('auto')" style="padding:6px 14px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2);transition:all .12s;font-family:var(--sans)">Auto-play</button>
-<button class="aw-cb" id="aw-b2" onclick="awGo('chaos')" style="padding:6px 14px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2);transition:all .12s;font-family:var(--sans)">Without NestOps</button>
-<button class="aw-cb" id="aw-b3" onclick="awGo('resolve')" style="padding:6px 14px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2);transition:all .12s;font-family:var(--sans)">With NestOps</button>
+<button class="aw-cb on" id="aw-b1" onclick="awGo('auto')" style="padding:6px 14px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2);transition:background .12s,color .12s,border-color .12s;font-family:var(--sans)">Auto-play</button>
+<button class="aw-cb" id="aw-b2" onclick="awGo('chaos')" style="padding:6px 14px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2);transition:background .12s,color .12s,border-color .12s;font-family:var(--sans)">Without AfterStay</button>
+<button class="aw-cb" id="aw-b3" onclick="awGo('resolve')" style="padding:6px 14px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2);transition:background .12s,color .12s,border-color .12s;font-family:var(--sans)">With AfterStay</button>
 </div>
 </div>
 <!-- Role cards 2×2 -->
@@ -1007,13 +991,13 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <!-- Guest Services -->
 <div style="background:#111827;border:1px solid #1f2937;border-radius:12px;padding:20px 22px">
 <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-<span style="font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.05em;background:rgba(29,158,117,.12);color:var(--green2);border:1px solid rgba(29,158,117,.3)">Guest Svc</span>
+<span style="font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.05em;background:rgba(196,98,45,.12);color:var(--accent-light);border:1px solid rgba(196,98,45,.3)">Guest Svc</span>
 </div>
 <div style="font-size:15px;font-weight:700;color:#f9fafb;line-height:1.35;margin-bottom:10px">Request lands in your queue. You contact the guest. One tap grants it.</div>
 <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px">
-<li style="font-size:12px;color:#9ca3af;display:flex;align-items:flex-start;gap:6px"><span style="color:var(--green);flex-shrink:0;margin-top:1px">&#10003;</span>PTE queue in dashboard</li>
-<li style="font-size:12px;color:#9ca3af;display:flex;align-items:flex-start;gap:6px"><span style="color:var(--green);flex-shrink:0;margin-top:1px">&#10003;</span>One action to grant, no back-and-forth with staff</li>
-<li style="font-size:12px;color:#9ca3af;display:flex;align-items:flex-start;gap:6px"><span style="color:var(--green);flex-shrink:0;margin-top:1px">&#10003;</span>Escalation auto-alerts if no action taken</li>
+<li style="font-size:12px;color:#9ca3af;display:flex;align-items:flex-start;gap:6px"><span style="color:var(--accent);flex-shrink:0;margin-top:1px">&#10003;</span>PTE queue in dashboard</li>
+<li style="font-size:12px;color:#9ca3af;display:flex;align-items:flex-start;gap:6px"><span style="color:var(--accent);flex-shrink:0;margin-top:1px">&#10003;</span>One action to grant, no back-and-forth with staff</li>
+<li style="font-size:12px;color:#9ca3af;display:flex;align-items:flex-start;gap:6px"><span style="color:var(--accent);flex-shrink:0;margin-top:1px">&#10003;</span>Escalation auto-alerts if no action taken</li>
 </ul>
 <div style="margin-top:12px"><span class="pte-badge pte-granted">PTE GRANTED</span></div>
 </div>
@@ -1036,15 +1020,15 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 
 <!-- Flow chain (PRD Diagram 4) -->
 <div style="max-width:800px;margin:32px auto 0;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap">
-<div style="padding:8px 16px;border-radius:8px;background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.18);font-size:12px;font-weight:600;color:var(--green2)">Staff requests PTE</div>
+<div style="padding:8px 16px;border-radius:8px;background:rgba(196,98,45,.08);border:1px solid rgba(196,98,45,.18);font-size:12px;font-weight:600;color:var(--accent-light)">Staff requests PTE</div>
 <span style="font-size:16px;color:#374151;font-weight:700">&rarr;</span>
-<div style="padding:8px 16px;border-radius:8px;background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.18);font-size:12px;font-weight:600;color:var(--green2)">GS contacts guest</div>
+<div style="padding:8px 16px;border-radius:8px;background:rgba(196,98,45,.08);border:1px solid rgba(196,98,45,.18);font-size:12px;font-weight:600;color:var(--accent-light)">GS contacts guest</div>
 <span style="font-size:16px;color:#374151;font-weight:700">&rarr;</span>
-<div style="padding:8px 16px;border-radius:8px;background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.18);font-size:12px;font-weight:600;color:var(--green2)">Guest approves window</div>
+<div style="padding:8px 16px;border-radius:8px;background:rgba(196,98,45,.08);border:1px solid rgba(196,98,45,.18);font-size:12px;font-weight:600;color:var(--accent-light)">Guest approves window</div>
 <span style="font-size:16px;color:#374151;font-weight:700">&rarr;</span>
-<div style="padding:8px 16px;border-radius:8px;background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.18);font-size:12px;font-weight:600;color:var(--green2)">Code unlocks</div>
+<div style="padding:8px 16px;border-radius:8px;background:rgba(196,98,45,.08);border:1px solid rgba(196,98,45,.18);font-size:12px;font-weight:600;color:var(--accent-light)">Code unlocks</div>
 <span style="font-size:16px;color:#374151;font-weight:700">&rarr;</span>
-<div style="padding:8px 16px;border-radius:8px;background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.18);font-size:12px;font-weight:600;color:var(--green2)">Window expires &rarr; re-locks</div>
+<div style="padding:8px 16px;border-radius:8px;background:rgba(196,98,45,.08);border:1px solid rgba(196,98,45,.18);font-size:12px;font-weight:600;color:var(--accent-light)">Window expires &rarr; re-locks</div>
 </div>
 
 <!-- Footer tagline -->
@@ -1064,13 +1048,13 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <div style="text-align:center;margin-bottom:24px;">
 <div class="feat-label" style="text-align:center;">Inventory · Auto-Deduction</div>
 <div class="feat-title text-gradient" style="text-align:center;max-width:600px;margin:0 auto;">Friday 9pm. "No coffee pods." Sound familiar?</div>
-<div class="feat-desc" style="text-align:center;max-width:500px;margin:8px auto 0;">Spreadsheets go stale. Nobody restocks until a guest arrives in 9 hours. NestOps auto-deducts on every clean, alerts your supervisor, and AI-drafts the vendor order — before anyone texts you.</div>
+<div class="feat-desc" style="text-align:center;max-width:500px;margin:8px auto 0;">Spreadsheets go stale. Nobody restocks until a guest arrives in 9 hours. AfterStay auto-deducts on every clean, alerts your supervisor, and AI-drafts the vendor order — before anyone texts you.</div>
 </div>
 
 <!-- Stat badges -->
 <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:32px;">
 <div class="feat-stat"><div class="feat-stat-num" style="color:var(--red)">9pm</div><div class="feat-stat-label">the text you get today<br>when stock runs out</div></div>
-<div class="feat-stat"><div class="feat-stat-num">4 days</div><div class="feat-stat-label">earlier NestOps<br>catches it</div></div>
+<div class="feat-stat"><div class="feat-stat-num">4 days</div><div class="feat-stat-label">earlier AfterStay<br>catches it</div></div>
 <div class="feat-stat"><div class="feat-stat-num">90 sec</div><div class="feat-stat-label">to review AI draft<br>and send vendor order</div></div>
 </div>
 
@@ -1086,15 +1070,15 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <div style="position:absolute;top:6px;left:50%;transform:translateX(-50%);width:82px;height:20px;background:#111;border-radius:12px;z-index:101;"></div>
 <div id="iv-slides"></div>
 <!-- Play overlay -->
-<div id="iv-overlay" style="position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(8,11,18,.9);backdrop-filter:blur(8px);border-radius:34px;cursor:pointer;" onclick="ivStart()">
-<div style="width:50px;height:50px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 30px rgba(29,158,117,.35);"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M6 4L16 10L6 16V4Z" fill="white"/></svg></div>
+<div id="iv-overlay" style="position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(14,10,8,.9);backdrop-filter:blur(8px);border-radius:34px;cursor:pointer;" onclick="ivStart()">
+<div style="width:50px;height:50px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 30px rgba(196,98,45,.35);"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M6 4L16 10L6 16V4Z" fill="white"/></svg></div>
 <div style="font-size:11px;font-weight:600;color:#fff;">Watch the story</div>
 <div style="font-size:9px;color:var(--text3);">12 chapters · ~2 min</div>
 </div>
 </div><!-- /phone -->
 </div>
 <div style="width:260px;margin-top:10px;display:flex;align-items:center;gap:10px;">
-<div style="flex:1;height:2px;background:var(--border);border-radius:1px;overflow:hidden;"><div id="iv-prog" style="height:100%;background:var(--green);border-radius:1px;width:0%;transition:width .1s linear;"></div></div>
+<div style="flex:1;height:2px;background:var(--border);border-radius:1px;overflow:hidden;"><div id="iv-prog" style="height:100%;background:var(--accent);border-radius:1px;width:0%;transition:width .1s linear;"></div></div>
 <button id="iv-rbtn" onclick="ivRestart()" style="padding:3px 9px;border-radius:8px;background:transparent;color:var(--text3);font-family:var(--sans);font-size:8px;font-weight:600;border:1px solid var(--border);cursor:pointer;opacity:0;transition:opacity .3s;">↺</button>
 </div>
 </div>
@@ -1104,30 +1088,30 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 
 <!-- Pre-play content -->
 <div id="iv-preplay">
-<div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--green);margin-bottom:12px;">The full story — 12 chapters</div>
+<div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:12px;">The full story — 12 chapters</div>
 <div style="font-size:clamp(18px,2.2vw,24px);font-weight:700;color:#fff;line-height:1.2;letter-spacing:-.02em;margin-bottom:10px;">From panic text to<br>fully stocked — automated.</div>
-<div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Watch a real scenario: Friday 9pm, no coffee pods, guest at 7am. Then rewind to Tuesday — where NestOps catches it 4 days early and runs the entire supply chain without a single text.</div>
+<div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Watch a real scenario: Friday 9pm, no coffee pods, guest at 7am. Then rewind to Tuesday — where AfterStay catches it 4 days early and runs the entire supply chain without a single text.</div>
 <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:16px;">
 <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text3);"><span style="color:var(--red);">✗</span> The 9pm panic text you get today</div>
 <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text3);"><span style="color:var(--red);">✗</span> The spreadsheet nobody updates</div>
-<div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--green2);">✓ Template → auto-deduct → alert → AI order</div>
-<div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--green2);">✓ Friday 9pm: phone silent. Everything stocked.</div>
+<div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--accent-light);">✓ Template → auto-deduct → alert → AI order</div>
+<div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--accent-light);">✓ Friday 9pm: phone silent. Everything stocked.</div>
 </div>
 <div style="display:inline-flex;align-items:center;gap:7px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:10px;color:var(--text2);">
-<div style="width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;"></div>
+<div style="width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;"></div>
 <span><strong style="color:var(--text);font-weight:700;font-family:var(--mono);">0 emergency supply runs</strong> after 30 days</span>
 </div>
 </div>
 
 <!-- Playing content (hidden until play) -->
 <div id="iv-playing" style="display:none;">
-<div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--green);margin-bottom:10px;">The full story — 12 chapters</div>
+<div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:10px;">The full story — 12 chapters</div>
 <div id="iv-ch-num" style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:5px;opacity:0;transition:opacity .3s;"></div>
 <div id="iv-ch-h" style="font-size:clamp(18px,2.2vw,24px);font-weight:700;color:#fff;line-height:1.2;letter-spacing:-.02em;margin-bottom:8px;opacity:0;transform:translateY(5px);transition:opacity .35s,transform .35s;"></div>
 <div id="iv-ch-b" style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:14px;opacity:0;transform:translateY(4px);transition:opacity .35s .1s,transform .35s .1s;"></div>
 <div id="iv-steps" style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px;opacity:0;transition:opacity .5s;"></div>
 <div id="iv-stat" style="display:inline-flex;align-items:center;gap:7px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:7px 12px;font-size:10px;color:var(--text2);margin-bottom:12px;opacity:0;transition:opacity .4s;">
-<div style="width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;"></div>
+<div style="width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;"></div>
 <span><strong style="color:var(--text);font-weight:700;font-family:var(--mono);">0 emergency supply runs</strong> after 30 days</span>
 </div>
 <div style="display:flex;align-items:center;gap:10px;">
@@ -1150,14 +1134,14 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <div class="sm-header">
 <div class="feat-label" style="text-align:center">Real-time control center</div>
 <div class="feat-title text-gradient" style="text-align:center;max-width:600px;margin:0 auto">Same morning. Same team. Two realities.</div>
-<div class="feat-desc" style="text-align:center;max-width:520px;margin:8px auto 0">Watch both sides run on the same clock. Left is your current morning. Right is NestOps.</div>
+<div class="feat-desc" style="text-align:center;max-width:520px;margin:8px auto 0">Watch both sides run on the same clock. Left is your current morning. Right is AfterStay.</div>
 </div>
 
 <div class="sm-split" id="sm-split">
 
 <!-- LEFT: CHAOS -->
 <div class="sm-side sm-chaos">
-<div class="sm-side-label sm-label-bad">⚠ Without NestOps</div>
+<div class="sm-side-label sm-label-bad">⚠ Without AfterStay</div>
 <div class="sm-clock sm-clock-bad" id="sm-clock-bad">6:47</div>
 <div class="sm-date">Saturday, March 21 · Peter, 8 properties</div>
 <div class="sm-counter">
@@ -1180,22 +1164,22 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 </div>
 </div>
 
-<!-- RIGHT: NESTOPS -->
+<!-- RIGHT: AFTERSTAY -->
 <div class="sm-side sm-nest">
-<div class="sm-side-label sm-label-good">✓ With NestOps</div>
+<div class="sm-side-label sm-label-good">✓ With AfterStay</div>
 <div class="sm-clock sm-clock-good" id="sm-clock-good">6:47</div>
 <div class="sm-date">Saturday, March 21 · Peter, 8 properties</div>
 <div class="sm-counter">
 <div class="sm-counter-item sm-ci-good">
-<div class="sm-ci-num" id="sm-auto" style="color:var(--green2)">0</div>
+<div class="sm-ci-num" id="sm-auto" style="color:var(--accent-light)">0</div>
 <div class="sm-ci-label">auto-handled</div>
 </div>
 <div class="sm-counter-item sm-ci-good">
-<div class="sm-ci-num" id="sm-ready" style="color:var(--green2)">0</div>
+<div class="sm-ci-num" id="sm-ready" style="color:var(--accent-light)">0</div>
 <div class="sm-ci-label">staff ready</div>
 </div>
 <div class="sm-counter-item sm-ci-good">
-<div class="sm-ci-num" id="sm-silence" style="color:var(--green2)">0</div>
+<div class="sm-ci-num" id="sm-silence" style="color:var(--accent-light)">0</div>
 <div class="sm-ci-label">msgs to Peter</div>
 </div>
 </div>
@@ -1205,7 +1189,7 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 </div>
 <!-- Dashboard preview reveal -->
 <div id="sm-dash-reveal" style="margin-top:10px;text-align:center;opacity:0;transition:opacity .5s ease">
-<button onclick="smShowDash()" style="padding:8px 18px;border-radius:8px;background:rgba(29,158,117,.15);border:1px solid rgba(29,158,117,.25);color:var(--green2);font-family:var(--sans);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s">See what Peter sees → the dashboard</button>
+<button onclick="smShowDash()" style="padding:8px 18px;border-radius:8px;background:rgba(196,98,45,.15);border:1px solid rgba(196,98,45,.25);color:var(--accent-light);font-family:var(--sans);font-size:11px;font-weight:600;cursor:pointer;transition:background .15s,color .15s">See what Peter sees → the dashboard</button>
 </div>
 </div>
 
@@ -1214,16 +1198,16 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <!-- DASHBOARD PREVIEW (hidden, expands below split) -->
 <div id="sm-dash-panel" style="max-width:1120px;margin:0 auto;overflow:hidden;max-height:0;opacity:0;transition:max-height .7s cubic-bezier(.25,.46,.45,.94),opacity .5s ease .2s">
 <div style="padding-top:20px">
-<div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--green2);text-align:center;margin-bottom:10px">This is Peter's actual dashboard at 9:00am</div>
+<div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-light);text-align:center;margin-bottom:10px">This is Peter's actual dashboard at 9:00am</div>
 <div style="border-radius:14px;border:2px solid var(--border2);background:var(--bg2);overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.03)">
 <!-- Browser chrome -->
 <div style="padding:7px 14px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
 <div style="display:flex;gap:4px"><div style="width:8px;height:8px;border-radius:50%;background:#ef4444"></div><div style="width:8px;height:8px;border-radius:50%;background:#f59e0b"></div><div style="width:8px;height:8px;border-radius:50%;background:#22c55e"></div></div>
-<div style="font-size:10px;color:var(--text3);background:var(--bg2);padding:3px 10px;border-radius:4px;flex:1;text-align:center">nestops.app/dashboard</div>
+<div style="font-size:10px;color:var(--text3);background:var(--bg2);padding:3px 10px;border-radius:4px;flex:1;text-align:center">afterstay.app/dashboard</div>
 <div style="display:flex;gap:6px;align-items:center"><span style="font-size:10px;color:var(--text3)">🔍</span><span style="font-size:10px;color:var(--text3)">🔔</span></div>
 </div>
 <!-- Real screenshot -->
-<img src="dashboard-screenshot.jpg" alt="NestOps Dashboard — Operator view" loading="lazy" style="width:100%;display:block;" />
+<img src="dashboard-screenshot.jpg" alt="AfterStay Dashboard — Operator view" loading="lazy" style="width:100%;display:block;" />
 </div><!-- /browser -->
 </div><!-- /padding -->
 </div><!-- /sm-dash-panel -->
@@ -1232,7 +1216,7 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <div class="sm-caption" id="sm-caption"></div>
 <div class="sm-progbar"><div class="sm-progfill" id="sm-prog"></div></div>
 <div style="text-align:center;margin-top:20px;display:flex;align-items:center;justify-content:center;gap:10px">
-<button onclick="smStart()" id="sm-play" style="padding:8px 22px;border-radius:8px;background:var(--green);color:#fff;font-family:var(--sans);font-size:12px;font-weight:600;border:none;cursor:pointer;transition:opacity .15s">▶ Play both mornings</button>
+<button onclick="smStart()" id="sm-play" style="padding:8px 22px;border-radius:8px;background:var(--accent);color:#fff;font-family:var(--sans);font-size:12px;font-weight:600;border:none;cursor:pointer;transition:opacity .15s">▶ Play both mornings</button>
 <button onclick="smRestart()" id="sm-replay" style="padding:7px 16px;border-radius:8px;background:transparent;color:var(--text3);font-family:var(--sans);font-size:11px;font-weight:500;border:1px solid var(--border);cursor:pointer;display:none;transition:border-color .15s,color .15s">↺ Replay</button>
 </div>
 <div style="text-align:center;margin-top:16px"><a href="/login" class="feat-cta">Start free trial <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"><path d="M6 3l5 5-5 5"/></svg></a></div>
@@ -1241,42 +1225,42 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 
 <div class="section-divider"></div>
 
-<!-- WHY NESTOPS — COMPETITIVE MOATS -->
+<!-- WHY AFTERSTAY — COMPETITIVE MOATS -->
 <section class="moats-section reveal">
 <div class="container">
 <div style="text-align:center">
-  <div class="feat-label" style="text-align:center">Why NestOps wins</div>
-  <div class="feat-title text-gradient" style="text-align:center;max-width:580px;margin:0 auto">12 things NestOps does. No competitor does any of them.</div>
+  <div class="feat-label" style="text-align:center">Why AfterStay wins</div>
+  <div class="feat-title text-gradient" style="text-align:center;max-width:580px;margin:0 auto">12 things AfterStay does. No competitor does any of them.</div>
   <div class="feat-desc" style="text-align:center;max-width:480px;margin:8px auto 0">Every feature ships because we ran the operation first. That's not a tagline — it's why the product works.</div>
 </div>
 <div class="moats-grid">
   <div class="moat-card">
-    <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+    <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
     <div class="moat-title">Role-aware, not role-limited</div>
     <div class="moat-desc">Cleaners see their 3 properties. Maintenance sees 4 jobs. Supervisors see the full team. One platform, zero confusion.</div>
   </div>
   <div class="moat-card">
-    <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+    <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
     <div class="moat-title">Automation that knows STR</div>
     <div class="moat-desc">Rules that understand turnovers, PTE windows, and check-in logic — not generic if/then bolted onto a task app.</div>
   </div>
   <div class="moat-card">
-    <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+    <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
     <div class="moat-title">End-to-end audit trail</div>
     <div class="moat-desc">Briefing → Task → Inventory → Access Code → Owner Payment. One thread, no tool-hopping, no data gaps.</div>
   </div>
   <div class="moat-card">
-    <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+    <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
     <div class="moat-title">No per-seat pricing. Ever.</div>
     <div class="moat-desc">$5/property flat. Add your whole team free. Scales down as fast as it scales up — unlike Breezeway or SuiteOp.</div>
   </div>
   <div class="moat-card">
-    <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+    <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
     <div class="moat-title">Built by operators</div>
     <div class="moat-desc">Our founding team runs 1,000+ listings. Every feature ships because we lived the problem first, not because a PM spec'd it.</div>
   </div>
   <div class="moat-card">
-    <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
+    <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
     <div class="moat-title">PMS-agnostic by design</div>
     <div class="moat-desc">Works with Hostaway, Guesty, Lodgify, OwnerRez. Bring your PMS. We handle everything that happens after a booking lands.</div>
   </div>
@@ -1285,7 +1269,7 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 </section>
 
 <!-- CTA MARQUEE -->
-<section style="padding:48px 0;overflow:hidden;background:linear-gradient(180deg,transparent,rgba(29,158,117,0.04),transparent)">
+<section style="padding:48px 0;overflow:hidden;background:linear-gradient(180deg,transparent,rgba(196,98,45,0.04),transparent)">
 <div class="cta-marquee-track" style="display:flex;gap:0;white-space:nowrap">
   <div class="cta-marquee-inner" style="display:flex;gap:0;animation:marquee-scroll 20s linear infinite;flex-shrink:0">
     <span class="cta-mq-item">0 phone calls</span>
@@ -1323,9 +1307,9 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <!-- SAVINGS CALCULATOR -->
 <section class="section reveal" style="padding:80px 0 40px">
 <div class="container" style="text-align:center">
-<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--green2);margin-bottom:16px">See your savings</div>
+<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--accent-light);margin-bottom:16px">See your savings</div>
 <h2 style="font-size:clamp(28px,4vw,48px);font-weight:700;letter-spacing:-0.03em;line-height:1.15;color:#fff;margin-bottom:14px">How much are you overpaying?</h2>
-<p style="font-size:clamp(14px,1.6vw,17px);color:var(--text2);max-width:560px;margin:0 auto 32px;line-height:1.7">Select your current stack. See what NestOps replaces — and what it costs you today.</p>
+<p style="font-size:clamp(14px,1.6vw,17px);color:var(--text2);max-width:560px;margin:0 auto 32px;line-height:1.7">Select your current stack. See what AfterStay replaces — and what it costs you today.</p>
 <div class="calc-wrap">
 <div class="calc-card">
 <div class="sliders">
@@ -1337,7 +1321,7 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <div class="res-empty">Select tools above to see your savings</div>
 <div class="res-content">
 <div class="bar-row"><span class="bar-label">Your stack</span><div class="bar-track"><div class="bar-fill red" id="b1"><span class="bar-amt" id="b1t"></span></div></div></div>
-<div class="bar-row"><span class="bar-label">NestOps</span><div class="bar-track"><div class="bar-fill grn" id="b2"><span class="bar-amt" id="b2t"></span></div></div></div>
+<div class="bar-row"><span class="bar-label">AfterStay</span><div class="bar-track"><div class="bar-fill grn" id="b2"><span class="bar-amt" id="b2t"></span></div></div></div>
 <div class="save-row">
 <div><div class="save-label">You save</div><div class="save-sub" id="ss"></div></div>
 <div style="text-align:right"><div class="save-amt" id="sv"></div><div class="save-yr" id="sy"></div></div>
@@ -1357,7 +1341,7 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <!-- PRICING -->
 <section class="section reveal" id="pricing">
 <div class="container" style="text-align:center">
-<div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:var(--green);margin-bottom:12px">Pricing</div>
+<div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);margin-bottom:12px">Pricing</div>
 <h2 class="text-gradient" style="font-size:clamp(24px,3vw,36px);font-weight:700;letter-spacing:-0.03em;margin-bottom:8px">One platform. Transparent pricing.</h2>
 <p style="font-size:14px;color:var(--text2);margin-bottom:40px">Unlimited users on every plan. No per-seat charges. Ever.</p>
 <div class="pricing-grid">
@@ -1407,7 +1391,7 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <li>Bulk property import</li>
 <li>Account manager</li>
 </ul>
-<button class="cta-ghost" style="margin-top:20px" onclick="location.href='mailto:hello@nestops.io'">Contact sales</button>
+<button class="cta-ghost" style="margin-top:20px" onclick="location.href='mailto:hello@afterstay.com'">Contact sales</button>
 </div>
 </div>
 </div>
@@ -1426,7 +1410,7 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 <!-- FOOTER -->
 <footer>
 <div class="container">
-<p>NestOps &copy; 2026 &middot; Built for STR operators &middot; Your PMS runs bookings. NestOps runs everything after.</p>
+<p>AfterStay &copy; 2026 &middot; Built for STR operators &middot; Your PMS runs bookings. AfterStay runs everything after.</p>
 </div>
 </footer>
 
@@ -1435,7 +1419,7 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 window.addEventListener('scroll',function(){document.getElementById('nav').classList.toggle('scrolled',window.scrollY>40)});
 
 // Scroll reveal
-var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:0.15});
+var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:0.15,rootMargin:'0px 0px -60px 0px'});
 document.querySelectorAll('.reveal').forEach(function(el){obs.observe(el)});
 
 // Calculator
@@ -1505,7 +1489,7 @@ var selCount=sel.filter(function(t){return!t.hrs}).length;
 document.getElementById('ss').textContent=selCount>0?'Replacing '+selCount+' tool'+(selCount>1?'s':'')+' with 1 platform':'';
 document.getElementById('mainCta').textContent=saved>0?'Start free trial — save '+fmt(saved)+'/mo':'Start free trial';
 var tg=document.getElementById('tg');tg.innerHTML='';
-sel.forEach(function(t){if(!t.hrs)tg.innerHTML+='<span class="tag rep">'+t.n+' → '+(repMap[t.id]||'NestOps')+'</span>'});
+sel.forEach(function(t){if(!t.hrs)tg.innerHTML+='<span class="tag rep">'+t.n+' → '+(repMap[t.id]||'AfterStay')+'</span>'});
 if(hasH)tg.innerHTML+='<span class="tag rep">WhatsApp → Activity Threads</span>';
 }
 U();
@@ -1525,19 +1509,19 @@ function awTriumph(){awChime([523,659,784,1047],110);awQ(function(){awChime([784
 function awScr(){awEl('fd').scrollTop=99999}
 function awSetTbAb(){awEl('tb').style.background='var(--bg3)';awEl('tb').innerHTML='<div style="width:32px;height:32px;border-radius:50%;background:#FF5A5F;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#fff;flex-shrink:0">G</div><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">Guest</div><div style="font-size:9.5px;color:var(--text3)">Airbnb messages</div></div><div style="font-size:8px;padding:2px 7px;border-radius:4px;font-weight:500;background:rgba(255,90,95,0.1);color:#FF5A5F;margin-left:auto">Airbnb</div>'}
 function awSetTbWa(){awEl('tb').style.background='#075E54';awEl('tb').innerHTML='<div style="width:32px;height:32px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#fff;flex-shrink:0">B</div><div style="flex:1"><div style="font-size:13px;font-weight:500;color:#fff">Bjorn (Maintenance)</div><div style="font-size:9.5px;color:rgba(255,255,255,.7)">online</div></div><div style="font-size:8px;padding:2px 7px;border-radius:4px;font-weight:500;background:rgba(255,255,255,.15);color:#fff;margin-left:auto">WhatsApp</div>'}
-function awSetTbNo(){awEl('tb').style.background='var(--green-bg)';awEl('tb').innerHTML='<div style="width:32px;height:32px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#fff;flex-shrink:0">N</div><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">NestOps</div><div style="font-size:9.5px;color:var(--text3)">Access Window</div></div>'}
+function awSetTbNo(){awEl('tb').style.background='var(--accent-bg)';awEl('tb').innerHTML='<div style="width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#fff;flex-shrink:0">N</div><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">AfterStay</div><div style="font-size:9.5px;color:var(--text3)">Access Window</div></div>'}
 function awShowTr(icon,txt,dl,dur){awQ(function(){awEl('tri').textContent=icon;awEl('trt').textContent=txt;awEl('tri').style.opacity='1';awEl('trt').style.opacity='1';awEl('trov').style.opacity='1';awQ(function(){awEl('tri').style.opacity='0';awEl('trt').style.opacity='0';awEl('trov').style.opacity='0'},dur)},dl)}
 function awSwitchWin(setFn,bg,dl){awQ(function(){awEl('fd').style.opacity='0';awQ(function(){awEl('fd').innerHTML='';awEl('fd').style.background=bg;setFn();awEl('fd').style.opacity='1'},350)},dl)}
 function awStmp(t,dl){awQ(function(){var d=document.createElement('div');d.className='aw-st';d.textContent=t;awEl('fd').appendChild(d);awScr();requestAnimationFrame(function(){d.classList.add('v')})},dl)}
 function awGap(t,dl){awQ(function(){var d=document.createElement('div');d.className='aw-gp';d.textContent=t;awEl('fd').appendChild(d);awScr();awQ(function(){d.classList.add('v')},30)},dl)}
 function awDots(side,bg,dl,dur){awQ(function(){var d=document.createElement('div');d.className='aw-dtr'+(side==='me'?' me':'');d.innerHTML='<div class="aw-dp" style="background:'+bg+'"><div class="aw-dd"></div><div class="aw-dd"></div><div class="aw-dd"></div></div>';awEl('fd').appendChild(d);awScr();awQ(function(){d.classList.add('v')},20);awQ(function(){d.remove()},dur)},dl)}
-function awAddMsg(who,txt,time,side,dl,bc,dotBg,whoClass,react,slam){if(!slam)awDots(side,dotBg||(side==='me'?'var(--green)':'var(--bg3)'),dl,380);var ed=slam?dl:dl+380;awQ(function(){var r=document.createElement('div');r.className='aw-row'+(side==='me'?' me':'')+(slam?' slam':'');var uid='awrx'+Math.random().toString(36).substr(2,6);r.innerHTML='<div class="aw-av"></div><div class="aw-bub '+bc+'"><div class="aw-bw '+(whoClass||'')+'">'+who+'</div>'+txt+'<div class="aw-bf"><span>'+time+'</span>'+(side==='me'?'<span class="aw-tk">\u2713\u2713</span>':'')+'</div>'+(react?'<span class="aw-rx" id="'+uid+'">'+react+'</span>':'')+'</div>';awEl('fd').appendChild(r);awScr();requestAnimationFrame(function(){r.classList.add('v')});awPop(slam?850+Math.random()*300:800,.1+(slam?.05:0),slam?.05:.08);if(react)awQ(function(){var x=document.getElementById(uid);if(x)x.classList.add('v')},340)},ed)}
+function awAddMsg(who,txt,time,side,dl,bc,dotBg,whoClass,react,slam){if(!slam)awDots(side,dotBg||(side==='me'?'var(--accent)':'var(--bg3)'),dl,380);var ed=slam?dl:dl+380;awQ(function(){var r=document.createElement('div');r.className='aw-row'+(side==='me'?' me':'')+(slam?' slam':'');var uid='awrx'+Math.random().toString(36).substr(2,6);r.innerHTML='<div class="aw-av"></div><div class="aw-bub '+bc+'"><div class="aw-bw '+(whoClass||'')+'">'+who+'</div>'+txt+'<div class="aw-bf"><span>'+time+'</span>'+(side==='me'?'<span class="aw-tk">\u2713\u2713</span>':'')+'</div>'+(react?'<span class="aw-rx" id="'+uid+'">'+react+'</span>':'')+'</div>';awEl('fd').appendChild(r);awScr();requestAnimationFrame(function(){r.classList.add('v')});awPop(slam?850+Math.random()*300:800,.1+(slam?.05:0),slam?.05:.08);if(react)awQ(function(){var x=document.getElementById(uid);if(x)x.classList.add('v')},340)},ed)}
 function awSys(txt,dl){awQ(function(){var d=document.createElement('div');d.className='aw-b-sy';d.textContent=txt;awEl('fd').appendChild(d);awScr();requestAnimationFrame(function(){d.classList.add('v')});awPop(1100,.05,.1)},dl)}
 function awAddRv(cls,stars,from,title,body,m1,m2,dl,tc){awQ(function(){var d=document.createElement('div');d.className='aw-rv '+cls;d.innerHTML='<div class="aw-rv-hd"><div class="aw-rv-st">'+stars+'</div><div class="aw-rv-fr">'+from+'</div></div><div class="aw-rv-ti" style="color:'+tc+'">'+title+'</div><div class="aw-rv-bd">'+body+'</div><div class="aw-rv-mt"><span>'+m1+'</span><span>'+m2+'</span></div>';awEl('fd').appendChild(d);awScr();requestAnimationFrame(function(){d.classList.add('v')})},dl)}
 function awShowOr(dl){awQ(function(){awEl('orov').style.opacity='1';awQ(function(){awEl('ort').style.opacity='1';awEl('ort').style.transform='scale(1)';awEl('orsub').style.opacity='1';awPop(180,.12,.4)},200)},dl)}
 function awHideOr(dl){awQ(function(){awEl('ort').style.opacity='0';awEl('ort').style.transform='scale(.5)';awEl('orsub').style.opacity='0';awQ(function(){awEl('orov').style.opacity='0'},400)},dl)}
-function awShowCtr(v,s,c){awEl('ctr').style.opacity='1';awEl('cv').textContent=v;awEl('cv').style.color=c==='red'?'var(--red)':'var(--green2)';awEl('cx').textContent=s}
-function awReveal(dl){awQ(function(){var d=document.createElement('div');d.className='aw-r';d.innerHTML='<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em">by NestOps</div><div style="width:36px;height:2px;border-radius:1px;background:var(--green);margin:10px auto;opacity:.5"></div><div style="font-size:26px;font-weight:500;color:var(--green2);letter-spacing:-.01em;margin:6px 0">Access Window</div><div style="width:36px;height:2px;border-radius:1px;background:var(--green);margin:10px auto;opacity:.5"></div><div style="font-size:13px;color:var(--text2);line-height:1.6;margin-top:8px">The guest picks the time.<br>The system handles everything else.<br>Nobody texts anyone.</div>';awEl('fd').appendChild(d);awScr();requestAnimationFrame(function(){d.classList.add('v')})},dl)}
+function awShowCtr(v,s,c){awEl('ctr').style.opacity='1';awEl('cv').textContent=v;awEl('cv').style.color=c==='red'?'var(--red)':'var(--accent-light)';awEl('cx').textContent=s}
+function awReveal(dl){awQ(function(){var d=document.createElement('div');d.className='aw-r';d.innerHTML='<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em">by AfterStay</div><div style="width:36px;height:2px;border-radius:1px;background:var(--accent);margin:10px auto;opacity:.5"></div><div style="font-size:26px;font-weight:500;color:var(--accent-light);letter-spacing:-.01em;margin:6px 0">Access Window</div><div style="width:36px;height:2px;border-radius:1px;background:var(--accent);margin:10px auto;opacity:.5"></div><div style="font-size:13px;color:var(--text2);line-height:1.6;margin-top:8px">The guest picks the time.<br>The system handles everything else.<br>Nobody texts anyone.</div>';awEl('fd').appendChild(d);awScr();requestAnimationFrame(function(){d.classList.add('v')})},dl)}
 function awReset(){awCl();awEl('fd').innerHTML='';awEl('fd').style.background='var(--bg2)';awEl('fd').style.opacity='1';awEl('ctr').style.opacity='0';awEl('orov').style.opacity='0';awEl('ort').style.opacity='0';awEl('ort').style.transform='scale(.5)';awEl('orsub').style.opacity='0';awEl('trov').style.opacity='0'}
 function awChaos(cb){
 awReset();awSetTbAb();awStartBg('tension');
@@ -1581,17 +1565,17 @@ awStmp('Same issue. Different outcome.',200);
 awQ(function(){var r=document.createElement('div');r.className='aw-row';r.innerHTML='<div class="aw-av"></div><div class="aw-bub aw-b-ab-g"><div class="aw-bw aw-bw-gl">Guest via Portal</div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">\ud83d\udcdd Issue report submitted</div><b style="font-size:12px;color:var(--text)">Heater not working</b><div style="font-size:11px;margin-top:4px;line-height:1.5;color:var(--text2)">Bedroom heater isn\u2019t producing heat. It was freezing last night.</div><div style="margin-top:8px;padding:6px 10px;border-radius:8px;background:rgba(55,138,221,0.08);border:1px solid rgba(55,138,221,0.15);font-size:10px;color:var(--text)">\ud83d\udd13 <b>Permission to enter:</b> Yes<br>\ud83d\udd52 <b>Access window:</b> Today 10:00am \u2013 2:00pm<br>\ud83d\udccd <b>Unit:</b> Downtown Loft, 4B</div><div class="aw-bf"><span>9:02 AM</span></div></div>';awEl('fd').appendChild(r);awScr();requestAnimationFrame(function(){r.classList.add('v')});awPop(900,.08,.08)},1000);
 awSys('\u2705 Issue received \u2014 PTE granted \u00b7 Access Window: 10am\u20132pm',3200);
 awSys('\ud83d\udcdd Draft task created: "Heater repair \u2014 Downtown Loft 4B"',4500);
-awSys('\ud83d\udc64 Assigned to Bjorn (HVAC) \u00b7 Notified via NestOps',5800);
-awStmp('What Bjorn sees in NestOps',7200);
-awQ(function(){var r=document.createElement('div');r.className='aw-row me';r.innerHTML='<div class="aw-av"></div><div class="aw-bub aw-b-no-r" style="border-radius:14px"><div class="aw-bw aw-bw-no">NestOps \u00b7 Task details</div><div style="font-size:11.5px;line-height:1.7;margin-top:4px"><b>Downtown Loft 4B</b> \u2014 Heater repair</div><div style="margin-top:8px;padding:8px;border-radius:8px;background:rgba(255,255,255,.08)"><div style="font-size:10.5px;line-height:1.8">\ud83d\udd13 PTE: <b>Granted</b><br>\ud83d\udd52 Access Window: <b>10:00am \u2013 2:00pm</b><br>\ud83d\udccd Unit 4B, 2nd floor<br>\ud83d\udee0 Issue: Heater not producing heat</div><div style="font-family:var(--mono);font-size:18px;letter-spacing:6px;font-weight:500;text-align:center;margin:8px 0;padding:6px;background:rgba(255,255,255,.06);border-radius:6px">4 5 2 1</div><div style="font-size:8.5px;opacity:.5;text-align:center">Door code \u00b7 active during window only</div></div><div class="aw-bf"><span>7:00 AM</span><span class="aw-tk">\u2713\u2713</span></div></div>';awEl('fd').appendChild(r);awScr();requestAnimationFrame(function(){r.classList.add('v')});awPop(1000,.07,.08)},8000);
+awSys('\ud83d\udc64 Assigned to Bjorn (HVAC) \u00b7 Notified via AfterStay',5800);
+awStmp('What Bjorn sees in AfterStay',7200);
+awQ(function(){var r=document.createElement('div');r.className='aw-row me';r.innerHTML='<div class="aw-av"></div><div class="aw-bub aw-b-no-r" style="border-radius:14px"><div class="aw-bw aw-bw-no">AfterStay \u00b7 Task details</div><div style="font-size:11.5px;line-height:1.7;margin-top:4px"><b>Downtown Loft 4B</b> \u2014 Heater repair</div><div style="margin-top:8px;padding:8px;border-radius:8px;background:rgba(255,255,255,.08)"><div style="font-size:10.5px;line-height:1.8">\ud83d\udd13 PTE: <b>Granted</b><br>\ud83d\udd52 Access Window: <b>10:00am \u2013 2:00pm</b><br>\ud83d\udccd Unit 4B, 2nd floor<br>\ud83d\udee0 Issue: Heater not producing heat</div><div style="font-family:var(--mono);font-size:18px;letter-spacing:6px;font-weight:500;text-align:center;margin:8px 0;padding:6px;background:rgba(255,255,255,.06);border-radius:6px">4 5 2 1</div><div style="font-size:8.5px;opacity:.5;text-align:center">Door code \u00b7 active during window only</div></div><div class="aw-bf"><span>7:00 AM</span><span class="aw-tk">\u2713\u2713</span></div></div>';awEl('fd').appendChild(r);awScr();requestAnimationFrame(function(){r.classList.add('v')});awPop(1000,.07,.08)},8000);
 awSys('\ud83d\udd11 Bjorn arrived 10:28am \u2014 code used \u2014 entry logged',11000);
 awSys('\u2705 Repair complete 11:15am \u2014 3 photos uploaded',12500);
 awSys('\ud83d\udd12 Access Window closed \u2014 code 4521 deactivated',13800);
 awStmp('Guest notified via portal',15000);
-awQ(function(){var r=document.createElement('div');r.className='aw-row me';r.innerHTML='<div class="aw-av"></div><div class="aw-bub aw-b-no-r" style="border-radius:14px"><div class="aw-bw aw-bw-no">NestOps \u2192 Guest portal</div>Your heater has been repaired! \u2728 Our technician visited 10:28\u201311:15am. Access code deactivated. Enjoy the rest of your stay!<div class="aw-bf"><span>11:16 AM</span><span class="aw-tk">\u2713\u2713</span></div></div>';awEl('fd').appendChild(r);awScr();requestAnimationFrame(function(){r.classList.add('v')});awPop(1050,.07,.08)},15800);
+awQ(function(){var r=document.createElement('div');r.className='aw-row me';r.innerHTML='<div class="aw-av"></div><div class="aw-bub aw-b-no-r" style="border-radius:14px"><div class="aw-bw aw-bw-no">AfterStay \u2192 Guest portal</div>Your heater has been repaired! \u2728 Our technician visited 10:28\u201311:15am. Access code deactivated. Enjoy the rest of your stay!<div class="aw-bf"><span>11:16 AM</span><span class="aw-tk">\u2713\u2713</span></div></div>';awEl('fd').appendChild(r);awScr();requestAnimationFrame(function(){r.classList.add('v')});awPop(1050,.07,.08)},15800);
 awQ(function(){var r=document.createElement('div');r.className='aw-row';r.innerHTML='<div class="aw-av"></div><div class="aw-bub aw-b-ab-g"><div class="aw-bw aw-bw-gl">Guest</div>wow that was so fast! we didn\u2019t even have to think about it. amazing service \ud83d\ude0a<div class="aw-bf"><span>11:22 AM</span></div><span class="aw-rx" id="awhrt">\u2764\ufe0f</span></div>';awEl('fd').appendChild(r);awScr();requestAnimationFrame(function(){r.classList.add('v')});awPop(800,.08,.08);awQ(function(){var x=document.getElementById('awhrt');if(x)x.classList.add('v')},340)},18000);
 awQ(function(){awKillBg();awTriumph()},20200);
-awQ(function(){awAddRv('aw-rv-good','\u2605\u2605\u2605\u2605\u2605','Airbnb \u00b7 Public review','Incredible service \u2014 fixed before we got back','Reported a heater issue through the guest portal. Within 2 hours it was completely fixed without us coordinating anything. They even deactivated the access code after. Best-managed property we\u2019ve ever stayed at!','Guest \u00b7 Downtown Loft','Posted 2 days later',0,'var(--green2)')},20500);
+awQ(function(){awAddRv('aw-rv-good','\u2605\u2605\u2605\u2605\u2605','Airbnb \u00b7 Public review','Incredible service \u2014 fixed before we got back','Reported a heater issue through the guest portal. Within 2 hours it was completely fixed without us coordinating anything. They even deactivated the access code after. Best-managed property we\u2019ve ever stayed at!','Guest \u00b7 Downtown Loft','Posted 2 days later',0,'var(--accent-light)')},20500);
 awQ(function(){awShowCtr('0 messages \u00b7 0 calls \u00b7 fixed in 47 min \u00b7 5\u2605 review','Full audit trail. Guest never coordinated anything.','grn')},22500);
 awQ(function(){awReveal(0)},24000);
 if(cb)awQ(cb,28000)}
@@ -1684,7 +1668,7 @@ var mbRoleData={
     statNum:'60 → 10',statLabel:'minutes of morning<br>coordination',
     glow:'rgba(55,138,221,.1)',dotColor:'#378ADD',statColor:'#378ADD',
     cards:[
-      {cls:'mb-nc-green',t:'✓ Team status: 4/5 clocked in',s:'Maria ✓ · Bjorn ✓ · Anna ✓ · Fatima ✓ · Lars — not yet',tags:[{text:'ON TIME',bg:'rgba(74,222,128,.15)',color:'#4ade80'},{text:'1 PENDING',bg:'rgba(245,158,11,.15)',color:'#fcd34d'}]},
+      {cls:'mb-nc-green',t:'✓ Team status: 4/5 clocked in',s:'Maria ✓ · Bjorn ✓ · Anna ✓ · Fatima ✓ · Lars — not yet',tags:[{text:'ON TIME',bg:'rgba(224,122,69,.15)',color:'#e07a45'},{text:'1 PENDING',bg:'rgba(245,158,11,.15)',color:'#fcd34d'}]},
       {cls:'mb-nc-dark',t:'Today\'s turnovers: 5 of 8 ready',s:'Ocean View ✓ · Harbor ✓ · Sunset ✓ · Downtown ✗ · Fjord ✗'},
       {cls:'mb-nc-red',t:'⚠ Overnight: Leaking pipe — Fjord Cabin',s:'Guest reported 11:42pm · Unassigned · Needs dispatch',tags:[{text:'URGENT',bg:'rgba(239,68,68,.15)',color:'#fca5a5'}]},
       {cls:'mb-nc-amber',t:'Pending: Sofa replacement approval',s:'Downtown Loft · 12,000 NOK · Submitted 2 days ago'},
@@ -1696,8 +1680,8 @@ var mbRoleData={
     statNum:'0',statLabel:'texts to ask "can I go in?"<br>PTE handles it',
     glow:'rgba(245,158,11,.08)',dotColor:'var(--amber)',statColor:'var(--amber)',
     cards:[
-      {cls:'mb-nc-green',t:'GO FIRST — Sunset Villa',s:'Thermostat replacement · Vacant — enter any time · Code: 4829',tags:[{text:'AUTO-PTE',bg:'rgba(74,222,128,.15)',color:'#4ade80'},{text:'VACANT',bg:'rgba(74,222,128,.15)',color:'#4ade80'}]},
-      {cls:'mb-nc-green',t:'Fjord Cabin — URGENT',s:'Leaking pipe · Guest checked out 6am · Vacant now',tags:[{text:'AUTO-PTE',bg:'rgba(74,222,128,.15)',color:'#4ade80'},{text:'URGENT',bg:'rgba(239,68,68,.15)',color:'#fca5a5'}]},
+      {cls:'mb-nc-green',t:'GO FIRST — Sunset Villa',s:'Thermostat replacement · Vacant — enter any time · Code: 4829',tags:[{text:'AUTO-PTE',bg:'rgba(224,122,69,.15)',color:'#e07a45'},{text:'VACANT',bg:'rgba(224,122,69,.15)',color:'#e07a45'}]},
+      {cls:'mb-nc-green',t:'Fjord Cabin — URGENT',s:'Leaking pipe · Guest checked out 6am · Vacant now',tags:[{text:'AUTO-PTE',bg:'rgba(224,122,69,.15)',color:'#e07a45'},{text:'URGENT',bg:'rgba(239,68,68,.15)',color:'#fca5a5'}]},
       {cls:'mb-nc-amber',t:'🔒 Harbor Studio — PTE Pending',s:'Broken window latch · Guest present · Requested 10-12pm',tags:[{text:'PENDING',bg:'rgba(245,158,11,.15)',color:'#fcd34d'},{text:'OCCUPIED',bg:'rgba(245,158,11,.15)',color:'#fcd34d'}]},
       {cls:'mb-nc-dark',t:'Downtown Loft — Afternoon',s:'Light fixture install · Vacant from 14:00 · Low priority',tags:[{text:'SCHEDULED',bg:'rgba(107,114,128,.2)',color:'#9ca3af'}]},
     ]
@@ -1705,9 +1689,9 @@ var mbRoleData={
   cleaner:{
     desc:'Every property, every clean type, every access code — sorted by your schedule. Know your full day in 30 seconds.',
     statNum:'30 sec',statLabel:'to know your full day',
-    glow:'rgba(29,158,117,.1)',dotColor:'var(--green)',statColor:'var(--green2)',
+    glow:'rgba(196,98,45,.1)',dotColor:'var(--accent)',statColor:'var(--accent-light)',
     cards:[
-      {cls:'mb-nc-green',t:'① Ocean View Apt — GO FIRST',s:'Turnover clean · 5 tasks · Keypad 7291 · 2.5hr gap (tight)',tags:[{text:'AUTO-PTE',bg:'rgba(74,222,128,.15)',color:'#4ade80'},{text:'TIGHT GAP',bg:'rgba(245,158,11,.15)',color:'#fcd34d'}]},
+      {cls:'mb-nc-green',t:'① Ocean View Apt — GO FIRST',s:'Turnover clean · 5 tasks · Keypad 7291 · 2.5hr gap (tight)',tags:[{text:'AUTO-PTE',bg:'rgba(224,122,69,.15)',color:'#e07a45'},{text:'TIGHT GAP',bg:'rgba(245,158,11,.15)',color:'#fcd34d'}]},
       {cls:'mb-nc-dark',t:'② Harbor Studio — Deep clean',s:'8 tasks · Lockbox #3 · 4hr gap · Guest arrives 14:00',tags:[{text:'DEEP',bg:'rgba(55,138,221,.15)',color:'#60a5fa'}]},
       {cls:'mb-nc-dark',t:'③ Downtown Loft — Standard clean',s:'4 tasks · Smart lock auto-unlock · No same-day check-in',tags:[{text:'STANDARD',bg:'rgba(107,114,128,.2)',color:'#9ca3af'}]},
       {cls:'mb-nc-amber',t:'⚡ Bring extra: 3 towel sets',s:'Harbor deep clean requires extra linens — check inventory',tags:[{text:'INVENTORY',bg:'rgba(245,158,11,.15)',color:'#fcd34d'}]},
@@ -1742,8 +1726,8 @@ function mbUpdateSlider(role){
   var bRect=btn.getBoundingClientRect();
   slider.style.width=bRect.width+'px';
   slider.style.transform='translateX('+(bRect.left-tRect.left-3)+'px)';
-  var colors={operator:'rgba(55,138,221,.18)',maintenance:'rgba(245,158,11,.12)',cleaner:'rgba(29,158,117,.15)'};
-  var borders={operator:'rgba(55,138,221,.25)',maintenance:'rgba(245,158,11,.2)',cleaner:'rgba(29,158,117,.25)'};
+  var colors={operator:'rgba(55,138,221,.18)',maintenance:'rgba(245,158,11,.12)',cleaner:'rgba(196,98,45,.15)'};
+  var borders={operator:'rgba(55,138,221,.25)',maintenance:'rgba(245,158,11,.2)',cleaner:'rgba(196,98,45,.25)'};
   slider.style.background=colors[role];
   slider.style.border='1px solid '+borders[role];
 }
@@ -1804,7 +1788,7 @@ function mbRun(){
     mbQ(function(){mbEl('mb-tr3').classList.add('show')},1500);
   },16000);
 
-  // Reveal NestOps
+  // Reveal AfterStay
   mbQ(function(){
     mbEl('mb-toggle').classList.add('show');
     requestAnimationFrame(function(){mbUpdateSlider('operator')});
@@ -1849,10 +1833,10 @@ window.mbRestart=function(){
   // Reset left text
   mbEl('mb-desc').textContent='Every staff member knows their full day before they leave home. Properties, clean type, access codes, PTE status — in 30 seconds. No texts. No calls. No WhatsApp archaeology.';
   mbEl('mb-stat-num').textContent='0';
-  mbEl('mb-stat-num').style.color='var(--green2)';
+  mbEl('mb-stat-num').style.color='var(--accent-light)';
   mbEl('mb-stat-label').innerHTML='messages before 9am<br>when briefing is live';
-  mbEl('mb-dot').style.background='var(--green)';
-  mbEl('mb-glow').style.background='radial-gradient(ellipse,rgba(29,158,117,.1) 0%,transparent 65%)';
+  mbEl('mb-dot').style.background='var(--accent)';
+  mbEl('mb-glow').style.background='radial-gradient(ellipse,rgba(196,98,45,.1) 0%,transparent 65%)';
   mbRole='operator';
   document.querySelectorAll('.mb-rbtn').forEach(function(b){b.classList.remove('active')});
   document.querySelector('[data-mbrole="operator"]').classList.add('active');
@@ -1961,7 +1945,7 @@ window.smStart=function(){
 
   // ─── 7:10 ───
   smClock('7:10',14500);
-  smCaption('7:10am — Chaos side: 23 messages. NestOps side: everyone is already working.',14500);
+  smCaption('7:10am — Chaos side: 23 messages. AfterStay side: everyone is already working.',14500);
   smAddEvent('sm-chaos-feed','sm-event-bad','7:10','📞 Missed call from Anna K. (2nd attempt)',15000);
   smCounter('sm-calls',2,15000);smCounter('sm-msgs',23,15000);smCounter('sm-waiting',3,15000);
   smAddEvent('sm-nest-feed','sm-event-good','7:08','✓ Maria arrived Ocean View · turnover started · 5 tasks loaded',15000);
@@ -1976,7 +1960,7 @@ window.smStart=function(){
 
   // ─── 8:30 ───
   smClock('8:30',20000);
-  smCaption('8:30am — Chaos side still catching up. NestOps side: first clean done.',20000);
+  smCaption('8:30am — Chaos side still catching up. AfterStay side: first clean done.',20000);
   smAddEvent('sm-chaos-feed','sm-event-bad','8:30','First turnover still in progress. 40 min behind schedule.',20500);
   smCounter('sm-msgs',42,20500);smCounter('sm-calls',3,20500);
   smAddEvent('sm-nest-feed','sm-event-good','8:22','✓ Maria completed Ocean View · auto-notified Peter · moving to Harbor',20500);
@@ -1984,7 +1968,7 @@ window.smStart=function(){
 
   // ─── 9:00 — OUTCOME ───
   smClock('9:00',23000);
-  smCaption('9:00am — Same morning. Same team. One had NestOps.',23000);
+  smCaption('9:00am — Same morning. Same team. One had AfterStay.',23000);
   smCounter('sm-msgs',47,23000);smCounter('sm-calls',3,23000);smCounter('sm-waiting',4,23000);
   smCounter('sm-auto',6,23500);smCounter('sm-ready',4,23500);smCounter('sm-silence',0,23500);
 
@@ -2054,16 +2038,16 @@ function ivRelief(){if(!ivAC)return;var t=ivAC.currentTime;[523,659,784,1047].fo
 var CHAPS=[
 {num:'Chapter 1 · The Old World',h:'Friday 9:47pm.<br>Two messages. No answers.',b:'Maria can\'t find supplies. Anna confirms the closet is empty. Guest arrives in 9 hours. Nobody has a system watching this.',glow:'rgba(239,68,68,.1)',step:0},
 {num:'Chapter 2 · The Spreadsheet',h:'A spreadsheet.<br>Last updated 3 weeks ago.',b:'This is how most STR operators track inventory. A shared Google Sheet nobody keeps current. "Not tracked." "Unknown." "Low?"',glow:'rgba(239,68,68,.08)',step:0},
-{num:'Chapter 3 · Rewind',h:'Let\'s go back<br>to Tuesday.',b:'What if a system was automatically watching the stock — and caught this four days early?',glow:'rgba(29,158,117,.06)',step:1},
-{num:'Chapter 4 · One-Time Setup',h:'Peter sets the<br>turnover template.',b:'NestOps Inventory → Templates → Harbor Studio → Turnover. Define every item consumed per clean, with quantities and warehouse. Set once. Runs forever.',glow:'rgba(29,158,117,.12)',step:1},
-{num:'Chapter 5 · Template Attaches',h:'Every task now<br>knows what to deduct.',b:'When a cleaning task is created for Harbor Studio, NestOps auto-attaches the turnover template. Maria sees exactly what will be deducted.',glow:'rgba(59,130,246,.1)',step:2},
+{num:'Chapter 3 · Rewind',h:'Let\'s go back<br>to Tuesday.',b:'What if a system was automatically watching the stock — and caught this four days early?',glow:'rgba(196,98,45,.06)',step:1},
+{num:'Chapter 4 · One-Time Setup',h:'Peter sets the<br>turnover template.',b:'AfterStay Inventory → Templates → Harbor Studio → Turnover. Define every item consumed per clean, with quantities and warehouse. Set once. Runs forever.',glow:'rgba(196,98,45,.12)',step:1},
+{num:'Chapter 5 · Template Attaches',h:'Every task now<br>knows what to deduct.',b:'When a cleaning task is created for Harbor Studio, AfterStay auto-attaches the turnover template. Maria sees exactly what will be deducted.',glow:'rgba(59,130,246,.1)',step:2},
 {num:'Chapter 6 · Task Complete',h:'Maria finishes.<br>She logs her extras.',b:'She adds 2 extra towels (pet stay) and 1 extra spray. One tap to complete. That single tap triggers the entire supply chain.',glow:'rgba(245,158,11,.1)',step:3},
 {num:'Chapter 7 · Engine Fires',h:'Stock drops.<br>Alerts fire. One second.',b:'The engine reads the template, adds Maria\'s extras, deducts from Oslo Central. Coffee Pods: 10→2. CRITICAL. Three threshold alerts — all in one second.',glow:'rgba(239,68,68,.1)',step:4},
 {num:'Chapter 8 · Supervisor Sees',h:'Anna sees it.<br>Nobody texted her.',b:'An in-app alert on Anna\'s phone. She sees the warehouse, what\'s critical, and sends a structured restock request — no calling anyone.',glow:'rgba(245,158,11,.1)',step:5},
-{num:'Chapter 9 · AI Draft → Sent',h:'AI draft ready.<br>Order sent. 90 seconds.',b:'Peter\'s dashboard surfaces the request. Claude drafted the vendor email. Peter adjusts one number. Sends. Done.',glow:'rgba(29,158,117,.12)',step:6},
+{num:'Chapter 9 · AI Draft → Sent',h:'AI draft ready.<br>Order sent. 90 seconds.',b:'Peter\'s dashboard surfaces the request. Claude drafted the vendor email. Peter adjusts one number. Sends. Done.',glow:'rgba(196,98,45,.12)',step:6},
 {num:'Chapter 10 · Stock Arrives',h:'Bjorn receives.<br>Warehouse updates live.',b:'Thursday morning. Bjorn marks the PO as received. Stock updates instantly. Maria gets notified: supplies ready.',glow:'rgba(59,130,246,.1)',step:7},
-{num:'Chapter 11 · All Green',h:'Every item restocked.<br>Every status OK.',b:'This is your inventory after NestOps runs the full loop. Every row live. Every badge auto-calculated. No spreadsheet.',glow:'rgba(29,158,117,.1)',step:8},
-{num:'Chapter 12 · Silent Friday',h:'Friday 9:47pm.<br>Your phone is silent.',b:'Same time. Same property. But NestOps has been running the loop since Tuesday. No messages. Everything is there.',glow:'rgba(255,255,255,.02)',step:9},
+{num:'Chapter 11 · All Green',h:'Every item restocked.<br>Every status OK.',b:'This is your inventory after AfterStay runs the full loop. Every row live. Every badge auto-calculated. No spreadsheet.',glow:'rgba(196,98,45,.1)',step:8},
+{num:'Chapter 12 · Silent Friday',h:'Friday 9:47pm.<br>Your phone is silent.',b:'Same time. Same property. But AfterStay has been running the loop since Tuesday. No messages. Everything is there.',glow:'rgba(255,255,255,.02)',step:9},
 ];
 
 var STEPS=[
@@ -2084,8 +2068,8 @@ c.appendChild(r);
 function ivUpdateSteps(si){
 STEPS.forEach(function(s,i){
 var d=ivEl('ivsd'+i),t=ivEl('ivst'+i);if(!d||!t)return;
-if(i<si){d.style.background='var(--green-lt)';d.style.transform='scale(1)';t.style.color='var(--green-lt)';}
-else if(i===si){d.style.background=s.c==='bad'?'#ef4444':s.c==='g'?'var(--green-lt)':'var(--green)';d.style.transform='scale(1.4)';t.style.color='var(--text2)';}
+if(i<si){d.style.background='var(--accent-lt)';d.style.transform='scale(1)';t.style.color='var(--accent-lt)';}
+else if(i===si){d.style.background=s.c==='bad'?'#ef4444':s.c==='g'?'var(--accent-lt)':'var(--accent)';d.style.transform='scale(1.4)';t.style.color='var(--text2)';}
 else{d.style.background='var(--border2)';d.style.transform='scale(1)';t.style.color='var(--text3)';}
 });
 }
@@ -2126,7 +2110,7 @@ wrap.appendChild(s2);ivSlideIds.push('iv-s2');
 
 // S3: Rewind
 var s3=document.createElement('div');s3.id='iv-s3';s3.style.cssText=slideStyle+'background:#000;align-items:center;justify-content:center;gap:10px;padding:30px;';
-s3.innerHTML='<div id="iv-rw1" style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#374151;opacity:0;transition:opacity .6s;">let\'s rewind to tuesday</div><div id="iv-rw2" style="font-size:20px;font-style:italic;font-weight:300;color:var(--green-lt);text-align:center;line-height:1.4;opacity:0;transform:scale(.92);transition:opacity .7s,transform .7s cubic-bezier(.34,1.56,.64,1);">What if a system<br>was watching?</div>';
+s3.innerHTML='<div id="iv-rw1" style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#374151;opacity:0;transition:opacity .6s;">let\'s rewind to tuesday</div><div id="iv-rw2" style="font-size:20px;font-style:italic;font-weight:300;color:var(--accent-lt);text-align:center;line-height:1.4;opacity:0;transform:scale(.92);transition:opacity .7s,transform .7s cubic-bezier(.34,1.56,.64,1);">What if a system<br>was watching?</div>';
 wrap.appendChild(s3);ivSlideIds.push('iv-s3');
 
 // S4-S12: App screens (built dynamically during playback)
@@ -2139,7 +2123,7 @@ wrap.appendChild(s);ivSlideIds.push('iv-s'+i);
 
 // Helper: build app chrome
 function ivAppHdr(color,title,meta){
-return '<div style="padding:22px 12px 6px;flex-shrink:0;"><div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;"><div style="width:18px;height:18px;border-radius:4px;background:'+color+';display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;">N</div><span style="font-size:10px;font-weight:700;color:#f9fafb;">NestOps</span><span style="font-size:7px;background:rgba(29,158,117,.15);color:var(--green);padding:1px 4px;border-radius:3px;font-weight:600;">v3.1</span></div><div style="font-size:12px;font-weight:700;color:#f9fafb;margin-bottom:1px;">'+title+'</div><div style="font-size:8.5px;color:#4b5563;">'+meta+'</div></div>';
+return '<div style="padding:22px 12px 6px;flex-shrink:0;"><div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;"><div style="width:18px;height:18px;border-radius:4px;background:'+color+';display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;">N</div><span style="font-size:10px;font-weight:700;color:#f9fafb;">AfterStay</span><span style="font-size:7px;background:rgba(196,98,45,.15);color:var(--accent);padding:1px 4px;border-radius:3px;font-weight:600;">v3.1</span></div><div style="font-size:12px;font-weight:700;color:#f9fafb;margin-bottom:1px;">'+title+'</div><div style="font-size:8.5px;color:#4b5563;">'+meta+'</div></div>';
 }
 
 // Helper: animated row
@@ -2220,12 +2204,12 @@ ivQ(function(){ivEl('iv-rw2').style.opacity='1';ivEl('iv-rw2').style.transform='
 ivQ(function(){
 ivSetCh(3,'iv-s4');
 var inner=ivEl('iv-s4-inner');
-inner.innerHTML=ivAppHdr('var(--green)','Inventory · Templates','Set what gets deducted on every clean');
-inner.innerHTML+='<div style="display:flex;border-bottom:1px solid var(--border);padding:0 12px;flex-shrink:0;"><div style="font-size:9px;font-weight:600;padding:4px 8px;color:var(--green);border-bottom:2px solid var(--green);">Turnover</div><div style="font-size:9px;padding:4px 8px;color:#4b5563;">Deep Clean</div></div>';
+inner.innerHTML=ivAppHdr('var(--accent)','Inventory · Templates','Set what gets deducted on every clean');
+inner.innerHTML+='<div style="display:flex;border-bottom:1px solid var(--border);padding:0 12px;flex-shrink:0;"><div style="font-size:9px;font-weight:600;padding:4px 8px;color:var(--accent);border-bottom:2px solid var(--accent);">Turnover</div><div style="font-size:9px;padding:4px 8px;color:#4b5563;">Deep Clean</div></div>';
 inner.innerHTML+='<div style="margin:7px 12px;padding:7px 9px;background:#111827;border:1px solid #1f2937;border-radius:7px;display:flex;align-items:center;gap:7px;flex-shrink:0;"><div style="width:24px;height:24px;border-radius:5px;background:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;">HS</div><div><div style="font-size:10px;font-weight:700;color:#f9fafb;">Harbor Studio</div><div style="font-size:8px;color:#4b5563;">Oslo Central Warehouse</div></div></div>';
 inner.innerHTML+='<div id="iv-tmpl-list" style="padding:5px 12px;display:flex;flex-direction:column;gap:3px;flex:1;overflow:hidden;"></div>';
-inner.innerHTML+='<div id="iv-tmpl-save" style="margin:5px 12px;padding:8px;border-radius:7px;background:var(--green);color:#fff;font-size:10px;font-weight:700;text-align:center;opacity:0;transition:opacity .5s;">Save template — runs on every turnover ✓</div>';
-inner.innerHTML+='<div id="iv-tmpl-saved" style="margin:3px 12px 6px;padding:7px 9px;border-radius:7px;background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.25);font-size:9px;color:var(--green-lt);font-weight:600;text-align:center;opacity:0;transition:opacity .5s;">✓ Saved · Runs on every task completion</div>';
+inner.innerHTML+='<div id="iv-tmpl-save" style="margin:5px 12px;padding:8px;border-radius:7px;background:var(--accent);color:#fff;font-size:10px;font-weight:700;text-align:center;opacity:0;transition:opacity .5s;">Save template — runs on every turnover ✓</div>';
+inner.innerHTML+='<div id="iv-tmpl-saved" style="margin:3px 12px 6px;padding:7px 9px;border-radius:7px;background:rgba(196,98,45,.08);border:1px solid rgba(196,98,45,.25);font-size:9px;color:var(--accent-lt);font-weight:600;text-align:center;opacity:0;transition:opacity .5s;">✓ Saved · Runs on every task completion</div>';
 
 var items=['Coffee Pods ×8','Hand Towels ×4','Linen Sets ×2','Cleaning Spray ×1','Toilet Rolls ×4','Toiletry Kit ×1'];
 items.forEach(function(nm,i){ivAddRow('iv-tmpl-list','<div style="display:flex;justify-content:space-between;"><span>'+nm.split(' ×')[0]+'</span><span style="font-weight:700;font-family:var(--mono);color:#f9fafb;">×'+nm.split('×')[1]+'</span></div>',500+i*280);});
@@ -2238,7 +2222,7 @@ ivQ(function(){
 ivSetCh(4,'iv-s5');
 var inner=ivEl('iv-s5-inner');
 inner.innerHTML=ivAppHdr('var(--blue)','Cleaning · Harbor Studio','Assigned to Maria S. · Tue Mar 21');
-inner.innerHTML+='<div style="margin:0 12px 6px;padding:9px 11px;background:#111827;border:1px solid #1f2937;border-radius:8px;flex-shrink:0;"><div style="font-size:11px;font-weight:700;color:#f9fafb;margin-bottom:1px;">Harbor Studio — Turnover</div><div style="font-size:8.5px;color:#4b5563;margin-bottom:5px;">09:00 – 12:00 · 6 tasks · Keypad 7291</div><div id="iv-tbadge" style="display:inline-flex;align-items:center;gap:4px;font-size:8.5px;font-weight:600;color:var(--green);background:rgba(29,158,117,.1);border:1px solid rgba(29,158,117,.2);padding:2px 7px;border-radius:4px;opacity:0;transition:opacity .5s;">📦 Turnover template attached</div></div>';
+inner.innerHTML+='<div style="margin:0 12px 6px;padding:9px 11px;background:#111827;border:1px solid #1f2937;border-radius:8px;flex-shrink:0;"><div style="font-size:11px;font-weight:700;color:#f9fafb;margin-bottom:1px;">Harbor Studio — Turnover</div><div style="font-size:8.5px;color:#4b5563;margin-bottom:5px;">09:00 – 12:00 · 6 tasks · Keypad 7291</div><div id="iv-tbadge" style="display:inline-flex;align-items:center;gap:4px;font-size:8.5px;font-weight:600;color:var(--accent);background:rgba(196,98,45,.1);border:1px solid rgba(196,98,45,.2);padding:2px 7px;border-radius:4px;opacity:0;transition:opacity .5s;">📦 Turnover template attached</div></div>';
 inner.innerHTML+='<div id="iv-s5-tasks" style="padding:0 12px;display:flex;flex-direction:column;gap:3px;flex:1;overflow:hidden;"></div>';
 var tasks=['Strip and replace linen','Clean bathrooms','Vacuum all rooms','Restock amenities','Mop kitchen floor','Final walkthrough'];
 tasks.forEach(function(nm,i){ivAddRow('iv-s5-tasks','<div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:50%;border:1.5px solid #374151;flex-shrink:0;"></div>'+nm+'</div>',400+i*180);});
@@ -2252,13 +2236,13 @@ var inner=ivEl('iv-s6-inner');
 inner.innerHTML=ivAppHdr('var(--amber)','Harbor Studio · Turnover','Maria S. · Tue 14:29 · In progress');
 inner.innerHTML+='<div style="margin:0 12px 5px;padding:8px 10px;background:#111827;border:1px solid #1f2937;border-radius:8px;flex-shrink:0;font-size:10px;"><div style="font-weight:700;color:#f9fafb;">All tasks completed ✓</div><div style="font-size:8px;color:#4b5563;">📦 Template deduction pending on complete</div></div>';
 inner.innerHTML+='<div id="iv-s6-tasks" style="padding:0 12px;display:flex;flex-direction:column;gap:2px;max-height:110px;overflow:hidden;"></div>';
-inner.innerHTML+='<div id="iv-extras" style="margin:5px 12px;padding:8px 10px;border-radius:8px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.18);opacity:0;transition:opacity .5s;flex-shrink:0;"><div style="font-size:8px;font-weight:700;color:#f59e0b;letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px;">Log extras above template</div><div style="font-size:9.5px;color:#d1d5db;line-height:1.8;">Hand Towels <span style="font-weight:700;color:#fcd34d;">+2</span> · pet stay<br>Cleaning Spray <span style="font-weight:700;color:#fcd34d;">+1</span> · heavy use</div><div style="margin-top:6px;padding:6px;border-radius:6px;background:var(--green);color:#fff;font-size:9px;font-weight:700;text-align:center;">Confirm extras & complete ✓</div></div>';
+inner.innerHTML+='<div id="iv-extras" style="margin:5px 12px;padding:8px 10px;border-radius:8px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.18);opacity:0;transition:opacity .5s;flex-shrink:0;"><div style="font-size:8px;font-weight:700;color:#f59e0b;letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px;">Log extras above template</div><div style="font-size:9.5px;color:#d1d5db;line-height:1.8;">Hand Towels <span style="font-weight:700;color:#fcd34d;">+2</span> · pet stay<br>Cleaning Spray <span style="font-weight:700;color:#fcd34d;">+1</span> · heavy use</div><div style="margin-top:6px;padding:6px;border-radius:6px;background:var(--accent);color:#fff;font-size:9px;font-weight:700;text-align:center;">Confirm extras & complete ✓</div></div>';
 var tasks6=['Strip linen ✓','Bathrooms ✓','Vacuum ✓','Restock ✓','Mop ✓','Walkthrough ✓'];
 tasks6.forEach(function(nm,i){
 ivQ(function(){
 var c=ivEl('iv-s6-tasks');if(!c)return;
-var r=document.createElement('div');r.style.cssText='padding:4px 8px;border-radius:5px;background:#111827;border:1px solid #1f2937;font-size:9px;color:var(--green-lt);opacity:0;transition:opacity .3s;display:flex;align-items:center;gap:5px;';
-r.innerHTML='<div style="width:12px;height:12px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:7px;color:#fff;">✓</div>'+nm;
+var r=document.createElement('div');r.style.cssText='padding:4px 8px;border-radius:5px;background:#111827;border:1px solid #1f2937;font-size:9px;color:var(--accent-lt);opacity:0;transition:opacity .3s;display:flex;align-items:center;gap:5px;';
+r.innerHTML='<div style="width:12px;height:12px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:7px;color:#fff;">✓</div>'+nm;
 c.appendChild(r);requestAnimationFrame(function(){r.style.opacity='1';});ivTick();
 },200+i*150);
 });
@@ -2270,11 +2254,11 @@ ivQ(function(){
 ivSetCh(6,'iv-s7');
 var inner=ivEl('iv-s7-inner');
 inner.style.background='#0a0d14';
-inner.innerHTML='<div style="padding:18px 12px 6px;flex-shrink:0;"><div style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:2px;">✦ NestOps · Auto-Deduction Engine</div><div style="font-size:11px;font-weight:700;color:#f9fafb;">Harbor Studio · Turnover Template</div><div style="font-size:8px;color:#4b5563;font-family:var(--mono);">Fired Tue 14:32:07</div></div>';
-inner.innerHTML+='<div id="iv-es1" style="margin:0 12px 5px;padding:8px 10px;border-radius:8px;background:#111827;border:1px solid #1f2937;opacity:0;transition:opacity .5s,border-color .5s;flex-shrink:0;"><div style="font-size:8px;font-weight:700;color:var(--green);letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px;">① Reading template + extras</div><div style="font-size:9px;color:#d1d5db;line-height:2;">Coffee Pods ×8<br>Hand Towels ×4 <span style="font-weight:700;color:#fcd34d;">+2 extra</span> → <span style="font-weight:800;color:#f9fafb;">×6</span><br>Linen Sets ×2<br>Cleaning Spray ×1 <span style="font-weight:700;color:#fcd34d;">+1 extra</span> → <span style="font-weight:800;color:#f9fafb;">×2</span></div></div>';
-inner.innerHTML+='<div id="iv-es2" style="margin:0 12px 5px;padding:8px 10px;border-radius:8px;background:#111827;border:1px solid #1f2937;opacity:0;transition:opacity .5s;flex-shrink:0;"><div style="font-size:8px;font-weight:700;color:var(--green);letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px;">② Stock deducted</div><div style="font-size:9.5px;color:#d1d5db;line-height:2;">Coffee Pods: <span style="color:#374151;text-decoration:line-through;">10</span> → <span style="font-weight:800;color:#ef4444;">2</span> <span style="font-size:7px;font-weight:700;background:rgba(239,68,68,.2);color:#ef4444;padding:1px 5px;border-radius:3px;">CRITICAL</span><br>Hand Towels: <span style="color:#374151;text-decoration:line-through;">8</span> → <span style="font-weight:800;color:#ef4444;">2</span> <span style="font-size:7px;font-weight:700;background:rgba(239,68,68,.2);color:#ef4444;padding:1px 5px;border-radius:3px;">CRITICAL</span><br>Linen Sets: <span style="color:#374151;text-decoration:line-through;">5</span> → <span style="font-weight:800;color:#f59e0b;">3</span> <span style="font-size:7px;font-weight:700;background:rgba(245,158,11,.15);color:#f59e0b;padding:1px 5px;border-radius:3px;">LOW</span></div></div>';
-inner.innerHTML+='<div id="iv-es3" style="margin:0 12px;padding:8px 10px;border-radius:8px;background:#111827;border:1px solid #1f2937;opacity:0;transition:opacity .5s;flex-shrink:0;"><div style="font-size:8px;font-weight:700;color:var(--green);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">③ Alerts created</div><div style="font-size:9.5px;color:#fca5a5;line-height:2;">🔴 Coffee Pods: 2 left (min 5) → CRITICAL<br>🔴 Hand Towels: 2 left (min 8) → CRITICAL<br>🟡 Linen Sets: 3 left (min 4) → LOW</div></div>';
-ivQ(function(){ivEl('iv-es1').style.opacity='1';ivEl('iv-es1').style.borderColor='rgba(29,158,117,.4)';ivTick();},500);
+inner.innerHTML='<div style="padding:18px 12px 6px;flex-shrink:0;"><div style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:2px;">✦ AfterStay · Auto-Deduction Engine</div><div style="font-size:11px;font-weight:700;color:#f9fafb;">Harbor Studio · Turnover Template</div><div style="font-size:8px;color:#4b5563;font-family:var(--mono);">Fired Tue 14:32:07</div></div>';
+inner.innerHTML+='<div id="iv-es1" style="margin:0 12px 5px;padding:8px 10px;border-radius:8px;background:#111827;border:1px solid #1f2937;opacity:0;transition:opacity .5s,border-color .5s;flex-shrink:0;"><div style="font-size:8px;font-weight:700;color:var(--accent);letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px;">① Reading template + extras</div><div style="font-size:9px;color:#d1d5db;line-height:2;">Coffee Pods ×8<br>Hand Towels ×4 <span style="font-weight:700;color:#fcd34d;">+2 extra</span> → <span style="font-weight:800;color:#f9fafb;">×6</span><br>Linen Sets ×2<br>Cleaning Spray ×1 <span style="font-weight:700;color:#fcd34d;">+1 extra</span> → <span style="font-weight:800;color:#f9fafb;">×2</span></div></div>';
+inner.innerHTML+='<div id="iv-es2" style="margin:0 12px 5px;padding:8px 10px;border-radius:8px;background:#111827;border:1px solid #1f2937;opacity:0;transition:opacity .5s;flex-shrink:0;"><div style="font-size:8px;font-weight:700;color:var(--accent);letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px;">② Stock deducted</div><div style="font-size:9.5px;color:#d1d5db;line-height:2;">Coffee Pods: <span style="color:#374151;text-decoration:line-through;">10</span> → <span style="font-weight:800;color:#ef4444;">2</span> <span style="font-size:7px;font-weight:700;background:rgba(239,68,68,.2);color:#ef4444;padding:1px 5px;border-radius:3px;">CRITICAL</span><br>Hand Towels: <span style="color:#374151;text-decoration:line-through;">8</span> → <span style="font-weight:800;color:#ef4444;">2</span> <span style="font-size:7px;font-weight:700;background:rgba(239,68,68,.2);color:#ef4444;padding:1px 5px;border-radius:3px;">CRITICAL</span><br>Linen Sets: <span style="color:#374151;text-decoration:line-through;">5</span> → <span style="font-weight:800;color:#f59e0b;">3</span> <span style="font-size:7px;font-weight:700;background:rgba(245,158,11,.15);color:#f59e0b;padding:1px 5px;border-radius:3px;">LOW</span></div></div>';
+inner.innerHTML+='<div id="iv-es3" style="margin:0 12px;padding:8px 10px;border-radius:8px;background:#111827;border:1px solid #1f2937;opacity:0;transition:opacity .5s;flex-shrink:0;"><div style="font-size:8px;font-weight:700;color:var(--accent);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">③ Alerts created</div><div style="font-size:9.5px;color:#fca5a5;line-height:2;">🔴 Coffee Pods: 2 left (min 5) → CRITICAL<br>🔴 Hand Towels: 2 left (min 8) → CRITICAL<br>🟡 Linen Sets: 3 left (min 4) → LOW</div></div>';
+ivQ(function(){ivEl('iv-es1').style.opacity='1';ivEl('iv-es1').style.borderColor='rgba(196,98,45,.4)';ivTick();},500);
 ivQ(function(){ivEl('iv-es2').style.opacity='1';ivAlert();},3500);
 ivQ(function(){ivEl('iv-es3').style.opacity='1';ivAlert();},7000);
 },t);t+=14000;
@@ -2297,9 +2281,9 @@ ivQ(function(){ivEl('iv-anna-req').style.opacity='1';ivRelief();},1800);
 ivQ(function(){
 ivSetCh(8,'iv-s9');
 var inner=ivEl('iv-s9-inner');
-inner.innerHTML=ivAppHdr('var(--green)','Inventory · Restock Alerts','Tue 14:33 · AI draft ready · 90 sec to send');
+inner.innerHTML=ivAppHdr('var(--accent)','Inventory · Restock Alerts','Tue 14:33 · AI draft ready · 90 sec to send');
 inner.innerHTML+='<div id="iv-peter" style="padding:0 12px;display:flex;flex-direction:column;gap:3px;flex:1;overflow:hidden;"></div>';
-inner.innerHTML+='<div id="iv-ai" style="margin:5px 12px 6px;padding:8px 10px;border-radius:8px;background:rgba(29,158,117,.06);border:1px solid rgba(29,158,117,.2);opacity:0;transition:opacity .5s;flex-shrink:0;"><div style="font-size:7.5px;font-weight:700;color:var(--green);letter-spacing:.07em;text-transform:uppercase;margin-bottom:3px;">✦ AI draft · Nordic Supply Co.</div><div style="font-size:8.5px;color:#a1a1aa;line-height:1.5;font-family:var(--mono);">Hi Nordic Supply,<br>Please deliver by Thursday:<br>Nespresso pods ×30 · Towels ×20 · Linen ×6</div><div style="margin-top:5px;padding:5px 9px;border-radius:5px;background:var(--green);color:#fff;font-size:9px;font-weight:700;display:inline-block;">Review & send → 90 seconds</div></div>';
+inner.innerHTML+='<div id="iv-ai" style="margin:5px 12px 6px;padding:8px 10px;border-radius:8px;background:rgba(196,98,45,.06);border:1px solid rgba(196,98,45,.2);opacity:0;transition:opacity .5s;flex-shrink:0;"><div style="font-size:7.5px;font-weight:700;color:var(--accent);letter-spacing:.07em;text-transform:uppercase;margin-bottom:3px;">✦ AI draft · Nordic Supply Co.</div><div style="font-size:8.5px;color:#a1a1aa;line-height:1.5;font-family:var(--mono);">Hi Nordic Supply,<br>Please deliver by Thursday:<br>Nespresso pods ×30 · Towels ×20 · Linen ×6</div><div style="margin-top:5px;padding:5px 9px;border-radius:5px;background:var(--accent);color:#fff;font-size:9px;font-weight:700;display:inline-block;">Review & send → 90 seconds</div></div>';
 ivAddRow('iv-peter','Coffee Pods ×30 · <span style="font-size:8px;color:#6b7280;">0 in stock</span>',400);
 ivAddRow('iv-peter','Hand Towels ×20 · <span style="font-size:8px;color:#6b7280;">2 in stock</span>',700);
 ivAddRow('iv-peter','Linen Sets ×6 · <span style="font-size:8px;color:#6b7280;">3 in stock</span>',1000);
@@ -2313,8 +2297,8 @@ var inner=ivEl('iv-s10-inner');
 inner.innerHTML=ivAppHdr('var(--blue)','PO #42 · Nordic Supply Co.','Bjorn L. · Thu 10:00 · Oslo Central');
 inner.innerHTML+='<div style="margin:0 12px 6px;padding:7px 10px;border-radius:7px;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.18);font-size:9.5px;color:#93c5fd;flex-shrink:0;">📦 Delivery arrived · confirm below</div>';
 inner.innerHTML+='<div id="iv-po" style="padding:0 12px;display:flex;flex-direction:column;gap:3px;flex:1;overflow:hidden;"></div>';
-inner.innerHTML+='<div id="iv-po-btn" style="margin:5px 12px;padding:8px;border-radius:7px;background:var(--green);color:#fff;font-size:10px;font-weight:700;text-align:center;opacity:0;transition:opacity .5s;">✓ Mark all as received →</div>';
-inner.innerHTML+='<div id="iv-po-done" style="margin:3px 12px 6px;padding:7px 10px;border-radius:7px;background:rgba(29,158,117,.06);border:1px solid rgba(29,158,117,.2);font-size:9px;color:var(--green-lt);line-height:1.6;opacity:0;transition:opacity .5s;">✓ Stock updated · Oslo Central<br><span style="font-size:8px;color:#4b5563;">Coffee 2→32 · Towels 2→22 · Linen 3→9</span></div>';
+inner.innerHTML+='<div id="iv-po-btn" style="margin:5px 12px;padding:8px;border-radius:7px;background:var(--accent);color:#fff;font-size:10px;font-weight:700;text-align:center;opacity:0;transition:opacity .5s;">✓ Mark all as received →</div>';
+inner.innerHTML+='<div id="iv-po-done" style="margin:3px 12px 6px;padding:7px 10px;border-radius:7px;background:rgba(196,98,45,.06);border:1px solid rgba(196,98,45,.2);font-size:9px;color:var(--accent-lt);line-height:1.6;opacity:0;transition:opacity .5s;">✓ Stock updated · Oslo Central<br><span style="font-size:8px;color:#4b5563;">Coffee 2→32 · Towels 2→22 · Linen 3→9</span></div>';
 ivAddRow('iv-po','<div style="display:flex;justify-content:space-between;"><span style="font-weight:600;">Nespresso Pods</span><span style="font-size:8.5px;color:#6b7280;font-family:var(--mono);">×30</span></div>',300);
 ivAddRow('iv-po','<div style="display:flex;justify-content:space-between;"><span style="font-weight:600;">Hand Towels</span><span style="font-size:8.5px;color:#6b7280;font-family:var(--mono);">×20</span></div>',500);
 ivAddRow('iv-po','<div style="display:flex;justify-content:space-between;"><span style="font-weight:600;">Linen Sets</span><span style="font-size:8.5px;color:#6b7280;font-family:var(--mono);">×6</span></div>',700);
@@ -2328,7 +2312,7 @@ ivSetCh(10,'iv-s11');
 var inner=ivEl('iv-s11-inner');
 inner.style.background='#0d1117';
 inner.innerHTML='<div style="padding:18px 12px 5px;flex-shrink:0;"><div style="font-size:13px;font-weight:800;color:#f9fafb;">Inventory</div><div style="font-size:8px;color:#4b5563;">Oslo Central · Updated Thu 10:14 · All OK</div></div>';
-inner.innerHTML+='<div style="display:flex;padding:0 12px;margin-top:4px;border-bottom:1px solid var(--border);flex-shrink:0;"><div style="font-size:8.5px;font-weight:600;padding:3px 7px;color:var(--green);border-bottom:2px solid var(--green);">Warehouse <span style="font-size:7px;">8</span></div><div style="font-size:8.5px;padding:3px 7px;color:#4b5563;">Templates</div><div style="font-size:8.5px;padding:3px 7px;color:#4b5563;">Alerts <span style="color:var(--green);">0</span></div></div>';
+inner.innerHTML+='<div style="display:flex;padding:0 12px;margin-top:4px;border-bottom:1px solid var(--border);flex-shrink:0;"><div style="font-size:8.5px;font-weight:600;padding:3px 7px;color:var(--accent);border-bottom:2px solid var(--accent);">Warehouse <span style="font-size:7px;">8</span></div><div style="font-size:8.5px;padding:3px 7px;color:#4b5563;">Templates</div><div style="font-size:8.5px;padding:3px 7px;color:#4b5563;">Alerts <span style="color:var(--accent);">0</span></div></div>';
 inner.innerHTML+='<div style="display:flex;padding:3px 12px;font-size:7px;font-weight:700;color:#4b5563;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);"><div style="flex:2;padding:2px 0;">Item</div><div style="flex:1;padding:2px 0;">Stock</div><div style="flex:1;padding:2px 0;">Min</div><div style="flex:1;padding:2px 0;">Status</div></div>';
 inner.innerHTML+='<div id="iv-wh" style="flex:1;overflow:hidden;"></div>';
 var rows=[['Coffee Pods','32','5',1],['Hand Towels','22','8',1],['Linen Sets','9','4',1],['Toilet Paper','6','5',0],['Bath Towels','12','10',0],['Dish Tablets','8','3',0],['Cleaning Spray','5','4',0],['Pillow Protectors','16','10',0]];
@@ -2337,8 +2321,8 @@ ivQ(function(){
 var wh=ivEl('iv-wh');if(!wh)return;
 var tr=document.createElement('div');
 tr.style.cssText='display:flex;padding:5px 12px;border-bottom:1px solid rgba(31,41,55,.5);align-items:center;font-size:9px;color:#f9fafb;opacity:0;transition:opacity .3s,background .6s;';
-if(r[3])tr.style.background='rgba(29,158,117,.06)';
-tr.innerHTML='<div style="flex:2;font-weight:600;">'+r[0]+'</div><div style="flex:1;font-weight:800;font-family:var(--mono);">'+r[1]+'</div><div style="flex:1;color:#6b7280;">'+r[2]+'</div><div style="flex:1;"><span style="color:var(--green);font-weight:600;font-size:8.5px;">OK</span></div>';
+if(r[3])tr.style.background='rgba(196,98,45,.06)';
+tr.innerHTML='<div style="flex:2;font-weight:600;">'+r[0]+'</div><div style="flex:1;font-weight:800;font-family:var(--mono);">'+r[1]+'</div><div style="flex:1;color:#6b7280;">'+r[2]+'</div><div style="flex:1;"><span style="color:var(--accent);font-weight:600;font-size:8.5px;">OK</span></div>';
 wh.appendChild(tr);
 requestAnimationFrame(function(){tr.style.opacity='1';});
 if(r[3])ivRelief();
@@ -2444,7 +2428,7 @@ function pteStart(){
   // Slide 3: GRANTED — code revealed
   pteQ(function(){
     pteSlide(3);
-    if(glow)glow.style.background='radial-gradient(ellipse,rgba(29,158,117,.1) 0%,transparent 65%)';
+    if(glow)glow.style.background='radial-gradient(ellipse,rgba(196,98,45,.1) 0%,transparent 65%)';
   },4200);
   // Slide 4: Timer countdown → EXPIRED
   pteQ(function(){
@@ -2490,7 +2474,7 @@ function pteStart(){
 
 </script>
 
-<!-- ── NestOps Operational Globe ──────────────────────────────────────────── -->
+<!-- ── AfterStay Operational Globe ──────────────────────────────────────────── -->
 <script>
 (function(){
 const cvs = document.getElementById('globe');
@@ -2514,7 +2498,7 @@ const c = ctx;
 // ── 3D MATH ──
 const rY = (x,y,z,a) => { const co=Math.cos(a),si=Math.sin(a); return [x*co+z*si,y,-x*si+z*co]; };
 const rX = (x,y,z,a) => { const co=Math.cos(a),si=Math.sin(a); return [x,y*co-z*si,y*si+z*co]; };
-const pr = (x,y,z,cx,cy,R) => { const f=4,s=f/(f+z); return {x:cx+x*s*R*.4,y:cy+y*s*R*.4,s,z}; };
+const pr = (x,y,z,cx,cy,R) => { const f=4,s=f/(f+z); return {x:cx+x*s*R*.56,y:cy+y*s*R*.56,s,z}; };
 const sp = (t,p) => [Math.sin(p)*Math.cos(t),Math.cos(p),Math.sin(p)*Math.sin(t)];
 const hA = (h,a) => { const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16); return `rgba(${r},${g},${b},${a})`; };
 
@@ -2573,11 +2557,11 @@ function draw(){
   c.clearRect(0,0,W,H);
   aY+=autoR+vY;aX+=vX;aX=Math.max(-.45,Math.min(.45,aX));vY*=.94;vX*=.94;
   const xf=(x,y,z)=>{const p=rX(x,y,z,aX);return rY(p[0],p[1],p[2],aY);};
-  const gR=R*.4*(4/(4+0));
+  const gR=R*.56*(4/(4+0));
 
   // ATMOSPHERE
   const ag=c.createRadialGradient(cx,cy,gR*.7,cx,cy,gR*1.35);
-  ag.addColorStop(0,'rgba(29,158,117,0)');ag.addColorStop(.6,'rgba(29,158,117,0.05)');ag.addColorStop(.8,'rgba(55,138,221,0.03)');ag.addColorStop(1,'rgba(55,138,221,0)');
+  ag.addColorStop(0,'rgba(196,98,45,0)');ag.addColorStop(.6,'rgba(196,98,45,0.05)');ag.addColorStop(.8,'rgba(55,138,221,0.03)');ag.addColorStop(1,'rgba(55,138,221,0)');
   c.beginPath();c.arc(cx,cy,gR*1.35,0,Math.PI*2);c.fillStyle=ag;c.fill();
 
   // GLOBE BODY
@@ -2588,7 +2572,7 @@ function draw(){
   // Rim lights
   c.save();c.beginPath();c.arc(cx,cy,gR,0,Math.PI*2);c.clip();
   const rl1=c.createRadialGradient(cx+gR*.8,cy-gR*.15,0,cx+gR*.8,cy-gR*.15,gR*.55);
-  rl1.addColorStop(0,'rgba(29,158,117,0.18)');rl1.addColorStop(1,'rgba(29,158,117,0)');
+  rl1.addColorStop(0,'rgba(196,98,45,0.18)');rl1.addColorStop(1,'rgba(196,98,45,0)');
   c.fillStyle=rl1;c.fillRect(cx-gR,cy-gR,gR*2,gR*2);
   const rl2=c.createRadialGradient(cx-gR*.75,cy+gR*.25,0,cx-gR*.75,cy+gR*.25,gR*.45);
   rl2.addColorStop(0,'rgba(55,138,221,0.1)');rl2.addColorStop(1,'rgba(55,138,221,0)');
@@ -2630,24 +2614,24 @@ function draw(){
   lastHp=hp;
 
   for(let pi=0;pi<3;pi++){const off=pi,prog=((time+off)%3)/3,rad=28+prog*90,al=(1-prog)*.22;
-    if(al>.01){c.beginPath();c.arc(hp.x,hp.y,rad,0,Math.PI*2);c.strokeStyle=`rgba(29,158,117,${al})`;c.lineWidth=2-prog*1.5;c.stroke();}}
+    if(al>.01){c.beginPath();c.arc(hp.x,hp.y,rad,0,Math.PI*2);c.strokeStyle=`rgba(196,98,45,${al})`;c.lineWidth=2-prog*1.5;c.stroke();}}
 
-  const hg1=c.createRadialGradient(hp.x,hp.y,0,hp.x,hp.y,80);hg1.addColorStop(0,'rgba(29,158,117,0.08)');hg1.addColorStop(.5,'rgba(29,158,117,0.03)');hg1.addColorStop(1,'rgba(29,158,117,0)');
+  const hg1=c.createRadialGradient(hp.x,hp.y,0,hp.x,hp.y,80);hg1.addColorStop(0,'rgba(196,98,45,0.08)');hg1.addColorStop(.5,'rgba(196,98,45,0.03)');hg1.addColorStop(1,'rgba(196,98,45,0)');
   c.beginPath();c.arc(hp.x,hp.y,80,0,Math.PI*2);c.fillStyle=hg1;c.fill();
 
   const sq=28,sqR=9;
-  c.save();c.shadowColor='rgba(29,158,117,0.5)';c.shadowBlur=28;
-  c.beginPath();c.roundRect(hp.x-sq,hp.y-sq,sq*2,sq*2,sqR);c.fillStyle='#1D9E75';c.fill();
+  c.save();c.shadowColor='rgba(196,98,45,0.5)';c.shadowBlur=28;
+  c.beginPath();c.roundRect(hp.x-sq,hp.y-sq,sq*2,sq*2,sqR);c.fillStyle='#c4622d';c.fill();
   c.shadowBlur=0;
-  const sqG=c.createLinearGradient(hp.x,hp.y-sq,hp.x,hp.y+sq);sqG.addColorStop(0,'#1D9E75');sqG.addColorStop(1,'#178558');
+  const sqG=c.createLinearGradient(hp.x,hp.y-sq,hp.x,hp.y+sq);sqG.addColorStop(0,'#c4622d');sqG.addColorStop(1,'#178558');
   c.beginPath();c.roundRect(hp.x-sq,hp.y-sq,sq*2,sq*2,sqR);c.fillStyle=sqG;c.fill();
   const sqH=c.createLinearGradient(hp.x-sq,hp.y-sq,hp.x+sq,hp.y+sq);sqH.addColorStop(0,'rgba(255,255,255,0.18)');sqH.addColorStop(.5,'rgba(255,255,255,0)');sqH.addColorStop(1,'rgba(0,0,0,0.12)');
   c.beginPath();c.roundRect(hp.x-sq,hp.y-sq,sq*2,sq*2,sqR);c.fillStyle=sqH;c.fill();
   c.beginPath();c.roundRect(hp.x-sq,hp.y-sq,sq*2,sq*2,sqR);c.strokeStyle='rgba(255,255,255,0.1)';c.lineWidth=1;c.stroke();
   c.restore();
-  c.save();c.font='700 34px Outfit, sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#FFF';c.fillText('N',hp.x,hp.y+1);c.restore();
+  c.save();c.font='700 34px Inter, sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#FFF';c.fillText('A',hp.x,hp.y+1);c.restore();
 
-  nsp.forEach((np,i)=>{if(!np.vis)return;c.beginPath();c.moveTo(hp.x,hp.y);c.lineTo(np.x,np.y);c.strokeStyle=hov===i?'rgba(29,158,117,0.12)':'rgba(29,158,117,0.04)';c.lineWidth=.6;c.stroke();});
+  nsp.forEach((np,i)=>{if(!np.vis)return;c.beginPath();c.moveTo(hp.x,hp.y);c.lineTo(np.x,np.y);c.strokeStyle=hov===i?'rgba(196,98,45,0.12)':'rgba(196,98,45,0.04)';c.lineWidth=.6;c.stroke();});
 
   // ARCS
   CN.forEach((cn,ci)=>{
@@ -2657,12 +2641,12 @@ function draw(){
     const isH=hov>=0&&(cn.a===hov||cn.b===hov);
     const al=hov>=0?(isH?.4:.03):.16;
     c.beginPath();pA.forEach((p,i)=>{if(i===0)c.moveTo(p.x,p.y);else c.lineTo(p.x,p.y);});
-    c.strokeStyle=`rgba(21,212,146,${al})`;c.lineWidth=isH?2:1.2;c.stroke();
+    c.strokeStyle=`rgba(224,122,69,${al})`;c.lineWidth=isH?2:1.2;c.stroke();
     parts.filter(p=>p.ci===ci).forEach(pt=>{
       const prog=((time*pt.sp+pt.off)%1),idx=Math.floor(prog*(pA.length-1)),pp=pA[idx];if(!pp)return;
       const fade=Math.sin(prog*Math.PI),pAl=(hov>=0&&!isH)?fade*.05:fade*.9,sz=isH?4:3;
-      c.beginPath();c.arc(pp.x,pp.y,sz*3.5,0,Math.PI*2);c.fillStyle=`rgba(21,212,146,${pAl*.1})`;c.fill();
-      c.beginPath();c.arc(pp.x,pp.y,sz*pp.s,0,Math.PI*2);c.fillStyle=`rgba(21,212,146,${pAl})`;c.fill();
+      c.beginPath();c.arc(pp.x,pp.y,sz*3.5,0,Math.PI*2);c.fillStyle=`rgba(224,122,69,${pAl*.1})`;c.fill();
+      c.beginPath();c.arc(pp.x,pp.y,sz*pp.s,0,Math.PI*2);c.fillStyle=`rgba(224,122,69,${pAl})`;c.fill();
     });
   });
 
@@ -2680,10 +2664,10 @@ function draw(){
     c.beginPath();c.arc(sp2.x,sp2.y-sz*.2,sz*.45,0,Math.PI*2);c.fillStyle='rgba(255,255,255,0.1)';c.fill();
     c.beginPath();c.arc(sp2.x,sp2.y,sz,0,Math.PI*2);c.strokeStyle='rgba(255,255,255,0.2)';c.lineWidth=1.2;c.stroke();
     c.font=`${sz*.85}px serif`;c.textAlign='center';c.textBaseline='middle';c.fillText(m.icon,sp2.x,sp2.y+1);
-    const fs=Math.max(11,13*sp2.s);c.font=`600 ${fs}px Outfit, sans-serif`;
+    const fs=Math.max(11,13*sp2.s);c.font=`600 ${fs}px Inter, sans-serif`;
     const tw=c.measureText(m.n).width,lp=14,ly=sp2.y+sz+18;
     c.fillStyle='rgba(0,0,0,0.35)';c.beginPath();c.roundRect(sp2.x-tw/2-lp+1,ly-12+1,tw+lp*2,26,13);c.fill();
-    c.fillStyle=isH?'rgba(8,11,18,0.95)':'rgba(8,11,18,0.88)';c.beginPath();c.roundRect(sp2.x-tw/2-lp,ly-12,tw+lp*2,26,13);c.fill();
+    c.fillStyle=isH?'rgba(14,10,8,0.95)':'rgba(14,10,8,0.88)';c.beginPath();c.roundRect(sp2.x-tw/2-lp,ly-12,tw+lp*2,26,13);c.fill();
     c.strokeStyle=hA(m.col,isH?.55:.28);c.lineWidth=1;c.beginPath();c.roundRect(sp2.x-tw/2-lp,ly-12,tw+lp*2,26,13);c.stroke();
     c.fillStyle=isH?'#FFF':'#CBD5E1';c.textBaseline='middle';c.fillText(m.n,sp2.x,ly+1);
     if(clickedNode===i){const el=(Date.now()-clickAnimTime)/1000;if(el<.8){const p1=el/.8,r1=sz*(1.5+p1*3);c.beginPath();c.arc(sp2.x,sp2.y,r1,0,Math.PI*2);c.strokeStyle=hA(m.col,(1-p1)*.5);c.lineWidth=2.5*(1-p1);c.stroke();if(el>.1){const p2=(el-.1)/.7,r2=sz*(1.3+p2*2.5);c.beginPath();c.arc(sp2.x,sp2.y,r2,0,Math.PI*2);c.strokeStyle=hA(m.col,(1-p2)*.3);c.lineWidth=1.5*(1-p2);c.stroke();}}else clickedNode=-1;}

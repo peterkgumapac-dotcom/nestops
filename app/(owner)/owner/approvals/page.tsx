@@ -83,7 +83,7 @@ export default function ApprovalsPage() {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('nestops_owner_work_orders')
+      const stored = localStorage.getItem('afterstay_owner_work_orders')
       if (stored) {
         const workOrders: Approval[] = JSON.parse(stored)
         setApprovals(prev => {
@@ -100,10 +100,10 @@ export default function ApprovalsPage() {
 
   const removeFromLocalStorage = (id: string) => {
     try {
-      const stored = localStorage.getItem('nestops_owner_work_orders')
+      const stored = localStorage.getItem('afterstay_owner_work_orders')
       if (stored) {
         const items = JSON.parse(stored).filter((wo: Approval) => wo.id !== id)
-        localStorage.setItem('nestops_owner_work_orders', JSON.stringify(items))
+        localStorage.setItem('afterstay_owner_work_orders', JSON.stringify(items))
       }
     } catch {}
   }

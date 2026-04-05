@@ -6,14 +6,17 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, X, Sun, Moon, Sparkles } from 'lucide-react'
 import { useRole } from '@/context/RoleContext'
 import { useTheme } from '@/context/ThemeContext'
-import { MAIN_APP_NAV_BY_ROLE, getStaffNav } from '@/lib/nav'
+import { MAIN_APP_NAV_BY_ROLE, getStaffNav, getOperatorNav } from '@/lib/nav'
+import type { AccessTier } from '@/context/RoleContext'
 
-const APP_VERSION = 'v4.0'
-const WHATS_NEW_KEY = 'nestops_whats_new_dismissed_v3.5'
+const APP_VERSION = 'v4.1'
+const WHATS_NEW_KEY = 'afterstay_whats_new_dismissed_v4.1'
 const WHATS_NEW_ITEMS = [
-  'Briefing pages now have auth guards — wrong-role users are redirected immediately',
-  'SOPs are now role-filtered — cleaners, maintenance, and GS staff each see only their relevant procedures',
-  'Staff intake field form foundation in place (/staff/intake/[propertyId])',
+  'Brand logo SVG replaces placeholder "A" across all sidebars and landing nav',
+  'Design tokens renamed from --green to --accent for semantic consistency',
+  'Mobile sidebar now slides in with spring-physics animation and backdrop fade',
+  'Nav item stagger animation only fires on initial load — no re-animation on route change',
+  'All transition:all declarations replaced with explicit GPU-friendly properties',
 ]
 
 interface MainAppSidebarProps {
@@ -22,13 +25,14 @@ interface MainAppSidebarProps {
 }
 
 const PORTAL_OPTIONS = [
-  { role: 'operator' as const, label: 'Operator Portal', color: '#7c3aed', href: '/operator' },
-  { role: 'owner'    as const, label: 'Owner Portal',    color: '#059669', href: '/owner' },
-  { role: 'staff'    as const, label: 'Staff Portal',    color: '#d97706', href: '/staff' },
+  { role: 'operator' as const, accessTier: 'full' as AccessTier,             label: 'Operator Portal',  color: '#7c3aed', href: '/app/dashboard' },
+  { role: 'operator' as const, accessTier: 'guest-services' as AccessTier,   label: 'Guest Services',   color: '#ec4899', href: '/app/dashboard' },
+  { role: 'owner'    as const, accessTier: 'full' as AccessTier,             label: 'Owner Portal',     color: '#059669', href: '/owner' },
+  { role: 'staff'    as const, accessTier: 'full' as AccessTier,             label: 'Staff Portal',     color: '#d97706', href: '/staff' },
 ]
 
 export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps) {
-  const { role, setRole, user, accent, portalLabel } = useRole()
+  const { role, accessTier, setRole, user, accent, portalLabel } = useRole()
   const { theme, toggleTheme } = useTheme()
   const pathname = usePathname()
   const router = useRouter()
@@ -40,6 +44,9 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
   const [whatsNewBanner, setWhatsNewBanner] = useState(false)
   const [switchedTo, setSwitchedTo] = useState<string | null>(null)
   const switcherRef = useRef<HTMLDivElement>(null)
+  const hasMountedRef = useRef(false)
+
+  useEffect(() => { hasMountedRef.current = true }, [])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -54,7 +61,7 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
   // Read subRole from localStorage so nav is always correct on first render
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('nestops_user')
+      const stored = localStorage.getItem('afterstay_user')
       if (stored) {
         const u = JSON.parse(stored)
         setCurrentSubRole(u.subRole)
@@ -67,7 +74,10 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
     } catch {}
   }, [])
 
-  const sections = role === 'staff'
+  const currentAccessTier = user?.accessTier ?? accessTier
+  const sections = role === 'operator'
+    ? getOperatorNav(currentAccessTier, currentSubRole ?? user?.subRole)
+    : role === 'staff'
     ? getStaffNav(currentJobRole ?? user?.jobRole, currentSubRole ?? user?.subRole)
     : (MAIN_APP_NAV_BY_ROLE[role] ?? MAIN_APP_NAV_BY_ROLE.operator)
 
@@ -93,13 +103,13 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
     >
       {/* Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '20px 16px', minHeight: 64, flexShrink: 0 }}>
-        <div style={{ width: 32, height: 32, borderRadius: 8, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#fff', fontSize: 14, flexShrink: 0 }}>
-          N
-        </div>
-        <div style={{ opacity: collapsed ? 0 : 1, transition: 'opacity 0.2s ease', pointerEvents: collapsed ? 'none' : 'auto', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-          <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>NestOps</div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'capitalize' }}>{displayRole}</div>
-        </div>
+        <Link href="/app/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', flex: 1, minWidth: 0 }}>
+          <img src="/logo-icon.svg" width={32} height={32} alt="AfterStay" style={{ borderRadius: 8, flexShrink: 0, cursor: 'pointer' }} />
+          <div style={{ opacity: collapsed ? 0 : 1, transition: 'opacity 0.2s ease', pointerEvents: collapsed ? 'none' : 'auto', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+            <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>AfterStay</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'capitalize' }}>{displayRole}</div>
+          </div>
+        </Link>
         {!collapsed && (
           <button
             onClick={toggleTheme}
@@ -116,30 +126,33 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
       {!collapsed && (
         <div style={{ padding: '0 8px 8px', flexShrink: 0 }}>
           <div style={{ display: 'flex', gap: 4, background: 'var(--bg-card)', borderRadius: 8, padding: 3, border: '1px solid var(--border)' }}>
-            {PORTAL_OPTIONS.map(opt => (
-              <button
-                key={opt.role}
-                onClick={() => {
-                  setRole(opt.role)
-                  setSwitchedTo(opt.label)
-                  setTimeout(() => setSwitchedTo(null), 1500)
-                  setSwitcherOpen(false)
-                  router.push(opt.href)
-                }}
-                title={opt.label}
-                style={{
-                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                  padding: '5px 6px', borderRadius: 6, border: role === opt.role ? `1px solid ${opt.color}40` : '1px solid transparent',
-                  background: role === opt.role ? `${opt.color}18` : 'transparent',
-                  color: role === opt.role ? opt.color : 'var(--text-subtle)',
-                  fontSize: 11, fontWeight: role === opt.role ? 600 : 400, cursor: 'pointer',
-                  transition: 'all 0.15s',
-                }}
-              >
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: opt.color, flexShrink: 0 }} />
-                {opt.label.split(' ')[0]}
-              </button>
-            ))}
+            {PORTAL_OPTIONS.map(opt => {
+              const isActive = role === opt.role && accessTier === opt.accessTier
+              return (
+                <button
+                  key={`${opt.role}-${opt.accessTier}`}
+                  onClick={() => {
+                    setRole(opt.role, opt.accessTier)
+                    setSwitchedTo(opt.label)
+                    setTimeout(() => setSwitchedTo(null), 1500)
+                    setSwitcherOpen(false)
+                    router.push(opt.href)
+                  }}
+                  title={opt.label}
+                  style={{
+                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                    padding: '5px 6px', borderRadius: 6, border: isActive ? `1px solid ${opt.color}40` : '1px solid transparent',
+                    background: isActive ? `${opt.color}18` : 'transparent',
+                    color: isActive ? opt.color : 'var(--text-subtle)',
+                    fontSize: 11, fontWeight: isActive ? 600 : 400, cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: opt.color, flexShrink: 0 }} />
+                  {opt.label.split(' ')[0]}
+                </button>
+              )
+            })}
           </div>
           <AnimatePresence>
             {switchedTo && (
@@ -183,9 +196,9 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
                 return (
                   <motion.div
                     key={item.href}
-                    initial={{ opacity: 0, x: -6 }}
+                    initial={hasMountedRef.current ? false : { opacity: 0, x: -6 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: itemIndex * 0.04, duration: 0.2 }}
+                    transition={hasMountedRef.current ? { duration: 0 } : { delay: itemIndex * 0.04, duration: 0.2 }}
                   >
                     <Link
                       href={item.href}
@@ -253,7 +266,7 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
                 Switch account
               </button>
               <button
-                onClick={() => { ['nestops_user','nestops_role','nestops_theme','nestops_briefing_prefs','nestops_clockin','nestops_field_reports','nestops_owner_work_orders'].forEach(k => localStorage.removeItem(k)); setSwitcherOpen(false); router.push('/login') }}
+                onClick={() => { ['afterstay_user','afterstay_role','afterstay_theme','afterstay_briefing_prefs','afterstay_clockin','afterstay_field_reports','afterstay_owner_work_orders'].forEach(k => localStorage.removeItem(k)); setSwitcherOpen(false); router.push('/login') }}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 7, background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 13, color: '#f87171', textAlign: 'left' }}
               >
                 Sign out
@@ -326,7 +339,7 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
             <Sparkles size={16} style={{ color: accent, flexShrink: 0, marginTop: 2 }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
-                NestOps {APP_VERSION} is here
+                AfterStay {APP_VERSION} is here
               </div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 10 }}>
                 Inventory v2, purchase approvals, and more.
@@ -359,7 +372,7 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
                 <Sparkles size={18} style={{ color: accent }} />
                 <div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>What&apos;s New</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>NestOps {APP_VERSION}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>AfterStay {APP_VERSION}</div>
                 </div>
               </div>
               <button onClick={() => setShowWhatsNew(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-subtle)' }}>

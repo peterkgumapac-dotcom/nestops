@@ -118,8 +118,8 @@ const INITIAL_TASKS: KanbanTask[] = [
 const SOPS: SopRow[] = [
   { id: 'sop-1', title: 'Guest Check-In Procedure',   category: 'Operations',   status: 'approved', lastUpdated: '2026-03-01', acknowledged: 8,  total: 10, body: 'Confirm booking details 24 hours before arrival. Send check-in instructions. Verify the lockbox code is active and tested. Complete the pre-arrival inspection checklist.' },
   { id: 'sop-2', title: 'Linen Change Protocol',       category: 'Housekeeping', status: 'approved', lastUpdated: '2026-02-15', acknowledged: 10, total: 10, body: 'Strip all bedding and towels after each checkout. Use the correct washing programme for each fabric type. Replace with freshly laundered sets.' },
-  { id: 'sop-3', title: 'Maintenance Escalation Flow', category: 'Maintenance',  status: 'pending',  lastUpdated: '2026-03-10', acknowledged: 0,  total: 10, body: 'For minor issues, log via NestOps and mark priority. For urgent issues (flooding, no heating), call the operator directly and submit a high-priority ticket immediately.' },
-  { id: 'sop-4', title: 'Lost & Found Policy',         category: 'Operations',   status: 'draft',    lastUpdated: '2026-03-14', acknowledged: 0,  total: 10, body: 'All found items must be logged in NestOps within 24 hours. Photograph and tag items. Store in designated lost property area. Notify guest via messaging.' },
+  { id: 'sop-3', title: 'Maintenance Escalation Flow', category: 'Maintenance',  status: 'pending',  lastUpdated: '2026-03-10', acknowledged: 0,  total: 10, body: 'For minor issues, log via AfterStay and mark priority. For urgent issues (flooding, no heating), call the operator directly and submit a high-priority ticket immediately.' },
+  { id: 'sop-4', title: 'Lost & Found Policy',         category: 'Operations',   status: 'draft',    lastUpdated: '2026-03-14', acknowledged: 0,  total: 10, body: 'All found items must be logged in AfterStay within 24 hours. Photograph and tag items. Store in designated lost property area. Notify guest via messaging.' },
 ]
 
 const MEETINGS: Meeting[] = [

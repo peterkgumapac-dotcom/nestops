@@ -55,7 +55,7 @@ export default function MyGuestServicesPage() {
   const [refundReviewIssue, setRefundReviewIssue] = useState<GuestIssue | null>(null)
 
   useEffect(() => {
-    const stored = localStorage.getItem('nestops_user')
+    const stored = localStorage.getItem('afterstay_user')
     if (stored) {
       try { setCurrentUser(JSON.parse(stored)) } catch {}
     }

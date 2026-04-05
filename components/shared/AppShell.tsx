@@ -18,7 +18,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false
-    const stored = localStorage.getItem('nestops_sidebar')
+    const stored = localStorage.getItem('afterstay_sidebar')
     return stored === null ? false : stored === 'true'
   })
   const [fabOpen, setFabOpen] = useState(false)
@@ -38,7 +38,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   function toggleSidebar() {
     setSidebarCollapsed(c => {
       const next = !c
-      localStorage.setItem('nestops_sidebar', String(next))
+      localStorage.setItem('afterstay_sidebar', String(next))
       return next
     })
   }
@@ -88,7 +88,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <Menu size={18} strokeWidth={1.5} />
           </button>
 
-          <span className="md:hidden" style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>NestOps</span>
+          <span className="md:hidden" style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>AfterStay</span>
 
           <ClockStatus />
 

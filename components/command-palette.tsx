@@ -31,7 +31,7 @@ const ACTIONS = [
   { label: 'New Task', href: '/workspace', category: 'Actions', action: 'new-task' },
 ]
 
-const RECENT_KEY = 'nestops_cmd_recent'
+const RECENT_KEY = 'afterstay_cmd_recent'
 
 function getRecent(): string[] {
   try {

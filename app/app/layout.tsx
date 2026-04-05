@@ -7,7 +7,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('nestops_user')
+    const savedUser = localStorage.getItem('afterstay_user')
     if (!savedUser) {
       router.replace('/login')
       return

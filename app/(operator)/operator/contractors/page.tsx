@@ -45,7 +45,7 @@ const INITIAL_CONTRACTORS: Contractor[] = [
   { id: 'c1', name: 'Lars Plumbing AS', specialty: 'Plumbing', phone: '+47 900 12 345', email: 'lars@plumbing.no', rating: 4.8, status: 'active' },
   { id: 'c2', name: 'Elcon Electricians', specialty: 'Electrical', phone: '+47 900 23 456', email: 'contact@elcon.no', rating: 4.9, status: 'active' },
   { id: 'c3', name: 'CleanPro Bergen', specialty: 'Cleaning', phone: '+47 900 34 567', email: 'info@cleanpro.no', rating: 4.6, status: 'active' },
-  { id: 'c4', name: 'Nordic HVAC', specialty: 'HVAC', phone: '+47 900 45 678', email: 'service@nordichvac.no', rating: 4.7, status: 'onboarding', onboardingLink: 'nestops.io/onboard/nordic-hvac-x9k2', onboardingStep: 2 },
+  { id: 'c4', name: 'Nordic HVAC', specialty: 'HVAC', phone: '+47 900 45 678', email: 'service@nordichvac.no', rating: 4.7, status: 'onboarding', onboardingLink: 'afterstay.io/onboard/nordic-hvac-x9k2', onboardingStep: 2 },
   { id: 'c5', name: 'Tømrer Hansen', specialty: 'Carpentry', phone: '+47 900 56 789', email: 'hansen@tomrer.no', rating: 4.5, status: 'inactive' },
 ]
 
@@ -104,7 +104,7 @@ export default function ContractorsPage() {
   }
 
   const sendOnboardingLink = (id: string) => {
-    const link = `nestops.io/onboard/${id}-${Math.random().toString(36).slice(2, 6)}`
+    const link = `afterstay.io/onboard/${id}-${Math.random().toString(36).slice(2, 6)}`
     setContractors(prev => prev.map(c => c.id === id ? { ...c, status: 'onboarding', onboardingLink: link, onboardingStep: 0 } : c))
     showToast('Onboarding link sent')
   }
@@ -459,9 +459,9 @@ export default function ContractorsPage() {
             <div style={{ padding: '10px 14px', borderRadius: 8, background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Contractor Access Link</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 12, fontFamily: 'monospace', color: accent }}>https://nestops.io/work/{woDrawer.token}</span>
+                <span style={{ fontSize: 12, fontFamily: 'monospace', color: accent }}>https://afterstay.io/work/{woDrawer.token}</span>
                 <button
-                  onClick={() => copyLink(`nestops.io/work/${woDrawer.token}`, woDrawer.id)}
+                  onClick={() => copyLink(`afterstay.io/work/${woDrawer.token}`, woDrawer.id)}
                   style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 5, border: '1px solid var(--border)', background: 'var(--bg-card)', fontSize: 11, color: 'var(--text-muted)', cursor: 'pointer' }}
                 >
                   {copied === woDrawer.id ? <Check size={10} /> : <Copy size={10} />}

@@ -97,7 +97,7 @@ Could you please arrange for the updated document to be sent through as soon as 
 Deadline: We require this document within 14 days of today, ${today}.
 
 Best regards,
-NestOps Property Management`)
+AfterStay Property Management`)
     setDrafting(false)
   }
 

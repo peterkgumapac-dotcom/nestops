@@ -3,8 +3,9 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronRight, Plus, Check, Building2, Users, Ticket, Package, Sparkles, ListTodo, Clock, CreditCard, Moon, AlertTriangle, Circle } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useRole } from '@/context/RoleContext'
-import type { UserProfile } from '@/context/RoleContext'
+import type { Role, AccessTier, UserProfile } from '@/context/RoleContext'
 import { useAlerts } from '@/context/AlertsContext'
 import CountdownTimer from '@/components/shared/CountdownTimer'
 import AppDrawer from '@/components/shared/AppDrawer'
@@ -221,11 +222,26 @@ function ActionBtn({ label, onClick }: { label: string; onClick?: () => void }) 
   )
 }
 
+// ─── Demo persona switcher data ──────────────────────────────────────────────
+
+const DEMO_PERSONAS = [
+  { userId: 'pk', initials: 'PK', name: 'Peter K.',   role: 'operator' as Role,                                                                                                                    avatarBg: '#c4622d', label: 'Operator' },
+  { userId: 'fn', initials: 'FN', name: 'Fatima N.',  role: 'operator' as Role, accessTier: 'guest-services' as AccessTier, subRole: 'Guest Services Agent',                                       avatarBg: '#ec4899', label: 'GS Agent' },
+  { userId: 'cm', initials: 'CM', name: 'Carlos M.',  role: 'operator' as Role, accessTier: 'guest-services' as AccessTier, subRole: 'GS Supervisor',                                              avatarBg: '#8b5cf6', label: 'GS Supervisor' },
+  { userId: 'ms', initials: 'MS', name: 'Maria S.',   role: 'staff'    as Role,                                              subRole: 'Cleaner',             jobRole: 'cleaner'     as UserProfile['jobRole'], avatarBg: '#d97706', label: 'Cleaner' },
+  { userId: 'bl', initials: 'BL', name: 'Bjorn L.',   role: 'staff'    as Role,                                              subRole: 'Maintenance',         jobRole: 'maintenance' as UserProfile['jobRole'], avatarBg: '#378ADD', label: 'Maintenance' },
+  { userId: 'ak', initials: 'AK', name: 'Anna K.',    role: 'staff'    as Role,                                              subRole: 'Cleaning Supervisor', jobRole: 'supervisor'  as UserProfile['jobRole'], avatarBg: '#06b6d4', label: 'Supervisor' },
+  { userId: 'sj', initials: 'SJ', name: 'Sarah J.',   role: 'owner'    as Role,                                                                                                                    avatarBg: '#7F77DD', label: 'Owner' },
+  { userId: 'mc', initials: 'MC', name: 'Michael C.', role: 'owner'    as Role,                                                                                                                    avatarBg: '#15d492', label: 'Owner' },
+]
+const PERSONA_ID_MAP: Record<string, string> = { pk: 'u1', ms: 'u3', bl: 'u4', fn: 'u5', ak: 'u7', cm: 'u8', sj: 'u2', mc: 'u6' }
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function AppDashboard() {
-  const { role, user, accent } = useRole()
+  const { role, user, accent, setUser } = useRole()
   const { getAlertsForRole, dismissAlert } = useAlerts()
+  const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
   const [clockIn, setClockIn] = useState<ClockInRecord | null>(null)
@@ -247,6 +263,7 @@ export default function AppDashboard() {
   const [newCleaningDate, setNewCleaningDate] = useState(new Date().toISOString().split('T')[0])
   const [newCleaningNotes, setNewCleaningNotes] = useState('')
   const [addedCleanings, setAddedCleanings] = useState<{id:string, templateName:string, property:string, date:string}[]>([])
+  const [personaSwitcherOpen, setPersonaSwitcherOpen] = useState(false)
   const [feedTab2, setFeedTab2] = useState<FeedTab>('all')
   const [approvalStatuses, setApprovalStatuses] = useState<Record<string, 'pending' | 'card' | 'invoice' | 'followup'>>(
     Object.fromEntries(APPROVALS.map(a => [a.id, 'pending']))
@@ -262,10 +279,29 @@ export default function AppDashboard() {
     showToast('AI escalation email drafted — check your drafts')
   }
 
+  const handleSwitchPersona = (p: typeof DEMO_PERSONAS[number]) => {
+    setPersonaSwitcherOpen(false)
+    const profile: UserProfile = {
+      id: PERSONA_ID_MAP[p.userId] ?? p.userId,
+      name: p.name,
+      role: p.role,
+      ...('accessTier' in p && p.accessTier ? { accessTier: p.accessTier } : {}),
+      subRole: p.subRole,
+      ...('jobRole' in p && p.jobRole ? { jobRole: p.jobRole } : {}),
+      avatarInitials: p.initials,
+      avatarColor: p.avatarBg,
+    }
+    localStorage.setItem('afterstay_user', JSON.stringify(profile))
+    setUser(profile)
+    if (p.role === 'operator' && !p.accessTier) router.push('/briefing')
+    else if (p.role === 'owner') router.push('/owner')
+    else router.push('/app/dashboard')
+  }
+
   const today = new Date().toISOString().split('T')[0]
 
   useEffect(() => {
-    const stored = localStorage.getItem('nestops_user')
+    const stored = localStorage.getItem('afterstay_user')
     if (stored) {
       try { setCurrentUser(JSON.parse(stored)) } catch { /* ignore */ }
     }
@@ -273,7 +309,7 @@ export default function AppDashboard() {
   }, [])
 
   useEffect(() => {
-    const stored = localStorage.getItem('nestops_clockin')
+    const stored = localStorage.getItem('afterstay_clockin')
     if (stored) {
       try {
         const ci = JSON.parse(stored) as ClockInRecord
@@ -327,7 +363,7 @@ export default function AppDashboard() {
       clockInTimestamp: now.getTime(),
       status: 'in_progress',
     }
-    localStorage.setItem('nestops_clockin', JSON.stringify(record))
+    localStorage.setItem('afterstay_clockin', JSON.stringify(record))
     setClockIn(record)
   }
 
@@ -338,7 +374,7 @@ export default function AppDashboard() {
       status: 'completed',
       clockOutTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
     }
-    localStorage.setItem('nestops_clockin', JSON.stringify(updated))
+    localStorage.setItem('afterstay_clockin', JSON.stringify(updated))
     setClockIn(updated)
   }
 
@@ -400,7 +436,62 @@ export default function AppDashboard() {
       {/* Header greeting */}
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 2 }}>
-          {greeting}, {displayName}
+          {greeting},{' '}
+          <span style={{ position: 'relative', display: 'inline-block' }}>
+            <button
+              onClick={() => setPersonaSwitcherOpen(v => !v)}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                fontSize: 'inherit', fontWeight: 'inherit', color: accent,
+                padding: 0, borderBottom: `2px dashed ${accent}40`,
+                transition: 'border-color 0.15s',
+              }}
+            >
+              {displayName} ▾
+            </button>
+            {personaSwitcherOpen && (
+              <>
+                <div style={{ position: 'fixed', inset: 0, zIndex: 199 }} onClick={() => setPersonaSwitcherOpen(false)} />
+                <div style={{
+                  position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 200,
+                  background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+                  borderRadius: 12, padding: '10px 12px', minWidth: 220,
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+                    Switch Persona
+                  </div>
+                  <div style={{ height: 1, background: 'var(--border)', marginBottom: 6 }} />
+                  {DEMO_PERSONAS.map(p => {
+                    const isActive = currentUser?.id === PERSONA_ID_MAP[p.userId]
+                    return (
+                      <button
+                        key={p.userId}
+                        onClick={() => handleSwitchPersona(p)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          width: '100%', padding: '7px 8px', borderRadius: 8,
+                          background: isActive ? `${p.avatarBg}18` : 'transparent',
+                          border: isActive ? `1px solid ${p.avatarBg}40` : '1px solid transparent',
+                          cursor: 'pointer', marginBottom: 2, textAlign: 'left', fontFamily: 'inherit',
+                          transition: 'background 0.12s',
+                        }}
+                      >
+                        <div style={{ width: 26, height: 26, borderRadius: '50%', background: p.avatarBg, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#fff' }}>
+                          {p.initials}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', lineHeight: 1.3 }}>{p.name}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.3 }}>{p.subRole ?? p.label}</div>
+                        </div>
+                        {isActive && <span style={{ fontSize: 11, color: p.avatarBg, fontWeight: 600 }}>✓</span>}
+                      </button>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+          </span>
         </h1>
         <p style={{ fontSize: 13, color: C.muted }}>
           {new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}
@@ -848,7 +939,7 @@ export default function AppDashboard() {
                     const updated = [...reportedIssues, newReport]
                     setReportedIssues(updated)
                     // Share with operator via localStorage
-                    try { localStorage.setItem('nestops_field_reports', JSON.stringify(updated)) } catch {}
+                    try { localStorage.setItem('afterstay_field_reports', JSON.stringify(updated)) } catch {}
                     setMaintenanceReportDrawer(false)
                     setReportDescription('')
                     if (reportUrgency === 'Urgent') {

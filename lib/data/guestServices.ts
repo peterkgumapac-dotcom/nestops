@@ -128,7 +128,7 @@ export const GUEST_ISSUES: GuestIssue[] = [
     internalNotes: 'AC unit is old — schedule full replacement before summer.',
     timeline: [
       { at: '2026-03-03T22:14:00', by: 'Guest', action: 'Issue reported via Airbnb message' },
-      { at: '2026-03-03T22:45:00', by: 'Peter K.', action: 'Acknowledged and logged in NestOps' },
+      { at: '2026-03-03T22:45:00', by: 'Peter K.', action: 'Acknowledged and logged in AfterStay' },
       { at: '2026-03-04T08:00:00', by: 'Peter K.', action: 'Assigned to Bjorn L. — technician dispatch' },
       { at: '2026-03-04T09:30:00', by: 'Bjorn L.', action: 'Resolved — capacitor replaced' },
       { at: '2026-03-05T10:00:00', by: 'Peter K.', action: 'Refund NOK 1,800 issued via Airbnb' },

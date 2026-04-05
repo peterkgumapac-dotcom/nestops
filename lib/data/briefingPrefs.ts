@@ -127,7 +127,7 @@ export const DEFAULT_PREFS: Record<string, Partial<BriefingToggles>> = {
   },
 }
 
-const STORAGE_KEY = 'nestops_briefing_prefs'
+const STORAGE_KEY = 'afterstay_briefing_prefs'
 
 export function getPrefs(
   userId: string,

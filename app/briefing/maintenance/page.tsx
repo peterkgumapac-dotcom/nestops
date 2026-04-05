@@ -45,7 +45,7 @@ export default function MaintenanceBriefingPage() {
 
   useEffect(() => {
     setMounted(true)
-    const stored = localStorage.getItem('nestops_user')
+    const stored = localStorage.getItem('afterstay_user')
     if (!stored) {
       router.replace('/login')
       return
@@ -96,7 +96,7 @@ export default function MaintenanceBriefingPage() {
     : []
 
   const handleClockInAndGo = (destination = '/app/my-tasks') => {
-    localStorage.setItem('nestops_clockin', JSON.stringify({
+    localStorage.setItem('afterstay_clockin', JSON.stringify({
       staffId: currentUser.id,
       shiftId: firstShift?.id ?? 'unknown',
       date: today,
@@ -135,7 +135,7 @@ export default function MaintenanceBriefingPage() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 28, height: 28, borderRadius: 8, background: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: 13 }}>N</div>
-          <span style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>NestOps</span>
+          <span style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>AfterStay</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button

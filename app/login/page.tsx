@@ -3,28 +3,30 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRole } from '@/context/RoleContext'
-import type { Role, UserProfile } from '@/context/RoleContext'
+import type { Role, AccessTier, UserProfile } from '@/context/RoleContext'
 
 interface DemoUser {
   userId: string
   initials: string
   name: string
   role: Role
+  accessTier?: AccessTier
   subRole?: string
   jobRole?: UserProfile['jobRole']
   avatarBg: string
   badgeLabel: string
+  group: string
 }
 
 const DEMO_USERS: DemoUser[] = [
-  { userId: 'pk', initials: 'PK', name: 'Peter K.',   role: 'operator' as Role, avatarBg: '#1D9E75', badgeLabel: 'Operator' },
-  { userId: 'ms', initials: 'MS', name: 'Maria S.',   role: 'staff'    as Role, subRole: 'Cleaner',             jobRole: 'cleaner',       avatarBg: '#d97706', badgeLabel: 'Cleaner' },
-  { userId: 'bl', initials: 'BL', name: 'Bjorn L.',   role: 'staff'    as Role, subRole: 'Maintenance',         jobRole: 'maintenance',   avatarBg: '#378ADD', badgeLabel: 'Maintenance' },
-  { userId: 'fn', initials: 'FN', name: 'Fatima N.',  role: 'staff'    as Role, subRole: 'Guest Services',      jobRole: 'guest-services',avatarBg: '#ec4899', badgeLabel: 'Guest Svc' },
-  { userId: 'ak', initials: 'AK', name: 'Anna K.',    role: 'staff'    as Role, subRole: 'Cleaning Supervisor', jobRole: 'supervisor',    avatarBg: '#06b6d4', badgeLabel: 'Supervisor' },
-  { userId: 'cm', initials: 'CM', name: 'Carlos M.',  role: 'staff'    as Role, subRole: 'GS Supervisor',      jobRole: 'gs-supervisor', avatarBg: '#8b5cf6', badgeLabel: 'GS Supervisor' },
-  { userId: 'sj', initials: 'SJ', name: 'Sarah J.',   role: 'owner'    as Role, avatarBg: '#7F77DD', badgeLabel: 'Owner' },
-  { userId: 'mc', initials: 'MC', name: 'Michael C.', role: 'owner'    as Role, avatarBg: '#15d492', badgeLabel: 'Owner' },
+  { userId: 'pk', initials: 'PK', name: 'Peter K.',   role: 'operator', avatarBg: '#c4622d', badgeLabel: 'Operator',      group: 'Operator' },
+  { userId: 'fn', initials: 'FN', name: 'Fatima N.',  role: 'operator', accessTier: 'guest-services', subRole: 'Guest Services Agent', avatarBg: '#ec4899', badgeLabel: 'GS Agent',        group: 'Guest Services' },
+  { userId: 'cm', initials: 'CM', name: 'Carlos M.',  role: 'operator', accessTier: 'guest-services', subRole: 'GS Supervisor',        avatarBg: '#8b5cf6', badgeLabel: 'GS Supervisor',   group: 'Guest Services' },
+  { userId: 'ms', initials: 'MS', name: 'Maria S.',   role: 'staff',    subRole: 'Cleaner',             jobRole: 'cleaner',       avatarBg: '#d97706', badgeLabel: 'Cleaner',         group: 'Staff' },
+  { userId: 'bl', initials: 'BL', name: 'Bjorn L.',   role: 'staff',    subRole: 'Maintenance',         jobRole: 'maintenance',   avatarBg: '#378ADD', badgeLabel: 'Maintenance',     group: 'Staff' },
+  { userId: 'ak', initials: 'AK', name: 'Anna K.',    role: 'staff',    subRole: 'Cleaning Supervisor', jobRole: 'supervisor',    avatarBg: '#06b6d4', badgeLabel: 'Supervisor',      group: 'Staff' },
+  { userId: 'sj', initials: 'SJ', name: 'Sarah J.',   role: 'owner',    avatarBg: '#7F77DD', badgeLabel: 'Owner',          group: 'Owner' },
+  { userId: 'mc', initials: 'MC', name: 'Michael C.', role: 'owner',    avatarBg: '#15d492', badgeLabel: 'Owner',          group: 'Owner' },
 ]
 
 const USER_ID_MAP: Record<string, string> = {
@@ -36,30 +38,30 @@ const DEMO_USER_MAP: Record<string, DemoUser> = Object.fromEntries(
 )
 
 const CREDENTIALS = [
-  { email: 'peter@nestops.com',    password: 'demo123', userId: 'pk' },
-  { email: 'operator@nestops.com', password: 'demo123', userId: 'pk' },
-  { email: 'maria@nestops.com',    password: 'demo123', userId: 'ms' },
-  { email: 'staff@nestops.com',    password: 'demo123', userId: 'ms' },
-  { email: 'bjorn@nestops.com',    password: 'demo123', userId: 'bl' },
-  { email: 'fatima@nestops.com',   password: 'demo123', userId: 'fn' },
-  { email: 'anna@nestops.com',     password: 'demo123', userId: 'ak' },
-  { email: 'carlos@nestops.com',  password: 'demo123', userId: 'cm' },
-  { email: 'sarah@nestops.com',    password: 'demo123', userId: 'sj' },
-  { email: 'owner@nestops.com',    password: 'demo123', userId: 'sj' },
-  { email: 'michael@nestops.com',  password: 'demo123', userId: 'mc' },
+  { email: 'peter@afterstay.com',    password: 'demo123', userId: 'pk' },
+  { email: 'operator@afterstay.com', password: 'demo123', userId: 'pk' },
+  { email: 'maria@afterstay.com',    password: 'demo123', userId: 'ms' },
+  { email: 'staff@afterstay.com',    password: 'demo123', userId: 'ms' },
+  { email: 'bjorn@afterstay.com',    password: 'demo123', userId: 'bl' },
+  { email: 'fatima@afterstay.com',   password: 'demo123', userId: 'fn' },
+  { email: 'anna@afterstay.com',     password: 'demo123', userId: 'ak' },
+  { email: 'carlos@afterstay.com',  password: 'demo123', userId: 'cm' },
+  { email: 'sarah@afterstay.com',    password: 'demo123', userId: 'sj' },
+  { email: 'owner@afterstay.com',    password: 'demo123', userId: 'sj' },
+  { email: 'michael@afterstay.com',  password: 'demo123', userId: 'mc' },
 ]
 
 const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
   :root {
-    --bg:#080b12; --bg2:#0f1219; --bg3:#161b26; --card:#111722;
-    --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.1);
-    --text:#e8e6e1; --text2:#9ca3af; --text3:#5a5f6b;
-    --green:#1D9E75; --green2:#15d492;
-    --green-bg:rgba(29,158,117,0.08); --green-border:rgba(29,158,117,0.2);
+    --bg:#0e0a08; --bg2:#161009; --bg3:#1e1510; --card:#161009;
+    --border:#2a1f16; --border2:rgba(196,98,45,0.15);
+    --text:#f5ede6; --text2:#8a6a58; --text3:#5a4a3b;
+    --green:#c4622d; --green2:#e07a45;
+    --green-bg:rgba(196,98,45,0.08); --green-border:rgba(196,98,45,0.2);
     --red:#e24b4a;
-    --sans:'Outfit',system-ui,sans-serif;
+    --sans:'Inter',system-ui,sans-serif;
     --mono:'JetBrains Mono',monospace;
   }
   .lp-root * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -74,7 +76,7 @@ const CSS = `
     position: relative;
     overflow-x: hidden;
   }
-  ::selection { background: var(--green); color: #fff; }
+  ::selection { background: var(--accent); color: #fff; }
 
   /* Grain */
   .grain {
@@ -91,7 +93,7 @@ const CSS = `
   .hero-glow {
     position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
     width: 800px; height: 600px;
-    background: radial-gradient(ellipse, rgba(29,158,117,0.08) 0%, transparent 70%);
+    background: radial-gradient(ellipse, rgba(196,98,45,0.08) 0%, transparent 70%);
     pointer-events: none;
   }
 
@@ -99,7 +101,7 @@ const CSS = `
   .lp-nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
     padding: 14px 0;
-    background: rgba(8,11,18,0.9);
+    background: rgba(14,10,8,0.9);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
   }
@@ -109,7 +111,7 @@ const CSS = `
   }
   .nav-left { display: flex; align-items: center; gap: 10px; }
   .nav-logo {
-    width: 32px; height: 32px; background: var(--green); border-radius: 8px;
+    width: 32px; height: 32px; background: var(--accent); border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
     font-weight: 600; font-size: 14px; color: #fff; flex-shrink: 0;
   }
@@ -138,12 +140,12 @@ const CSS = `
   .hero-badge {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 6px 16px; border-radius: 20px;
-    border: 1px solid var(--green-border); background: var(--green-bg);
-    font-size: 12px; color: var(--green2); font-weight: 500;
+    border: 1px solid var(--accent-border); background: var(--accent-bg);
+    font-size: 12px; color: var(--accent-light); font-weight: 500;
     margin-bottom: 24px;
   }
   .pulse {
-    width: 6px; height: 6px; border-radius: 50%; background: var(--green2);
+    width: 6px; height: 6px; border-radius: 50%; background: var(--accent-light);
     animation: pulse 2s ease infinite; flex-shrink: 0;
   }
   @keyframes pulse {
@@ -161,7 +163,7 @@ const CSS = `
   .calc-card::before {
     content: ''; position: absolute; top: 0; left: 50%;
     transform: translateX(-50%); width: 200px; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--green), transparent);
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
   }
 
   /* Wordmark inside card */
@@ -182,8 +184,8 @@ const CSS = `
     box-sizing: border-box;
   }
   .login-input:focus {
-    border-color: rgba(29,158,117,0.4);
-    box-shadow: 0 0 0 3px rgba(29,158,117,0.12);
+    border-color: rgba(196,98,45,0.4);
+    box-shadow: 0 0 0 3px rgba(196,98,45,0.12);
   }
   .login-input.error { border-color: var(--red); }
   .login-input-wrap { position: relative; }
@@ -196,14 +198,14 @@ const CSS = `
   /* Buttons */
   .cta-primary {
     display: block; width: 100%; padding: 14px; border-radius: 10px;
-    background: var(--green); color: #fff; font-size: 14px; font-weight: 600;
+    background: var(--accent); color: #fff; font-size: 14px; font-weight: 600;
     text-align: center; border: none; cursor: pointer;
     font-family: var(--sans); transition: all 0.15s; letter-spacing: -0.01em;
   }
   .cta-primary:hover {
-    background: var(--green2);
+    background: var(--accent-light);
     transform: translateY(-1px);
-    box-shadow: 0 8px 30px rgba(29,158,117,0.25);
+    box-shadow: 0 8px 30px rgba(196,98,45,0.25);
   }
   .cta-primary:disabled { opacity: 0.7; cursor: not-allowed; transform: none; box-shadow: none; }
   .cta-ghost {
@@ -246,7 +248,7 @@ const CSS = `
     font-family: var(--sans); margin-bottom: 4px;
   }
   .tc:hover { border-color: var(--border2); background: var(--bg3); }
-  .tc.on { border-color: var(--green-border); background: var(--green-bg); }
+  .tc.on { border-color: var(--accent-border); background: var(--accent-bg); }
   .tc-name { font-size: 13px; font-weight: 500; color: var(--text); }
   .tc-meta { font-size: 10px; color: var(--text3); margin-top: 1px; }
   .tc-badge {
@@ -290,10 +292,10 @@ const CSS = `
   .floating-toggle {
     display: flex; align-items: center; gap: 8px;
     padding: 10px 16px; border-radius: 40px;
-    border: 1px solid var(--green); color: #fff; font-size: 13px; font-weight: 500;
+    border: 1px solid var(--accent); color: #fff; font-size: 13px; font-weight: 500;
     cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.4);
     font-family: var(--sans); transition: all 0.15s;
-    background: var(--green);
+    background: var(--accent);
   }
   .floating-toggle.open {
     background: var(--bg3); border-color: var(--border2); color: var(--text2);
@@ -321,6 +323,7 @@ export default function LoginPage() {
     id: USER_ID_MAP[user.userId] ?? user.userId,
     name: user.name,
     role: user.role,
+    ...(user.accessTier ? { accessTier: user.accessTier } : {}),
     subRole: user.subRole,
     jobRole: user.jobRole,
     avatarInitials: user.initials,
@@ -331,18 +334,16 @@ export default function LoginPage() {
     if (isLoading) return
     setIsLoading(true)
     const profile = buildProfile(user)
-    localStorage.setItem('nestops_user', JSON.stringify(profile))
+    localStorage.setItem('afterstay_user', JSON.stringify(profile))
     setUser(profile)
     let dest = '/briefing'
-    if (profile.role === 'staff') {
+    if (profile.role === 'owner') {
+      dest = '/owner'
+    } else if (profile.role === 'staff') {
       if (profile.jobRole === 'maintenance')               dest = '/briefing/maintenance'
-      else if (profile.jobRole === 'gs-supervisor')        dest = '/briefing/gs-supervisor'
       else if (profile.jobRole === 'supervisor')           dest = '/briefing/supervisor'
-      else if (profile.jobRole === 'guest-services')       dest = '/briefing/guest-services'
       else if (profile.jobRole === 'cleaner')              dest = '/briefing/cleaners'
-      // subRole fallback
       else if (profile.subRole?.includes('Maintenance'))   dest = '/briefing/maintenance'
-      else if (profile.subRole?.includes('Guest'))         dest = '/briefing/guest-services'
       else if (profile.subRole?.includes('Cleaner') || profile.subRole?.includes('Cleaning'))
                                                            dest = '/briefing/cleaners'
     }
@@ -354,12 +355,12 @@ export default function LoginPage() {
     if (!user || isLoading) return
     setIsLoading(true)
     const profile = buildProfile(user)
-    localStorage.setItem('nestops_user', JSON.stringify(profile))
+    localStorage.setItem('afterstay_user', JSON.stringify(profile))
     setUser(profile)
     let dest = '/app/my-tasks'
     if (user.role === 'operator') dest = '/app/dashboard'
     else if (user.role === 'owner') dest = '/owner'
-    else if (user.jobRole === 'supervisor' || user.jobRole === 'gs-supervisor') dest = '/app/dashboard'
+    else if (user.jobRole === 'supervisor') dest = '/app/dashboard'
     router.push(dest)
   }
 
@@ -374,17 +375,14 @@ export default function LoginPage() {
         setIsLoading(true)
         setTimeout(() => {
           const profile = buildProfile(demoUser)
-          localStorage.setItem('nestops_user', JSON.stringify(profile))
+          localStorage.setItem('afterstay_user', JSON.stringify(profile))
           setUser(profile)
           // Route by role — same logic as handleDemoSelect
           let dest = '/briefing'
           if (profile.role === 'owner') dest = '/owner'
-          else if (profile.role === 'operator') dest = '/app/dashboard'
           else if (profile.role === 'staff') {
             if (profile.jobRole === 'maintenance')         dest = '/briefing/maintenance'
-            else if (profile.jobRole === 'gs-supervisor')  dest = '/briefing/gs-supervisor'
             else if (profile.jobRole === 'supervisor')     dest = '/briefing/supervisor'
-            else if (profile.jobRole === 'guest-services') dest = '/briefing/guest-services'
             else if (profile.jobRole === 'cleaner')        dest = '/briefing/cleaners'
           }
           router.push(dest)
@@ -409,9 +407,9 @@ export default function LoginPage() {
       <nav className="lp-nav">
         <div className="nav-inner">
           <div className="nav-left">
-            <div className="nav-logo">N</div>
-            <span className="nav-name">NestOps</span>
-            <span className="nav-tag">v4.0</span>
+            <div className="nav-logo">A</div>
+            <span className="nav-name">AfterStay</span>
+            <span className="nav-tag">v1.0</span>
           </div>
           <a href="/" className="nav-cta">← Back to home</a>
         </div>
@@ -440,9 +438,9 @@ export default function LoginPage() {
         >
           {/* Wordmark */}
           <div className="card-wordmark">
-            <div className="nav-logo">N</div>
-            <span className="nav-name">NestOps</span>
-            <span className="nav-tag">v4.0</span>
+            <div className="nav-logo">A</div>
+            <span className="nav-name">AfterStay</span>
+            <span className="nav-tag">v1.0</span>
           </div>
 
           {/* Email */}
@@ -451,7 +449,7 @@ export default function LoginPage() {
             <input
               type="email"
               autoComplete="email"
-              placeholder="peter@nestops.com"
+              placeholder="peter@afterstay.com"
               value={email}
               onChange={e => { setEmail(e.target.value); setError('') }}
               onKeyDown={e => { if (e.key === 'Enter') handleLogin() }}
@@ -531,36 +529,51 @@ export default function LoginPage() {
                   </button>
                 </div>
                 <div>
-                  {DEMO_USERS.map((user, i) => (
-                    <motion.button
-                      key={user.userId}
-                      className="tc"
-                      initial={{ opacity: 0, x: -8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.04 }}
-                      onClick={() => handleDemoSelect(user)}
-                    >
-                      <div style={{
-                        width: 32, height: 32, borderRadius: '50%',
-                        background: user.avatarBg, flexShrink: 0,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 11, fontWeight: 600, color: '#fff',
-                      }}>
-                        {user.initials}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div className="tc-name">{user.name}</div>
-                        <div className="tc-meta">{user.subRole ?? user.badgeLabel}</div>
-                      </div>
-                      <span className="tc-badge" style={{
-                        background: user.avatarBg + '20',
-                        color: user.avatarBg,
-                        border: `1px solid ${user.avatarBg}30`,
-                      }}>
-                        {user.badgeLabel}
-                      </span>
-                    </motion.button>
-                  ))}
+                  {(() => {
+                    let lastGroup = ''
+                    let idx = 0
+                    return DEMO_USERS.map(user => {
+                      const showGroup = user.group !== lastGroup
+                      lastGroup = user.group
+                      const i = idx++
+                      return (
+                        <div key={user.userId}>
+                          {showGroup && (
+                            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '8px 0 4px', marginTop: i > 0 ? 4 : 0 }}>
+                              {user.group}
+                            </div>
+                          )}
+                          <motion.button
+                            className="tc"
+                            initial={{ opacity: 0, x: -8 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.04 }}
+                            onClick={() => handleDemoSelect(user)}
+                          >
+                            <div style={{
+                              width: 32, height: 32, borderRadius: '50%',
+                              background: user.avatarBg, flexShrink: 0,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: 11, fontWeight: 600, color: '#fff',
+                            }}>
+                              {user.initials}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div className="tc-name">{user.name}</div>
+                              <div className="tc-meta">{user.subRole ?? user.badgeLabel}</div>
+                            </div>
+                            <span className="tc-badge" style={{
+                              background: user.avatarBg + '20',
+                              color: user.avatarBg,
+                              border: `1px solid ${user.avatarBg}30`,
+                            }}>
+                              {user.badgeLabel}
+                            </span>
+                          </motion.button>
+                        </div>
+                      )
+                    })
+                  })()}
                 </div>
               </motion.div>
             )}
@@ -569,7 +582,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p style={{ marginTop: 32, fontSize: 11, color: 'var(--text3)', position: 'relative', zIndex: 1 }}>
-          NestOps © {new Date().getFullYear()} · Built for STR operators
+          AfterStay © {new Date().getFullYear()} · Built for STR operators
         </p>
       </main>
 
@@ -588,11 +601,11 @@ export default function LoginPage() {
               <div className="floating-panel-divider" />
               {[
                 { userId: 'pk', emoji: '⚙️', label: 'Operator',       sub: 'Peter K. · /app/dashboard' },
+                { userId: 'fn', emoji: '🛎️', label: 'GS Agent',        sub: 'Fatima N. · /app/dashboard' },
+                { userId: 'cm', emoji: '🎧', label: 'GS Supervisor',   sub: 'Carlos M. · /app/dashboard' },
                 { userId: 'ms', emoji: '🧹', label: 'Cleaner',         sub: 'Maria S. · /app/my-tasks' },
                 { userId: 'bl', emoji: '🔧', label: 'Maintenance',     sub: 'Bjorn L. · /app/my-tasks' },
-                { userId: 'fn', emoji: '🛎️', label: 'Guest Services',  sub: 'Fatima N. · /app/my-tasks' },
                 { userId: 'ak', emoji: '👷', label: 'Supervisor',      sub: 'Anna K. · /app/dashboard' },
-                { userId: 'cm', emoji: '🎧', label: 'GS Supervisor',   sub: 'Carlos M. · /app/dashboard' },
                 { userId: 'sj', emoji: '🏠', label: 'Owner',           sub: 'Sarah J. · /owner' },
                 { userId: 'mc', emoji: '🏠', label: 'Owner',           sub: 'Michael C. · /owner' },
               ].map(p => (

@@ -1,12 +1,12 @@
 // lib/storage.ts
 export const STORAGE_KEYS = {
-  USER: 'nestops_user',
-  ROLE: 'nestops_role',
-  THEME: 'nestops_theme',
-  BRIEFING_PREFS: 'nestops_briefing_prefs',
-  CLOCKIN: 'nestops_clockin',
-  FIELD_REPORTS: 'nestops_field_reports',
-  OWNER_WORK_ORDERS: 'nestops_owner_work_orders',
+  USER: 'afterstay_user',
+  ROLE: 'afterstay_role',
+  THEME: 'afterstay_theme',
+  BRIEFING_PREFS: 'afterstay_briefing_prefs',
+  CLOCKIN: 'afterstay_clockin',
+  FIELD_REPORTS: 'afterstay_field_reports',
+  OWNER_WORK_ORDERS: 'afterstay_owner_work_orders',
 } as const
 
 export function storageGet<T>(key: string): T | null {

@@ -31,15 +31,18 @@ export default function ClockStatus() {
   const [isSupervisor, setIsSupervisor] = useState(false)
 
   useEffect(() => {
-    const userStr = localStorage.getItem('nestops_user')
+    const userStr = localStorage.getItem('afterstay_user')
     if (userStr) {
       try {
         const u = JSON.parse(userStr)
         setIsStaff(u.role === 'staff')
-        setIsSupervisor(u.jobRole === 'supervisor' || u.jobRole === 'gs-supervisor')
+        setIsSupervisor(
+          u.jobRole === 'supervisor' ||
+          (u.role === 'operator' && u.accessTier === 'guest-services' && u.subRole?.includes('Supervisor'))
+        )
       } catch {}
     }
-    const ciStr = localStorage.getItem('nestops_clockin')
+    const ciStr = localStorage.getItem('afterstay_clockin')
     if (ciStr) {
       try {
         const ci = JSON.parse(ciStr)
@@ -84,7 +87,7 @@ export default function ClockStatus() {
           <button
             onClick={() => {
               const updated = { ...clockIn, status: 'completed', clockOutTime: new Date().toISOString() }
-              localStorage.setItem('nestops_clockin', JSON.stringify(updated))
+              localStorage.setItem('afterstay_clockin', JSON.stringify(updated))
               setClockIn(null)
             }}
             style={{ fontSize: 11, padding: '3px 8px', borderRadius: 5, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}

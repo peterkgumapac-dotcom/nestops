@@ -61,7 +61,7 @@ export default function StaffHome() {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('nestops_user')
+      const stored = localStorage.getItem('afterstay_user')
       const profile = stored ? JSON.parse(stored) : null
       setUserId(profile?.id ?? null)
       const staffId = profile ? USER_TO_STAFF[profile.id] : null
@@ -69,7 +69,7 @@ export default function StaffHome() {
         ? STAFF_MEMBERS.find(s => s.id === staffId) ?? STAFF_MEMBERS[0]
         : STAFF_MEMBERS[0]
       setCurrentStaff(staff)
-      const savedChecks = profile ? localStorage.getItem(`nestops_job_checks_${profile.id}`) : null
+      const savedChecks = profile ? localStorage.getItem(`afterstay_job_checks_${profile.id}`) : null
       if (savedChecks) {
         setCheckedJobs(new Set(JSON.parse(savedChecks)))
       } else {
@@ -83,7 +83,7 @@ export default function StaffHome() {
 
     // Load clock-in state
     try {
-      const ciStr = localStorage.getItem('nestops_clockin')
+      const ciStr = localStorage.getItem('afterstay_clockin')
       if (ciStr) {
         const ci = JSON.parse(ciStr)
         const today = new Date().toISOString().split('T')[0]
@@ -114,10 +114,10 @@ export default function StaffHome() {
       if (next.has(id)) next.delete(id)
       else next.add(id)
       try {
-        const stored = localStorage.getItem('nestops_user')
+        const stored = localStorage.getItem('afterstay_user')
         if (stored) {
           const profile = JSON.parse(stored)
-          localStorage.setItem(`nestops_job_checks_${profile.id}`, JSON.stringify([...next]))
+          localStorage.setItem(`afterstay_job_checks_${profile.id}`, JSON.stringify([...next]))
         }
       } catch {}
       return next
@@ -131,10 +131,10 @@ export default function StaffHome() {
     const allIds = new Set(myJobs.map(j => j.id))
     setCheckedJobs(allIds)
     try {
-      const stored = localStorage.getItem('nestops_user')
+      const stored = localStorage.getItem('afterstay_user')
       if (stored) {
         const profile = JSON.parse(stored)
-        localStorage.setItem(`nestops_job_checks_${profile.id}`, JSON.stringify([...allIds]))
+        localStorage.setItem(`afterstay_job_checks_${profile.id}`, JSON.stringify([...allIds]))
       }
     } catch {}
   }
@@ -149,7 +149,7 @@ export default function StaffHome() {
       clockInTime: now,
       status: 'in_progress',
     }
-    localStorage.setItem('nestops_clockin', JSON.stringify(record))
+    localStorage.setItem('afterstay_clockin', JSON.stringify(record))
     setClockedIn(true)
     setClockInTime(now)
     setElapsed(getElapsed(now))
@@ -157,11 +157,11 @@ export default function StaffHome() {
 
   const handleClockOut = () => {
     try {
-      const ciStr = localStorage.getItem('nestops_clockin')
+      const ciStr = localStorage.getItem('afterstay_clockin')
       if (ciStr) {
         const ci = JSON.parse(ciStr)
         const updated = { ...ci, status: 'completed', clockOutTime: new Date().toISOString() }
-        localStorage.setItem('nestops_clockin', JSON.stringify(updated))
+        localStorage.setItem('afterstay_clockin', JSON.stringify(updated))
       }
     } catch {}
     setClockedIn(false)

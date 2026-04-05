@@ -75,7 +75,7 @@ export default function AlertsPage() {
   const [convertedAlerts, setConvertedAlerts] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    const stored = localStorage.getItem('nestops_user')
+    const stored = localStorage.getItem('afterstay_user')
     if (stored) {
       try {
         const user: UserProfile = JSON.parse(stored)
@@ -137,8 +137,8 @@ export default function AlertsPage() {
       createdAt: new Date().toISOString(),
     }
     try {
-      const existing = JSON.parse(localStorage.getItem('nestops_work_orders') || '[]')
-      localStorage.setItem('nestops_work_orders', JSON.stringify([...existing, workOrder]))
+      const existing = JSON.parse(localStorage.getItem('afterstay_work_orders') || '[]')
+      localStorage.setItem('afterstay_work_orders', JSON.stringify([...existing, workOrder]))
     } catch {}
     setConvertedAlerts(prev => ({ ...prev, [convertAlert.id]: woId }))
     setConvertStep('success')

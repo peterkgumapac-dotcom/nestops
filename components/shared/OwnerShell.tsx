@@ -25,7 +25,7 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
   const [switchedTo, setSwitchedTo] = useState<string | null>(null)
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('nestops_user')
+    const savedUser = localStorage.getItem('afterstay_user')
     if (savedUser) {
       try {
         const u = JSON.parse(savedUser)
@@ -48,12 +48,10 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
       display: 'flex', flexDirection: 'column', height: '100%',
     }}>
       {/* Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '20px 16px', minHeight: 64, flexShrink: 0 }}>
-        <div style={{ width: 32, height: 32, borderRadius: 8, background: ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#fff', fontSize: 14, flexShrink: 0 }}>
-          N
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '20px 8px', minHeight: 64, flexShrink: 0 }}>
+        <img src="/logo-icon.svg" width={32} height={32} alt="AfterStay" style={{ borderRadius: 8, flexShrink: 0 }} />
         <div>
-          <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>NestOps</div>
+          <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>AfterStay</div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Owner Portal</div>
         </div>
       </div>
@@ -164,7 +162,7 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
           </div>
           <button
             onClick={() => {
-              ['nestops_user', 'nestops_role', 'nestops_theme', 'nestops_briefing_prefs', 'nestops_clockin', 'nestops_field_reports', 'nestops_owner_work_orders']
+              ['afterstay_user', 'afterstay_role', 'afterstay_theme', 'afterstay_briefing_prefs', 'afterstay_clockin', 'afterstay_field_reports', 'afterstay_owner_work_orders']
                 .forEach(k => localStorage.removeItem(k))
               router.push('/login')
             }}
@@ -212,7 +210,7 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
           >
             <Menu size={20} />
           </button>
-          <span className="md:hidden" style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>NestOps</span>
+          <span className="md:hidden" style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>AfterStay</span>
           <div className="hidden md:block" />
           <button
             aria-label="Notifications"

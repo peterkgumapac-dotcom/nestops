@@ -33,7 +33,7 @@ The email body should be professional, clear, and request the document urgently 
   } catch {
     return NextResponse.json({
       subject: `Action Required: ${documentType} — ${propertyName}`,
-      body: `Dear Owner,\n\nWe are writing to inform you that the ${documentType} for ${propertyName} is currently ${status} and requires your immediate attention.\n\nPlease provide the updated document at your earliest convenience.\n\nBest regards,\nNestOps Operations Team`,
+      body: `Dear Owner,\n\nWe are writing to inform you that the ${documentType} for ${propertyName} is currently ${status} and requires your immediate attention.\n\nPlease provide the updated document at your earliest convenience.\n\nBest regards,\nAfterStay Operations Team`,
     })
   }
 }

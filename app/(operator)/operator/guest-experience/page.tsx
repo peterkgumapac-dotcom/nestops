@@ -48,9 +48,9 @@ const DEFAULT_GATES: VerificationGate[] = [
 ]
 
 const PORTAL_CONFIGS: PortalConfig[] = [
-  { id: 'pc1', propertyId: 'p1', propertyName: 'Sunset Villa', gatesEnabled: DEFAULT_GATES, doorCodeReveal: 'verified_only', brandColor: '#7c3aed', shareUrl: 'nestops.io/stay/sunset-villa', guestsVerified: 24 },
-  { id: 'pc2', propertyId: 'p2', propertyName: 'Harbor Studio', gatesEnabled: DEFAULT_GATES.map(g => ({ ...g, enabled: g.id !== 'selfie' })), doorCodeReveal: 'verified_only', brandColor: '#0284c7', shareUrl: 'nestops.io/stay/harbor-studio', guestsVerified: 18 },
-  { id: 'pc3', propertyId: 'p3', propertyName: 'Downtown Loft', gatesEnabled: DEFAULT_GATES.map(g => ({ ...g, enabled: g.id !== 'selfie' && g.id !== 'deposit' })), doorCodeReveal: 'time_gated', brandColor: '#059669', shareUrl: 'nestops.io/stay/downtown-loft', guestsVerified: 12 },
+  { id: 'pc1', propertyId: 'p1', propertyName: 'Sunset Villa', gatesEnabled: DEFAULT_GATES, doorCodeReveal: 'verified_only', brandColor: '#7c3aed', shareUrl: 'afterstay.io/stay/sunset-villa', guestsVerified: 24 },
+  { id: 'pc2', propertyId: 'p2', propertyName: 'Harbor Studio', gatesEnabled: DEFAULT_GATES.map(g => ({ ...g, enabled: g.id !== 'selfie' })), doorCodeReveal: 'verified_only', brandColor: '#0284c7', shareUrl: 'afterstay.io/stay/harbor-studio', guestsVerified: 18 },
+  { id: 'pc3', propertyId: 'p3', propertyName: 'Downtown Loft', gatesEnabled: DEFAULT_GATES.map(g => ({ ...g, enabled: g.id !== 'selfie' && g.id !== 'deposit' })), doorCodeReveal: 'time_gated', brandColor: '#059669', shareUrl: 'afterstay.io/stay/downtown-loft', guestsVerified: 12 },
 ]
 
 const BOOKING_SOURCE_LABELS: Record<BookingSource, string> = {

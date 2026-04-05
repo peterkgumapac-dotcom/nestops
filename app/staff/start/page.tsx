@@ -85,7 +85,7 @@ export default function StaffStartPage() {
     const now = new Date()
     setCurrentTime(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }))
 
-    const stored = localStorage.getItem('nestops_user')
+    const stored = localStorage.getItem('afterstay_user')
     if (!stored) {
       router.push('/login')
       return
@@ -116,7 +116,7 @@ export default function StaffStartPage() {
     if (!currentUser || !todayShift) return
     const now = new Date()
     const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-    localStorage.setItem('nestops_clockin', JSON.stringify({
+    localStorage.setItem('afterstay_clockin', JSON.stringify({
       staffId: USER_TO_STAFF[currentUser.id] ?? currentUser.id,
       shiftId: todayShift.id,
       propertyId: todayShift.propertyId,
@@ -190,7 +190,7 @@ export default function StaffStartPage() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 28, height: 28, borderRadius: 8, background: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: 13 }}>N</div>
-          <span style={{ fontWeight: 700, color: '#fff', fontSize: 16 }}>NestOps</span>
+          <span style={{ fontWeight: 700, color: '#fff', fontSize: 16 }}>AfterStay</span>
         </div>
         <Link href="/app/dashboard" style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>
           Skip →

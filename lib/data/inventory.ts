@@ -299,7 +299,7 @@ export function getStockItemsForUser(userId: string): StockItem[] {
 
   if (typeof window !== 'undefined') {
     try {
-      const saved = localStorage.getItem(`nestops_stock_${userId}`)
+      const saved = localStorage.getItem(`afterstay_stock_${userId}`)
       if (saved) {
         const overrides: { id: string; inStock: number; status: StockStatus }[] = JSON.parse(saved)
         return baseItems.map(item => {

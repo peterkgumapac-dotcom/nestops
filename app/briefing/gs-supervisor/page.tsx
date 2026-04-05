@@ -21,14 +21,16 @@ export default function GSSupervisorBriefingPage() {
 
   useEffect(() => {
     setMounted(true)
-    const stored = localStorage.getItem('nestops_user')
+    const stored = localStorage.getItem('afterstay_user')
     if (!stored) {
       router.replace('/login')
       return
     }
     try {
       const user: UserProfile = JSON.parse(stored)
-      if (user.jobRole !== 'gs-supervisor' && !user.subRole?.includes('GS Supervisor')) {
+      const isGSSup = (user.role === 'operator' && user.accessTier === 'guest-services' && user.subRole?.includes('Supervisor')) ||
+                      user.jobRole === 'gs-supervisor' as string || user.subRole?.includes('GS Supervisor')
+      if (!isGSSup) {
         router.replace('/staff/start')
         return
       }
@@ -89,7 +91,7 @@ export default function GSSupervisorBriefingPage() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 28, height: 28, borderRadius: 8, background: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: 13 }}>N</div>
-          <span style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>NestOps</span>
+          <span style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>AfterStay</span>
         </div>
         <Link href="/app/dashboard" style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
           Dashboard →

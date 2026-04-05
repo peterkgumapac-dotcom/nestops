@@ -44,7 +44,7 @@ const ALERT_RULES: AlertRule[] = [
 ]
 
 const INTEGRATIONS: Integration[] = [
-  { id: 'slack',     name: 'Slack',      emoji: '💬', description: 'Send alerts to your workspace',   category: 'Communication', connected: true,  detail: '#nestops-alerts' },
+  { id: 'slack',     name: 'Slack',      emoji: '💬', description: 'Send alerts to your workspace',   category: 'Communication', connected: true,  detail: '#afterstay-alerts' },
   { id: 'sendgrid',  name: 'SendGrid',   emoji: '✉️', description: 'Transactional email alerts',      category: 'Communication', connected: false },
   { id: 'hostaway',  name: 'Hostaway',   emoji: '🏠', description: 'Sync bookings and calendars',     category: 'PMS',           connected: false },
   { id: 'guesty',    name: 'Guesty',     emoji: '🏠', description: 'Sync bookings and calendars',     category: 'PMS',           connected: false },
@@ -72,7 +72,7 @@ export default function AlertsPage() {
   const [slackSheet, setSlackSheet] = useState(false)
   const [connectDialog, setConnectDialog] = useState<Integration | null>(null)
   const [editingRule, setEditingRule] = useState<AlertRule | null>(null)
-  const [slackMappings, setSlackMappings] = useState([['Maintenance alerts', '#maintenance'], ['Low stock', '#inventory'], ['Compliance', '#compliance'], ['General', '#nestops-alerts']])
+  const [slackMappings, setSlackMappings] = useState([['Maintenance alerts', '#maintenance'], ['Low stock', '#inventory'], ['Compliance', '#compliance'], ['General', '#afterstay-alerts']])
   const [toast, setToast] = useState('')
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
@@ -86,7 +86,7 @@ export default function AlertsPage() {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <PageHeader
         title="Alerts & Integrations"
-        subtitle="Configure how and where NestOps notifies your team"
+        subtitle="Configure how and where AfterStay notifies your team"
       />
 
       {/* ── Field Team Alerts (live panel) ── */}
@@ -261,8 +261,8 @@ export default function AlertsPage() {
         <SheetContent side="right">
           <SheetHeader><SheetTitle>Configure Slack</SheetTitle></SheetHeader>
           <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div><label style={labelStyle}>Workspace</label><input value="NestOps Team" readOnly style={{ ...inputStyle, color: 'var(--text-muted)' }} /></div>
-            <div><label style={labelStyle}>Default Alert Channel</label><input defaultValue="#nestops-alerts" style={inputStyle} /></div>
+            <div><label style={labelStyle}>Workspace</label><input value="AfterStay Team" readOnly style={{ ...inputStyle, color: 'var(--text-muted)' }} /></div>
+            <div><label style={labelStyle}>Default Alert Channel</label><input defaultValue="#afterstay-alerts" style={inputStyle} /></div>
             <div>
               <label style={labelStyle}>Channel Mapping</label>
               {slackMappings.map(([type, channel], idx) => (
@@ -275,7 +275,7 @@ export default function AlertsPage() {
                 <Plus size={12} /> Add mapping
               </button>
             </div>
-            <button onClick={() => showToast('Test message sent to #nestops-alerts')} style={{ padding: '9px 0', borderRadius: 8, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, fontSize: 13, cursor: 'pointer' }}>
+            <button onClick={() => showToast('Test message sent to #afterstay-alerts')} style={{ padding: '9px 0', borderRadius: 8, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, fontSize: 13, cursor: 'pointer' }}>
               Send Test Message
             </button>
           </div>

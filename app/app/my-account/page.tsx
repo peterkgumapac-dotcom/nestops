@@ -83,7 +83,7 @@ export default function MyAccountPage() {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('nestops_user')
+      const stored = localStorage.getItem('afterstay_user')
       if (stored) {
         const u = JSON.parse(stored)
         const sid = USER_TO_STAFF[u.id as string]

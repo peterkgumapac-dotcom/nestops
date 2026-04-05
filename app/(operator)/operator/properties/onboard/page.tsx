@@ -107,7 +107,7 @@ const DEFAULT_FORM: FormState = {
   photos: [], coverPhoto: '',
 }
 
-const LS_KEY = 'nestops_onboard_draft'
+const LS_KEY = 'afterstay_onboard_draft'
 
 const inputStyle: React.CSSProperties = { width: '100%', padding: '11px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontSize: 14, outline: 'none' }
 
@@ -238,7 +238,7 @@ export default function OnboardPage() {
       case 2: return (
         <div>
           <h2 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>Tell us about this property</h2>
-          <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 28 }}>Basic details used throughout NestOps.</p>
+          <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 28 }}>Basic details used throughout AfterStay.</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
               <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>Property Name *</label>
@@ -426,7 +426,7 @@ export default function OnboardPage() {
       case 8: return (
         <div>
           <h2 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>Add photos of this property</h2>
-          <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 24 }}>Used throughout NestOps for visual identification. At least 1 required.</p>
+          <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 24 }}>Used throughout AfterStay for visual identification. At least 1 required.</p>
           {/* Drag drop zone */}
           <div style={{ border: `2px dashed ${accent}`, borderRadius: 16, padding: '40px 20px', textAlign: 'center', marginBottom: 20, background: `${accent}05`, cursor: 'pointer' }}>
             <div style={{ fontSize: 32, marginBottom: 8 }}>📷</div>
@@ -544,7 +544,7 @@ export default function OnboardPage() {
                 </div>
                 <button
                   onClick={() => {
-                    try { localStorage.setItem(`nestops_template_${form.name || 'property'}`, JSON.stringify(templateItems)) } catch {}
+                    try { localStorage.setItem(`afterstay_template_${form.name || 'property'}`, JSON.stringify(templateItems)) } catch {}
                     setTemplateSaved(true)
                   }}
                   style={{ width: '100%', padding: '9px', borderRadius: 8, border: 'none', background: templateSaved ? '#10b981' : accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
@@ -580,7 +580,7 @@ export default function OnboardPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid var(--border)', background: 'var(--bg-surface)', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 28, height: 28, borderRadius: 7, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#fff', fontSize: 12 }}>N</div>
-          <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>NestOps</span>
+          <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>AfterStay</span>
           <span style={{ fontSize: 13, color: 'var(--text-subtle)' }}>/ Add Property</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>

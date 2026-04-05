@@ -645,7 +645,7 @@ export default function TaskSheet({ task, open, onClose, onMarkComplete }: TaskS
   const [subRole, setSubRole] = useState<string | undefined>(undefined)
   useEffect(() => {
     try {
-      const raw = localStorage.getItem('nestops_user')
+      const raw = localStorage.getItem('afterstay_user')
       if (raw) setSubRole(JSON.parse(raw)?.subRole)
     } catch { /* ignore */ }
   }, [])

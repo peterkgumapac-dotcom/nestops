@@ -14,7 +14,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>('dark')
 
   useEffect(() => {
-    const saved = localStorage.getItem('nestops_theme') as Theme | null
+    const saved = localStorage.getItem('afterstay_theme') as Theme | null
     if (saved) {
       setTheme(saved)
       applyTheme(saved)
@@ -35,7 +35,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark'
     setTheme(next)
-    localStorage.setItem('nestops_theme', next)
+    localStorage.setItem('afterstay_theme', next)
     applyTheme(next)
   }
 

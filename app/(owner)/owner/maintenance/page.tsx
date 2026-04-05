@@ -46,7 +46,7 @@ const INITIAL_ROWS: MaintRow[] = [
 ]
 
 const APPROVAL_ROWS: MaintRow[] = [
-  { id: 'm2', date: '2026-03-10', property: 'Harbor Studio', issue: 'Replace guest towel set',         cost: 890,   currency: 'NOK', status: 'pending',  approval: 'pending_approval', vendor: 'NestOps Supply' },
+  { id: 'm2', date: '2026-03-10', property: 'Harbor Studio', issue: 'Replace guest towel set',         cost: 890,   currency: 'NOK', status: 'pending',  approval: 'pending_approval', vendor: 'AfterStay Supply' },
   { id: 'm5', date: '2026-03-16', property: 'Sunset Villa',  issue: 'Emergency Plumbing Repair',       cost: 4800,  currency: 'NOK', status: 'pending',  approval: 'pending_approval', vendor: 'Lars Plumbing AS', notes: 'Burst pipe under kitchen sink. Immediate repair required.' },
   { id: 'm6', date: '2026-03-15', property: 'Sunset Villa',  issue: 'Replace Dishwasher',              cost: 9200,  currency: 'NOK', status: 'pending',  approval: 'pending_approval', vendor: 'Elkjøp', notes: 'Bosch SMS6ZCW00E recommended.' },
 ]

@@ -10,6 +10,23 @@ interface ChangeEntry {
 
 const CHANGELOG: ChangeEntry[] = [
   {
+    version: 'v4.1',
+    date: 'Apr 4, 2026',
+    items: [
+      { tag: '🎨 UI', text: 'Brand logo SVG replaces placeholder "A" letter in all sidebars (AppSidebar, MainAppSidebar, OwnerShell) and landing page nav' },
+      { tag: '🎨 UI', text: 'Design token rename — --green/--n-green tokens renamed to --accent/--n-accent for semantic consistency; all references updated across globals.css, login, intake, operator dashboard, and landing page' },
+      { tag: '🎨 UI', text: 'Light mode border-subtle now carries a terracotta brand tint (rgba(184,90,38,0.08)) instead of flat #eeeeee' },
+      { tag: '🎨 UI', text: 'OwnerShell sidebar padding standardized to match AppSidebar (20px 8px)' },
+      { tag: '🎨 UI', text: 'Landing page border-radius standardized — cards 14px, mockup devices 20px, buttons 8px' },
+      { tag: '✨ Animation', text: 'Mobile sidebar slide-in uses spring physics (damping:30, stiffness:300) with AnimatePresence + backdrop opacity fade' },
+      { tag: '✨ Animation', text: 'What\'s New modal and banner entrance animations — scale(0.96) + y(8px) fade-in via framer-motion' },
+      { tag: '✨ Animation', text: 'Nav item stagger animation fires only on initial mount via hasMountedRef — prevents re-animation on every route change' },
+      { tag: '⚡ Perf', text: 'Sidebar collapse transition removed (was width 0.2s) — instant width change eliminates layout thrashing' },
+      { tag: '⚡ Perf', text: 'All transition:all declarations in landing page (~18 instances) replaced with explicit property transitions for GPU compositing' },
+      { tag: '⚡ Perf', text: 'IntersectionObserver rootMargin set to "0px 0px -60px 0px" for staggered scroll-reveal timing on landing page' },
+    ],
+  },
+  {
     version: 'v4.0',
     date: 'Mar 24, 2026',
     items: [
@@ -40,7 +57,7 @@ const CHANGELOG: ChangeEntry[] = [
       { tag: '⚡ Feature', text: 'Supplies Used collapsible section added to cleaning task drawer — pre-populated from property turnover template on task open; collapsed summary shows item count and total units; steppers for each item, remove button, warehouse picker overlay for adding items not in template' },
       { tag: '⚡ Feature', text: 'Warehouse picker overlay — two-step flow: browse by category (Consumables/Linen/Cleaning) with stock status badges, then confirm with quantity stepper; items already in the supply list are excluded from browse' },
       { tag: '⚡ Feature', text: 'Realistic per-persona inventory — Maria (Cleaner) sees critically low soap and coffee pods; Bjorn (Maintenance) sees critical spray; Fatima (Guest Services) sees nearly-out coffee; stock overrides seed from PERSONA_STOCK_SNAPSHOTS or localStorage for persistence' },
-      { tag: '🏗 Arch', text: 'CONSUMPTION_TEMPLATES extended to Studio/1BR/2BR; template matching uses property bed count from PROPERTIES; supply consumption logged to nestops_consumption localStorage key on task submit' },
+      { tag: '🏗 Arch', text: 'CONSUMPTION_TEMPLATES extended to Studio/1BR/2BR; template matching uses property bed count from PROPERTIES; supply consumption logged to afterstay_consumption localStorage key on task submit' },
     ],
   },
   {
@@ -49,7 +66,7 @@ const CHANGELOG: ChangeEntry[] = [
     items: [
       { tag: '⚡ Feature', text: 'Report Problem modal enriched — cleaner can specify problem type (Safety Hazard, Damage, Maintenance Required, Guest Complaint, Supply Issue), add photo evidence, and set urgency level; report saved to localStorage and visible in operator alerts' },
       { tag: '⚡ Feature', text: 'Task delegation — cleaning tasks can be reassigned from the task drawer; "Delegate to…" dropdown shows available staff on shift with availability indicators; delegation reason required for supervisor audit trail' },
-      { tag: '🐛 Fix', text: 'Supplies logging on submit — supply items consumed during a cleaning task are now written to nestops_consumption on submit, enabling operator-side waste tracking and reorder triggers' },
+      { tag: '🐛 Fix', text: 'Supplies logging on submit — supply items consumed during a cleaning task are now written to afterstay_consumption on submit, enabling operator-side waste tracking and reorder triggers' },
     ],
   },
   {
@@ -133,7 +150,7 @@ const CHANGELOG: ChangeEntry[] = [
     date: 'Mar 21, 2026',
     items: [
       { tag: '⚡ Feature', text: 'Demo persona switcher — floating 🎭 button available inside every portal; switch between all 7 personas (Operator, Owner, Cleaner, Supervisor, Guest Services, Maintenance, Linen) in one tap without returning to login' },
-      { tag: '⚡ Feature', text: 'Per-persona inventory stock — inventory page filters items and stock levels per logged-in user; each persona sees only their assigned properties with realistic seed data; stock persisted in namespaced localStorage (nestops_stock_userId)' },
+      { tag: '⚡ Feature', text: 'Per-persona inventory stock — inventory page filters items and stock levels per logged-in user; each persona sees only their assigned properties with realistic seed data; stock persisted in namespaced localStorage (afterstay_stock_userId)' },
       { tag: '⚡ Feature', text: 'Staff alerts now include Early Check-in and Late Checkout upsell requests visible to cleaners; clicking an alert navigates directly to My Tasks with "→ Review request" CTA on the alert card' },
       { tag: '⚡ Feature', text: "My Cleanings timeline cards on the staff portal are now fully clickable — tapping a cleaning job opens the full task checklist drawer; 'Open checklist' label shown on hover" },
       { tag: '⚡ Feature', text: 'Upsell approval sheet rewritten: shows full day schedule with type badge, property, time window, and ⚡ Tight gap warning per slot; Impact of Approving section computes a conflict verdict (🟢 Looks fine / 🟡 Plan carefully / 🔴 Schedule conflict) based on checkout/checkin time analysis' },
@@ -255,13 +272,13 @@ const CHANGELOG: ChangeEntry[] = [
     version: 'v2.0',
     date: 'Mar 19, 2026',
     items: [
-      { tag: '⚡ Feature', text: 'Guest-facing Guidebook page — new route /guest/guidebook/[id]: mobile-optimized, no sidebar, WiFi reveal/copy, draft watermark banner, NestOps footer branding' },
+      { tag: '⚡ Feature', text: 'Guest-facing Guidebook page — new route /guest/guidebook/[id]: mobile-optimized, no sidebar, WiFi reveal/copy, draft watermark banner, AfterStay footer branding' },
       { tag: '⚡ Feature', text: 'Portal Quick Switch pills — compact role-switcher row below logo in both sidebars; animated "Switched to X" confirmation badge' },
       { tag: '⚡ Feature', text: 'Team page — new Daily tab showing all staff members with their assigned jobs, color-coded by type (cleaning/maintenance/inspection/GS), click-to-detail sheet' },
       { tag: '⚡ Feature', text: 'Operator dashboard — Team Today widget: compact 2-column staff grid showing pending tasks per person and PTE flags' },
       { tag: '⚡ Feature', text: 'Full Guest Services role — Fatima Ndiaye added as s4 with own jobs (heating follow-up, late check-in), shifts, and availability; correct USER_TO_STAFF mapping in 4 files' },
-      { tag: '⚡ Feature', text: 'Inspector demo login — anna@nestops.com / demo123 — with dedicated Inspector nav (Home, My Inspections, Intake, Work Orders, Inspection SOPs)' },
-      { tag: '🐛 Fix', text: 'Portal role switch now persists on page refresh — setRole() patches nestops_user.role in localStorage to prevent role revert' },
+      { tag: '⚡ Feature', text: 'Inspector demo login — anna@afterstay.com / demo123 — with dedicated Inspector nav (Home, My Inspections, Intake, Work Orders, Inspection SOPs)' },
+      { tag: '🐛 Fix', text: 'Portal role switch now persists on page refresh — setRole() patches afterstay_user.role in localStorage to prevent role revert' },
       { tag: '🐛 Fix', text: 'Guidebook editor inputs (WiFi name/password, check-in/out times) converted from defaultValue to controlled state seeded from editingGuide' },
       { tag: '🐛 Fix', text: 'Guidebook section toggles are now interactive — click to enable/disable; state stored in enabledSections Set' },
       { tag: '🐛 Fix', text: 'Guidebook QR code now renders a real scannable QR image (api.qrserver.com) instead of the Lucide QrCode icon placeholder' },
@@ -431,7 +448,7 @@ export default function ChangelogPage() {
 
   return (
     <div>
-      <PageHeader title="Changelog" subtitle="What's been shipped in NestOps" />
+      <PageHeader title="Changelog" subtitle="What's been shipped in AfterStay" />
 
       <div style={{ maxWidth: 720 }}>
         {CHANGELOG.map((entry, eIdx) => (

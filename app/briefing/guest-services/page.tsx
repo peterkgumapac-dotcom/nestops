@@ -10,14 +10,11 @@ import { PROPERTIES } from '@/lib/data/properties'
 import { JOBS } from '@/lib/data/staff'
 import { OVERNIGHT_REPORTS, GUEST_ISSUES, getActiveIssues } from '@/lib/data/guestServices'
 import CountdownTimer from '@/components/shared/CountdownTimer'
-import { MaintenanceTaskCard } from '@/components/tasks/maintenance/MaintenanceTaskCard'
 import {
   getPrefs, savePrefs, resetPrefs,
   TOGGLE_LABELS, ALWAYS_ON,
 } from '@/lib/data/briefingPrefs'
 import type { BriefingPrefs, BriefingToggles } from '@/lib/data/briefingPrefs'
-import { MAINTENANCE_FLAGS } from '@/lib/data/maintenanceFlags'
-import type { MaintenanceFlag } from '@/lib/data/maintenanceFlags'
 
 const USER_TO_STAFF: Record<string, string> = {
   'u5': 's4',
@@ -38,8 +35,6 @@ export default function GuestServicesBriefingPage() {
   const [mounted, setMounted] = useState(false)
   const [prefs, setPrefs] = useState<BriefingPrefs | null>(null)
   const [showToggles, setShowToggles] = useState(false)
-  const [accessCodeVisible, setAccessCodeVisible] = useState<Record<string, boolean>>({})
-  const [maintenanceFlags, setMaintenanceFlags] = useState<MaintenanceFlag[]>([])
 
   useEffect(() => {
     setToday(new Date().toISOString().split('T')[0])
@@ -47,14 +42,16 @@ export default function GuestServicesBriefingPage() {
 
   useEffect(() => {
     setMounted(true)
-    const stored = localStorage.getItem('nestops_user')
+    const stored = localStorage.getItem('afterstay_user')
     if (!stored) {
       router.replace('/login')
       return
     }
     try {
       const user: UserProfile = JSON.parse(stored)
-      if (user.jobRole !== 'guest-services' && !user.subRole?.includes('Guest')) {
+      const isGS = (user.role === 'operator' && user.accessTier === 'guest-services') ||
+                   user.jobRole === 'guest-services' as string || user.subRole?.includes('Guest')
+      if (!isGS) {
         router.replace('/staff/start')
         return
       }
@@ -66,15 +63,6 @@ export default function GuestServicesBriefingPage() {
       return
     }
 
-    // Load maintenance flags: merge static seed + any locally submitted flags
-    try {
-      const local = JSON.parse(localStorage.getItem('nestops_maintenance_flags') ?? '[]') as MaintenanceFlag[]
-      const allIds = new Set(MAINTENANCE_FLAGS.map(f => f.id))
-      const newLocal = local.filter(f => !allIds.has(f.id))
-      setMaintenanceFlags([...newLocal, ...MAINTENANCE_FLAGS])
-    } catch {
-      setMaintenanceFlags([...MAINTENANCE_FLAGS])
-    }
   }, [])
 
   useEffect(() => {
@@ -124,7 +112,7 @@ export default function GuestServicesBriefingPage() {
   ]
 
   const handleClockInAndGo = (destination = '/app/my-guest-services') => {
-    localStorage.setItem('nestops_clockin', JSON.stringify({
+    localStorage.setItem('afterstay_clockin', JSON.stringify({
       staffId: currentUser.id,
       shiftId: firstShift?.id ?? 'unknown',
       date: today,
@@ -163,7 +151,7 @@ export default function GuestServicesBriefingPage() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 28, height: 28, borderRadius: 8, background: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: 13 }}>N</div>
-          <span style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>NestOps</span>
+          <span style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>AfterStay</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button
@@ -243,14 +231,34 @@ export default function GuestServicesBriefingPage() {
                   <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>
                     Tasks Today
                   </div>
-                  {checkInJobs.map((job) => (
-                    <MaintenanceTaskCard
-                      key={job.id}
-                      job={job}
-                      codeVisible={accessCodeVisible[job.id] ?? false}
-                      onToggleCode={() => setAccessCodeVisible(prev => ({ ...prev, [job.id]: true }))}
-                    />
-                  ))}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {checkInJobs.map((job) => (
+                      <div key={job.id} style={{
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: 12, padding: '14px 16px',
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{job.title}</div>
+                          <span style={{
+                            fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+                            background: job.status === 'done' ? 'rgba(16,185,129,0.15)' : job.status === 'in_progress' ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.08)',
+                            color: job.status === 'done' ? '#34d399' : job.status === 'in_progress' ? '#60a5fa' : 'rgba(255,255,255,0.5)',
+                            textTransform: 'uppercase',
+                          }}>
+                            {job.status === 'in_progress' ? 'In Progress' : job.status === 'done' ? 'Complete' : 'Pending'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 2 }}>
+                          {job.propertyName}
+                        </div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>
+                          {job.dueTime ? `Due: ${job.dueTime}` : ''}
+                          {job.reservation?.guestName ? `${job.dueTime ? ' · ' : ''}Guest: ${job.reservation.guestName}` : ''}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </>
               )
             )}
@@ -403,95 +411,6 @@ export default function GuestServicesBriefingPage() {
                 ))}
               </div>
             )}
-
-            {/* MAINTENANCE FLAGS */}
-            {(() => {
-              const pendingFlags = maintenanceFlags.filter(f => f.status === 'pending_review')
-              if (pendingFlags.length === 0) return null
-
-              const updateFlag = (id: string, changes: Partial<MaintenanceFlag>) => {
-                setMaintenanceFlags(prev => prev.map(f => f.id === id ? { ...f, ...changes } : f))
-              }
-
-              const convertToTask = (flag: MaintenanceFlag) => {
-                // Create a new maintenance job in local state (demo: just update the flag)
-                updateFlag(flag.id, { status: 'converted', linkedJobId: `j-mf-${flag.id}` })
-              }
-
-              return (
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
-                      ⚠️ Maintenance Flags
-                    </div>
-                    <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'rgba(245,158,11,0.2)', color: '#fbbf24' }}>
-                      {pendingFlags.length} pending
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {pendingFlags.map(flag => {
-                      const reportedTime = new Date(flag.reportedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
-                      return (
-                        <div key={flag.id} style={{
-                          background: 'rgba(245,158,11,0.06)',
-                          border: '1px solid rgba(245,158,11,0.2)',
-                          borderRadius: 12, padding: '14px 16px',
-                        }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-                            <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{flag.propertyName}</div>
-                            <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: flag.urgency === 'today' ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.08)', color: flag.urgency === 'today' ? '#f87171' : 'rgba(255,255,255,0.5)' }}>
-                              {flag.urgency === 'today' ? 'Today' : 'Can wait'}
-                            </span>
-                          </div>
-                          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 4 }}>
-                            {flag.issueType} · {flag.description}
-                          </div>
-                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginBottom: 12 }}>
-                            Reported by {flag.reportedBy} · {reportedTime}
-                          </div>
-                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                            <button
-                              onClick={() => updateFlag(flag.id, { status: 'scheduled', urgency: 'today' })}
-                              style={{
-                                padding: '7px 14px', borderRadius: 8,
-                                background: 'rgba(239,68,68,0.12)', color: '#f87171',
-                                border: '1px solid rgba(239,68,68,0.25)',
-                                fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                              }}
-                            >
-                              Resolve Today
-                            </button>
-                            <button
-                              onClick={() => updateFlag(flag.id, { status: 'scheduled', urgency: 'later' })}
-                              style={{
-                                padding: '7px 14px', borderRadius: 8,
-                                background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)',
-                                border: '1px solid rgba(255,255,255,0.12)',
-                                fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                              }}
-                            >
-                              Schedule Later
-                            </button>
-                            <button
-                              onClick={() => convertToTask(flag)}
-                              style={{
-                                padding: '7px 14px', borderRadius: 8,
-                                background: 'rgba(124,58,237,0.12)', color: '#a78bfa',
-                                border: '1px solid rgba(124,58,237,0.25)',
-                                fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                              }}
-                            >
-                              Convert to Task →
-                            </button>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )
-            })()}
 
             {/* CTA */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

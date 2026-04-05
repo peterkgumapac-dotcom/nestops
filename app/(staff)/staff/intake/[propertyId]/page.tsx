@@ -143,7 +143,7 @@ type Draft = { data: SectionData; bedrooms: BedroomEntry[]; appliances: Applianc
 
 function loadDraft(propertyId: string, userId: string): Draft | null {
   try {
-    const raw = localStorage.getItem(`nestops_intake_${propertyId}`)
+    const raw = localStorage.getItem(`afterstay_intake_${propertyId}`)
     if (!raw) return null
     return (JSON.parse(raw) as Record<string, Draft>)[userId] ?? null
   } catch { return null }
@@ -151,10 +151,10 @@ function loadDraft(propertyId: string, userId: string): Draft | null {
 
 function saveDraft(propertyId: string, userId: string, userName: string, payload: Omit<Draft, 'submittedBy' | 'lastSaved'>) {
   try {
-    const raw = localStorage.getItem(`nestops_intake_${propertyId}`)
+    const raw = localStorage.getItem(`afterstay_intake_${propertyId}`)
     const all: Record<string, Draft> = raw ? JSON.parse(raw) : {}
     all[userId] = { ...payload, submittedBy: userName, lastSaved: new Date().toISOString() }
-    localStorage.setItem(`nestops_intake_${propertyId}`, JSON.stringify(all))
+    localStorage.setItem(`afterstay_intake_${propertyId}`, JSON.stringify(all))
   } catch { /* silent */ }
 }
 
@@ -205,7 +205,7 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
       <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>{label}</span>
       <button
         onClick={() => onChange(!value)}
-        style={{ width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer', background: value ? 'var(--green)' : 'var(--border)', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}
+        style={{ width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer', background: value ? 'var(--accent)' : 'var(--border)', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}
       >
         <span style={{ position: 'absolute', top: 2, left: value ? 22 : 2, width: 20, height: 20, borderRadius: '50%', background: '#fff', transition: 'left 0.2s' }} />
       </button>
@@ -243,7 +243,7 @@ function Section({ id, meta, complete, refCb, children }: {
           <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{meta.label}</span>
         </div>
         {complete === 'complete'
-          ? <CheckCircle2 size={18} color="var(--green)" style={{ flexShrink: 0, marginTop: 2 }} />
+          ? <CheckCircle2 size={18} color="var(--accent)" style={{ flexShrink: 0, marginTop: 2 }} />
           : complete === 'partial'
             ? <div style={{ width: 18, height: 18, borderRadius: '50%', border: '2px solid var(--amber)', flexShrink: 0, marginTop: 2 }} />
             : <div style={{ width: 18, height: 18, borderRadius: '50%', border: '2px solid var(--border)', flexShrink: 0, marginTop: 2 }} />
@@ -283,7 +283,7 @@ export default function IntakePage() {
   // Load saved draft on mount
   useEffect(() => {
     try {
-      const profile = JSON.parse(localStorage.getItem('nestops_user') || '{}')
+      const profile = JSON.parse(localStorage.getItem('afterstay_user') || '{}')
       const uid = profile.id ?? 'guest'
       const uname = profile.name ?? 'Staff'
       setUserId(uid)
@@ -395,7 +395,7 @@ export default function IntakePage() {
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginTop: 1 }}>{property.address}, {property.city}</div>
           </div>
-          <span style={{ fontSize: 11, color: saveStatus === 'saved' ? 'var(--green)' : saveStatus === 'saving' ? 'var(--text-subtle)' : 'transparent', flexShrink: 0, transition: 'color 0.3s' }}>
+          <span style={{ fontSize: 11, color: saveStatus === 'saved' ? 'var(--accent)' : saveStatus === 'saving' ? 'var(--text-subtle)' : 'transparent', flexShrink: 0, transition: 'color 0.3s' }}>
             {saveStatus === 'saving' ? 'Saving…' : '✓ Saved'}
           </span>
         </div>
@@ -413,8 +413,8 @@ export default function IntakePage() {
                   flexShrink: 0, padding: '5px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600,
                   border: '1px solid', cursor: 'pointer', transition: 'all 0.15s', whiteSpace: 'nowrap',
                   background: active ? accent : 'transparent',
-                  color: active ? '#fff' : c === 'complete' ? 'var(--green)' : c === 'partial' ? 'var(--amber)' : 'var(--text-muted)',
-                  borderColor: active ? accent : c === 'complete' ? 'var(--green-border)' : c === 'partial' ? 'var(--n-amber-border)' : 'var(--border)',
+                  color: active ? '#fff' : c === 'complete' ? 'var(--accent)' : c === 'partial' ? 'var(--amber)' : 'var(--text-muted)',
+                  borderColor: active ? accent : c === 'complete' ? 'var(--accent-border)' : c === 'partial' ? 'var(--n-amber-border)' : 'var(--border)',
                 }}
               >
                 {SECTION_META[key].emoji} {SECTION_META[key].label}
@@ -932,7 +932,7 @@ export default function IntakePage() {
           ].map(row => (
             <div key={row.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid var(--border)' }}>
               <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{row.label}</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: row.ok ? 'var(--green)' : 'var(--amber)' }}>{row.value}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: row.ok ? 'var(--accent)' : 'var(--amber)' }}>{row.value}</span>
             </div>
           ))}
 
@@ -985,14 +985,14 @@ function PhotoCheck({ photo, onToggle }: { photo: PhotoItem; onToggle: () => voi
       style={{
         display: 'flex', alignItems: 'flex-start', gap: 10, width: '100%', textAlign: 'left',
         background: photo.checked ? 'rgba(29,158,117,0.07)' : 'transparent',
-        border: `1px solid ${photo.checked ? 'var(--green-border)' : 'var(--border)'}`,
+        border: `1px solid ${photo.checked ? 'var(--accent-border)' : 'var(--border)'}`,
         borderRadius: 8, padding: '10px 12px', cursor: 'pointer', marginBottom: 7,
       }}
     >
       <div style={{
         width: 18, height: 18, borderRadius: 4, flexShrink: 0, marginTop: 1,
-        border: `2px solid ${photo.checked ? 'var(--green)' : 'var(--border)'}`,
-        background: photo.checked ? 'var(--green)' : 'transparent',
+        border: `2px solid ${photo.checked ? 'var(--accent)' : 'var(--border)'}`,
+        background: photo.checked ? 'var(--accent)' : 'transparent',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
         {photo.checked && <Check size={11} color="#fff" strokeWidth={3} />}

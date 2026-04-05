@@ -11,15 +11,17 @@ import { useRole } from '@/context/RoleContext'
 import type { Role, UserProfile } from '@/context/RoleContext'
 import { useAlerts } from '@/context/AlertsContext'
 
+import type { AccessTier } from '@/context/RoleContext'
+
 const DEMO_SWITCHER_PERSONAS = [
-  { userId: 'pk', initials: 'PK', name: 'Peter K.',   role: 'operator' as Role,                                                                                  avatarBg: '#1D9E75', emoji: '⚙️', label: 'Operator' },
-  { userId: 'ms', initials: 'MS', name: 'Maria S.',   role: 'staff'    as Role, subRole: 'Cleaner',             jobRole: 'cleaner'         as UserProfile['jobRole'], avatarBg: '#d97706', emoji: '🧹', label: 'Cleaner' },
-  { userId: 'bl', initials: 'BL', name: 'Bjorn L.',   role: 'staff'    as Role, subRole: 'Maintenance',         jobRole: 'maintenance'     as UserProfile['jobRole'], avatarBg: '#378ADD', emoji: '🔧', label: 'Maintenance' },
-  { userId: 'fn', initials: 'FN', name: 'Fatima N.',  role: 'staff'    as Role, subRole: 'Guest Services',      jobRole: 'guest-services'  as UserProfile['jobRole'], avatarBg: '#ec4899', emoji: '🛎️', label: 'Guest Svc' },
-  { userId: 'ak', initials: 'AK', name: 'Anna K.',    role: 'staff'    as Role, subRole: 'Cleaning Supervisor', jobRole: 'supervisor'      as UserProfile['jobRole'], avatarBg: '#06b6d4', emoji: '👷', label: 'Supervisor' },
-  { userId: 'cm', initials: 'CM', name: 'Carlos M.',  role: 'staff'    as Role, subRole: 'GS Supervisor',        jobRole: 'gs-supervisor'   as UserProfile['jobRole'], avatarBg: '#8b5cf6', emoji: '🎧', label: 'GS Supervisor' },
-  { userId: 'sj', initials: 'SJ', name: 'Sarah J.',   role: 'owner'    as Role,                                                                                  avatarBg: '#7F77DD', emoji: '🏠', label: 'Owner' },
-  { userId: 'mc', initials: 'MC', name: 'Michael C.', role: 'owner'    as Role,                                                                                  avatarBg: '#15d492', emoji: '🏠', label: 'Owner' },
+  { userId: 'pk', initials: 'PK', name: 'Peter K.',   role: 'operator' as Role,                                                                                                                    avatarBg: '#c4622d', emoji: '⚙️', label: 'Operator' },
+  { userId: 'fn', initials: 'FN', name: 'Fatima N.',  role: 'operator' as Role, accessTier: 'guest-services' as AccessTier, subRole: 'Guest Services Agent',                                       avatarBg: '#ec4899', emoji: '🛎️', label: 'GS Agent' },
+  { userId: 'cm', initials: 'CM', name: 'Carlos M.',  role: 'operator' as Role, accessTier: 'guest-services' as AccessTier, subRole: 'GS Supervisor',                                              avatarBg: '#8b5cf6', emoji: '🎧', label: 'GS Supervisor' },
+  { userId: 'ms', initials: 'MS', name: 'Maria S.',   role: 'staff'    as Role,                                              subRole: 'Cleaner',             jobRole: 'cleaner'     as UserProfile['jobRole'], avatarBg: '#d97706', emoji: '🧹', label: 'Cleaner' },
+  { userId: 'bl', initials: 'BL', name: 'Bjorn L.',   role: 'staff'    as Role,                                              subRole: 'Maintenance',         jobRole: 'maintenance' as UserProfile['jobRole'], avatarBg: '#378ADD', emoji: '🔧', label: 'Maintenance' },
+  { userId: 'ak', initials: 'AK', name: 'Anna K.',    role: 'staff'    as Role,                                              subRole: 'Cleaning Supervisor', jobRole: 'supervisor'  as UserProfile['jobRole'], avatarBg: '#06b6d4', emoji: '👷', label: 'Supervisor' },
+  { userId: 'sj', initials: 'SJ', name: 'Sarah J.',   role: 'owner'    as Role,                                                                                                                    avatarBg: '#7F77DD', emoji: '🏠', label: 'Owner' },
+  { userId: 'mc', initials: 'MC', name: 'Michael C.', role: 'owner'    as Role,                                                                                                                    avatarBg: '#15d492', emoji: '🏠', label: 'Owner' },
 ]
 const USER_ID_MAP: Record<string, string> = { pk: 'u1', ms: 'u3', bl: 'u4', fn: 'u5', ak: 'u7', cm: 'u8', sj: 'u2', mc: 'u6' }
 
@@ -49,16 +51,18 @@ export default function MainAppShell({ children }: { children: React.ReactNode }
       id: USER_ID_MAP[p.userId] ?? p.userId,
       name: p.name,
       role: p.role,
+      ...('accessTier' in p && p.accessTier ? { accessTier: p.accessTier } : {}),
       subRole: p.subRole,
-      jobRole: p.jobRole,
+      ...('jobRole' in p && p.jobRole ? { jobRole: p.jobRole } : {}),
       avatarInitials: p.initials,
       avatarColor: p.avatarBg,
     }
-    localStorage.setItem('nestops_user', JSON.stringify(profile))
+    localStorage.setItem('afterstay_user', JSON.stringify(profile))
     setUser(profile)
     let dest = '/app/my-tasks'
-    if (p.role === 'operator' || p.subRole?.includes('Supervisor')) dest = '/app/dashboard'
+    if (p.role === 'operator') dest = '/briefing'
     else if (p.role === 'owner') dest = '/owner'
+    else if (p.jobRole === 'supervisor') dest = '/app/dashboard'
     router.push(dest)
   }
 
@@ -88,7 +92,7 @@ export default function MainAppShell({ children }: { children: React.ReactNode }
           >
             <Menu size={20} />
           </button>
-          <span className="md:hidden" style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>NestOps</span>
+          <Link href="/app/dashboard" className="md:hidden" style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)', textDecoration: 'none' }}>AfterStay</Link>
 
           {/* Desktop spacer */}
           <div className="hidden md:block" />

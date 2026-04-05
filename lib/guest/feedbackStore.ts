@@ -6,7 +6,7 @@ interface FeedbackState {
 }
 
 function key(guidebookId: string) {
-  return `nestops_guest_feedback_${guidebookId}`
+  return `afterstay_guest_feedback_${guidebookId}`
 }
 
 export const feedbackStore = {
