@@ -94,6 +94,52 @@ export default function MyGuestServicesPage() {
         }
       />
 
+      {/* Pulse — live guest-services events */}
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span className="live-dot" />
+            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Pulse</span>
+            <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 10, background: 'var(--bg-elevated)', color: 'var(--text-muted)', fontWeight: 600 }}>
+              {allOpenIssues.length}
+            </span>
+          </div>
+        </div>
+        {allOpenIssues.length === 0 ? (
+          <div style={{ padding: 24, textAlign: 'center', fontSize: 13, color: 'var(--text-muted)' }}>No live events.</div>
+        ) : (
+          allOpenIssues.slice(0, 6).map((issue, i, arr) => {
+            const isUrgent = issue.severity === 'high' || issue.severity === 'critical' || issue.status === 'escalated'
+            const dotColor = SEVERITY_COLOR[issue.severity] ?? '#6b7280'
+            return (
+              <div
+                key={issue.id}
+                onClick={() => setSelectedIssue(issue)}
+                style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 10,
+                  padding: '10px 16px',
+                  borderLeft: isUrgent ? '2px solid #E07A45' : '2px solid transparent',
+                  borderBottom: i < arr.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: dotColor, flexShrink: 0, marginTop: 5 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.4 }}>
+                    <span style={{ fontWeight: 600 }}>{issue.guestName}</span>
+                    <span style={{ color: 'var(--text-muted)' }}> — {issue.title}</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginTop: 2 }}>{issue.propertyName}</div>
+                </div>
+                <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 10, background: STATUS_BG[issue.status] ?? '#6b728015', color: STATUS_COLOR[issue.status] ?? '#6b7280', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
+                  {issue.status.replace(/_/g, ' ')}
+                </span>
+              </div>
+            )
+          })
+        )}
+      </div>
+
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16, marginBottom: 24 }}>
         <StatCard label="My Open Issues" value={openCount} icon={Headphones} subtitle="Assigned to me" />
