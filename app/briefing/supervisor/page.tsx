@@ -1,5 +1,24 @@
 'use client'
 import { useState, useEffect } from 'react'
+
+type PulseStatus = 'at_risk' | 'blocked' | 'complete' | 'ok'
+type PulseEvent = {
+  id: string
+  actor: string
+  action: string
+  property: string
+  status: PulseStatus
+  type: 'staff_late' | 'property_blocked' | 'checkin_at_risk' | 'task_complete' | 'other'
+  time: string
+}
+const PULSE_EVENTS: PulseEvent[] = [
+  { id: 'p1', actor: 'Maria L.', action: 'running late (20m)', property: 'Harbor Studio', status: 'at_risk', type: 'staff_late', time: '9:42' },
+  { id: 'p2', actor: 'Carlos R.', action: 'flagged property', property: 'Skyline Loft 3B', status: 'blocked', type: 'property_blocked', time: '9:35' },
+  { id: 'p3', actor: 'Ana T.', action: 'check-in at risk', property: 'Ocean Villa', status: 'at_risk', type: 'checkin_at_risk', time: '9:28' },
+  { id: 'p4', actor: 'Jin P.', action: 'completed clean', property: 'Sunset Suite', status: 'complete', type: 'task_complete', time: '9:14' },
+]
+type PulseTab = 'all' | 'at_risk' | 'blocked' | 'complete'
+
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
@@ -21,6 +40,7 @@ export default function SupervisorBriefingPage() {
   const [today, setToday] = useState('')
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
   const [mounted, setMounted] = useState(false)
+  const [pulseTab, setPulseTab] = useState<PulseTab>('all')
 
   useEffect(() => {
     setToday(new Date().toISOString().split('T')[0])
@@ -141,6 +161,75 @@ export default function SupervisorBriefingPage() {
           </div>
 
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+
+            {/* Pulse */}
+            <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '16px', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span className="live-dot" />
+                  <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>Pulse</span>
+                </div>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {(['all', 'at_risk', 'blocked', 'complete'] as PulseTab[]).map(tab => {
+                    const active = pulseTab === tab
+                    return (
+                      <button key={tab} onClick={() => setPulseTab(tab)} style={{
+                        padding: '3px 10px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.15)',
+                        background: active ? '#ffffff' : 'transparent',
+                        color: active ? '#0a0f1a' : 'rgba(255,255,255,0.6)',
+                        fontSize: 11, fontWeight: active ? 600 : 500, cursor: 'pointer', textTransform: 'capitalize',
+                      }}>
+                        {tab === 'at_risk' ? 'At Risk' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+              {PULSE_EVENTS
+                .filter(e => pulseTab === 'all' ? true : e.status === pulseTab)
+                .map((e, i, arr) => {
+                  const isUrgent = e.status === 'blocked' || e.status === 'at_risk'
+                  const statusColor = e.status === 'blocked' ? '#E07A45'
+                    : e.status === 'at_risk' ? '#f59e0b'
+                    : e.status === 'complete' ? '#10b981' : 'rgba(255,255,255,0.5)'
+                  const actions: { label: string; onClick?: () => void }[] =
+                    e.type === 'staff_late' ? [{ label: 'Send Reminder' }, { label: 'Reassign' }]
+                    : e.type === 'property_blocked' ? [{ label: 'Flag property' }]
+                    : e.type === 'checkin_at_risk' ? [{ label: 'Reassign cleaner' }]
+                    : e.type === 'task_complete' ? [{ label: 'Verify' }]
+                    : []
+                  return (
+                    <div key={e.id} style={{
+                      display: 'flex', flexDirection: 'column', gap: 6,
+                      padding: '10px 10px 10px 12px',
+                      borderLeft: isUrgent ? '2px solid #E07A45' : '2px solid transparent',
+                      borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                        <div style={{ fontSize: 13, color: '#fff', lineHeight: 1.4 }}>
+                          <span style={{ fontWeight: 600 }}>{e.actor}</span>
+                          <span style={{ color: 'rgba(255,255,255,0.6)' }}> {e.action} — </span>
+                          <span style={{ fontWeight: 600 }}>{e.property}</span>
+                        </div>
+                        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--n-mono)', flexShrink: 0 }}>{e.time}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: `${statusColor}22`, color: statusColor, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          {e.status.replace('_', ' ')}
+                        </span>
+                        {actions.map(a => (
+                          <button key={a.label} style={{
+                            padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.18)',
+                            background: 'transparent', color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: 500, cursor: 'pointer',
+                          }}>
+                            {a.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+            </div>
 
             {/* Staff on shift today */}
             <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '16px', marginBottom: 16 }}>

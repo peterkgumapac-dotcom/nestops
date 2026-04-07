@@ -92,7 +92,13 @@ export default function MaintenanceBriefingPage() {
 
   const staffId = USER_TO_STAFF[currentUser.id]
   const myJobs = staffId
-    ? sortJobsByAccessibility(JOBS.filter(j => j.staffId === staffId))
+    ? (() => {
+        const sorted = sortJobsByAccessibility(JOBS.filter(j => j.staffId === staffId))
+        // Pulse requirement: Urgent → Today → Earlier. Stable-sort urgent to the top.
+        const urgencyRank = (j: typeof sorted[number]) =>
+          (j as { priority?: string }).priority === 'urgent' ? 0 : 1
+        return [...sorted].sort((a, b) => urgencyRank(a) - urgencyRank(b))
+      })()
     : []
 
   const handleClockInAndGo = (destination = '/app/my-tasks') => {
@@ -227,7 +233,7 @@ export default function MaintenanceBriefingPage() {
                     <MaintenanceTaskCard
                       key={job.id}
                       job={job}
-                      showPteStatus={prefs?.toggles.pteStatus}
+                      showPteStatus={true}
                       showLocation={prefs?.toggles.jobLocation}
                       showAccessCode={prefs?.toggles.accesstype}
                       codeVisible={accessCodeVisible[job.id] ?? false}

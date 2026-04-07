@@ -1501,8 +1501,8 @@ export default function AppDashboard() {
 
           {/* Right column */}
           <div style={{ position: 'sticky', top: 0, maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
-            {/* Activity Feed */}
-            <SectionLabel label="Activity Feed" />
+            {/* Pulse */}
+            <SectionLabel label="PULSE" />
             <Card style={{ padding: 0, overflow: 'hidden' }}>
               {/* Header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', borderBottom: `1px solid ${C.border}` }}>
@@ -1518,8 +1518,8 @@ export default function AppDashboard() {
                   <button key={tab} onClick={() => setFeedTab2(tab)} style={{
                     flex: 1, padding: '4px 0', fontSize: 11, fontWeight: feedTab2 === tab ? 600 : 400,
                     borderRadius: 5, border: 'none', cursor: 'pointer',
-                    background: feedTab2 === tab ? `${accent}18` : 'transparent',
-                    color: feedTab2 === tab ? accent : C.muted,
+                    background: feedTab2 === tab ? '#ffffff' : 'transparent',
+                    color: feedTab2 === tab ? C.text : C.muted,
                   }}>
                     {tab === 'all' ? 'All' : tab === 'in_progress' ? 'In progress' : 'Issues'}
                   </button>

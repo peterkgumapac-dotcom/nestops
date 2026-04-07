@@ -344,8 +344,8 @@ export default function GuestServicesPage() {
         {/* Feed header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Activity size={15} color={accent} />
-            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Live Activity Feed</span>
+            <span className="live-dot" />
+            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Pulse</span>
             <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 10, background: `${accent}18`, color: accent, fontWeight: 600 }}>
               {filteredFeed.length}
             </span>
@@ -358,9 +358,9 @@ export default function GuestServicesPage() {
                 onClick={() => setFeedTab(tab)}
                 style={{
                   padding: '4px 12px', borderRadius: 16, border: '1px solid',
-                  borderColor: feedTab === tab ? accent : 'var(--border)',
-                  background: feedTab === tab ? `${accent}18` : 'transparent',
-                  color: feedTab === tab ? accent : 'var(--text-muted)',
+                  borderColor: feedTab === tab ? 'var(--border)' : 'var(--border)',
+                  background: feedTab === tab ? '#ffffff' : 'transparent',
+                  color: feedTab === tab ? 'var(--text-primary)' : 'var(--text-muted)',
                   fontSize: 12, fontWeight: feedTab === tab ? 600 : 500,
                   cursor: 'pointer', textTransform: 'capitalize',
                 }}
@@ -383,6 +383,7 @@ export default function GuestServicesPage() {
               .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
               .map((item, i) => {
                 const dotColor = feedDotColor(item.type, item.upsellDecisionStatus)
+                const isUrgent = item.type === 'issue_reported' || item.type === 'guest_issue' || (item as { status?: string }).status === 'blocked'
                 return (
                   <div
                     key={item.id}
@@ -390,6 +391,7 @@ export default function GuestServicesPage() {
                       display: 'flex', alignItems: 'flex-start', gap: 12,
                       padding: '12px 18px',
                       borderBottom: i < filteredFeed.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                      borderLeft: isUrgent ? '2px solid #E07A45' : '2px solid transparent',
                     }}
                   >
                     {/* Dot */}

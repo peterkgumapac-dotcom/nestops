@@ -550,12 +550,12 @@ export default function OperatorDashboard() {
       {/* ═══ RIGHT PANEL ════════════════════════════════════════════════════════ */}
       <aside className="rp-new" style={{ display: isMobile ? 'none' : undefined }}>
 
-        {/* I. Live Feed */}
+        {/* I. Pulse */}
         <div className="rp-block-new" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span className="live-dot" />
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--n-text)', textTransform: 'uppercase', letterSpacing: '.05em' }}>Live Feed</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--n-text)', textTransform: 'uppercase', letterSpacing: '.05em' }}>PULSE</span>
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
               {feedBlocked > 0 && <span style={{ fontSize: 10, color: 'var(--n-red)', fontFamily: 'var(--n-mono)' }}>{feedBlocked} blocked</span>}

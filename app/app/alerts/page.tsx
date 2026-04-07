@@ -152,10 +152,10 @@ export default function AlertsPage() {
   const accent = '#7c3aed'
 
   const pillStyle = (active: boolean): React.CSSProperties => ({
-    padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: 'pointer',
-    border: `1px solid ${active ? accent : 'var(--border)'}`,
-    background: active ? `${accent}1a` : 'transparent',
-    color: active ? accent : 'var(--text-muted)',
+    padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: active ? 600 : 500, cursor: 'pointer',
+    border: '1px solid var(--border)',
+    background: active ? '#ffffff' : 'transparent',
+    color: active ? 'var(--text-primary)' : 'var(--text-muted)',
   })
 
   const renderAlertCard = (alert: FieldAlert) => {
@@ -208,8 +208,8 @@ export default function AlertsPage() {
               )}
             </div>
 
-            {/* Work order CTA */}
-            {(alert.type === 'maintenance_issue' || alert.type === 'apartment_dirty') && (
+            {/* Work order CTA — supervisors only */}
+            {isSupervisor && (alert.type === 'maintenance_issue' || alert.type === 'apartment_dirty') && (
               convertedAlerts[alert.id]
                 ? <div style={{ marginTop: 8, fontSize: 11, fontWeight: 600, color: '#16a34a',
                                 display: 'flex', alignItems: 'center', gap: 4 }}>
