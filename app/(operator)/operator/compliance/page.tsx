@@ -14,10 +14,10 @@ import { PROPERTIES } from '@/lib/data/properties'
 import { OWNERS } from '@/lib/data/owners'
 
 const STATUS_CONFIG = {
-  valid:    { label: 'Valid',    color: '#10b981', bg: '#10b98115', border: '#10b98130' },
-  expiring: { label: 'Expiring', color: '#d97706', bg: '#d9770615', border: '#d9770630' },
-  expired:  { label: 'Expired',  color: '#ef4444', bg: '#ef444415', border: '#ef444430' },
-  missing:  { label: 'Missing',  color: '#6b7280', bg: '#6b728015', border: '#6b728030' },
+  valid:    { label: 'Valid',    color: 'var(--status-success)', bg: '#10b98115', border: '#10b98130' },
+  expiring: { label: 'Expiring', color: 'var(--status-warning)', bg: '#d9770615', border: '#d9770630' },
+  expired:  { label: 'Expired',  color: 'var(--status-danger)', bg: '#ef444415', border: '#ef444430' },
+  missing:  { label: 'Missing',  color: 'var(--text-subtle)', bg: '#6b728015', border: '#6b728030' },
 }
 
 const CATEGORIES = [
@@ -143,7 +143,7 @@ AfterStay Property Management`)
           }}
         >
           <AlertTriangle size={16} color="#ef4444" />
-          <span style={{ fontSize: 13, color: '#ef4444', fontWeight: 600 }}>
+          <span style={{ fontSize: 13, color: 'var(--status-danger)', fontWeight: 600 }}>
             {expired} expired · {missing} missing —&nbsp;
           </span>
           <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>

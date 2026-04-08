@@ -91,7 +91,7 @@ interface TodayArrival {
 
 const COLUMNS = [
   { id: 'todo',       label: 'To Do',       color: '#7878a0' },
-  { id: 'inprogress', label: 'In Progress',  color: '#7c3aed' },
+  { id: 'inprogress', label: 'In Progress',  color: 'var(--status-accent)' },
   { id: 'done',       label: 'Done',         color: '#059669' },
 ]
 
@@ -169,11 +169,11 @@ interface CleaningJob {
 }
 
 const CLEANING_JOBS_SEED: CleaningJob[] = [
-  { propId: 'p1', day: 1, label: 'Deep Clean', color: '#7c3aed', cleaner: 'Maria S.',  timeWindow: '10:00–14:00', checklistTemplate: 'Full Turnover',    status: 'scheduled',  gapHrs: 2.5 },
+  { propId: 'p1', day: 1, label: 'Deep Clean', color: 'var(--status-accent)', cleaner: 'Maria S.',  timeWindow: '10:00–14:00', checklistTemplate: 'Full Turnover',    status: 'scheduled',  gapHrs: 2.5 },
   { propId: 'p2', day: 0, label: 'Turnover',   color: '#059669', cleaner: 'Fatima N.', timeWindow: '11:00–13:00', checklistTemplate: 'Standard Turnover', status: 'in_progress', gapHrs: 1.2 },
-  { propId: 'p3', day: 2, label: 'Inspection', color: '#d97706', cleaner: 'Bjorn L.',  timeWindow: '09:00–10:30', checklistTemplate: 'Pre-Inspection',    status: 'scheduled' },
+  { propId: 'p3', day: 2, label: 'Inspection', color: 'var(--status-warning)', cleaner: 'Bjorn L.',  timeWindow: '09:00–10:30', checklistTemplate: 'Pre-Inspection',    status: 'scheduled' },
   { propId: 'p4', day: 4, label: 'Turnover',   color: '#059669', cleaner: 'Maria S.',  timeWindow: '12:00–14:00', checklistTemplate: 'Standard Turnover', status: 'scheduled',  gapHrs: 0.8 },
-  { propId: 'p5', day: 3, label: 'Deep Clean', color: '#7c3aed', cleaner: 'Fatima N.', timeWindow: '10:00–14:00', checklistTemplate: 'Seasonal Deep Clean', status: 'done' },
+  { propId: 'p5', day: 3, label: 'Deep Clean', color: 'var(--status-accent)', cleaner: 'Fatima N.', timeWindow: '10:00–14:00', checklistTemplate: 'Seasonal Deep Clean', status: 'done' },
   { propId: 'p1', day: 5, label: 'Turnover',   color: '#059669', cleaner: 'Maria S.',  timeWindow: '11:00–13:00', checklistTemplate: 'Standard Turnover', status: 'scheduled' },
   { propId: 'p3', day: 6, label: 'Turnover',   color: '#059669', cleaner: 'Fatima N.', timeWindow: '11:00–13:00', checklistTemplate: 'Standard Turnover', status: 'scheduled' },
 ]
@@ -613,8 +613,8 @@ function OperationsContent() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
                   {[
                     { label: 'Open Tasks',         value: allOpen.length,     color: accent },
-                    { label: 'Overdue',            value: overdue.length,     color: '#dc2626' },
-                    { label: 'Maintenance Active', value: maintActive.length, color: '#d97706' },
+                    { label: 'Overdue',            value: overdue.length,     color: 'var(--status-danger)' },
+                    { label: 'Maintenance Active', value: maintActive.length, color: 'var(--status-warning)' },
                     { label: "Today's Cleanings",  value: todayCleans.length, color: '#059669' },
                   ].map(s => (
                     <div key={s.label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px' }}>
@@ -783,8 +783,8 @@ function OperationsContent() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Week of {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</span>
             <div style={{ display: 'flex', gap: 12, fontSize: 11, color: 'var(--text-subtle)' }}>
-              <span style={{ color: '#f59e0b', fontWeight: 600 }}>● &lt;3h gap</span>
-              <span style={{ color: '#ef4444', fontWeight: 600 }}>● &lt;1.5h gap</span>
+              <span style={{ color: 'var(--status-warning)', fontWeight: 600 }}>● &lt;3h gap</span>
+              <span style={{ color: 'var(--status-danger)', fontWeight: 600 }}>● &lt;1.5h gap</span>
             </div>
           </div>
           <CleaningCalendar
@@ -810,7 +810,7 @@ function OperationsContent() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 {m.actionItems.filter(a => !a.done).length > 0 && (
-                  <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: 'rgba(217,119,6,0.15)', color: '#fbbf24' }}>
+                  <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: 'rgba(217,119,6,0.15)', color: 'var(--status-warning)' }}>
                     {m.actionItems.filter(a => !a.done).length} actions
                   </span>
                 )}

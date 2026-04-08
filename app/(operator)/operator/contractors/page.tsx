@@ -65,9 +65,9 @@ const inputStyle: React.CSSProperties = {
 
 const WO_STATUS_CONFIG = {
   issued:         { label: 'Issued',          color: '#6366f1', bg: '#6366f115' },
-  in_progress:    { label: 'In Progress',      color: '#d97706', bg: '#d9770615' },
-  completed:      { label: 'Completed',        color: '#10b981', bg: '#10b98115' },
-  pending_review: { label: 'Pending Review',   color: '#d97706', bg: '#d9770615' },
+  in_progress:    { label: 'In Progress',      color: 'var(--status-warning)', bg: '#d9770615' },
+  completed:      { label: 'Completed',        color: 'var(--status-success)', bg: '#10b98115' },
+  pending_review: { label: 'Pending Review',   color: 'var(--status-warning)', bg: '#d9770615' },
 }
 
 type Tab = 'directory' | 'onboarding' | 'work_orders'
@@ -201,7 +201,7 @@ export default function ContractorsPage() {
               <div style={{ height: 1, background: 'var(--border)', marginBottom: 12 }} />
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <Star size={12} style={{ color: '#fbbf24', fill: '#fbbf24' }} />
+                  <Star size={12} style={{ color: 'var(--status-warning)', fill: '#fbbf24' }} />
                   <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{c.rating}</span>
                   <span style={{ fontSize: 12, color: 'var(--text-subtle)' }}>/ 5.0</span>
                 </div>
@@ -307,7 +307,7 @@ export default function ContractorsPage() {
                   <CheckCircle size={14} color="#10b981" />
                   <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', flex: 1 }}>{c.name}</span>
                   <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{c.specialty}</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: '#10b98115', color: '#10b981' }}>Active</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: '#10b98115', color: 'var(--status-success)' }}>Active</span>
                 </div>
               ))}
             </div>
@@ -351,7 +351,7 @@ export default function ContractorsPage() {
                       <Clock size={11} /> Issued {wo.issuedDate}
                     </div>
                     {wo.invoiceUploaded && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#10b981' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--status-success)' }}>
                         <FileText size={11} /> Invoice uploaded
                       </div>
                     )}

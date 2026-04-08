@@ -23,17 +23,17 @@ const PROPERTY_TYPES = ['Studio', '1BR', '2BR', '3BR', '4BR+'] as const
 interface CartItem { itemId: string; name: string; qty: number; unit: string; vendorId: string; vendorName: string; price: number }
 
 const TIER_COLORS: Record<string, { bg: string; color: string; label: string }> = {
-  auto:    { bg: 'rgba(22,163,74,0.1)',  color: '#16a34a', label: 'Auto-approved' },
-  manager: { bg: 'rgba(37,99,235,0.1)',  color: '#2563eb', label: 'Manager approval' },
-  owner:   { bg: 'rgba(239,68,68,0.1)',  color: '#ef4444', label: 'Owner approval' },
+  auto:    { bg: 'rgba(22,163,74,0.1)',  color: 'var(--status-success)', label: 'Auto-approved' },
+  manager: { bg: 'rgba(37,99,235,0.1)',  color: 'var(--status-info)', label: 'Manager approval' },
+  owner:   { bg: 'rgba(239,68,68,0.1)',  color: 'var(--status-danger)', label: 'Owner approval' },
 }
 const APPROVAL_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
-  pending:           { bg: 'rgba(217,119,6,0.1)', color: '#d97706' },
-  approved:          { bg: 'rgba(22,163,74,0.1)', color: '#16a34a' },
+  pending:           { bg: 'rgba(217,119,6,0.1)', color: 'var(--status-warning)' },
+  approved:          { bg: 'rgba(22,163,74,0.1)', color: 'var(--status-success)' },
   sent:              { bg: 'rgba(99,102,241,0.1)', color: '#6366f1' },
-  received:          { bg: 'rgba(22,163,74,0.1)', color: '#16a34a' },
-  cancelled:         { bg: 'rgba(107,114,128,0.1)', color: '#6b7280' },
-  changes_requested: { bg: 'rgba(239,68,68,0.1)', color: '#ef4444' },
+  received:          { bg: 'rgba(22,163,74,0.1)', color: 'var(--status-success)' },
+  cancelled:         { bg: 'rgba(107,114,128,0.1)', color: 'var(--text-subtle)' },
+  changes_requested: { bg: 'rgba(239,68,68,0.1)', color: 'var(--status-danger)' },
 }
 
 export default function InventoryPage() {
@@ -108,7 +108,7 @@ export default function InventoryPage() {
     { key: 'valueNOK', label: 'Value', sortable: true, render: a => <span style={{ fontSize: 13 }}>{a.valueNOK.toLocaleString()} NOK</span> },
     { key: 'condition', label: 'Condition', render: a => <span style={{ fontSize: 12, textTransform: 'capitalize', color: 'var(--text-muted)' }}>{a.condition}</span> },
     { key: 'id', label: '', width: '80px', render: a => (
-      <button onClick={e => { e.stopPropagation(); setSelectedAsset(a); setAssetReportDrawer(true) }} style={{ fontSize: 12, color: '#f87171', background: 'none', border: 'none', cursor: 'pointer' }}>
+      <button onClick={e => { e.stopPropagation(); setSelectedAsset(a); setAssetReportDrawer(true) }} style={{ fontSize: 12, color: 'var(--status-danger)', background: 'none', border: 'none', cursor: 'pointer' }}>
         <AlertCircle size={14} />
       </button>
     )},
@@ -321,7 +321,7 @@ export default function InventoryPage() {
                               <td style={{ padding: '9px 12px', fontSize: 13, fontWeight: 600 }}>{ti.qtyPerTurnover} {item.unit}</td>
                               <td style={{ padding: '9px 12px' }}>
                                 {atPar && (
-                                  <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: 'rgba(239,68,68,0.1)', color: '#ef4444' }}>
+                                  <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: 'rgba(239,68,68,0.1)', color: 'var(--status-danger)' }}>
                                     ~{remaining} turnovers left
                                   </span>
                                 )}
@@ -481,7 +481,7 @@ export default function InventoryPage() {
                             <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                               <button
                                 onClick={() => addToCart(item)}
-                                style={{ fontSize: 12, padding: '5px 12px', borderRadius: 6, border: 'none', background: inCart ? '#16a34a' : accent, color: '#fff', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}
+                                style={{ fontSize: 12, padding: '5px 12px', borderRadius: 6, border: 'none', background: inCart ? '#16a34a' : accent, color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}
                               >
                                 <ShoppingCart size={11} /> {inCart ? 'In Cart' : 'Add to Cart'}
                               </button>
@@ -568,7 +568,7 @@ export default function InventoryPage() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18, padding: '12px 16px', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8 }}>
             <AlertTriangle size={14} color="#ef4444" />
-            <span style={{ fontSize: 13, color: '#ef4444' }}>Staff members with <strong>&gt;20% over expected</strong> consumption are highlighted in red.</span>
+            <span style={{ fontSize: 13, color: 'var(--status-danger)' }}>Staff members with <strong>&gt;20% over expected</strong> consumption are highlighted in red.</span>
           </div>
 
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
@@ -794,7 +794,7 @@ export default function InventoryPage() {
                     setOrders(prev => prev.map(o => o.id === selectedPO.id ? { ...o, approvalStatus: 'changes_requested' } : o))
                     showToast('Changes requested')
                   }
-                }} style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid #d97706', background: 'transparent', color: '#d97706', fontSize: 13, cursor: 'pointer' }}>Request Changes</button>
+                }} style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid #d97706', background: 'transparent', color: 'var(--status-warning)', fontSize: 13, cursor: 'pointer' }}>Request Changes</button>
                 <button onClick={() => {
                   if (selectedPO) {
                     setPoApprovals(p => ({ ...p, [selectedPO.id]: 'approved' }))
@@ -836,7 +836,7 @@ export default function InventoryPage() {
                 <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-subtle)', marginBottom: 8 }}>Approval Chain</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   {selectedPO.total < 500 ? (
-                    <span style={{ fontSize: 12, color: '#16a34a' }}>✓ Auto-approved (under 500 NOK)</span>
+                    <span style={{ fontSize: 12, color: 'var(--status-success)' }}>✓ Auto-approved (under 500 NOK)</span>
                   ) : selectedPO.total < 2000 ? (
                     <>
                       <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 10, background: `${accent}18`, color: accent, fontWeight: 600 }}>Manager</span>
@@ -847,7 +847,7 @@ export default function InventoryPage() {
                     <>
                       <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 10, background: `${accent}18`, color: accent, fontWeight: 600 }}>Manager</span>
                       <ChevronRight size={12} style={{ color: 'var(--text-subtle)' }} />
-                      <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 10, background: 'rgba(239,68,68,0.1)', color: '#ef4444', fontWeight: 600 }}>Owner</span>
+                      <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 10, background: 'rgba(239,68,68,0.1)', color: 'var(--status-danger)', fontWeight: 600 }}>Owner</span>
                       <ChevronRight size={12} style={{ color: 'var(--text-subtle)' }} />
                       <span style={{ fontSize: 12, color: 'var(--text-subtle)' }}>Send</span>
                     </>

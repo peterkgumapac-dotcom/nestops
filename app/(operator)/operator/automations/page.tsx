@@ -174,7 +174,7 @@ export default function AutomationsPage() {
                 placeholder="e.g. Post-Checkout Cleaning"
                 style={{ ...inputStyle, borderColor: nameError ? '#ef4444' : undefined }}
               />
-              {nameError && <span style={{ color: '#ef4444', fontSize: 12, marginTop: 4, display: 'block' }}>{nameError}</span>}
+              {nameError && <span style={{ color: 'var(--status-danger)', fontSize: 12, marginTop: 4, display: 'block' }}>{nameError}</span>}
             </div>
 
             {/* Active toggle */}

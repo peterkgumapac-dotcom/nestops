@@ -269,8 +269,8 @@ export default function TicketsPage() {
           selectedRequest && (
             <div style={{ display: 'flex', gap: 8, width: '100%' }}>
               {selectedRequest.type === 'purchase' && selectedRequest.status !== 'resolved' && <>
-                <button onClick={() => updateStatus(selectedRequest.id, 'pending')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: 'rgba(5,150,105,0.15)', color: '#34d399', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Approve</button>
-                <button onClick={() => updateStatus(selectedRequest.id, 'open')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: 'rgba(239,68,68,0.12)', color: '#f87171', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Decline</button>
+                <button onClick={() => updateStatus(selectedRequest.id, 'pending')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: 'rgba(5,150,105,0.15)', color: 'var(--status-success)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Approve</button>
+                <button onClick={() => updateStatus(selectedRequest.id, 'open')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: 'rgba(239,68,68,0.12)', color: 'var(--status-danger)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Decline</button>
               </>}
               {selectedRequest.type === 'maintenance' && selectedRequest.status !== 'resolved' && (
                 <div style={{ flex: 1, position: 'relative' }}>

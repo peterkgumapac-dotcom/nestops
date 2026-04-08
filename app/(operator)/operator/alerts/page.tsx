@@ -96,15 +96,15 @@ export default function AlertsPage() {
         return (
           <div style={{ marginBottom: 24, background: 'var(--bg-card)', border: '1px solid #7c3aed30', borderLeft: '4px solid #7c3aed', borderRadius: 10, padding: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <Users size={14} style={{ color: '#7c3aed' }} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Field Team — Supervisor Action Required</span>
-              <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 10, background: '#7c3aed20', color: '#7c3aed', fontWeight: 600 }}>{escalated.length}</span>
+              <Users size={14} style={{ color: 'var(--status-accent)' }} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--status-accent)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Field Team — Supervisor Action Required</span>
+              <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 10, background: '#7c3aed20', color: 'var(--status-accent)', fontWeight: 600 }}>{escalated.length}</span>
               <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-muted)' }}>Cleaning &amp; Maintenance</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {escalated.map(req => (
                 <div key={req.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: 'var(--bg-elevated)', borderRadius: 8, border: '1px solid var(--border)' }}>
-                  <AlertTriangle size={14} style={{ color: '#f59e0b', flexShrink: 0 }} />
+                  <AlertTriangle size={14} style={{ color: 'var(--status-warning)', flexShrink: 0 }} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>
                       {req.upsellTitle} — {req.guestName}
@@ -115,10 +115,10 @@ export default function AlertsPage() {
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>${req.price}</span>
-                    <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 10, background: '#f59e0b18', color: '#d97706', border: '1px solid #f59e0b30', fontWeight: 600 }}>
+                    <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 10, background: '#f59e0b18', color: 'var(--status-warning)', border: '1px solid #f59e0b30', fontWeight: 600 }}>
                       {req.calendarSignal === 'tentative' ? '🟡 Tentative' : req.calendarSignal === 'blocked' ? '🔴 Blocked' : '🟢 Available'}
                     </span>
-                    <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 10, background: '#7c3aed14', color: '#7c3aed', border: '1px solid #7c3aed30', fontWeight: 600 }}>⬆ Escalated</span>
+                    <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 10, background: '#7c3aed14', color: 'var(--status-accent)', border: '1px solid #7c3aed30', fontWeight: 600 }}>⬆ Escalated</span>
                   </div>
                 </div>
               ))}
@@ -167,7 +167,7 @@ export default function AlertsPage() {
                     <td style={{ padding: '11px 12px' }}>
                       <div style={{ display: 'flex', gap: 4 }}>
                         <button onClick={() => { setEditingRule(r); setRuleSheet(true) }} style={{ padding: '3px 8px', borderRadius: 5, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, fontSize: 11, cursor: 'pointer' }}>Edit</button>
-                        <button onClick={() => deleteRule(r.id)} style={{ padding: '3px 8px', borderRadius: 5, border: '1px solid var(--border)', background: 'transparent', color: '#f87171', fontSize: 11, cursor: 'pointer' }}>Delete</button>
+                        <button onClick={() => deleteRule(r.id)} style={{ padding: '3px 8px', borderRadius: 5, border: '1px solid var(--border)', background: 'transparent', color: 'var(--status-danger)', fontSize: 11, cursor: 'pointer' }}>Delete</button>
                       </div>
                     </td>
                   </tr>
@@ -192,7 +192,7 @@ export default function AlertsPage() {
                         <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)', marginBottom: 2 }}>{intg.name}</div>
                         <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{intg.description}</div>
                         {intg.connected && intg.detail && (
-                          <div style={{ fontSize: 11, color: '#34d399', marginTop: 4 }}>● Connected · {intg.detail}</div>
+                          <div style={{ fontSize: 11, color: 'var(--status-success)', marginTop: 4 }}>● Connected · {intg.detail}</div>
                         )}
                         {!intg.connected && (
                           <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginTop: 4 }}>○ Not connected</div>
@@ -203,7 +203,7 @@ export default function AlertsPage() {
                       {intg.connected ? (
                         <>
                           <button onClick={() => { if (intg.id === 'slack') setSlackSheet(true) }} style={{ padding: '5px 12px', borderRadius: 7, border: `1px solid ${accent}`, background: `${accent}14`, color: accent, fontSize: 12, cursor: 'pointer' }}>Configure</button>
-                          <button onClick={() => disconnectIntegration(intg.id)} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid var(--border)', background: 'transparent', color: '#f87171', fontSize: 12, cursor: 'pointer' }}>Disconnect</button>
+                          <button onClick={() => disconnectIntegration(intg.id)} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid var(--border)', background: 'transparent', color: 'var(--status-danger)', fontSize: 12, cursor: 'pointer' }}>Disconnect</button>
                         </>
                       ) : (
                         <button onClick={() => setConnectDialog(intg)} style={{ padding: '5px 12px', borderRadius: 7, border: 'none', background: accent, color: '#fff', fontSize: 12, cursor: 'pointer' }}>Connect</button>

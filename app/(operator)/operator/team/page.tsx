@@ -286,7 +286,7 @@ export default function TeamPage() {
         <button style={tabStyle('timelog')}     onClick={() => setTab('timelog')}>     <Clock size={14} /> Timelog     </button>
         <button style={tabStyle('contractors')} onClick={() => setTab('contractors')}> <Wrench size={14} /> Contractors </button>
         <button style={tabStyle('daily')}       onClick={() => setTab('daily')}>       <Calendar size={14} /> Daily       </button>
-        <button style={tabStyle('leave')}       onClick={() => setTab('leave')}>       <ClipboardCheck size={14} /> Leave{leaveRequests.filter(r => r.status === 'pending').length > 0 && <span style={{ marginLeft: 4, fontSize: 10, fontWeight: 700, padding: '1px 5px', borderRadius: 10, background: '#d9770630', color: '#d97706' }}>{leaveRequests.filter(r => r.status === 'pending').length}</span>} </button>
+        <button style={tabStyle('leave')}       onClick={() => setTab('leave')}>       <ClipboardCheck size={14} /> Leave{leaveRequests.filter(r => r.status === 'pending').length > 0 && <span style={{ marginLeft: 4, fontSize: 10, fontWeight: 700, padding: '1px 5px', borderRadius: 10, background: '#d9770630', color: 'var(--status-warning)' }}>{leaveRequests.filter(r => r.status === 'pending').length}</span>} </button>
         <button style={tabStyle('contracts')}   onClick={() => setTab('contracts')}>   <FileText size={14} /> Contracts   </button>
       </div>
 
@@ -515,9 +515,9 @@ export default function TeamPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '10px 14px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8 }}>
               <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-subtle)' }}>Utilization:</span>
               {[
-                { color: '#10b981', label: '<70% On track' },
-                { color: '#d97706', label: '70–89% Busy' },
-                { color: '#ef4444', label: '≥90% Overloaded' },
+                { color: 'var(--status-success)', label: '<70% On track' },
+                { color: 'var(--status-warning)', label: '70–89% Busy' },
+                { color: 'var(--status-danger)', label: '≥90% Overloaded' },
               ].map(({ color, label }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: color }} />
@@ -822,7 +822,7 @@ export default function TeamPage() {
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>{c.email}</div>
                   <div style={{ height: 1, background: 'var(--border)', marginBottom: 12 }} />
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Star size={12} style={{ color: '#fbbf24', fill: '#fbbf24' }} />
+                    <Star size={12} style={{ color: 'var(--status-warning)', fill: '#fbbf24' }} />
                     <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{c.rating}</span>
                     <span style={{ fontSize: 12, color: 'var(--text-subtle)' }}>/ 5.0</span>
                   </div>
@@ -952,7 +952,7 @@ export default function TeamPage() {
                       <StatusBadge status={selectedDailyJob.priority} />
                     </div>
                     {'pteStatus' in selectedDailyJob && (selectedDailyJob as { pteStatus?: string }).pteStatus === 'pending' && (
-                      <div style={{ padding: '8px 12px', borderRadius: 8, background: '#d9770618', border: '1px solid #d9770640', fontSize: 12, color: '#d97706', fontWeight: 600 }}>
+                      <div style={{ padding: '8px 12px', borderRadius: 8, background: '#d9770618', border: '1px solid #d9770640', fontSize: 12, color: 'var(--status-warning)', fontWeight: 600 }}>
                         🔒 PTE Pending — awaiting Guest Services approval
                       </div>
                     )}
@@ -975,9 +975,9 @@ export default function TeamPage() {
               return (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
                   {[
-                    { label: 'Pending Requests', value: pending,  color: '#d97706' },
-                    { label: 'Approved',          value: approved, color: '#16a34a' },
-                    { label: 'Denied',            value: denied,   color: '#dc2626' },
+                    { label: 'Pending Requests', value: pending,  color: 'var(--status-warning)' },
+                    { label: 'Approved',          value: approved, color: 'var(--status-success)' },
+                    { label: 'Denied',            value: denied,   color: 'var(--status-danger)' },
                   ].map(({ label, value, color }) => (
                     <div key={label} style={{ padding: '16px 18px', background: 'var(--bg-card)', border: `1px solid ${color}30`, borderRadius: 10 }}>
                       <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-subtle)', textTransform: 'uppercase', marginBottom: 6 }}>{label}</div>
@@ -1003,9 +1003,9 @@ export default function TeamPage() {
 
               {leaveRequests.map((req, i) => {
                 const statusMap: Record<LeaveStatus, { bg: string; color: string; label: string }> = {
-                  pending:  { bg: '#d9770618', color: '#d97706', label: 'Pending' },
-                  approved: { bg: '#16a34a18', color: '#16a34a', label: 'Approved' },
-                  denied:   { bg: '#dc262618', color: '#dc2626', label: 'Denied' },
+                  pending:  { bg: '#d9770618', color: 'var(--status-warning)', label: 'Pending' },
+                  approved: { bg: '#16a34a18', color: 'var(--status-success)', label: 'Approved' },
+                  denied:   { bg: '#dc262618', color: 'var(--status-danger)', label: 'Denied' },
                 }
                 const s = statusMap[req.status]
                 return (
@@ -1082,9 +1082,9 @@ export default function TeamPage() {
               {contracts.map(c => {
                 const empTypeLabel: Record<string, string> = { full_time: 'Full Time', part_time: 'Part Time', casual: 'Casual', contractor: 'Contractor' }
                 const statusMap: Record<string, { bg: string; color: string; label: string }> = {
-                  active:        { bg: '#16a34a18', color: '#16a34a', label: 'Active' },
-                  expiring_soon: { bg: '#d9770618', color: '#d97706', label: 'Expiring Soon' },
-                  expired:       { bg: '#dc262618', color: '#dc2626', label: 'Expired' },
+                  active:        { bg: '#16a34a18', color: 'var(--status-success)', label: 'Active' },
+                  expiring_soon: { bg: '#d9770618', color: 'var(--status-warning)', label: 'Expiring Soon' },
+                  expired:       { bg: '#dc262618', color: 'var(--status-danger)', label: 'Expired' },
                   draft:         { bg: 'var(--bg-elevated)', color: 'var(--text-muted)', label: 'Draft' },
                 }
                 const displayStatus = c.staffId === 's3' ? 'expiring_soon' : c.status
@@ -1183,9 +1183,9 @@ export default function TeamPage() {
           const staff = STAFF_MEMBERS.find(s => s.id === c.staffId)
           const empTypeLabel: Record<string, string> = { full_time: 'Full Time', part_time: 'Part Time', casual: 'Casual', contractor: 'Contractor' }
           const statusMap: Record<string, { bg: string; color: string; label: string }> = {
-            active:        { bg: '#16a34a18', color: '#16a34a', label: 'Active' },
-            expiring_soon: { bg: '#d9770618', color: '#d97706', label: 'Expiring Soon' },
-            expired:       { bg: '#dc262618', color: '#dc2626', label: 'Expired' },
+            active:        { bg: '#16a34a18', color: 'var(--status-success)', label: 'Active' },
+            expiring_soon: { bg: '#d9770618', color: 'var(--status-warning)', label: 'Expiring Soon' },
+            expired:       { bg: '#dc262618', color: 'var(--status-danger)', label: 'Expired' },
             draft:         { bg: 'var(--bg-elevated)', color: 'var(--text-muted)', label: 'Draft' },
           }
           const displayStatus = c.staffId === 's3' ? 'expiring_soon' : c.status

@@ -31,9 +31,9 @@ const STATUS_COLORS: Record<VerificationStatus, string> = {
 
 const STEP_STATUS_ICON: Record<StepStatus, React.ReactNode> = {
   completed: <CheckCircle2 size={16} style={{ color: '#059669' }} />,
-  failed:    <XCircle     size={16} style={{ color: '#dc2626' }} />,
-  pending:   <Clock       size={16} style={{ color: '#6b7280' }} />,
-  skipped:   <SkipForward size={16} style={{ color: '#9ca3af' }} />,
+  failed:    <XCircle     size={16} style={{ color: 'var(--status-danger)' }} />,
+  pending:   <Clock       size={16} style={{ color: 'var(--text-subtle)' }} />,
+  skipped:   <SkipForward size={16} style={{ color: 'var(--text-muted)' }} />,
 }
 
 type PageTab = 'guests' | 'step_config' | 'analytics'
@@ -377,7 +377,7 @@ export default function VerificationPage() {
                           </div>
                         )}
                         {s.status === 'failed' && (
-                          <div style={{ fontSize: 11, color: '#dc2626', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <div style={{ fontSize: 11, color: 'var(--status-danger)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
                             <AlertTriangle size={11} /> Verification failed
                           </div>
                         )}

@@ -526,7 +526,7 @@ export default function GuidebooksPage() {
                           showToast(`Applied "${tmpl.name}" template`)
                         }}
                       >
-                        <div style={{ width: 28, height: 28, borderRadius: 6, background: tmpl.brandColor, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff' }}>
+                        <div style={{ width: 28, height: 28, borderRadius: 6, background: tmpl.brandColor, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'var(--text-primary)' }}>
                           {(tmpl.brandName ?? 'N')[0]}
                         </div>
                         <div style={{ flex: 1 }}>

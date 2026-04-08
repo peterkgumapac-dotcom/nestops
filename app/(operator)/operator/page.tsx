@@ -16,6 +16,9 @@ import { ASSETS } from '@/lib/data/assets'
 import { UPSELL_APPROVAL_REQUESTS } from '@/lib/data/upsellApprovals'
 import { useRole } from '@/context/RoleContext'
 import { FEED_ITEMS, filterFeed, type FeedTab } from '@/lib/data/activityFeed'
+import OperationsKanban from './_components/OperationsKanban'
+import ScheduledRail from './_components/ScheduledRail'
+import OperatorPanelAside from '@/components/shared/OperatorPanelAside'
 
 // ─── Team clock status (6 members) ───────────────────────────────────────────
 const TEAM_CLOCK_STATUS = [
@@ -175,6 +178,7 @@ export default function OperatorDashboard() {
   const cOver    = useCountUp(mounted ? overdueCount            : 0)
   const cApprove = useCountUp(mounted ? pendingApprovals.length : 0)
 
+  const [topView, setTopView] = useState<'kanban' | 'classic'>('kanban')
   const [dashView, setDashView] = useState<'work' | 'portfolio'>('work')
   const [workFilter, setWorkFilter] = useState<'all' | 'task' | 'ticket' | 'approval' | 'overdue'>('all')
 
@@ -312,11 +316,44 @@ export default function OperatorDashboard() {
   )
 
   // ─── Render ───────────────────────────────────────────────────────────────────
+  // Tab switcher — Kanban (new revamp) vs Classic (legacy rich dashboard)
+  const ViewTabs = (
+    <div style={{ display: 'inline-flex', gap: 4, padding: 4, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, marginBottom: 18 }}>
+      {(['kanban', 'classic'] as const).map(v => (
+        <button
+          key={v}
+          onClick={() => setTopView(v)}
+          style={{
+            padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+            fontSize: 12, fontWeight: 600, textTransform: 'capitalize',
+            background: topView === v ? 'rgba(255,255,255,0.06)' : 'transparent',
+            color: topView === v ? '#fff' : 'rgba(255,255,255,0.55)',
+          }}
+        >
+          {v === 'kanban' ? 'Tasks' : 'Overview'}
+        </button>
+      ))}
+    </div>
+  )
+
+  if (topView === 'kanban') {
+    return (
+      <OperatorPanelAside slot={<ScheduledRail />}>
+        <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {ViewTabs}
+          <OperationsKanban />
+        </div>
+      </OperatorPanelAside>
+    )
+  }
+
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
 
       {/* ═══ CENTER COLUMN ══════════════════════════════════════════════════════ */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+        {ViewTabs}
 
         {/* A. Live Ticker */}
         <div style={{ background: 'var(--n-bg3)', height: 36, borderRadius: 8, overflow: 'hidden', position: 'relative', display: 'flex', alignItems: 'center', border: '1px solid var(--n-border)' }}>

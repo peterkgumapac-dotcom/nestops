@@ -53,7 +53,7 @@ export default function AssetsPage() {
       render: a => (
         <button
           onClick={e => { e.stopPropagation(); setSelectedAsset(a); setReportDrawer(true) }}
-          style={{ fontSize: 12, color: '#f87171', background: 'none', border: 'none', cursor: 'pointer' }}
+          style={{ fontSize: 12, color: 'var(--status-danger)', background: 'none', border: 'none', cursor: 'pointer' }}
         >
           <AlertCircle size={14} />
         </button>

@@ -5,9 +5,9 @@ import { PROPERTIES } from '@/lib/data/properties'
 import { useRole } from '@/context/RoleContext'
 
 const GROUPS = [
-  { id: 'gr1', name: 'Oslo Portfolio', color: '#7c3aed', propertyIds: ['p1', 'p4'] },
+  { id: 'gr1', name: 'Oslo Portfolio', color: 'var(--status-accent)', propertyIds: ['p1', 'p4'] },
   { id: 'gr2', name: 'Coastal Properties', color: '#059669', propertyIds: ['p2', 'p3'] },
-  { id: 'gr3', name: 'Mountain & Nature', color: '#d97706', propertyIds: ['p5'] },
+  { id: 'gr3', name: 'Mountain & Nature', color: 'var(--status-warning)', propertyIds: ['p5'] },
 ]
 
 export default function PropertyGroupsPage() {

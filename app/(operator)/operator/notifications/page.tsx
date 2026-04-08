@@ -12,10 +12,10 @@ const NOTIFICATIONS = [
 ]
 
 const TYPE_CONFIG = {
-  urgent: { icon: AlertTriangle, color: '#f87171', bg: 'rgba(239,68,68,0.1)' },
-  warning: { icon: AlertTriangle, color: '#fbbf24', bg: 'rgba(217,119,6,0.1)' },
-  info: { icon: Info, color: '#60a5fa', bg: 'rgba(59,130,246,0.1)' },
-  success: { icon: CheckCircle, color: '#34d399', bg: 'rgba(5,150,105,0.1)' },
+  urgent: { icon: AlertTriangle, color: 'var(--status-danger)', bg: 'rgba(239,68,68,0.1)' },
+  warning: { icon: AlertTriangle, color: 'var(--status-warning)', bg: 'rgba(217,119,6,0.1)' },
+  info: { icon: Info, color: 'var(--status-info)', bg: 'rgba(59,130,246,0.1)' },
+  success: { icon: CheckCircle, color: 'var(--status-success)', bg: 'rgba(5,150,105,0.1)' },
 }
 
 export default function NotificationsPage() {

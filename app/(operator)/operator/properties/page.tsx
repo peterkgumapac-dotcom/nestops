@@ -13,12 +13,12 @@ import { getLibrary, PROPERTY_LIBRARIES } from '@/lib/data/propertyLibrary'
 function getComplianceDot(propertyId: string): { color: string; title: string; label: string } {
   const docs = COMPLIANCE_DOCS.filter(d => d.propertyId === propertyId)
   if (docs.some(d => d.status === 'expired' || d.status === 'missing')) {
-    return { color: '#ef4444', title: 'Expired or missing compliance documents', label: 'Action needed' }
+    return { color: 'var(--status-danger)', title: 'Expired or missing compliance documents', label: 'Action needed' }
   }
   if (docs.some(d => d.status === 'expiring')) {
-    return { color: '#d97706', title: 'Compliance documents expiring soon', label: 'Expiring soon' }
+    return { color: 'var(--status-warning)', title: 'Compliance documents expiring soon', label: 'Expiring soon' }
   }
-  return { color: '#10b981', title: 'All compliance documents valid', label: 'Compliant' }
+  return { color: 'var(--status-success)', title: 'All compliance documents valid', label: 'Compliant' }
 }
 
 const PAGE_SIZE = 25
@@ -364,7 +364,7 @@ export default function PropertiesPage() {
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
                 <span style={{ fontWeight: 600, color: accent }}>{librarySearchResults.results.length}</span> {librarySearchResults.results.length === 1 ? 'property' : 'properties'} with data matching "{debouncedLibSearch}"
                 {librarySearchResults.missing.length > 0 && (
-                  <> · <span style={{ color: '#d97706', fontWeight: 500 }}>{librarySearchResults.missing.length} missing this info</span></>
+                  <> · <span style={{ color: 'var(--status-warning)', fontWeight: 500 }}>{librarySearchResults.missing.length} missing this info</span></>
                 )}
               </div>
 
@@ -409,8 +409,8 @@ export default function PropertiesPage() {
               {librarySearchResults.missing.length > 0 && (
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                    <AlertTriangle size={13} style={{ color: '#d97706' }} />
-                    <span style={{ fontSize: 12, fontWeight: 600, color: '#d97706' }}>
+                    <AlertTriangle size={13} style={{ color: 'var(--status-warning)' }} />
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--status-warning)' }}>
                       Missing this info — {librarySearchResults.missing.length} {librarySearchResults.missing.length === 1 ? 'property' : 'properties'}
                     </span>
                   </div>
@@ -421,9 +421,9 @@ export default function PropertiesPage() {
                         style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 12px', background: 'var(--bg-card)', border: '1px solid #d9770630', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}
                         onClick={() => router.push(`/operator/properties/${prop.id}`)}
                       >
-                        <AlertTriangle size={11} style={{ color: '#d97706', flexShrink: 0 }} />
+                        <AlertTriangle size={11} style={{ color: 'var(--status-warning)', flexShrink: 0 }} />
                         <span style={{ color: 'var(--text-primary)' }}>{prop.name}</span>
-                        <span style={{ fontSize: 11, color: '#d97706', fontWeight: 500 }}>Update library →</span>
+                        <span style={{ fontSize: 11, color: 'var(--status-warning)', fontWeight: 500 }}>Update library →</span>
                       </div>
                     ))}
                   </div>
