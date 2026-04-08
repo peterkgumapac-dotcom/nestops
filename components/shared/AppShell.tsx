@@ -54,10 +54,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
         {/* Top header bar */}
         <div
+          className="shell-header"
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '0 20px', height: 52, borderBottom: '1px solid var(--border)',
-            background: 'var(--bg-surface)', flexShrink: 0,
+            background: 'var(--bg-surface)', flexShrink: 0, gap: 8,
           }}
         >
           {/* Mobile hamburger */}
@@ -90,7 +91,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
           <span className="md:hidden" style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>AfterStay</span>
 
-          <ClockStatus />
+          <div className="hide-sm" style={{ display: 'flex', alignItems: 'center' }}><ClockStatus /></div>
 
           {/* Notification bell */}
           <button
@@ -104,7 +105,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
-        <main style={{ flex: 1, overflowY: 'auto', padding: 'clamp(16px, 3vw, 24px)', position: 'relative', zIndex: 1 }}>
+        <main className="shell-main" style={{ flex: 1, overflowY: 'auto', padding: 'clamp(16px, 3vw, 24px)', position: 'relative', zIndex: 1 }}>
           {children}
         </main>
       </div>
@@ -113,7 +114,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Quick Actions FAB — operator portal only */}
       {role === 'operator' && (
-        <div ref={fabRef} style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 200 }}>
+        <div ref={fabRef} className="fab-safe" style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 200 }}>
           {/* Menu */}
           {fabOpen && (
             <div style={{
@@ -128,6 +129,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   key={label}
                   href={href}
                   onClick={() => setFabOpen(false)}
+                  className="fab-menu-item"
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10,
                     padding: '10px 14px',

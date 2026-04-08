@@ -160,7 +160,7 @@ export default function GuestExperiencePage() {
 
       {/* ── PORTAL BUILDER ── */}
       {tab === 'portal' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: 20 }}>
+        <div className="stack-sm" style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: 20 }}>
           {/* Property selector */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-subtle)', textTransform: 'uppercase', marginBottom: 4 }}>Properties</div>

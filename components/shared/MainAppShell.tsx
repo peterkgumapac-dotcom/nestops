@@ -78,10 +78,11 @@ export default function MainAppShell({ children }: { children: React.ReactNode }
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Top header bar */}
         <div
+          className="shell-header"
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '0 20px', height: 52, borderBottom: '1px solid var(--border)',
-            background: 'var(--bg-surface)', flexShrink: 0,
+            background: 'var(--bg-surface)', flexShrink: 0, gap: 8,
           }}
         >
           {/* Mobile hamburger */}
@@ -97,7 +98,7 @@ export default function MainAppShell({ children }: { children: React.ReactNode }
           {/* Desktop spacer */}
           <div className="hidden md:block" />
 
-          <ClockStatus />
+          <div className="hide-sm" style={{ display: 'flex', alignItems: 'center' }}><ClockStatus /></div>
 
           {/* Alerts bell */}
           <div style={{ position: 'relative' }}>
@@ -160,7 +161,7 @@ export default function MainAppShell({ children }: { children: React.ReactNode }
       <CommandPalette />
 
       {/* Floating demo persona switcher */}
-      <div style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 300 }}>
+      <div className="fab-safe" style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 300 }}>
         <AnimatePresence>
           {demoOpen && (
             <motion.div

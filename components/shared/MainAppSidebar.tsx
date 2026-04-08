@@ -320,7 +320,7 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)' }} onClick={onClose} />
           <div style={{ position: 'absolute', left: 0, top: 0, height: '100%' }}>
             {sidebarContent}
-            <button onClick={onClose} aria-label="Close sidebar" style={{ position: 'absolute', top: 16, right: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+            <button onClick={onClose} aria-label="Close sidebar" style={{ position: 'absolute', top: 16, right: 10, background: 'rgba(0,0,0,0.25)', border: '1px solid var(--border)', borderRadius: 10, cursor: 'pointer', color: 'var(--text-primary)', padding: 0, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
               <X size={16} />
             </button>
           </div>

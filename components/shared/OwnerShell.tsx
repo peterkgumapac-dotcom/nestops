@@ -189,7 +189,7 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} onClick={() => setMobileOpen(false)} />
           <div style={{ position: 'absolute', left: 0, top: 0, height: '100%' }}>
             {sidebarContent}
-            <button onClick={() => setMobileOpen(false)} style={{ position: 'absolute', top: 16, right: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+            <button onClick={() => setMobileOpen(false)} aria-label="Close sidebar" style={{ position: 'absolute', top: 16, right: 10, background: 'rgba(0,0,0,0.25)', border: '1px solid var(--border)', borderRadius: 10, cursor: 'pointer', color: 'var(--text-primary)', padding: 0, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
               <X size={16} />
             </button>
           </div>
@@ -198,10 +198,10 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Top bar */}
-        <div style={{
+        <div className="shell-header" style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '0 20px', height: 52, borderBottom: '1px solid var(--border)',
-          background: 'var(--bg-surface)', flexShrink: 0,
+          background: 'var(--bg-surface)', flexShrink: 0, gap: 8,
         }}>
           <button
             className="md:hidden"
@@ -223,7 +223,7 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
           </button>
         </div>
 
-        <main style={{ flex: 1, overflowY: 'auto', padding: 24, position: 'relative' }}>
+        <main className="shell-main" style={{ flex: 1, overflowY: 'auto', padding: 24, position: 'relative' }}>
           {children}
         </main>
       </div>

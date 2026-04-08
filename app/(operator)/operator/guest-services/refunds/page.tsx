@@ -158,7 +158,7 @@ export default function RefundsPage() {
         <StatCard label="Avg Refund"       value={fmtNok(Math.round(totalApproved / Math.max(refundIssues.filter(i => i.refund?.approvedAmount).length, 1)))} icon={TrendingDown} subtitle="Per incident" animate={false} />
       </motion.div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 24 }}>
+      <div className="stack-sm" style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 24 }}>
         {/* Table */}
         <div>
           {/* Filters */}

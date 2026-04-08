@@ -391,6 +391,7 @@ export default function AppSidebar({ isOpen, onClose, collapsed = false }: AppSi
       initial={{ opacity: 0, scale: 0.96, y: 8 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      className="hide-sm"
       style={{
       position: 'fixed', bottom: 24, left: 236, zIndex: 100,
       background: 'var(--bg-surface)', border: `1px solid ${accent}40`,
@@ -451,10 +452,12 @@ export default function AppSidebar({ isOpen, onClose, collapsed = false }: AppSi
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
               style={{ position: 'absolute', left: 0, top: 0, height: '100%' }}
             >
-              {sidebarContent}
-              <button onClick={onClose} aria-label="Close sidebar" style={{ position: 'absolute', top: 12, right: 4, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 8, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <X size={16} />
-              </button>
+              <div style={{ position: 'relative', height: '100%' }}>
+                {sidebarContent}
+                <button onClick={onClose} aria-label="Close sidebar" style={{ position: 'absolute', top: 16, right: 10, background: 'rgba(0,0,0,0.25)', border: '1px solid var(--border)', borderRadius: 10, cursor: 'pointer', color: 'var(--text-primary)', padding: 0, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
+                  <X size={16} />
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

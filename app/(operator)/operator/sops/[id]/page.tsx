@@ -67,7 +67,7 @@ export default function SopDetailPage() {
       </div>
 
       {/* Two-column layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20, alignItems: 'start' }}>
+      <div className="stack-sm" style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20, alignItems: 'start' }}>
         {/* SOP Body */}
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 24 }}>
           <div className="label-upper" style={{ marginBottom: 16 }}>SOP Content</div>

@@ -130,7 +130,7 @@ export default function AlertsPage() {
         )
       })()}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 24, alignItems: 'start' }}>
+      <div className="stack-sm" style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 24, alignItems: 'start' }}>
 
         {/* ── Left: Alert Rules ── */}
         <div>

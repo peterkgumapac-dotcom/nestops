@@ -330,8 +330,8 @@ function CleaningCalendar({ accent, jobs, onCellClick, onJobClick }: {
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
   return (
-    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '140px repeat(7, 1fr)', borderBottom: '1px solid var(--border)' }}>
+    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+      <div style={{ display: 'grid', gridTemplateColumns: '140px repeat(7, 1fr)', borderBottom: '1px solid var(--border)', minWidth: 620 }}>
         <div style={{ padding: '10px 16px', fontSize: 11, fontWeight: 500, color: 'var(--text-muted)', borderRight: '1px solid var(--border)' }}>Property</div>
         {days.map((d, i) => (
           <div key={i} style={{ padding: '10px 0', textAlign: 'center', fontSize: 11, fontWeight: 500, color: d.toDateString() === now.toDateString() ? accent : 'var(--text-muted)', borderRight: i < 6 ? '1px solid var(--border-subtle)' : 'none', background: d.toDateString() === now.toDateString() ? `${accent}08` : 'transparent' }}>
@@ -341,7 +341,7 @@ function CleaningCalendar({ accent, jobs, onCellClick, onJobClick }: {
         ))}
       </div>
       {PROPERTIES_CLEANING.map((prop, pi) => (
-        <div key={prop.id} style={{ display: 'grid', gridTemplateColumns: '140px repeat(7, 1fr)', borderBottom: pi < PROPERTIES_CLEANING.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+        <div key={prop.id} style={{ display: 'grid', gridTemplateColumns: '140px repeat(7, 1fr)', borderBottom: pi < PROPERTIES_CLEANING.length - 1 ? '1px solid var(--border-subtle)' : 'none', minWidth: 620 }}>
           <div style={{ padding: '10px 16px', fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', borderRight: '1px solid var(--border)', display: 'flex', alignItems: 'center' }}>{prop.name}</div>
           {[0, 1, 2, 3, 4, 5, 6].map(dayIdx => {
             const job = jobs.find(j => j.propId === prop.id && j.day === dayIdx)
