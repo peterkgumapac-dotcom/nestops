@@ -843,7 +843,7 @@ body.drawer-open #globe-canvas{opacity:0.35}
         <div class="afm-card-icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h16a2 2 0 012 2v34a1 1 0 01-1-1H6V6z"/><path d="M42 6H26a2 2 0 00-2 2v34a1 1 0 011-1h17V6z"/><path d="M11 14h6M11 19h8M11 24h4"/><path d="M31 14h6M31 19h8M31 24h4"/><path d="M24 16v6" stroke-dasharray="1.5 2" opacity="0.3"/><circle cx="24" cy="28" r="3" fill="currentColor" stroke="none" opacity="0.25"/></svg></div>
         <div class="afm-card-num">Moat 05</div>
         <div class="afm-card-title">Property Library</div>
-        <div class="afm-card-desc">One intake → 10 tabs. Feeds guidebooks, staff cards, owner portal.</div>
+        <div class="afm-card-desc">One intake. Ten tabs of truth. Guidebooks, staff cards, owner portal — all from one source.</div>
         <div class="afm-card-badge"><span class="afm-dot"></span> Zero competitors</div></div></div>
       <div class="afm-card" data-m="autonomy" data-i="5"><div class="afm-card-inner">
         <div class="afm-card-icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="17" cy="16" r="6"/><path d="M7 38c0-5.523 4.477-10 10-10s10 4.477 10 10"/><path d="M31 24h10M37 19l5 5-5 5"/><rect x="33" y="31" width="10" height="11" rx="2"/><path d="M35 35h6M35 38h4"/></svg></div>
@@ -1461,6 +1461,219 @@ gdPill('1 notification',true,16600);
 gdCaption('Fatima handled it. You never had to be in the loop.',20000);
 gdQ(function(){var rb=gdEl('gd-replay');if(rb)rb.classList.add('show');gdDone=true},GD_DUR-200)}
 window.gdRestart=function(){var fl=gdEl('gd-feed-l'),fr=gdEl('gd-feed-r');if(fl)fl.innerHTML='';if(fr)fr.innerHTML='';gdPill('0 notifications',false,0);var cp=gdEl('gd-caption');if(cp)cp.textContent='Press play to watch Fatima handle a guest issue — without you.';var pr=gdEl('gd-prog');if(pr)pr.style.width='0%';if(gdPFrame)cancelAnimationFrame(gdPFrame);var rb=gdEl('gd-replay');if(rb)rb.classList.remove('show');if(fr){var badge=document.createElement('div');badge.id='gd-notif-badge';badge.style.cssText='position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;transition:opacity .4s';badge.innerHTML='<div class="gd-notif-pill zero" id="gd-pill"><span>🔔</span><span id="gd-pill-text">0 notifications</span></div>';fr.appendChild(badge)}gdRun()};
+})();
+</script>
+</div>
+<div class="afm-demo-entry" data-key="library">
+<style>
+.pl-section .reveal{opacity:1 !important;transform:none !important}
+.pl-section{padding:60px 0;position:relative;overflow:hidden}
+.pl-section .pl-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:900px;height:500px;background:radial-gradient(ellipse,rgba(14,165,233,0.05) 0%,transparent 70%);pointer-events:none}
+.pl-section .dot-grid{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,0.025) 1px,transparent 1px);background-size:32px 32px;pointer-events:none}
+.pl-section .container{max-width:1120px;margin:0 auto;padding:0 24px}
+.pl-eyebrow{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:#0ea5e9;margin-bottom:12px;text-align:center}
+.pl-title{font-size:clamp(26px,3.5vw,38px);font-weight:700;letter-spacing:-.035em;line-height:1.15;color:#fff;margin-bottom:12px;text-align:center}
+.pl-sub{font-size:14px;color:#9ca3af;line-height:1.75;max-width:520px;margin:0 auto 32px;text-align:center}
+.pl-stats{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:52px}
+.pl-stat{display:inline-flex;flex-direction:column;align-items:center;gap:3px;padding:14px 20px;border-radius:12px;background:#161b26;border:1px solid rgba(255,255,255,0.06);min-width:120px}
+.pl-stat-num{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:-.02em}
+.pl-stat-label{font-size:10px;color:#5a5f6b;text-align:center;line-height:1.4}
+.pl-stat.teal .pl-stat-num{color:#0ea5e9}
+.pl-stat.green .pl-stat-num{color:#15d492}
+.pl-stat.amber .pl-stat-num{color:#ef9f27}
+.pl-body{display:grid;grid-template-columns:1fr 500px;gap:56px;align-items:start}
+.pl-left{padding-top:4px}
+.pl-chapter{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#5a5f6b;margin-bottom:14px}
+.pl-headline{font-size:clamp(20px,2.4vw,28px);font-weight:700;letter-spacing:-.03em;line-height:1.2;color:#fff;margin-bottom:14px}
+.pl-copy{font-size:13.5px;color:#9ca3af;line-height:1.8;margin-bottom:22px}
+.pl-feeds{display:flex;flex-direction:column;gap:6px;margin-bottom:24px}
+.pl-feed-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:9px;background:#161b26;border:1px solid rgba(255,255,255,0.06);transition:border-color .2s}
+.pl-feed-item:hover{border-color:rgba(255,255,255,0.1)}
+.pl-feed-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.pl-feed-title{font-size:12px;font-weight:600;color:#e8e6e1;margin-bottom:1px}
+.pl-feed-desc{font-size:11px;color:#5a5f6b;line-height:1.4}
+.pl-quote{padding-left:14px;border-left:2px solid rgba(14,165,233,0.2);font-size:11.5px;color:#5a5f6b;font-style:italic;line-height:1.6;margin-bottom:22px}
+.pl-cta-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.pl-cta-row .cta-primary{padding:13px 32px;border-radius:10px;background:#1D9E75;color:#fff;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s;letter-spacing:-.01em}
+.pl-cta-row .cta-primary:hover{background:#15d492;transform:translateY(-1px);box-shadow:0 8px 30px rgba(29,158,117,.25)}
+.pl-cta-row .zero-badge{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;background:rgba(226,75,74,0.08);border:1px solid rgba(226,75,74,0.2);font-size:11px;font-weight:600;color:#e24b4a;letter-spacing:.04em;text-transform:uppercase}
+.pl-right{display:flex;flex-direction:column;align-items:center;gap:0}
+#pl-overlay{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(8,11,18,.88);backdrop-filter:blur(10px);border-radius:28px;cursor:pointer;transition:opacity .4s ease}
+#pl-overlay.hidden{opacity:0;pointer-events:none}
+.pl-play-btn{width:54px;height:54px;border-radius:50%;background:#0ea5e9;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 30px rgba(14,165,233,.3);transition:transform .15s}
+#pl-overlay:hover .pl-play-btn{transform:scale(1.08)}
+.pl-play-icon{width:18px;height:18px;fill:#fff;margin-left:3px}
+.pl-phone-wrap{position:relative;width:300px}
+.pl-phone{width:300px;background:#0f1219;border-radius:30px;border:2px solid rgba(255,255,255,0.1);overflow:hidden;box-shadow:0 28px 60px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.02);display:flex;flex-direction:column;height:540px}
+.pl-phone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:70px;height:18px;background:#000;border-radius:0 0 10px 10px;z-index:50}
+.pl-app-bar{padding:26px 12px 10px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.06)}
+.pl-app-name{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:700;color:#f9fafb;margin-bottom:3px}
+.pl-app-logo{width:14px;height:14px;border-radius:3px;background:#1D9E75;display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:800;color:#fff}
+.pl-prop-name{font-size:13px;font-weight:700;color:#f9fafb}
+.pl-prop-meta{font-size:8.5px;color:#4b5563;margin-top:1px}
+.pl-tabs{display:flex;overflow-x:auto;padding:8px 10px 0;gap:4px;flex-shrink:0;scrollbar-width:none}
+.pl-tabs::-webkit-scrollbar{display:none}
+.pl-tab{padding:5px 9px;border-radius:6px;font-size:8.5px;font-weight:600;white-space:nowrap;cursor:pointer;border:1px solid transparent;transition:all .2s;flex-shrink:0;color:#5a5f6b;background:transparent}
+.pl-tab.active{background:rgba(14,165,233,0.08);border-color:rgba(14,165,233,0.2);color:#0ea5e9}
+.pl-tab.done{background:rgba(29,158,117,0.08);border-color:rgba(29,158,117,0.2);color:#15d492}
+.pl-tab-content{flex:1;overflow:hidden;padding:10px;display:flex;flex-direction:column;gap:5px;position:relative}
+.pl-row{padding:7px 9px;border-radius:8px;background:#111827;border:1px solid #1f2937;font-size:9.5px;color:#d1d5db;opacity:0;transform:translateY(6px);transition:opacity .3s,transform .3s}
+.pl-row.in{opacity:1;transform:translateY(0)}
+.pl-row-title{font-size:9px;font-weight:700;color:#f9fafb;margin-bottom:2px}
+.pl-row-val{font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;color:#0ea5e9}
+.pl-row-meta{font-size:8px;color:#4b5563;margin-top:1px}
+.pl-row.highlight{background:rgba(14,165,233,.06);border-color:rgba(14,165,233,.2)}
+.pl-downstream{margin:6px 10px 8px;padding:8px 10px;border-radius:8px;background:rgba(29,158,117,.06);border:1px solid rgba(29,158,117,.2);opacity:0;transition:opacity .4s}
+.pl-downstream.show{opacity:1}
+.pl-ds-label{font-size:8px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#15d492;margin-bottom:5px}
+.pl-ds-row{display:flex;gap:4px;flex-wrap:wrap}
+.pl-ds-tag{padding:2px 7px;border-radius:5px;font-size:8px;font-weight:600;background:rgba(29,158,117,.12);color:#15d492;border:1px solid rgba(29,158,117,.18);opacity:0;transform:scale(.85);transition:opacity .25s,transform .25s}
+.pl-ds-tag.pop{opacity:1;transform:scale(1)}
+.pl-prog-wrap{width:100%;height:2px;background:#161b26;border-radius:1px;overflow:hidden;margin-top:10px}
+.pl-prog{height:100%;background:#0ea5e9;border-radius:1px;width:0%;transition:width .1s linear}
+.pl-step-label{text-align:center;font-size:11px;color:#5a5f6b;min-height:18px;margin-top:6px;font-style:italic;transition:opacity .3s}
+.pl-replay-row{display:flex;justify-content:center;margin-top:8px}
+.pl-replay-btn{padding:4px 14px;border-radius:8px;background:transparent;color:#5a5f6b;font-family:'Outfit',sans-serif;font-size:9px;font-weight:600;border:1px solid rgba(255,255,255,0.06);cursor:pointer;opacity:0;transition:opacity .3s}
+.pl-replay-btn.show{opacity:1}
+@media(max-width:900px){
+  .pl-body{grid-template-columns:1fr;gap:40px}
+  .pl-right{max-width:320px;margin:0 auto}
+}
+</style>
+<section class="pl-section">
+  <div class="dot-grid"></div>
+  <div class="pl-glow"></div>
+  <div class="container">
+    <div class="pl-stats">
+      <div class="pl-stat teal"><span class="pl-stat-num">1</span><span class="pl-stat-label">intake fills<br>everything</span></div>
+      <div class="pl-stat green"><span class="pl-stat-num">10</span><span class="pl-stat-label">tabs auto-populated<br>from one source</span></div>
+      <div class="pl-stat amber"><span class="pl-stat-num">0</span><span class="pl-stat-label">duplicate data entry<br>ever again</span></div>
+    </div>
+    <div class="pl-body">
+      <div class="pl-left">
+        <div class="pl-chapter">The story</div>
+        <h3 class="pl-headline">Your fusebox photo is in WhatsApp.<br>Your WiFi code is in a Google Doc.<br>Your emergency contact is in your head.</h3>
+        <p class="pl-copy">Every STR operator has the same problem: property knowledge scattered across 6 different places. When a cleaner asks "what's the WiFi?" — that's a context switch. When a guest asks about the heater — that's a search. When you onboard a new staff member — that's a 45-minute call.<br><br>Property Library is the architectural foundation of AfterStay. One 12-step intake wizard. 10 tabs populated. Every downstream tool reads from it automatically.</p>
+        <div class="pl-feeds">
+          <div class="pl-feed-item"><span class="pl-feed-icon">📖</span><div><div class="pl-feed-title">AI Guidebook Generation</div><div class="pl-feed-desc">WiFi, house rules, appliance guides — written from your Library data. No copy-paste.</div></div></div>
+          <div class="pl-feed-item"><span class="pl-feed-icon">🪪</span><div><div class="pl-feed-title">Staff Reference Cards</div><div class="pl-feed-desc">Cleaners and maintenance see access codes, fusebox location, emergency contacts — in-app.</div></div></div>
+          <div class="pl-feed-item"><span class="pl-feed-icon">🏠</span><div><div class="pl-feed-title">Owner Portal</div><div class="pl-feed-desc">Owners see their property's specs, appliances, and utility info — pulled straight from the Library.</div></div></div>
+          <div class="pl-feed-item"><span class="pl-feed-icon">🔑</span><div><div class="pl-feed-title">PTE / Access Window</div><div class="pl-feed-desc">Access codes, lock types, and entry instructions auto-populate from the Library on every task.</div></div></div>
+        </div>
+        <p class="pl-quote">Enter it once. The system does the rest — staff cards, guidebooks, owner reports, access windows. All from the same record.</p>
+      </div>
+      <div class="pl-right">
+        <div class="pl-phone-wrap">
+          <div id="pl-overlay" onclick="plStart()">
+            <div class="pl-play-btn"><svg class="pl-play-icon" viewBox="0 0 20 20"><path d="M6 4L16 10L6 16V4Z"/></svg></div>
+            <div style="font-size:12px;font-weight:600;color:#fff">Watch the intake</div>
+            <div style="font-size:9.5px;color:#5a5f6b">10 tabs · ~35 seconds · no auto-play</div>
+          </div>
+          <div class="pl-phone">
+            <div class="pl-phone-notch"></div>
+            <div class="pl-app-bar">
+              <div class="pl-app-name"><div class="pl-app-logo">A</div>AfterStay · Property Library</div>
+              <div class="pl-prop-name" id="pl-prop-name">Harbor Studio</div>
+              <div class="pl-prop-meta" id="pl-prop-meta">Oslo, Norway · Setup in progress…</div>
+            </div>
+            <div class="pl-tabs" id="pl-tabs">
+              <div class="pl-tab active" id="pl-tab-0">Access</div>
+              <div class="pl-tab" id="pl-tab-1">Utilities</div>
+              <div class="pl-tab" id="pl-tab-2">Fusebox</div>
+              <div class="pl-tab" id="pl-tab-3">Appliances</div>
+              <div class="pl-tab" id="pl-tab-4">WiFi</div>
+              <div class="pl-tab" id="pl-tab-5">Rules</div>
+              <div class="pl-tab" id="pl-tab-6">Emergency</div>
+              <div class="pl-tab" id="pl-tab-7">Inventory</div>
+              <div class="pl-tab" id="pl-tab-8">Guidebook</div>
+              <div class="pl-tab" id="pl-tab-9">Staff Card</div>
+            </div>
+            <div class="pl-tab-content" id="pl-tab-content"></div>
+            <div class="pl-downstream" id="pl-downstream">
+              <div class="pl-ds-label">↓ Auto-populated downstream</div>
+              <div class="pl-ds-row" id="pl-ds-row"></div>
+            </div>
+          </div>
+        </div>
+        <div class="pl-step-label" id="pl-caption">Press play to watch a property fill its own knowledge base.</div>
+        <div class="pl-prog-wrap"><div class="pl-prog" id="pl-prog"></div></div>
+        <div class="pl-replay-row"><button class="pl-replay-btn" id="pl-replay" onclick="plRestart()">↺ Replay</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+<script>
+(function(){
+var PL_DUR=36000,plPF=null,plTs=[];
+function plEl(id){return document.getElementById(id)}
+function plQ(fn,d){var t=setTimeout(fn,d);plTs.push(t);return t}
+var TABS=[
+  {id:0,label:'Access',rows:[{title:'Entry method',val:'Smart lock (August Pro)',meta:'Auto-unlock on check-in · Code changes per guest'},{title:'Backup keypad code',val:'7291',meta:'Staff use only · Rotate monthly'},{title:'Key safe location',val:'Left of main entrance, behind plant',meta:'Emergency access'}]},
+  {id:1,label:'Utilities',rows:[{title:'Electricity provider',val:'Hafslund Nett',meta:'Account #HN-40912'},{title:'Water shutoff',val:'Under kitchen sink, blue valve',meta:''},{title:'Gas',val:'No gas — all electric',meta:''}]},
+  {id:2,label:'Fusebox',rows:[{title:'Fusebox location',val:'Hallway cupboard, top shelf',meta:'Panel photo attached'},{title:'Circuit 1',val:'Kitchen + oven',meta:'20A breaker'},{title:'Circuit 2',val:'Bedroom + bathroom',meta:'15A breaker'},{title:'Master reset',val:'Bottom left switch labeled "MAIN"',meta:''}]},
+  {id:3,label:'Appliances',rows:[{title:'Dishwasher',val:'Bosch Serie 6',meta:'Manual in Library · Eco mode for short stays'},{title:'Washing machine',val:'Miele WCI 860',meta:'60°C cotton cycle for linens'},{title:'Thermostat',val:'Nest 3rd Gen',meta:'Default: 20°C · Guest-adjustable'}]},
+  {id:4,label:'WiFi',rows:[{title:'Network name',val:'HarborStudio_Guest',meta:'Auto-populated in guidebook'},{title:'Password',val:'harbor2024',meta:'Printed in welcome card template'},{title:'Router location',val:'Behind TV unit',meta:'Restart: hold button 10s'}]},
+  {id:5,label:'Rules',rows:[{title:'Check-in / out',val:'15:00 / 11:00',meta:'Auto-set on all reservations'},{title:'Quiet hours',val:'22:00 – 08:00',meta:'Included in guidebook auto-copy'},{title:'Pet policy',val:'Allowed · €50 cleaning fee',meta:'Guest verification trigger'}]},
+  {id:6,label:'Emergency',rows:[{title:'Property manager',val:'Peter · +47 900 12345',meta:'24/7 escalation'},{title:'Local plumber',val:'Oslo Rør AS · +47 22 33 44 55',meta:''},{title:'Electrician',val:'Strøm & Co · +47 22 11 22 33',meta:''},{title:'Nearest hospital',val:'Oslo University Hospital · 2.1km',meta:''}]},
+  {id:7,label:'Inventory',rows:[{title:'Linen sets',val:'4 full sets',meta:'Restocked from Oslo Central warehouse'},{title:'Toiletry kits',val:'12 units',meta:'Threshold alert: below 3'},{title:'Coffee pods',val:'24 units',meta:'Auto-deduct on turnover task complete'}]},
+  {id:8,label:'Guidebook',rows:[{title:'Status',val:'AI draft ready',meta:'Generated from Library · 3 edits suggested',highlight:true},{title:'WiFi section',val:'✓ Auto-filled',meta:'Network + password from Library'},{title:'House rules',val:'✓ Auto-filled',meta:'Check-in times, quiet hours, pets'},{title:'Appliance guides',val:'✓ Auto-filled',meta:'Dishwasher, thermostat, washing machine'}]},
+  {id:9,label:'Staff Card',rows:[{title:'Entry code',val:'7291',meta:'Shown to assigned staff only · Expires on checkout'},{title:'Fusebox',val:'Hallway cupboard',meta:'Tap for photo'},{title:'Emergency contact',val:'Peter · +47 900 12345',meta:''},{title:'Cleaning notes',val:'Nest thermostat: set to 20°C on exit',meta:'From rules tab'}]}
+];
+var DS_TAGS=['AI Guidebook','Staff Cards','Owner Portal','Access Window','Task Engine','Inventory Alerts'];
+function plSetTab(idx,animate){
+  document.querySelectorAll('.pl-tab').forEach(function(t,i){t.classList.remove('active');if(i<idx)t.classList.add('done')});
+  var active=plEl('pl-tab-'+idx);if(!active)return;
+  active.classList.add('active');active.classList.remove('done');
+  active.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+  var content=plEl('pl-tab-content');content.innerHTML='';
+  var tab=TABS[idx];
+  tab.rows.forEach(function(row,i){
+    var r=document.createElement('div');
+    r.className='pl-row'+(row.highlight?' highlight':'');
+    r.innerHTML='<div class="pl-row-title">'+row.title+'</div><div class="pl-row-val">'+row.val+'</div>'+(row.meta?'<div class="pl-row-meta">'+row.meta+'</div>':'');
+    content.appendChild(r);
+    setTimeout(function(){r.classList.add('in')},animate?80+i*120:0);
+  });
+}
+function plCaption(text,delay){plQ(function(){var el=plEl('pl-caption');el.style.opacity='0';setTimeout(function(){el.textContent=text;el.style.opacity='1'},200)},delay)}
+function plRun(){
+  var pStart=performance.now();
+  function pFrame(now){var p=Math.min((now-pStart)/PL_DUR*100,100);plEl('pl-prog').style.width=p+'%';if(p<100)plPF=requestAnimationFrame(pFrame)}
+  plPF=requestAnimationFrame(pFrame);
+  plQ(function(){plEl('pl-prop-meta').textContent='Oslo, Norway · Intake complete ✓'},1000);
+  var tabDuration=3200;
+  TABS.forEach(function(tab,idx){
+    var tabDelay=idx*tabDuration;
+    plQ(function(){plSetTab(idx,true)},tabDelay+200);
+    plCaption('Tab '+(idx+1)+' of 10 — '+tab.label,tabDelay+200);
+  });
+  var afterAll=TABS.length*tabDuration+400;
+  plCaption('One intake. Everything populated downstream.',afterAll);
+  plQ(function(){
+    plEl('pl-downstream').classList.add('show');
+    var row=plEl('pl-ds-row');
+    DS_TAGS.forEach(function(tag,i){
+      var t=document.createElement('div');t.className='pl-ds-tag';t.textContent=tag;row.appendChild(t);
+      setTimeout(function(){t.classList.add('pop')},200+i*150);
+    });
+  },afterAll+400);
+  plCaption('AI Guidebook, Staff Cards, Owner Portal — all reading from the same record.',afterAll+1400);
+  plQ(function(){plEl('pl-replay').classList.add('show')},PL_DUR-200);
+}
+window.plStart=function(){plEl('pl-overlay').classList.add('hidden');plRun()};
+window.plRestart=function(){
+  plTs.forEach(clearTimeout);plTs=[];
+  if(plPF)cancelAnimationFrame(plPF);
+  plEl('pl-prog').style.width='0%';
+  plEl('pl-replay').classList.remove('show');
+  plEl('pl-caption').textContent='Press play to watch a property fill its own knowledge base.';
+  plEl('pl-prop-meta').textContent='Oslo, Norway · Setup in progress…';
+  var ds=plEl('pl-downstream');ds.classList.remove('show');plEl('pl-ds-row').innerHTML='';
+  document.querySelectorAll('.pl-tab').forEach(function(t){t.classList.remove('active','done')});
+  plEl('pl-tab-0').classList.add('active');plEl('pl-tab-content').innerHTML='';
+  plSetTab(0,false);plRun();
+};
+plSetTab(0,false);
 })();
 </script>
 </div>
