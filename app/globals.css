@@ -447,3 +447,105 @@ html {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
+
+/* Operator floating-panel mesh background (v4 — shell-owned) */
+.operator-mesh-outer {
+  min-height: 100vh;
+  padding: 32px 40px;
+  background-color: #15131c;
+  background-image:
+    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(139,92,246,0.12), transparent 70%),
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: auto, 56px 56px, 56px 56px;
+
+  --panel-bg: #1a1a22;
+  --column-bg: rgba(255,255,255,0.025);
+  --card-bg: #20202a;
+  --text-1: #f5f5f7;
+  --text-2: rgba(255,255,255,0.55);
+  --text-3: rgba(255,255,255,0.35);
+  --border-hair: rgba(255,255,255,0.05);
+  --accent-gradient: linear-gradient(135deg, #a78bfa 0%, #c084fc 50%, #f0abfc 100%);
+  --progress-gradient: linear-gradient(90deg, #ec4899 0%, #a78bfa 50%, #60a5fa 100%);
+
+  /* Legacy token aliases — every operator page inside the panel inherits
+     the panel palette without needing explicit migration. Follow-on PRs
+     can migrate pages to the canonical --card-bg/--text-1/2/3/--border-hair
+     names; until then, these aliases prevent visible token drift. */
+  --bg-card: var(--card-bg);
+  --bg-surface: var(--panel-bg);
+  --bg-elevated: var(--panel-bg);
+  --bg-page: var(--panel-bg);
+  --text-primary: var(--text-1);
+  --text-muted: var(--text-2);
+  --text-subtle: var(--text-3);
+  --border: var(--border-hair);
+  --border-subtle: var(--border-hair);
+
+  /* Task-engine (n-*) tokens harmonize inside panel too */
+  --n-bg: var(--panel-bg);
+  --n-surface: var(--card-bg);
+  --n-text: var(--text-1);
+  --n-text-muted: var(--text-2);
+  --n-border: var(--border-hair);
+
+  /* Canonical status palette — use these instead of inline hex values. */
+  --status-danger: #ef4444;
+  --status-warning: #d97706;
+  --status-success: #10b981;
+  --status-info: #3b82f6;
+  --status-accent: #7c3aed;
+}
+
+.operator-panel {
+  background: #1a1a22;
+  border-radius: 28px;
+  border: 1px solid rgba(255,255,255,0.05);
+  box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+  padding: 16px 20px 24px;
+  min-height: calc(100vh - 64px);
+  display: grid;
+  grid-template-columns: 68px 1fr;
+  grid-template-areas: "rail main";
+  gap: 20px;
+  color: var(--text-1);
+}
+
+.operator-panel:has(.panel-aside) {
+  grid-template-columns: 68px 1fr 300px;
+  grid-template-areas: "rail main aside";
+}
+
+.operator-panel > aside.app-shell-rail { grid-area: rail; position: relative; z-index: 5; }
+.operator-panel > .panel-main-col       { grid-area: main; min-width: 0; display: flex; flex-direction: column; position: relative; z-index: 1; isolation: isolate; }
+.operator-panel > .panel-aside          { grid-area: aside; min-width: 0; }
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px 14px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1100px) {
+  .operator-panel:has(.panel-aside) {
+    grid-template-columns: 68px 1fr;
+    grid-template-areas: "rail main";
+  }
+  .operator-panel > .panel-aside { display: none; }
+}
+@media (max-width: 760px) {
+  .operator-panel,
+  .operator-panel:has(.panel-aside) {
+    grid-template-columns: 1fr;
+    grid-template-areas: "main";
+    padding: 16px;
+  }
+  .operator-panel > aside.app-shell-rail.in-panel-rail { display: none; }
+  .operator-mesh-outer { padding: 16px; }
+}
+
+.operator-panel .rail-scroll::-webkit-scrollbar { width: 0; display: none; }
+.operator-panel .rail-scroll { scrollbar-width: none; }
