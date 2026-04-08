@@ -316,7 +316,7 @@ export const MAIN_APP_OPERATOR_NAV: NavSection[] = [
     label: 'Resources',
     items: [
       { label: 'Inventory', href: '/app/inventory', icon: Package },
-      { label: 'Staff',     href: '/app/team',      icon: UserCheck },
+      { label: 'People',    href: '/app/team',      icon: UserCheck },
     ],
   },
   {

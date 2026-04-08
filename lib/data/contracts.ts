@@ -10,7 +10,7 @@ export interface StaffContract {
   weeklyHours: number        // contracted hours
   noticePeriodDays: number
   benefits: string[]
-  status: 'active' | 'expired' | 'draft'
+  status: 'active' | 'expiring_soon' | 'expired' | 'draft'
 }
 
 export const STAFF_CONTRACTS: StaffContract[] = [

@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users, Calendar, BarChart2, Plus, Clock, Home,
-  CheckCircle, X, ChevronDown, ChevronRight, DollarSign, Wrench, Phone, Star,
+  CheckCircle, X, ChevronDown, ChevronRight, Wrench, Phone, Star,
   FileText, ClipboardCheck,
 } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
@@ -19,9 +19,51 @@ import {
   type Shift, type DayOfWeek, type ShiftType,
 } from '@/lib/data/staffScheduling'
 import { LEAVE_REQUESTS, type LeaveRequest, type LeaveStatus } from '@/lib/data/leave'
-import { STAFF_CONTRACTS } from '@/lib/data/contracts'
+import { STAFF_CONTRACTS, type StaffContract } from '@/lib/data/contracts'
 
-type Tab = 'roster' | 'schedule' | 'workload' | 'payroll' | 'contractors' | 'daily' | 'leave' | 'contracts'
+type Tab = 'roster' | 'schedule' | 'workload' | 'timelog' | 'contractors' | 'daily' | 'leave' | 'contracts'
+
+const EMPLOYMENT_TYPE: Record<string, 'Hourly' | 'Salaried' | 'Contractor'> = {
+  s1: 'Hourly', s2: 'Salaried', s3: 'Contractor', s4: 'Hourly',
+}
+const CONTRACT_STATUS: Record<string, 'Active' | 'Expiring Soon' | 'Expired' | 'Missing'> = {
+  s1: 'Active', s2: 'Active', s3: 'Expiring Soon', s4: 'Active',
+}
+const CONTRACT_STATUS_COLOR: Record<string, string> = {
+  Active: '#16a34a', 'Expiring Soon': '#d97706', Expired: '#dc2626', Missing: '#d97706',
+}
+const EMPLOYMENT_TYPE_COLOR: Record<string, string> = {
+  Hourly: '#2563eb', Salaried: '#7c3aed', Contractor: '#d97706',
+}
+const BREAK_PER_STAFF: Record<string, string> = {
+  s1: '45m', s2: '—', s3: '—', s4: '32m',
+}
+const NET_HOURS_PER_STAFF: Record<string, string> = {
+  s1: '52h 15m', s2: '26h', s3: '23h', s4: '22h 28m',
+}
+const NET_HOURS_MINUTES: Record<string, number> = {
+  s1: 52 * 60 + 15, s2: 26 * 60, s3: 23 * 60, s4: 22 * 60 + 28,
+}
+const TIMELOG_BREAKDOWN: Record<string, Array<{ property: string; hours: string }>> = {
+  s1: [
+    { property: 'Sunset Villa',   hours: '18h 30m' },
+    { property: 'Ocean View Apt', hours: '15h 45m' },
+    { property: 'Mountain Cabin', hours: '18h 45m' },
+  ],
+  s2: [
+    { property: 'Ocean View Apt', hours: '14h 00m' },
+    { property: 'Downtown Loft',  hours: '12h 00m' },
+  ],
+  s3: [
+    { property: 'Downtown Loft',  hours: '10h 00m' },
+    { property: 'Harbor Studio',  hours: '8h 00m'  },
+    { property: 'Sunset Villa',   hours: '5h 00m'  },
+  ],
+  s4: [
+    { property: 'Sunset Villa',   hours: '12h 00m' },
+    { property: 'Harbor Studio',  hours: '10h 28m' },
+  ],
+}
 
 interface Contractor {
   id: string; name: string; specialty: string; phone: string; email: string; rating: number; status: 'active' | 'inactive'
@@ -204,7 +246,10 @@ export default function TeamPage() {
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(LEAVE_REQUESTS)
   const [contracts] = useState(STAFF_CONTRACTS)
   const [contractors, setContractors] = useState<Contractor[]>(INITIAL_CONTRACTORS)
+  const [timelogRange, setTimelogRange] = useState<'week' | 'month'>('week')
+  const [pendingApproveId, setPendingApproveId] = useState<string | null>(null)
   const [addDrawer, setAddDrawer] = useState(false)
+  const [viewContract, setViewContract] = useState<StaffContract | null>(null)
   const [newName, setNewName] = useState('')
   const [newSpecialty, setNewSpecialty] = useState('')
   const [newPhone, setNewPhone] = useState('')
@@ -216,16 +261,16 @@ export default function TeamPage() {
     display: 'flex', alignItems: 'center', gap: 7,
     padding: '7px 16px', borderRadius: 7, fontSize: 13,
     fontWeight: tab === t ? 600 : 500,
-    color: tab === t ? accent : 'var(--text-muted)',
-    background: tab === t ? `${accent}18` : 'transparent',
+    color: tab === t ? '#0f172a' : 'var(--text-muted)',
+    background: tab === t ? '#ffffff' : 'transparent',
     border: 'none', cursor: 'pointer', transition: 'all 0.15s',
   })
 
   return (
     <div>
       <PageHeader
-        title="Team"
-        subtitle="Roster, scheduling & workload"
+        title="People"
+        subtitle="Staff management, time tracking & payments"
         action={
           <button style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 16px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             <Plus size={15} /> Add Shift
@@ -238,7 +283,7 @@ export default function TeamPage() {
         <button style={tabStyle('roster')}      onClick={() => setTab('roster')}>      <Users size={14} /> Roster      </button>
         <button style={tabStyle('schedule')}    onClick={() => setTab('schedule')}>    <Calendar size={14} /> Schedule    </button>
         <button style={tabStyle('workload')}    onClick={() => setTab('workload')}>    <BarChart2 size={14} /> Workload    </button>
-        <button style={tabStyle('payroll')}     onClick={() => setTab('payroll')}>     <DollarSign size={14} /> Payroll     </button>
+        <button style={tabStyle('timelog')}     onClick={() => setTab('timelog')}>     <Clock size={14} /> Timelog     </button>
         <button style={tabStyle('contractors')} onClick={() => setTab('contractors')}> <Wrench size={14} /> Contractors </button>
         <button style={tabStyle('daily')}       onClick={() => setTab('daily')}>       <Calendar size={14} /> Daily       </button>
         <button style={tabStyle('leave')}       onClick={() => setTab('leave')}>       <ClipboardCheck size={14} /> Leave{leaveRequests.filter(r => r.status === 'pending').length > 0 && <span style={{ marginLeft: 4, fontSize: 10, fontWeight: 700, padding: '1px 5px', borderRadius: 10, background: '#d9770630', color: '#d97706' }}>{leaveRequests.filter(r => r.status === 'pending').length}</span>} </button>
@@ -271,6 +316,27 @@ export default function TeamPage() {
                           <div style={{ fontSize: 12, color: 'var(--text-subtle)' }}>{member.role}</div>
                         </div>
                         <StatusBadge status={member.status} />
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+                        {(() => {
+                          const emp = EMPLOYMENT_TYPE[member.id] ?? 'Hourly'
+                          const ec = EMPLOYMENT_TYPE_COLOR[emp]
+                          return (
+                            <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: `${ec}18`, color: ec }}>
+                              {emp}
+                            </span>
+                          )
+                        })()}
+                        {(() => {
+                          const cs = CONTRACT_STATUS[member.id] ?? 'Active'
+                          const col = CONTRACT_STATUS_COLOR[cs]
+                          return (
+                            <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: `${col}18`, color: col }}>
+                              {cs}
+                            </span>
+                          )
+                        })()}
                       </div>
 
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
@@ -539,9 +605,9 @@ export default function TeamPage() {
             </div>
           </motion.div>
         )}
-        {/* ── PAYROLL ── */}
-        {tab === 'payroll' && (
-          <motion.div key="payroll" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        {/* ── TIMELOG ── */}
+        {tab === 'timelog' && (
+          <motion.div key="timelog" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
             {/* Summary cards */}
             {(() => {
@@ -568,14 +634,61 @@ export default function TeamPage() {
 
             {/* Per-staff rows */}
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
-              <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Staff Time Log — Week of {WEEK_DATES['Mon']}</h2>
-                <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Estimates based on scheduled hours</span>
+              <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
+                  Staff Time Log — {timelogRange === 'week' ? `Week of ${WEEK_DATES['Mon']}` : 'This Month'}
+                </h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ display: 'flex', gap: 2, padding: 3, background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 8 }}>
+                    {(['week', 'month'] as const).map(r => (
+                      <button
+                        key={r}
+                        onClick={() => setTimelogRange(r)}
+                        style={{
+                          padding: '5px 12px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                          fontSize: 12, fontWeight: timelogRange === r ? 600 : 500,
+                          background: timelogRange === r ? '#ffffff' : 'transparent',
+                          color: timelogRange === r ? '#0f172a' : 'var(--text-muted)',
+                          textTransform: 'capitalize',
+                        }}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => {
+                      const rows: string[] = [['Staff', 'Role', 'Rate (NOK/hr)', 'Hours', 'Break', 'Net Hours', 'Est. Pay'].join(',')]
+                      STAFF_MEMBERS.forEach(m => {
+                        const hrs = getStaffWeeklyHours(m.id)
+                        const brk = BREAK_PER_STAFF[m.id] ?? '—'
+                        const net = NET_HOURS_PER_STAFF[m.id] ?? `${hrs}h`
+                        const pay = Math.round(hrs * m.hourlyRate)
+                        rows.push([`"${m.name}"`, `"${m.role}"`, m.hourlyRate, hrs, brk, net, pay].join(','))
+                        getShiftsForStaff(m.id).forEach(sh => {
+                          const propName = PROPERTIES.find(p => p.id === sh.propertyId)?.name ?? sh.propertyId
+                          const sHrs = (getShiftDuration(sh) / 60).toFixed(2)
+                          rows.push([`"  ${m.name} — ${sh.day}"`, `"${propName}"`, '', sHrs, '', '', ''].join(','))
+                        })
+                      })
+                      const blob = new Blob([rows.join('\n')], { type: 'text/csv' })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = `timelog-${timelogRange}.csv`
+                      a.click()
+                      URL.revokeObjectURL(url)
+                    }}
+                    style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    Export CSV
+                  </button>
+                </div>
               </div>
 
               {/* Table header */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px 100px 110px', gap: 0, padding: '8px 20px', borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
-                {['Staff', 'Rate (NOK/hr)', 'Hours', 'Est. Pay', ''].map(h => (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px 70px 90px 100px 110px', gap: 0, padding: '8px 20px', borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
+                {['Staff', 'Rate (NOK/hr)', 'Hours', 'Break', 'Net Hours', 'Est. Pay', ''].map(h => (
                   <div key={h} style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-subtle)', textTransform: 'uppercase' }}>{h}</div>
                 ))}
               </div>
@@ -588,7 +701,7 @@ export default function TeamPage() {
                 return (
                   <div key={member.id} style={{ borderBottom: mi < STAFF_MEMBERS.length - 1 ? '1px solid var(--border)' : 'none' }}>
                     {/* Staff row */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px 100px 110px', gap: 0, padding: '14px 20px', alignItems: 'center' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px 70px 90px 100px 110px', gap: 0, padding: '14px 20px', alignItems: 'center' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <div style={{ width: 32, height: 32, borderRadius: '50%', background: `${accent}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: accent, flexShrink: 0 }}>
                           {member.initials}
@@ -603,6 +716,12 @@ export default function TeamPage() {
                       </div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
                         {hrs}h
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                        {BREAK_PER_STAFF[member.id] ?? '—'}
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                        {NET_HOURS_PER_STAFF[member.id] ?? `${hrs}h`}
                       </div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: accent }}>
                         {pay.toLocaleString('no-NO')}
@@ -621,42 +740,27 @@ export default function TeamPage() {
                       {isOpen && (
                         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} style={{ overflow: 'hidden' }}>
                           <div style={{ background: 'var(--bg-elevated)', borderTop: '1px solid var(--border-subtle)' }}>
-                            {/* Shift table header */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '70px 90px 1fr 70px 90px', gap: 0, padding: '8px 20px 8px 62px', borderBottom: '1px solid var(--border-subtle)' }}>
-                              {['Day', 'Time', 'Property', 'Hrs', 'Subtotal'].map(h => (
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: 0, padding: '8px 20px 8px 62px', borderBottom: '1px solid var(--border-subtle)' }}>
+                              {['Property', 'Hours'].map(h => (
                                 <div key={h} style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-subtle)', textTransform: 'uppercase' }}>{h}</div>
                               ))}
                             </div>
-                            {shifts.map((shift, si) => {
-                              const shiftHrs = getShiftDuration(shift) / 60
-                              const subtotal = Math.round(shiftHrs * member.hourlyRate)
-                              const propName = PROPERTIES.find(p => p.id === shift.propertyId)?.name ?? shift.propertyId
-                              const typeColor = SHIFT_TYPE_COLOR[shift.type]
-                              return (
-                                <div
-                                  key={shift.id}
-                                  style={{
-                                    display: 'grid', gridTemplateColumns: '70px 90px 1fr 70px 90px', gap: 0,
-                                    padding: '8px 20px 8px 62px',
-                                    borderBottom: si < shifts.length - 1 ? '1px solid var(--border-subtle)' : 'none',
-                                  }}
-                                >
-                                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{shift.day}</div>
-                                  <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{shift.startTime}–{shift.endTime}</div>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                                    <div style={{ width: 7, height: 7, borderRadius: 2, background: typeColor, flexShrink: 0 }} />
-                                    <span style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{propName}</span>
-                                  </div>
-                                  <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>{shiftHrs.toFixed(1)}h</div>
-                                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{subtotal.toLocaleString('no-NO')}</div>
-                                </div>
-                              )
-                            })}
-                            {/* Subtotal row */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '70px 90px 1fr 70px 90px', gap: 0, padding: '10px 20px 10px 62px', borderTop: '1px solid var(--border)', background: `${accent}08` }}>
-                              <div style={{ gridColumn: '1 / 4', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>Weekly Total</div>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{hrs}h</div>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: accent }}>NOK {pay.toLocaleString('no-NO')}</div>
+                            {(TIMELOG_BREAKDOWN[member.id] ?? []).map((row, ri, arr) => (
+                              <div
+                                key={row.property}
+                                style={{
+                                  display: 'grid', gridTemplateColumns: '1fr 120px', gap: 0,
+                                  padding: '8px 20px 8px 62px',
+                                  borderBottom: ri < arr.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                                }}
+                              >
+                                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{row.property}</div>
+                                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-subtle)' }}>{row.hours}</div>
+                              </div>
+                            ))}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: 0, padding: '10px 20px 10px 62px', borderTop: '1px solid var(--border)', background: `${accent}08` }}>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>Weekly Total</div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{NET_HOURS_PER_STAFF[member.id] ?? `${hrs}h`}</div>
                             </div>
                           </div>
                         </motion.div>
@@ -670,11 +774,17 @@ export default function TeamPage() {
               {(() => {
                 const grandHrs = workload.reduce((s, w) => s + w.weeklyHours, 0)
                 const grandPay = STAFF_MEMBERS.reduce((s, m) => s + Math.round(getStaffWeeklyHours(m.id) * m.hourlyRate), 0)
+                const grandNetMin = STAFF_MEMBERS.reduce((s, m) => s + (NET_HOURS_MINUTES[m.id] ?? 0), 0)
+                const gnH = Math.floor(grandNetMin / 60)
+                const gnM = grandNetMin % 60
+                const grandNetLabel = gnM === 0 ? `${gnH}h` : `${gnH}h ${gnM}m`
                 return (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px 100px 110px', gap: 0, padding: '14px 20px', background: `${accent}10`, borderTop: '2px solid var(--border)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px 70px 90px 100px 110px', gap: 0, padding: '14px 20px', background: `${accent}10`, borderTop: '2px solid var(--border)' }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Grand Total</div>
                     <div />
                     <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{grandHrs}h</div>
+                    <div />
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{grandNetLabel}</div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: accent }}>NOK {grandPay.toLocaleString('no-NO')}</div>
                     <div />
                   </div>
@@ -899,7 +1009,8 @@ export default function TeamPage() {
                 }
                 const s = statusMap[req.status]
                 return (
-                  <div key={req.id} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 1fr 50px 1fr 100px 130px', gap: 0, padding: '13px 20px', borderBottom: i < leaveRequests.length - 1 ? '1px solid var(--border)' : 'none', alignItems: 'center', background: req.status === 'pending' ? '#d9770606' : 'transparent' }}>
+                  <div key={req.id} style={{ borderBottom: i < leaveRequests.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 1fr 50px 1fr 100px 130px', gap: 0, padding: '13px 20px', alignItems: 'center', background: req.status === 'pending' ? '#d9770606' : 'transparent' }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{req.staffName}</div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', textTransform: 'capitalize' }}>{req.type}</div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{req.from} – {req.to}</div>
@@ -909,10 +1020,7 @@ export default function TeamPage() {
                     {req.status === 'pending' ? (
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button
-                          onClick={() => {
-                            setLeaveRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'approved', reviewedBy: 'Operator' } : r))
-                            showCToast('Leave approved')
-                          }}
+                          onClick={() => setPendingApproveId(req.id)}
                           style={{ padding: '5px 10px', borderRadius: 6, border: 'none', background: '#16a34a', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
                         >
                           Approve
@@ -933,6 +1041,34 @@ export default function TeamPage() {
                       </div>
                     )}
                   </div>
+                  {pendingApproveId === req.id && (
+                    <div style={{ margin: '0 20px 14px', padding: '12px 14px', background: '#d9770612', borderLeft: '2px solid #d97706', borderRadius: 6, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 500 }}>
+                        {req.staffId === 's1' || req.id === 'lr1'
+                          ? '⚠ Approving this leave will leave Harbor Studio and Sunset Villa unassigned Mar 25–28. Reassign before confirming.'
+                          : `⚠ Approving this leave will leave properties unassigned on ${req.from}–${req.to}. Reassign before confirming.`}
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          onClick={() => {
+                            setLeaveRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'approved', reviewedBy: 'Operator' } : r))
+                            setPendingApproveId(null)
+                            showCToast('Leave approved')
+                          }}
+                          style={{ padding: '6px 12px', borderRadius: 6, border: 'none', background: '#d97706', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          Confirm Approval
+                        </button>
+                        <button
+                          onClick={() => setPendingApproveId(null)}
+                          style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  </div>
                 )
               })}
             </div>
@@ -945,12 +1081,14 @@ export default function TeamPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
               {contracts.map(c => {
                 const empTypeLabel: Record<string, string> = { full_time: 'Full Time', part_time: 'Part Time', casual: 'Casual', contractor: 'Contractor' }
-                const statusMap: Record<string, { bg: string; color: string }> = {
-                  active:  { bg: '#16a34a18', color: '#16a34a' },
-                  expired: { bg: '#dc262618', color: '#dc2626' },
-                  draft:   { bg: 'var(--bg-elevated)', color: 'var(--text-muted)' },
+                const statusMap: Record<string, { bg: string; color: string; label: string }> = {
+                  active:        { bg: '#16a34a18', color: '#16a34a', label: 'Active' },
+                  expiring_soon: { bg: '#d9770618', color: '#d97706', label: 'Expiring Soon' },
+                  expired:       { bg: '#dc262618', color: '#dc2626', label: 'Expired' },
+                  draft:         { bg: 'var(--bg-elevated)', color: 'var(--text-muted)', label: 'Draft' },
                 }
-                const sm = statusMap[c.status]
+                const displayStatus = c.staffId === 's3' ? 'expiring_soon' : c.status
+                const sm = statusMap[displayStatus]
                 return (
                   <div key={c.staffId} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
                     {/* Header */}
@@ -962,10 +1100,10 @@ export default function TeamPage() {
                         <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{c.staffName}</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
                           <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 8px', borderRadius: 20, background: `${accent}18`, color: accent }}>
-                            {empTypeLabel[c.employmentType]}
+                            {empTypeLabel[c.employmentType]} · {EMPLOYMENT_TYPE[c.staffId] ?? 'Hourly'}
                           </span>
-                          <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 8px', borderRadius: 20, background: sm.bg, color: sm.color, textTransform: 'capitalize' }}>
-                            {c.status}
+                          <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 8px', borderRadius: 20, background: sm.bg, color: sm.color }}>
+                            {sm.label}
                           </span>
                         </div>
                       </div>
@@ -995,6 +1133,13 @@ export default function TeamPage() {
                         ))}
                       </div>
                     </div>
+
+                    <button
+                      onClick={() => setViewContract(c)}
+                      style={{ marginTop: 4, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      View Contract
+                    </button>
                   </div>
                 )
               })}
@@ -1010,6 +1155,110 @@ export default function TeamPage() {
           <ShiftSheet shift={selectedShift} onClose={() => setSelectedShift(null)} />
         )}
       </AnimatePresence>
+
+      {/* View Contract drawer */}
+      <AppDrawer
+        open={!!viewContract}
+        onClose={() => setViewContract(null)}
+        title="Employment Contract"
+        footer={
+          <>
+            <button
+              onClick={() => setViewContract(null)}
+              style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+            >
+              Close
+            </button>
+            <button
+              onClick={() => showCToast('PDF export coming soon')}
+              style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+            >
+              Download PDF
+            </button>
+          </>
+        }
+      >
+        {viewContract && (() => {
+          const c = viewContract
+          const staff = STAFF_MEMBERS.find(s => s.id === c.staffId)
+          const empTypeLabel: Record<string, string> = { full_time: 'Full Time', part_time: 'Part Time', casual: 'Casual', contractor: 'Contractor' }
+          const statusMap: Record<string, { bg: string; color: string; label: string }> = {
+            active:        { bg: '#16a34a18', color: '#16a34a', label: 'Active' },
+            expiring_soon: { bg: '#d9770618', color: '#d97706', label: 'Expiring Soon' },
+            expired:       { bg: '#dc262618', color: '#dc2626', label: 'Expired' },
+            draft:         { bg: 'var(--bg-elevated)', color: 'var(--text-muted)', label: 'Draft' },
+          }
+          const displayStatus = c.staffId === 's3' ? 'expiring_soon' : c.status
+          const sm = statusMap[displayStatus]
+          const emp = EMPLOYMENT_TYPE[c.staffId] ?? 'Hourly'
+          const sectionLabel: React.CSSProperties = { fontSize: 12, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-subtle)', letterSpacing: '0.06em', marginBottom: 6 }
+          const sectionBody: React.CSSProperties = { fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }
+          const sections: Array<[string, React.ReactNode]> = [
+            ['1. Position & Duties', `${c.staffName} is employed as ${staff?.role ?? 'Staff'} and reports to the Operations Manager.`],
+            ['2. Employment Type', `${empTypeLabel[c.employmentType]} · ${emp}. Effective ${c.startDate}. Indefinite term.`],
+            ['3. Compensation', `NOK ${c.hourlyRate}/hour. Paid monthly on the 25th. Overtime per Working Environment Act §10-6.`],
+            ['4. Working Hours', `${c.weeklyHours} hours/week. 23-minute unpaid meal break per shift. Schedule per published roster.`],
+            ['5. Leave & Benefits', (
+              <>
+                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                  {c.benefits.map(b => <li key={b}>{b}</li>)}
+                </ul>
+                <div style={{ marginTop: 6 }}>Holidays Act applies.</div>
+              </>
+            )],
+            ['6. Notice Period', `${c.noticePeriodDays} days written notice by either party per Working Environment Act §15-3.`],
+            ['7. Confidentiality', 'Employee shall not disclose any confidential business information during or after employment.'],
+            ['8. Governing Law', 'Governed by the laws of Norway. Disputes resolved in Oslo District Court.'],
+          ]
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Status stripe */}
+              <div>
+                <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, background: sm.bg, color: sm.color }}>
+                  {sm.label}
+                </span>
+              </div>
+
+              {/* Header */}
+              <div style={{ padding: '14px 16px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>AfterStay AS</div>
+                <div style={{ fontSize: 12, color: 'var(--text-subtle)', marginTop: 2 }}>Org no NO 123 456 789 MVA</div>
+                <div style={{ fontSize: 12, color: 'var(--text-subtle)' }}>Storgata 12, 0155 Oslo</div>
+                <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginTop: 6 }}>Contract ref: AS-EMP-{c.staffId.toUpperCase()}-2024</div>
+              </div>
+
+              {/* Parties */}
+              <div style={sectionBody}>
+                This employment agreement is entered into between <strong style={{ color: 'var(--text-primary)' }}>AfterStay AS</strong> (the Employer) and <strong style={{ color: 'var(--text-primary)' }}>{c.staffName}</strong> (the Employee).
+              </div>
+
+              {/* Numbered sections */}
+              {sections.map(([label, body]) => (
+                <div key={label}>
+                  <div style={sectionLabel}>{label}</div>
+                  <div style={sectionBody}>{body}</div>
+                </div>
+              ))}
+
+              {/* Signature block */}
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                <div>
+                  <div style={sectionLabel}>Employer</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Erik Haugen, CEO</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-subtle)', marginTop: 2 }}>{c.startDate}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginTop: 4 }}>Signed electronically ✓</div>
+                </div>
+                <div>
+                  <div style={sectionLabel}>Employee</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{c.staffName}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-subtle)', marginTop: 2 }}>{c.startDate}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginTop: 4 }}>Signed electronically ✓</div>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
+      </AppDrawer>
     </div>
   )
 }
