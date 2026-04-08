@@ -11,6 +11,7 @@ import { ASSETS } from '@/lib/data/assets'
 import { JOBS, STAFF_MEMBERS } from '@/lib/data/staff'
 import StatusBadge from '@/components/shared/StatusBadge'
 import Tabs from '@/components/shared/Tabs'
+import PageHeader from '@/components/shared/PageHeader'
 import { useRole } from '@/context/RoleContext'
 
 export default function PropertyDetailPage() {
@@ -79,6 +80,7 @@ export default function PropertyDetailPage() {
 
   return (
     <div>
+      <PageHeader title={property.name ?? 'Property'} />
       {/* Back button */}
       <button
         onClick={() => router.push('/operator/properties')}

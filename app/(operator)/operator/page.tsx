@@ -19,6 +19,7 @@ import { FEED_ITEMS, filterFeed, type FeedTab } from '@/lib/data/activityFeed'
 import OperationsKanban from './_components/OperationsKanban'
 import ScheduledRail from './_components/ScheduledRail'
 import OperatorPanelAside from '@/components/shared/OperatorPanelAside'
+import PageHeader from '@/components/shared/PageHeader'
 
 // ─── Team clock status (6 members) ───────────────────────────────────────────
 const TEAM_CLOCK_STATUS = [
@@ -352,6 +353,8 @@ export default function OperatorDashboard() {
 
       {/* ═══ CENTER COLUMN ══════════════════════════════════════════════════════ */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+        <PageHeader title="Dashboard" subtitle="Operator command center" />
 
         {ViewTabs}
 

@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Check, MapPin, Wifi, Car, Waves, Flame, Wind, Tv
 import { getCleaningChecklist, type ChecklistItem } from '@/lib/data/checklists'
 import { useRole } from '@/context/RoleContext'
 import { OWNERS } from '@/lib/data/owners'
+import PageHeader from '@/components/shared/PageHeader'
 
 const TOTAL_STEPS = 9
 
@@ -576,6 +577,7 @@ export default function OnboardPage() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-page)' }}>
+      <PageHeader title="Onboard property" subtitle="New property setup" />
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid var(--border)', background: 'var(--bg-surface)', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
