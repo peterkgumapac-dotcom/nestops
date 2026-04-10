@@ -1,10 +1,10 @@
 'use client'
 import { useState, useCallback, useEffect } from 'react'
 import {
-  AlertTriangle, Phone, ChevronRight, ChevronUp,
+  AlertTriangle, Phone, ChevronRight, ChevronUp, ChevronDown,
   Search, Heart, Check, Star, MapPin, Copy, Bookmark,
   ClipboardList, Plug, KeyRound, ArrowUpDown, HelpCircle,
-  MessageSquare, Wrench, CircleHelp,
+  MessageSquare, MessageCircle, Wrench, CircleHelp,
   Users, Map, ShieldAlert, CloudSun, ThumbsUp, ThumbsDown,
   Sparkles, Send, Link2, RefreshCw, Loader2,
 } from 'lucide-react'
@@ -51,6 +51,91 @@ const GUIDE_ICONS: { icon: typeof ClipboardList; color: string; rgb: string }[] 
   { icon: Map,           color: '#4A9EFF', rgb: '74,158,255' },
   { icon: ShieldAlert,   color: '#FF4D4D', rgb: '255,77,77' },
 ]
+
+const GUIDE_DETAIL_CONTENT: Record<string, React.ReactNode> = {
+  'House Rules': (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {['Quiet hours 10 PM – 8 AM', 'No smoking indoors', 'Max 2 extra guests', 'Pets allowed (notify host)', 'No parties or events'].map(r => (
+        <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ width: 4, height: 4, borderRadius: 2, background: G.accent, flexShrink: 0 }} />
+          <span>{r}</span>
+        </div>
+      ))}
+    </div>
+  ),
+  'Appliances': (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {[
+        { name: 'Oven', desc: 'Preheat 10 min, dial on left' },
+        { name: 'Washer', desc: 'Programs on door, pods under sink' },
+        { name: 'TV', desc: 'Remote in drawer, Netflix pre-logged' },
+        { name: 'Coffee', desc: 'Nespresso machine, capsules in cabinet' },
+      ].map(a => (
+        <div key={a.name}>
+          <span style={{ fontWeight: 800, color: G.text }}>{a.name}: </span>
+          <span>{a.desc}</span>
+        </div>
+      ))}
+    </div>
+  ),
+  'Access & Parking': (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {[
+        { name: 'Main door', desc: 'Code 4821' },
+        { name: 'Building gate', desc: 'Buzz #12' },
+        { name: 'Parking', desc: 'Spot B14 in basement' },
+        { name: 'Elevator', desc: 'Card in welcome pack' },
+      ].map(a => (
+        <div key={a.name}>
+          <span style={{ fontWeight: 800, color: G.text }}>{a.name}: </span>
+          <span>{a.desc}</span>
+        </div>
+      ))}
+    </div>
+  ),
+  'Checkout Guide': (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {['Strip beds', 'Start dishwasher', 'Take out trash', 'Close windows', 'Leave keys on counter', 'Lock door (auto-locks)'].map(t => (
+        <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ width: 16, height: 16, borderRadius: 4, border: `1.5px solid ${G.border}`, flexShrink: 0 }} />
+          <span>{t}</span>
+        </div>
+      ))}
+    </div>
+  ),
+  'FAQs': (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {[
+        { q: 'Where are extra towels?', a: 'Hall closet, top shelf' },
+        { q: 'How does heating work?', a: 'Thermostat in hallway, set to 21°C' },
+        { q: 'Is there a hair dryer?', a: 'Under bathroom sink' },
+        { q: 'Nearest grocery store?', a: 'Kiwi, 200m east' },
+      ].map(f => (
+        <div key={f.q}>
+          <div style={{ fontWeight: 800, color: G.text, marginBottom: 2 }}>{f.q}</div>
+          <div>{f.a}</div>
+        </div>
+      ))}
+    </div>
+  ),
+  'Property Map': (
+    <div style={{ padding: '8px 0', lineHeight: 1.7 }}>
+      Kitchen → Living → Bedroom 1 → Bedroom 2<br />
+      Bathroom off hallway · Balcony via living room
+    </div>
+  ),
+  'Safety & Emergency': (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div><span style={{ fontWeight: 800, color: G.text }}>Fire exit: </span>Main door + balcony</div>
+      <div><span style={{ fontWeight: 800, color: G.text }}>First aid: </span>Under kitchen sink</div>
+      <div style={{ padding: '8px 12px', borderRadius: 10, background: `${G.red}0d` }}>
+        <div style={{ fontWeight: 800, color: G.red, marginBottom: 4 }}>Emergency Numbers</div>
+        <div>112 (police) · 113 (ambulance) · 110 (fire)</div>
+        <div style={{ marginTop: 4 }}>Host emergency: +47 900 12 345</div>
+      </div>
+    </div>
+  ),
+}
 
 const SUPPORT_ICONS: { icon: typeof MessageSquare; color: string; rgb: string }[] = [
   { icon: MessageSquare, color: '#4A9EFF', rgb: '74,158,255' },
@@ -196,6 +281,8 @@ export default function GuestPortalPreview() {
   })
 
   const [issueOpen, setIssueOpen] = useState(false)
+  const [expandedGuide, setExpandedGuide] = useState<string | null>(null)
+  const [helpMenuOpen, setHelpMenuOpen] = useState(false)
   const [tab, setTab] = useState<GuestTab>('home')
   const [favorited, setFavorited] = useState(false)
   const [activeCat, setActiveCat] = useState('all')
@@ -366,7 +453,7 @@ export default function GuestPortalPreview() {
             textShadow: '0 2px 12px rgba(0,0,0,0.3)',
           }}>{guidebook.propertyName}</div>
           <div style={{
-            fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.85)', marginTop: 4,
+            fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)', marginTop: 4,
             display: 'flex', alignItems: 'center', gap: 4,
           }}>
             <MapPin size={12} /> {property ? `${property.address ?? ''}${property.city ? `, ${property.city}` : ''}` : 'Oslo, Norway'}
@@ -393,7 +480,7 @@ export default function GuestPortalPreview() {
           }}>
             Hey {guestName} 👋
           </div>
-          <div style={{ fontSize: 14, fontWeight: 500, color: G.textMuted, marginTop: 6 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: G.textBody, marginTop: 6 }}>
             Let&apos;s make your stay effortless
           </div>
         </div>
@@ -411,7 +498,7 @@ export default function GuestPortalPreview() {
           }}
         >
           <Search size={16} color={G.textMuted} />
-          <span style={{ fontSize: 14, fontWeight: 500, color: G.textMuted }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: G.textMuted }}>
             Ask anything about your stay...
           </span>
         </button>
@@ -435,7 +522,7 @@ export default function GuestPortalPreview() {
               <Sparkles size={18} color={G.accent} />
               <span style={{ fontSize: 16, fontWeight: 900, color: G.text }}>Plan Your Trip</span>
             </div>
-            <div style={{ fontSize: 13, fontWeight: 500, color: G.textBody, marginBottom: 10 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: G.textBody, marginBottom: 10 }}>
               First time in Oslo? We&apos;ll build your top picks in 30s.
             </div>
             <span style={{
@@ -601,7 +688,7 @@ export default function GuestPortalPreview() {
                               {item.source === 'host' ? '⭐ Host\'s Pick' : `${item.rating} ★ Google`}
                             </span>
                           </div>
-                          <div style={{ fontSize: 11, fontWeight: 500, color: G.textMuted, marginBottom: 2 }}>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: G.textBody, marginBottom: 2 }}>
                             {item.distance} · {item.reason}
                           </div>
                           <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
@@ -766,7 +853,7 @@ export default function GuestPortalPreview() {
             <div style={{ fontSize: 12, fontWeight: 800, color: G.text }}>
               Maintenance Visit · Today 2:00–3:00 PM
             </div>
-            <div style={{ fontSize: 11, fontWeight: 500, color: G.textMuted, marginTop: 2 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: G.textBody, marginTop: 2 }}>
               Plumber — Bathroom faucet repair
             </div>
           </div>
@@ -862,66 +949,8 @@ export default function GuestPortalPreview() {
           </>
         )}
 
-        {/* Need Help? — Support section folded into Home */}
-        <SectionHeader title="Need Help?" />
-
-        {/* Emergency SOS card */}
-        <button className="gp-press" style={{
-          width: '100%', padding: 16, borderRadius: 16,
-          background: `${G.red}0d`, border: `1px solid ${G.red}26`,
-          boxShadow: 'none',
-          color: G.red, fontSize: 14, fontWeight: 700,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          cursor: 'pointer', fontFamily: 'inherit',
-          marginBottom: 12,
-        }}>
-          <AlertTriangle size={18} /> Emergency — Immediate Help
-        </button>
-
-        {/* Support action rows */}
-        {[
-          { title: 'Message Host', sub: 'Usually responds within 15 min' },
-          { title: 'Call Host', sub: 'Tap to call' },
-          { title: 'Report an Issue', sub: 'Auto-dispatched to maintenance' },
-        ].map((row, i) => {
-          const iconCfg = SUPPORT_ICONS[i]
-          const IconComp = iconCfg.icon
-          const isIssue = row.title === 'Report an Issue'
-          const content = (
-            <div className="gp-press" style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              padding: 14, marginBottom: 10,
-              background: G.surface, borderRadius: 18,
-              boxShadow: G.shadowSm, cursor: 'pointer',
-              border: `1px solid ${G.border}`,
-            }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 14, flexShrink: 0,
-                background: `rgba(${iconCfg.rgb}, 0.08)`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <IconComp size={22} color={`rgba(${iconCfg.rgb}, 0.7)`} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: G.text }}>{row.title}</div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: G.textMuted, marginTop: 2 }}>{row.sub}</div>
-              </div>
-              <ChevronRight size={18} color={G.textFaint} />
-            </div>
-          )
-          if (isIssue) {
-            return (
-              <button
-                key={row.title}
-                onClick={() => setIssueOpen(true)}
-                style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-              >
-                {content}
-              </button>
-            )
-          }
-          return <div key={row.title}>{content}</div>
-        })}
+        {/* Spacer at bottom for FAB clearance */}
+        <div style={{ height: 60 }} />
       </div>
     </div>
   )
@@ -956,7 +985,7 @@ export default function GuestPortalPreview() {
           <div style={{ fontSize: 15, fontWeight: 800, color: G.text, letterSpacing: '-0.02em' }}>
             Welcome to {guidebook.propertyName}!
           </div>
-          <div style={{ fontSize: 12, fontWeight: 500, color: G.textMuted, marginTop: 2 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: G.textBody, marginTop: 2 }}>
             I&apos;m Erik, your host. Reach out anytime!
           </div>
         </div>
@@ -985,27 +1014,54 @@ export default function GuestPortalPreview() {
       {guideRows.map((row, i) => {
         const iconCfg = GUIDE_ICONS[i]
         const IconComp = iconCfg.icon
+        const isExpanded = expandedGuide === row.t
+        const detail = GUIDE_DETAIL_CONTENT[row.t]
         return (
-          <div key={row.t} className="gp-press" style={{
-            display: 'flex', alignItems: 'center', gap: 12,
-            padding: 14, marginBottom: 10,
-            background: G.surface, borderRadius: 18,
-            boxShadow: G.shadowSm, cursor: 'pointer',
-            border: `1px solid ${G.border}`,
-            transition: 'border-color 0.15s',
-          }}>
-            <div style={{
-              width: 44, height: 44, borderRadius: 14, flexShrink: 0,
-              background: `rgba(${iconCfg.rgb}, 0.08)`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <IconComp size={22} color={`rgba(${iconCfg.rgb}, 0.7)`} />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: G.text }}>{row.t}</div>
-              <div style={{ fontSize: 12, fontWeight: 500, color: G.textMuted, marginTop: 2 }}>{row.s}</div>
-            </div>
-            <ChevronRight size={18} color={G.textFaint} />
+          <div key={row.t} style={{ marginBottom: 10 }}>
+            <button
+              className="gp-press"
+              onClick={() => setExpandedGuide(isExpanded ? null : row.t)}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                padding: 14,
+                background: G.surface,
+                borderRadius: isExpanded ? '18px 18px 0 0' : '18px',
+                boxShadow: G.shadowSm, cursor: 'pointer',
+                border: `1px solid ${isExpanded ? G.accent + '33' : G.border}`,
+                borderBottom: isExpanded ? 'none' : `1px solid ${G.border}`,
+                transition: 'border-color 0.15s',
+                fontFamily: 'inherit',
+              }}
+            >
+              <div style={{
+                width: 44, height: 44, borderRadius: 14, flexShrink: 0,
+                background: `rgba(${iconCfg.rgb}, 0.08)`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <IconComp size={22} color={`rgba(${iconCfg.rgb}, 0.7)`} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: G.text }}>{row.t}</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: G.textBody, marginTop: 2 }}>{row.s}</div>
+              </div>
+              {isExpanded
+                ? <ChevronDown size={18} color={G.accent} style={{ transform: 'rotate(180deg)', transition: 'transform 0.2s' }} />
+                : <ChevronRight size={18} color={G.textFaint} />
+              }
+            </button>
+            {isExpanded && detail && (
+              <div style={{
+                padding: '14px 16px 16px',
+                background: G.surfaceHover,
+                borderRadius: '0 0 18px 18px',
+                border: `1px solid ${G.accent}33`,
+                borderTop: 'none',
+                fontSize: 12, fontWeight: 600, color: G.textBody,
+                lineHeight: 1.55,
+              }}>
+                {detail}
+              </div>
+            )}
           </div>
         )
       })}
@@ -1027,7 +1083,7 @@ export default function GuestPortalPreview() {
         <span style={{ fontSize: 13, fontWeight: 600, color: G.textMuted }}>·</span>
         <span style={{ fontSize: 13, fontWeight: 800, color: G.text }}>12°C</span>
         <span style={{ fontSize: 13, fontWeight: 600, color: G.textMuted }}>·</span>
-        <span style={{ fontSize: 12, fontWeight: 500, color: G.textMuted }}>Partly cloudy</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: G.textMuted }}>Partly cloudy</span>
       </div>
 
       {/* Search bar */}
@@ -1038,7 +1094,7 @@ export default function GuestPortalPreview() {
         marginBottom: 16,
       }}>
         <Search size={16} color={G.textMuted} />
-        <span style={{ fontSize: 14, fontWeight: 500, color: G.textMuted }}>
+        <span style={{ fontSize: 14, fontWeight: 600, color: G.textMuted }}>
           Search places, restaurants...
         </span>
       </div>
@@ -1088,7 +1144,7 @@ export default function GuestPortalPreview() {
       </button>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-        <div style={{ fontSize: 18, fontWeight: 900, color: G.text, letterSpacing: '-0.02em' }}>Host&apos;s Local Picks</div>
+        <div style={{ fontSize: 20, fontWeight: 900, color: G.text, letterSpacing: '-0.02em' }}>Host&apos;s Local Picks</div>
         <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.06em', color: G.textMuted }}>CURATED</div>
       </div>
 
@@ -1160,7 +1216,7 @@ export default function GuestPortalPreview() {
                   letterSpacing: '-0.01em', marginBottom: 4,
                 }}>{rec.name}</div>
                 <div style={{
-                  fontSize: 11, fontWeight: 600, color: G.textMuted, lineHeight: 1.45,
+                  fontSize: 11, fontWeight: 600, color: G.textBody, lineHeight: 1.45,
                   marginBottom: 10,
                 }}>{rec.desc}</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -1207,7 +1263,7 @@ export default function GuestPortalPreview() {
       {/* Guest Recommendations Section */}
       <div style={{ marginTop: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-          <div style={{ fontSize: 18, fontWeight: 900, color: G.text, letterSpacing: '-0.02em' }}>Guest Recommendations</div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: G.text, letterSpacing: '-0.02em' }}>Guest Recommendations</div>
           <span style={{
             fontSize: 9, fontWeight: 800, padding: '3px 8px', borderRadius: 8,
             background: G.accentBg, color: G.accent, letterSpacing: '0.04em',
@@ -1235,7 +1291,7 @@ export default function GuestPortalPreview() {
                   fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 8,
                   background: G.surfaceHover, color: G.textMuted,
                 }}>{gr.cat}</span>
-                <span style={{ fontSize: 10, fontWeight: 600, color: G.textMuted }}>
+                <span style={{ fontSize: 10, fontWeight: 600, color: G.textBody }}>
                   Recommended by {gr.recCount} guests
                 </span>
               </div>
@@ -1277,7 +1333,7 @@ export default function GuestPortalPreview() {
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>{u.title}</div>
                 <div style={{
-                  fontSize: 10, fontWeight: 600, color: G.textMuted,
+                  fontSize: 10, fontWeight: 600, color: G.textBody,
                   marginTop: 2,
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>{u.description}</div>
@@ -1330,7 +1386,7 @@ export default function GuestPortalPreview() {
         boxShadow: G.shadowMd,
       }}>
         <div style={{ fontSize: 15, fontWeight: 800, color: G.text, marginBottom: 4 }}>Invite your group</div>
-        <div style={{ fontSize: 12, fontWeight: 500, color: G.textMuted, marginBottom: 14 }}>Share access with everyone staying</div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: G.textBody, marginBottom: 14 }}>Share access with everyone staying</div>
 
         <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
           <input
@@ -1447,7 +1503,7 @@ export default function GuestPortalPreview() {
               <span style={{ fontSize: 16 }}>{item.cat}</span>
               <span style={{ fontSize: 14, fontWeight: 800, color: G.text }}>{item.name}</span>
             </div>
-            <div style={{ fontSize: 11, fontWeight: 500, color: G.textMuted, marginBottom: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: G.textBody, marginBottom: 10 }}>
               {item.source === 'trip-planner' ? 'From Trip Planner' : `Added by ${item.addedBy}`}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1594,7 +1650,87 @@ export default function GuestPortalPreview() {
   return (
     <>
       {/* Phone device frame for desktop viewing */}
-      <PhoneFrame toast={toast}>{portalContent}</PhoneFrame>
+      <PhoneFrame
+        toast={toast}
+        fab={
+          <>
+            {/* Help menu popover */}
+            {helpMenuOpen && (
+              <>
+                <div
+                  onClick={() => setHelpMenuOpen(false)}
+                  style={{ position: 'absolute', inset: 0, zIndex: 198 }}
+                />
+                <div style={{
+                  position: 'absolute', bottom: 150, right: 20, zIndex: 200,
+                  background: G.surface, borderRadius: 18,
+                  boxShadow: G.shadowLg, border: `1px solid ${G.border}`,
+                  padding: 6, width: 200,
+                  backdropFilter: 'blur(12px)',
+                }}>
+                  {[
+                    { label: 'Emergency', icon: AlertTriangle, color: G.red, rgb: '196,51,51',
+                      action: () => { setHelpMenuOpen(false); showToast('Calling emergency...') } },
+                    { label: 'Message Host', icon: MessageSquare, color: '#4A9EFF', rgb: '74,158,255',
+                      action: () => { setHelpMenuOpen(false); showToast('Coming soon') } },
+                    { label: 'Call Host', icon: Phone, color: '#3ECF8E', rgb: '62,207,142',
+                      action: () => { setHelpMenuOpen(false); showToast('Coming soon') } },
+                    { label: 'Report Issue', icon: Wrench, color: '#FF4D4D', rgb: '255,77,77',
+                      action: () => { setHelpMenuOpen(false); setIssueOpen(true) } },
+                  ].map(item => {
+                    const ItemIcon = item.icon
+                    return (
+                      <button
+                        key={item.label}
+                        className="gp-press-sm"
+                        onClick={item.action}
+                        style={{
+                          width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                          padding: '10px 12px', borderRadius: 12,
+                          background: 'transparent', border: 'none',
+                          cursor: 'pointer', fontFamily: 'inherit',
+                          transition: 'background 0.15s',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = G.surfaceHover }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                      >
+                        <div style={{
+                          width: 32, height: 32, borderRadius: 10, flexShrink: 0,
+                          background: `rgba(${item.rgb}, 0.1)`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          <ItemIcon size={16} color={item.color} />
+                        </div>
+                        <span style={{
+                          fontSize: 13, fontWeight: 700,
+                          color: item.label === 'Emergency' ? G.red : G.text,
+                        }}>{item.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* FAB button */}
+            <button
+              onClick={() => setHelpMenuOpen(v => !v)}
+              className="gp-press-sm"
+              style={{
+                position: 'absolute', bottom: 90, right: 20, zIndex: 199,
+                width: 52, height: 52, borderRadius: '50%',
+                background: G.accent, border: 'none',
+                boxShadow: `0 6px 20px ${G.accent}66, 0 2px 8px rgba(0,0,0,0.2)`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+              }}
+            >
+              <MessageCircle size={22} color="#fff" />
+            </button>
+          </>
+        }
+      >{portalContent}</PhoneFrame>
 
       <ReportIssueSheet
         open={issueOpen}
@@ -1607,7 +1743,7 @@ export default function GuestPortalPreview() {
 }
 
 // ——— Phone device frame ——————————————————————————————————————
-function PhoneFrame({ children, toast }: { children: React.ReactNode; toast: string | null }) {
+function PhoneFrame({ children, toast, fab }: { children: React.ReactNode; toast: string | null; fab?: React.ReactNode }) {
   return (
     <>
       <div style={{
@@ -1679,9 +1815,13 @@ function PhoneFrame({ children, toast }: { children: React.ReactNode; toast: str
             flex: 1,
             overflow: 'auto',
             scrollbarWidth: 'none',
+            position: 'relative',
           }}>
             {children}
           </div>
+
+          {/* Floating overlays (FAB) */}
+          {fab}
         </div>
       </div>
 
@@ -1746,8 +1886,8 @@ function PhoneFrame({ children, toast }: { children: React.ReactNode; toast: str
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
-      fontSize: 11, fontWeight: 700, color: G.textMuted,
-      textTransform: 'uppercase', letterSpacing: '0.06em',
+      fontSize: 10, fontWeight: 700, color: G.textMuted,
+      textTransform: 'uppercase', letterSpacing: '0.08em',
       marginBottom: 12,
     }}>{children}</div>
   )
@@ -1761,7 +1901,7 @@ function SectionHeader({
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       margin: '22px 0 10px',
     }}>
-      <div style={{ fontSize: 18, fontWeight: 900, color: G.text, letterSpacing: '-0.02em' }}>{title}</div>
+      <div style={{ fontSize: 20, fontWeight: 900, color: G.text, letterSpacing: '-0.02em' }}>{title}</div>
       {action && (
         <button
           onClick={onAction}
