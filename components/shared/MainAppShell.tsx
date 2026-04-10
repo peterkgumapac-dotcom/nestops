@@ -1,12 +1,12 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Menu, Bell, X } from 'lucide-react'
+import { Bell, X } from 'lucide-react'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
 import MainAppSidebar from './MainAppSidebar'
-import ClockStatus from './ClockStatus'
 import CommandPalette from '@/components/command-palette'
+import ShellHeader from './ShellHeader'
 import { useRole } from '@/context/RoleContext'
 import type { Role, UserProfile } from '@/context/RoleContext'
 import { useAlerts } from '@/context/AlertsContext'
@@ -14,7 +14,7 @@ import { useAlerts } from '@/context/AlertsContext'
 import type { AccessTier } from '@/context/RoleContext'
 
 const DEMO_SWITCHER_PERSONAS = [
-  { userId: 'pk', initials: 'PK', name: 'Peter K.',   role: 'operator' as Role,                                                                                                                    avatarBg: '#c4622d', emoji: '⚙️', label: 'Operator' },
+  { userId: 'pk', initials: 'PK', name: 'Peter K.',   role: 'operator' as Role,                                                                                                                    avatarBg: '#14b8a6', emoji: '⚙️', label: 'Operator' },
   { userId: 'fn', initials: 'FN', name: 'Fatima N.',  role: 'operator' as Role, accessTier: 'guest-services' as AccessTier, subRole: 'Guest Services Agent',                                       avatarBg: '#ec4899', emoji: '🛎️', label: 'GS Agent' },
   { userId: 'cm', initials: 'CM', name: 'Carlos M.',  role: 'operator' as Role, accessTier: 'guest-services' as AccessTier, subRole: 'GS Supervisor',                                              avatarBg: '#8b5cf6', emoji: '🎧', label: 'GS Supervisor' },
   { userId: 'ms', initials: 'MS', name: 'Maria S.',   role: 'staff'    as Role,                                              subRole: 'Cleaner',             jobRole: 'cleaner'     as UserProfile['jobRole'], avatarBg: '#d97706', emoji: '🧹', label: 'Cleaner' },
@@ -76,31 +76,10 @@ export default function MainAppShell({ children }: { children: React.ReactNode }
     <div className={meshClass} style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--bg-page)' }}>
       <MainAppSidebar isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {/* Top header bar */}
-        <div
-          className="shell-header"
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '0 20px', height: 52, borderBottom: '1px solid var(--border)',
-            background: 'var(--bg-surface)', flexShrink: 0, gap: 8,
-          }}
-        >
-          {/* Mobile hamburger */}
-          <button
-            className="md:hidden"
-            onClick={() => setMobileOpen(true)}
-            style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}
-          >
-            <Menu size={20} />
-          </button>
-          <Link href="/app/dashboard" className="md:hidden" style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)', textDecoration: 'none' }}>AfterStay</Link>
-
-          {/* Desktop spacer */}
-          <div className="hidden md:block" />
-
-          <div className="hide-sm" style={{ display: 'flex', alignItems: 'center' }}><ClockStatus /></div>
-
-          {/* Alerts bell */}
+        <ShellHeader
+          variant="full"
+          onMobileOpen={() => setMobileOpen(true)}
+          rightSlot={
           <div style={{ position: 'relative' }}>
             <button
               onClick={() => setAlertsOpen(o => !o)}
@@ -152,7 +131,8 @@ export default function MainAppShell({ children }: { children: React.ReactNode }
               </>
             )}
           </div>
-        </div>
+          }
+        />
 
         <main className="main-content" style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 1 }}>
           {children}

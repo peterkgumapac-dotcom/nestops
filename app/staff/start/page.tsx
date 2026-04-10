@@ -346,7 +346,7 @@ export default function StaffStartPage() {
                             {showCodes[job.id] ? `Code: 4821` : 'Show Code 👁'}
                           </button>
                         ) : (
-                          <span style={{ fontSize: 12, color: '#d97706' }}>🔒 Locked until PTE granted</span>
+                          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>🔒 Locked until PTE granted</span>
                         )}
                       </div>
                     )

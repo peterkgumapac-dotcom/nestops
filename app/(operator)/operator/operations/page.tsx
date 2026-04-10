@@ -223,7 +223,6 @@ function SortableCard({ task, accent }: { task: KanbanTask; accent: string }) {
       <div style={{
         background: 'var(--bg-card)',
         border: '1px solid var(--border)',
-        borderLeft: `3px solid ${task.priority === 'high' ? '#dc2626' : task.priority === 'medium' ? '#d97706' : '#059669'}`,
         borderRadius: 8,
         padding: 12,
         cursor: 'grab',

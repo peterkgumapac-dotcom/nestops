@@ -225,7 +225,7 @@ function ActionBtn({ label, onClick }: { label: string; onClick?: () => void }) 
 // ─── Demo persona switcher data ──────────────────────────────────────────────
 
 const DEMO_PERSONAS = [
-  { userId: 'pk', initials: 'PK', name: 'Peter K.',   role: 'operator' as Role,                                                                                                                    avatarBg: '#c4622d', label: 'Operator' },
+  { userId: 'pk', initials: 'PK', name: 'Peter K.',   role: 'operator' as Role,                                                                                                                    avatarBg: '#14b8a6', label: 'Operator' },
   { userId: 'fn', initials: 'FN', name: 'Fatima N.',  role: 'operator' as Role, accessTier: 'guest-services' as AccessTier, subRole: 'Guest Services Agent',                                       avatarBg: '#ec4899', label: 'GS Agent' },
   { userId: 'cm', initials: 'CM', name: 'Carlos M.',  role: 'operator' as Role, accessTier: 'guest-services' as AccessTier, subRole: 'GS Supervisor',                                              avatarBg: '#8b5cf6', label: 'GS Supervisor' },
   { userId: 'ms', initials: 'MS', name: 'Maria S.',   role: 'staff'    as Role,                                              subRole: 'Cleaner',             jobRole: 'cleaner'     as UserProfile['jobRole'], avatarBg: '#d97706', label: 'Cleaner' },
@@ -1293,8 +1293,8 @@ export default function AppDashboard() {
         <>
           {/* Alert banner */}
           {(APPROVALS.filter(a => approvalStatuses[a.id] === 'pending').length > 0 || NEEDS_ACTION_ITEMS.length > 0) && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', marginBottom: 16, background: 'rgba(217,119,6,0.1)', border: '1px solid rgba(217,119,6,0.3)', borderLeft: '4px solid #d97706', borderRadius: 8 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: C.amber }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', marginBottom: 16, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
                 {NEEDS_ACTION_ITEMS.length} items need action · {APPROVALS.filter(a => approvalStatuses[a.id] === 'pending').length} approvals pending
               </span>
             </div>
@@ -1314,7 +1314,7 @@ export default function AppDashboard() {
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: C.muted, marginBottom: 8 }}>Needs Attention — PTE</div>
                 {ptePendingLong.map(j => (
-                  <div key={j.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', marginBottom: 8, background: 'rgba(217,119,6,0.08)', border: '1px solid rgba(217,119,6,0.3)', borderLeft: '4px solid #d97706', borderRadius: 8 }}>
+                  <div key={j.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', marginBottom: 8, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8 }}>
                     <span style={{ fontSize: 14, flexShrink: 0 }}>⏳</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>PTE pending 4+ hours — {j.title}</div>

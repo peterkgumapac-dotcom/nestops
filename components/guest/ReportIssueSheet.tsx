@@ -31,6 +31,7 @@ export default function ReportIssueSheet({ open, onClose, guidebook, verificatio
   const [category, setCategory] = useState('')
   const [location, setLocation] = useState('')
   const [urgency, setUrgency] = useState<'normal' | 'urgent'>('normal')
+  const [pte, setPte] = useState<'yes' | 'window' | 'no'>('window')
   const [description, setDescription] = useState('')
   const [photos, setPhotos] = useState<string[]>([])
   const [submitted, setSubmitted] = useState<GuestIssue | null>(null)
@@ -55,7 +56,7 @@ export default function ReportIssueSheet({ open, onClose, guidebook, verificatio
       category,
       location: location || undefined,
       urgency,
-      description,
+      description: description + `\n\n[PTE: ${pte}]`,
       photos,
     })
     setSubmitted(issue)
@@ -65,6 +66,7 @@ export default function ReportIssueSheet({ open, onClose, guidebook, verificatio
     setCategory('')
     setLocation('')
     setUrgency('normal')
+    setPte('window')
     setDescription('')
     setPhotos([])
     setSubmitted(null)
@@ -221,6 +223,34 @@ export default function ReportIssueSheet({ open, onClose, guidebook, verificatio
               </div>
             </div>
 
+            {/* Permission To Enter (PTE) */}
+            <div style={{ marginBottom: 16, padding: 12, borderRadius: 12, background: '#4A9EFF0d', border: '1px solid #4A9EFF26' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#4A9EFF', marginBottom: 8, letterSpacing: '0.02em' }}>
+                Permission to enter?
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {([
+                  { key: 'yes',    label: 'Yes, anytime' },
+                  { key: 'window', label: 'Only in window' },
+                  { key: 'no',     label: 'No, contact me' },
+                ] as const).map(o => (
+                  <button
+                    key={o.key}
+                    onClick={() => setPte(o.key)}
+                    style={{
+                      flex: 1, padding: '9px 6px', borderRadius: 10, fontSize: 11, fontWeight: 700,
+                      border: `1px solid ${pte === o.key ? '#4A9EFF' : '#4A9EFF26'}`,
+                      background: pte === o.key ? '#4A9EFF22' : '#4A9EFF08',
+                      color: pte === o.key ? '#fff' : G.textBody,
+                      cursor: 'pointer', lineHeight: 1.3,
+                    }}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Description */}
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: G.textMuted, marginBottom: 8 }}>Description</div>
@@ -244,7 +274,7 @@ export default function ReportIssueSheet({ open, onClose, guidebook, verificatio
               disabled={!canSubmit}
               style={{
                 width: '100%', padding: '13px',
-                background: canSubmit ? G.text : G.border,
+                background: canSubmit ? G.accent : G.border,
                 color: canSubmit ? '#fff' : G.textMuted,
                 border: 'none', borderRadius: 12,
                 fontSize: 14, fontWeight: 600,

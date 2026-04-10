@@ -39,8 +39,8 @@ export default function CountdownTimer({ targetTime, label, context, onComplete,
 
   let timerColor = '#3b82f6'
   if (minutesLeft < 0) timerColor = '#dc2626'
-  else if (minutesLeft < 30) timerColor = '#ea580c'
-  else if (minutesLeft < 60) timerColor = '#d97706'
+  else if (minutesLeft < 30) timerColor = '#dc2626'
+  else if (minutesLeft < 60) timerColor = 'var(--text-muted)'
 
   const { hours, minutes, seconds } = timeLeft ?? { hours: 0, minutes: 0, seconds: 0 }
 

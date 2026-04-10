@@ -974,8 +974,7 @@ export default function MyTasksPage() {
                 onClick={() => setSelectedApprovalRequest(req)}
                 style={{
                   background: 'var(--bg-card)',
-                  border: req.escalatedToSupervisor ? '1px solid #7c3aed30' : '1px solid #d9770630',
-                  borderLeft: req.escalatedToSupervisor ? '4px solid #7c3aed' : '4px solid #d97706',
+                  border: '1px solid var(--border)',
                   borderRadius: 10,
                   padding: '12px 14px',
                   cursor: 'pointer',
@@ -1073,7 +1072,6 @@ export default function MyTasksPage() {
                   onClick={() => !completedIds.has(task.id) && setSelectedTask(task)}
                   style={{
                     background: 'var(--bg-card)', border: '1px solid var(--border)',
-                    borderLeft: `4px solid ${task.isDeliveryTask ? '#d97706' : PRIORITY_BORDER[task.priority]}`,
                     borderRadius: 10, padding: '14px 16px', marginBottom: 8,
                     opacity: completedIds.has(task.id) ? 0.5 : 1,
                     cursor: completedIds.has(task.id) ? 'default' : 'pointer',

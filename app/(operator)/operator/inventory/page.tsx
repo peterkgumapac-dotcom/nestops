@@ -794,7 +794,7 @@ export default function InventoryPage() {
                     setOrders(prev => prev.map(o => o.id === selectedPO.id ? { ...o, approvalStatus: 'changes_requested' } : o))
                     showToast('Changes requested')
                   }
-                }} style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid #d97706', background: 'transparent', color: 'var(--status-warning)', fontSize: 13, cursor: 'pointer' }}>Request Changes</button>
+                }} style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }}>Request Changes</button>
                 <button onClick={() => {
                   if (selectedPO) {
                     setPoApprovals(p => ({ ...p, [selectedPO.id]: 'approved' }))

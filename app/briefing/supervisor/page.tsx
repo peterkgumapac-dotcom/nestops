@@ -190,7 +190,7 @@ export default function SupervisorBriefingPage() {
                 .map((e, i, arr) => {
                   const isUrgent = e.status === 'blocked' || e.status === 'at_risk'
                   const statusColor = e.status === 'blocked' ? '#E07A45'
-                    : e.status === 'at_risk' ? '#f59e0b'
+                    : e.status === 'at_risk' ? 'rgba(255,255,255,0.65)'
                     : e.status === 'complete' ? '#10b981' : 'rgba(255,255,255,0.5)'
                   const actions: { label: string; onClick?: () => void }[] =
                     e.type === 'staff_late' ? [{ label: 'Send Reminder' }, { label: 'Reassign' }]

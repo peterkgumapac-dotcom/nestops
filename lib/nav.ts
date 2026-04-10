@@ -7,7 +7,7 @@ import {
   Settings, History,
   Home, Inbox, PlusCircle, FileText, CheckSquare,
   Wrench, Users, CreditCard, UserCircle,
-  KeyRound, Globe,
+  KeyRound, Smartphone,
   LucideIcon,
 } from 'lucide-react'
 
@@ -39,7 +39,7 @@ export const OPERATOR_NAV: NavSection[] = [
     label: 'Platform',
     collapsible: true,
     items: [
-      { label: 'Guest Experience', href: '/operator/guest-experience', icon: Globe },
+      { label: 'Guest Portal',     href: '/operator/guest-experience', icon: Smartphone },
       { label: 'Upsells',          href: '/operator/upsells',          icon: ShoppingBag },
       { label: 'Compliance',       href: '/operator/compliance',       icon: ShieldCheck },
       { label: 'Automations',      href: '/operator/automations',      icon: Zap },

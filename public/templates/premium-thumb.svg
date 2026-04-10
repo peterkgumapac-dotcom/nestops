@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="640" viewBox="0 0 360 640">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#0f0f1a"/>
+    </linearGradient>
+  </defs>
+  <rect width="360" height="640" rx="20" fill="url(#g)"/>
+  <rect x="20" y="20" width="320" height="60" rx="10" fill="rgba(255,255,255,0.05)"/>
+  <text x="180" y="58" text-anchor="middle" fill="#d4af37" font-family="system-ui" font-size="18" font-weight="600">AfterStay</text>
+  <rect x="20" y="100" width="320" height="140" rx="12" fill="rgba(212,175,55,0.08)" stroke="rgba(212,175,55,0.2)" stroke-width="1"/>
+  <text x="180" y="175" text-anchor="middle" fill="#e8e0d0" font-family="system-ui" font-size="14">Premium Experience</text>
+  <rect x="20" y="260" width="150" height="100" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(212,175,55,0.15)" stroke-width="1"/>
+  <rect x="190" y="260" width="150" height="100" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(212,175,55,0.15)" stroke-width="1"/>
+  <rect x="20" y="380" width="320" height="80" rx="12" fill="rgba(255,255,255,0.03)"/>
+  <rect x="20" y="560" width="320" height="60" rx="30" fill="rgba(212,175,55,0.2)" stroke="rgba(212,175,55,0.4)" stroke-width="1"/>
+  <text x="180" y="595" text-anchor="middle" fill="#d4af37" font-family="system-ui" font-size="12">Premium Template</text>
+</svg>

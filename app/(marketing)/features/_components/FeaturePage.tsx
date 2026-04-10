@@ -16,7 +16,7 @@ export function FeaturePage({ feature }: Props) {
       }}
     >
       <nav style={{ padding: '20px 32px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <Link href="/landing.html" style={{ color: '#CBD5E1', textDecoration: 'none', fontWeight: 600 }}>
+        <Link href="/features" style={{ color: '#CBD5E1', textDecoration: 'none', fontWeight: 600 }}>
           ← AfterStay
         </Link>
       </nav>
@@ -57,7 +57,66 @@ export function FeaturePage({ feature }: Props) {
         </p>
       </section>
 
-      <section style={{ maxWidth: 880, margin: '0 auto', padding: '24px 32px 96px' }}>
+      <section style={{ maxWidth: 880, margin: '0 auto', padding: '0 32px 48px' }}>
+        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.14em', color: '#94A3B8', marginBottom: 12 }}>
+          THE PROBLEM
+        </div>
+        <p
+          style={{
+            margin: 0,
+            padding: '16px 20px',
+            borderLeft: `3px solid ${feature.color}`,
+            background: 'rgba(196,98,45,0.04)',
+            color: '#CBD5E1',
+            fontSize: 17,
+            lineHeight: 1.65,
+          }}
+        >
+          {feature.problem}
+        </p>
+      </section>
+
+      <section style={{ maxWidth: 880, margin: '0 auto', padding: '0 32px 64px' }}>
+        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.14em', color: '#94A3B8', marginBottom: 16 }}>
+          HOW IT PLAYS OUT
+        </div>
+        <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 12 }}>
+          {feature.storyboard.map((beat, i) => (
+            <li
+              key={i}
+              style={{
+                display: 'flex',
+                gap: 16,
+                padding: '14px 18px',
+                borderRadius: 12,
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.06)',
+              }}
+            >
+              <span
+                style={{
+                  flexShrink: 0,
+                  width: 28,
+                  height: 28,
+                  borderRadius: 999,
+                  background: feature.color,
+                  color: '#0c0d14',
+                  fontWeight: 700,
+                  fontSize: 13,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {i + 1}
+              </span>
+              <span style={{ color: '#CBD5E1', lineHeight: 1.55 }}>{beat}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section style={{ maxWidth: 880, margin: '0 auto', padding: '0 32px 64px' }}>
         <div style={{ display: 'grid', gap: 20 }}>
           {feature.sections.map((s) => (
             <div
@@ -76,7 +135,27 @@ export function FeaturePage({ feature }: Props) {
         </div>
       </section>
 
-      <section style={{ maxWidth: 880, margin: '0 auto', padding: '24px 32px 96px' }}>
+      <section style={{ maxWidth: 880, margin: '0 auto', padding: '0 32px 64px' }}>
+        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.14em', color: '#94A3B8', marginBottom: 12 }}>
+          THE MOAT
+        </div>
+        <div
+          style={{
+            padding: '22px 26px',
+            borderRadius: 14,
+            background: 'rgba(196,98,45,0.08)',
+            border: '1px solid rgba(196,98,45,0.35)',
+            color: '#F5EDE6',
+            fontSize: 17,
+            fontWeight: 600,
+            lineHeight: 1.55,
+          }}
+        >
+          {feature.moat}
+        </div>
+      </section>
+
+      <section style={{ maxWidth: 880, margin: '0 auto', padding: '0 32px 96px' }}>
         <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.12em', color: '#64748B', marginBottom: 16 }}>
           OTHER MODULES
         </div>
@@ -117,10 +196,10 @@ export function FeaturePage({ feature }: Props) {
           See it in action.
         </h2>
         <p style={{ color: '#94A3B8', margin: '0 0 24px' }}>
-          One platform. Nine modules. Your operation, finally on one screen.
+          One platform. Twelve modules. Your operation, finally on one screen.
         </p>
         <Link
-          href="/landing.html"
+          href="/features"
           style={{
             display: 'inline-block',
             padding: '14px 28px',

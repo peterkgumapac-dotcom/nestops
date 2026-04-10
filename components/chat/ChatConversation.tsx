@@ -41,6 +41,40 @@ const THREADS: Record<string, Thread> = {
       { id: 'm1', text: 'Linen delivery confirmed — ETA 09:45', time: '10:08 AM', isMe: false },
     ],
   },
+  guest_sarah: {
+    id: 'guest_sarah', name: 'Sarah K.', initials: 'SK', color: '#e67e22',
+    ctx: 'Guest · Ocean View Apt',
+    messages: [
+      { id: 'm1', text: 'Hi, what time can I check in today?', time: '11:30 AM', isMe: false },
+      { id: 'm2', text: 'Hi Sarah! Check-in is from 3 PM. I can arrange early check-in at 1 PM if needed — just let me know!', time: '11:32 AM', isMe: true, readReceipt: true },
+      { id: 'm3', text: '1 PM would be perfect! How much is it?', time: '11:35 AM', isMe: false },
+    ],
+  },
+  guest_thomas: {
+    id: 'guest_thomas', name: 'Thomas B.', initials: 'TB', color: '#3498db',
+    ctx: 'Guest · Sunset Villa',
+    messages: [
+      { id: 'm1', text: 'Hi there! I saw you offer a welcome basket — I\'d like to add one please.', time: '10:15 AM', isMe: false },
+      { id: 'm2', text: 'Great choice Thomas! I\'ve added the welcome basket (250 NOK). It\'ll be ready when you arrive. 🧺', time: '10:18 AM', isMe: true, readReceipt: true },
+    ],
+  },
+  guest_emma: {
+    id: 'guest_emma', name: 'Emma L.', initials: 'EL', color: '#9b59b6',
+    ctx: 'Guest · Harbor Studio',
+    messages: [
+      { id: 'm1', text: 'The Wi-Fi password isn\'t working. I\'ve tried it several times.', time: '3:20 PM', isMe: false },
+      { id: 'm2', text: 'Sorry about that Emma! The password was recently changed. The new one is: HarborStudio2026. Let me know if it works!', time: '3:24 PM', isMe: true, readReceipt: true },
+      { id: 'm3', text: 'That worked, thank you!', time: '3:26 PM', isMe: false },
+    ],
+  },
+  guest_anders: {
+    id: 'guest_anders', name: 'Anders M.', initials: 'AM', color: '#1abc9c',
+    ctx: 'Guest · Downtown Loft',
+    messages: [
+      { id: 'm1', text: 'Thanks for a wonderful stay! The apartment was spotless and the location is unbeatable. 🙏', time: '10:00 AM', isMe: false },
+      { id: 'm2', text: 'Thank you Anders, we\'re so glad you enjoyed it! Don\'t forget to leave a review — it really helps. Safe travels!', time: '10:15 AM', isMe: true, readReceipt: true },
+    ],
+  },
 }
 
 interface Props {

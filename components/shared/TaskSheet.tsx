@@ -91,7 +91,7 @@ function ReservationSection({ reservation }: { reservation: JobReservation }) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Clock size={13} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-          <span style={{ fontSize: 12, color: nightsLeft <= 1 ? '#d97706' : 'var(--text-muted)' }}>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
             {nightsLeft} night{nightsLeft !== 1 ? 's' : ''} remaining · {reservation.status === 'checked_in' ? 'Checked in' : reservation.status}
           </span>
         </div>
@@ -250,7 +250,7 @@ function PTESection({
 
       {/* Field staff waiting message */}
       {!canControl && isPending && (
-        <div style={{ fontSize: 11, color: '#d97706', marginTop: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
+        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
           <AlertTriangle size={11} /> Waiting for Guest Services to confirm access
         </div>
       )}
@@ -333,10 +333,10 @@ function MaintenanceLayout({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Before Photos */}
       <div>
-        <div style={sectionLabel('Before Photos', '#d97706')}>Before Photos <span style={{ fontWeight: 400, textTransform: 'none', fontSize: 10 }}>(required)</span></div>
+        <div style={sectionLabel('Before Photos', 'var(--text-muted)')}>Before Photos <span style={{ fontWeight: 400, textTransform: 'none', fontSize: 10 }}>(required)</span></div>
         <PhotoZone photos={beforePhotos} type="before" inputRef={beforeInputRef} />
         {beforePhotos.length === 0 && (
-          <div style={{ fontSize: 11, color: '#d97706', marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
             <AlertTriangle size={10} /> Upload at least 1 before photo to begin
           </div>
         )}
@@ -766,7 +766,7 @@ export default function TaskSheet({ task, open, onClose, onMarkComplete }: TaskS
                   <KeyRound size={13} style={{ color: accent }} />
                   <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-subtle)' }}>Property Access</span>
                   {task.pteRequired && !isAccessCodeVisible(localPTEStatus) && (
-                    <span style={{ fontSize: 10, padding: '1px 5px', borderRadius: 4, background: '#f59e0b20', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 3 }}>
+                    <span style={{ fontSize: 10, padding: '1px 5px', borderRadius: 4, background: 'var(--bg-card)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 3 }}>
                       <Lock size={9} /> PTE required
                     </span>
                   )}

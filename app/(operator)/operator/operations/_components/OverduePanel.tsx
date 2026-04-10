@@ -82,7 +82,7 @@ export default function OverduePanel({ tasks, staffOnDuty, sops, today, accent: 
   }
 
   return (
-    <div style={{ background: '#d9770608', border: '1px solid var(--border)', borderLeft: '3px solid #d97706', borderRadius: 12, padding: 16 }}>
+    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
         <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>⚠ Needs Action</span>
         <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 7px', borderRadius: 20, background: '#d9770620', color: '#d97706' }}>{items.length}</span>

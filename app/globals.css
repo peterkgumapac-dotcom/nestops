@@ -4,25 +4,24 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --bg-page: #0e0a08;
-  --bg-surface: #161009;
-  --bg-card: #161009;
-  --bg-elevated: #1e1510;
-  --border: #2a1f16;
-  --border-subtle: rgba(196,98,45,0.08);
-  --text-primary: #f5ede6;
-  --text-muted: #8a6a58;
-  --text-subtle: #5a4a3b;
-  --accent-operator: #c4622d;
-  --accent-owner: #059669;
-  --accent-staff: #d97706;
-  --accent: #c4622d;
+  --bg-page: #0c0d14;
+  --bg-surface: #14151e;
+  --bg-card: #1c1d2a;
+  --bg-elevated: #262838;
+  --border: rgba(255,255,255,0.07);
+  --border-subtle: rgba(255,255,255,0.04);
+  --text-primary: #eae8e4;
+  --text-muted: #8a8f9c;
+  --text-subtle: #4a4f5c;
+  --accent-operator: #14b8a6;
+  --accent-owner: #10b981;
+  --accent-staff: #f59e0b;
+  --accent: #14b8a6;
 
-  /* Brand terracotta tokens */
-  --accent: #c4622d;
-  --accent-light: #e07a45;
-  --accent-bg: rgba(196,98,45,0.08);
-  --accent-border: rgba(196,98,45,0.2);
+  /* Accent derivative tokens */
+  --accent-light: #2dd4bf;
+  --accent-bg: rgba(20,184,166,0.08);
+  --accent-border: rgba(20,184,166,0.20);
   --red: #e24b4a;
   --amber: #ef9f27;
   --blue: #378ADD;
@@ -60,11 +59,11 @@
   --status-neutral-bg: rgba(107,114,128,0.12);
 
   /* AfterStay Task Engine tokens */
-  --n-bg:#0e0a08; --n-bg2:#161009; --n-bg3:#1e1510; --n-card:#161009;
-  --n-border:#2a1f16; --n-border2:rgba(196,98,45,0.15);
-  --n-text:#f5ede6; --n-text2:#8a6a58; --n-text3:#5a4a3b;
-  --n-accent:#c4622d; --n-accent-light:#e07a45;
-  --n-accent-bg:rgba(196,98,45,0.08); --n-accent-border:rgba(196,98,45,0.20);
+  --n-bg:#0c0d14; --n-bg2:#14151e; --n-bg3:#1c1d2a; --n-card:#14151e;
+  --n-border:rgba(255,255,255,0.07); --n-border2:rgba(255,255,255,0.12);
+  --n-text:#eae8e4; --n-text2:#8a8f9c; --n-text3:#4a4f5c;
+  --n-accent:#14b8a6; --n-accent-light:#2dd4bf;
+  --n-accent-bg:rgba(20,184,166,0.08); --n-accent-border:rgba(20,184,166,0.20);
   --n-red:#e24b4a; --n-red-bg:rgba(226,75,74,0.08); --n-red-border:rgba(226,75,74,0.20);
   --n-amber:#ef9f27; --n-amber-bg:rgba(239,159,39,0.08); --n-amber-border:rgba(239,159,39,0.20);
   --n-blue:#378ADD; --n-blue-bg:rgba(55,138,221,0.08); --n-blue-border:rgba(55,138,221,0.20);
@@ -72,15 +71,15 @@
 }
 
 .light {
-  --bg-page: #f7f7f7;
+  --bg-page: #f8f9fa;
   --bg-surface: #ffffff;
   --bg-card: #ffffff;
-  --bg-elevated: #f0f0f0;
-  --border: #e4e4e4;
-  --border-subtle: rgba(184, 90, 38, 0.08);
-  --text-primary: #0f0f0f;
-  --text-muted: #666666;
-  --text-subtle: #999999;
+  --bg-elevated: #f1f3f5;
+  --border: #e2e4e8;
+  --border-subtle: rgba(0, 0, 0, 0.04);
+  --text-primary: #0f1115;
+  --text-muted: #5c6370;
+  --text-subtle: #9ca3af;
 
   /* Status badge tokens — light mode overrides */
   --status-purple-bg: rgba(124, 58, 237, 0.10);
@@ -95,10 +94,10 @@
   --status-blue-fg:   #2563eb;
   --status-muted-bg:  rgba(100, 100, 120, 0.10);
   --status-muted-fg:  #6b7280;
-  --accent: #b85a26;
-  --accent-operator: #b85a26;
+  --accent: #0d9488;
+  --accent-operator: #0d9488;
   --accent-owner: #059669;
-  --accent-staff: #0891b2;
+  --accent-staff: #d97706;
   --accent-foreground: #ffffff;
 }
 
@@ -126,8 +125,8 @@ body {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse at 20% 20%, rgba(196, 98, 45, 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 80%, rgba(196, 98, 45, 0.04) 0%, transparent 60%);
+    radial-gradient(ellipse at 20% 20%, rgba(20, 184, 166, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(20, 184, 166, 0.04) 0%, transparent 60%);
   animation: meshMove 20s ease-in-out infinite alternate;
   pointer-events: none;
   z-index: 0;
@@ -141,8 +140,8 @@ body {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse at 20% 20%, rgba(5, 150, 105, 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 80%, rgba(5, 150, 105, 0.04) 0%, transparent 60%);
+    radial-gradient(ellipse at 20% 20%, rgba(16, 185, 129, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(16, 185, 129, 0.04) 0%, transparent 60%);
   animation: meshMove 20s ease-in-out infinite alternate;
   pointer-events: none;
   z-index: 0;
@@ -156,8 +155,8 @@ body {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse at 20% 20%, rgba(217, 119, 6, 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 80%, rgba(217, 119, 6, 0.04) 0%, transparent 60%);
+    radial-gradient(ellipse at 20% 20%, rgba(245, 158, 11, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(245, 158, 11, 0.04) 0%, transparent 60%);
   animation: meshMove 20s ease-in-out infinite alternate;
   pointer-events: none;
   z-index: 0;
@@ -452,54 +451,27 @@ html {
 .operator-mesh-outer {
   min-height: 100vh;
   padding: 32px 40px;
-  background-color: #15131c;
+  background-color: var(--bg-page);
   background-image:
     radial-gradient(ellipse 80% 40% at 50% 0%, rgba(139,92,246,0.12), transparent 70%),
     linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
   background-size: auto, 56px 56px, 56px 56px;
 
-  --panel-bg: #1a1a22;
+  /* Panel-specific tokens */
+  --panel-bg: #161720;
   --column-bg: rgba(255,255,255,0.025);
-  --card-bg: #20202a;
-  --text-1: #f5f5f7;
-  --text-2: rgba(255,255,255,0.55);
-  --text-3: rgba(255,255,255,0.35);
+  --card-bg: var(--bg-card);
+  --text-1: var(--text-primary);
+  --text-2: var(--text-muted);
+  --text-3: var(--text-subtle);
   --border-hair: rgba(255,255,255,0.05);
-  --accent-gradient: linear-gradient(135deg, #a78bfa 0%, #c084fc 50%, #f0abfc 100%);
+  --accent-gradient: linear-gradient(135deg, #14b8a6 0%, #10b981 50%, #34d399 100%);
   --progress-gradient: linear-gradient(90deg, #ec4899 0%, #a78bfa 50%, #60a5fa 100%);
-
-  /* Legacy token aliases — every operator page inside the panel inherits
-     the panel palette without needing explicit migration. Follow-on PRs
-     can migrate pages to the canonical --card-bg/--text-1/2/3/--border-hair
-     names; until then, these aliases prevent visible token drift. */
-  --bg-card: var(--card-bg);
-  --bg-surface: var(--panel-bg);
-  --bg-elevated: var(--panel-bg);
-  --bg-page: var(--panel-bg);
-  --text-primary: var(--text-1);
-  --text-muted: var(--text-2);
-  --text-subtle: var(--text-3);
-  --border: var(--border-hair);
-  --border-subtle: var(--border-hair);
-
-  /* Task-engine (n-*) tokens harmonize inside panel too */
-  --n-bg: var(--panel-bg);
-  --n-surface: var(--card-bg);
-  --n-text: var(--text-1);
-  --n-text-muted: var(--text-2);
-  --n-border: var(--border-hair);
-
-  /* Canonical status palette — use these instead of inline hex values. */
-  --status-danger: #ef4444;
-  --status-warning: #d97706;
-  --status-success: #10b981;
-  --status-info: #3b82f6;
-  --status-accent: #7c3aed;
 }
 
 .operator-panel {
-  background: #1a1a22;
+  background: var(--panel-bg);
   border-radius: 28px;
   border: 1px solid rgba(255,255,255,0.05);
   box-shadow: 0 40px 80px rgba(0,0,0,0.5);
@@ -512,9 +484,17 @@ html {
   color: var(--text-1);
 }
 
+.operator-panel.rail-expanded {
+  grid-template-columns: 240px 1fr;
+}
+
 .operator-panel:has(.panel-aside) {
   grid-template-columns: 68px 1fr 300px;
   grid-template-areas: "rail main aside";
+}
+
+.operator-panel.rail-expanded:has(.panel-aside) {
+  grid-template-columns: 240px 1fr 300px;
 }
 
 .operator-panel > aside.app-shell-rail { grid-area: rail; position: relative; z-index: 5; }
@@ -549,3 +529,18 @@ html {
 
 .operator-panel .rail-scroll::-webkit-scrollbar { width: 0; display: none; }
 .operator-panel .rail-scroll { scrollbar-width: none; }
+
+/* Operator dashboard — smooth hover lift for KPI & team cards */
+.kpi-tile:hover,
+.team-tile:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent-border);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 6px 20px rgba(0,0,0,0.28);
+}
+.kpi-tile svg,
+.team-tile svg {
+  transition: transform 0.18s ease;
+}
+.kpi-tile:hover svg {
+  transform: scale(1.08);
+}

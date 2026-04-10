@@ -23,11 +23,11 @@ import PageHeader from '@/components/shared/PageHeader'
 
 // ─── Team clock status (6 members) ───────────────────────────────────────────
 const TEAM_CLOCK_STATUS = [
-  { id: 'km', name: 'Kim',    initials: 'KM', avatarBg: 'var(--n-accent)',  role: 'Cleaning',       property: 'Ocean View Apt', status: 'active',  task: 'Turnover clean',          clockTime: '09:05' },
+  { id: 'km', name: 'Kim',    initials: 'KM', avatarBg: 'var(--accent)',  role: 'Cleaning',       property: 'Ocean View Apt', status: 'active',  task: 'Turnover clean',          clockTime: '09:05' },
   { id: 'nm', name: 'Nameda', initials: 'NM', avatarBg: '#7c3aed',         role: 'Guest Services', property: 'Remote',         status: 'busy',    task: 'Handling guest request',  clockTime: '08:55' },
-  { id: 'ar', name: 'Aron',   initials: 'AR', avatarBg: 'var(--n-blue)',   role: 'Maintenance',    property: 'Harbor Studio',  status: 'active',  task: 'Fixing AC unit',          clockTime: '09:15' },
-  { id: 'jo', name: 'Jonas',  initials: 'JO', avatarBg: 'var(--n-amber)',  role: 'Cleaning',       property: 'Sunset Villa',   status: 'blocked', task: 'Waiting for supplies',    clockTime: null },
-  { id: 'ka', name: 'Kasper', initials: 'KA', avatarBg: 'var(--n-text3)', role: 'Cleaning',       property: 'Downtown Loft',  status: 'idle',    task: 'Starts at 14:00',         clockTime: null },
+  { id: 'ar', name: 'Aron',   initials: 'AR', avatarBg: 'var(--status-info)',   role: 'Maintenance',    property: 'Harbor Studio',  status: 'active',  task: 'Fixing AC unit',          clockTime: '09:15' },
+  { id: 'jo', name: 'Jonas',  initials: 'JO', avatarBg: 'var(--status-warning)',  role: 'Cleaning',       property: 'Sunset Villa',   status: 'blocked', task: 'Waiting for supplies',    clockTime: null },
+  { id: 'ka', name: 'Kasper', initials: 'KA', avatarBg: 'var(--text-subtle)', role: 'Cleaning',       property: 'Downtown Loft',  status: 'idle',    task: 'Starts at 14:00',         clockTime: null },
   { id: 'la', name: 'Lars',   initials: 'LA', avatarBg: '#e97575',         role: 'Maintenance',    property: 'Garden Suite',   status: 'active',  task: 'Deep clean in progress',  clockTime: '08:40' },
 ]
 
@@ -71,7 +71,7 @@ function Collapsible({ title, meta, defaultOpen = true, children, liveMode = fal
   const [open, setOpen] = useState(defaultOpen)
   if (liveMode) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', flex: open ? '1 1 0' : '0 0 auto', minHeight: 0, overflow: 'hidden', borderBottom: '1px solid var(--n-border)', transition: 'flex 0.22s ease' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', flex: open ? '1 1 0' : '0 0 auto', minHeight: 0, overflow: 'hidden', borderBottom: '1px solid var(--border)', transition: 'flex 0.22s ease' }}>
         <div className="coll-header" onClick={() => setOpen(o => !o)}>
           <ChevronRight className={`coll-chevron${open ? ' open' : ''}`} />
           <span className="coll-title">{title}</span>
@@ -82,7 +82,7 @@ function Collapsible({ title, meta, defaultOpen = true, children, liveMode = fal
     )
   }
   return (
-    <div style={{ borderBottom: '1px solid var(--n-border)' }}>
+    <div style={{ borderBottom: '1px solid var(--border)' }}>
       <div className="coll-header" onClick={() => setOpen(o => !o)}>
         <ChevronRight className={`coll-chevron${open ? ' open' : ''}`} />
         <span className="coll-title">{title}</span>
@@ -179,7 +179,7 @@ export default function OperatorDashboard() {
   const cOver    = useCountUp(mounted ? overdueCount            : 0)
   const cApprove = useCountUp(mounted ? pendingApprovals.length : 0)
 
-  const [topView, setTopView] = useState<'kanban' | 'classic'>('kanban')
+  const [topView, setTopView] = useState<'kanban' | 'classic'>('classic')
   const [dashView, setDashView] = useState<'work' | 'portfolio'>('work')
   const [workFilter, setWorkFilter] = useState<'all' | 'task' | 'ticket' | 'approval' | 'overdue'>('all')
 
@@ -259,7 +259,7 @@ export default function OperatorDashboard() {
 
   function scoreColor(score: number): string {
     if (score >= 80) return '#10b981'
-    if (score >= 50) return '#f59e0b'
+    if (score >= 50) return '#ef4444'
     return '#ef4444'
   }
 
@@ -274,38 +274,38 @@ export default function OperatorDashboard() {
   const WORK_FILTER_LABELS: Record<string, string> = { all: 'All', task: 'Tasks', ticket: 'Tickets', approval: 'Approvals', overdue: 'Overdue' }
 
   function feedDotColor(type: string) {
-    if (type === 'blocked') return 'var(--n-red)'
-    if (type === 'in_progress') return 'var(--n-accent)'
-    if (type === 'en_route') return 'var(--n-accent-light)'
-    return 'var(--n-text3)'
+    if (type === 'blocked') return 'var(--status-danger)'
+    if (type === 'in_progress') return 'var(--accent)'
+    if (type === 'en_route') return 'var(--accent-light)'
+    return 'var(--text-subtle)'
   }
   function feedStatusStyle(type: string) {
-    if (type === 'in_progress') return { bg: 'var(--n-blue-bg)', fg: 'var(--n-blue)', label: 'In progress' }
-    if (type === 'blocked')     return { bg: 'var(--n-red-bg)',  fg: 'var(--n-red)',  label: 'Blocked' }
+    if (type === 'in_progress') return { bg: 'var(--status-info-bg)', fg: 'var(--status-info)', label: 'In progress' }
+    if (type === 'blocked')     return { bg: 'var(--status-danger-bg)',  fg: 'var(--status-danger)',  label: 'Blocked' }
     return null
   }
   const feedBlocked = filterFeed(FEED_ITEMS, 'all').filter(i => i.type === 'blocked').length
   const feedActive  = filterFeed(FEED_ITEMS, 'all').filter(i => i.type === 'in_progress').length
 
   function statusDotColor(status: string) {
-    if (status === 'active')  return 'var(--n-accent)'
-    if (status === 'blocked') return 'var(--n-red)'
-    if (status === 'busy')    return 'var(--n-amber)'
-    return 'var(--n-text3)'
+    if (status === 'active')  return 'var(--accent)'
+    if (status === 'blocked') return 'var(--status-danger)'
+    if (status === 'busy')    return 'var(--status-warning)'
+    return 'var(--text-subtle)'
   }
   function statusTaskColor(status: string) {
-    if (status === 'active')  return 'var(--n-accent)'
-    if (status === 'blocked') return 'var(--n-red)'
-    return 'var(--n-text2)'
+    if (status === 'active')  return 'var(--accent)'
+    if (status === 'blocked') return 'var(--status-danger)'
+    return 'var(--text-muted)'
   }
 
   const STAT_CARDS = [
-    { count: cProps,   label: 'Properties',    icon: Building2,     glow: 'var(--n-blue)',  sub: 'All active' },
-    { count: cCleans,  label: 'Active Cleans',  icon: Sparkles,      glow: 'var(--n-text2)', sub: 'In progress' },
-    { count: cCheckin, label: 'Check-ins',      icon: CalendarCheck, glow: 'var(--n-accent)', sub: 'Today' },
-    { count: cReq,     label: 'Guest Issues',   icon: AlertTriangle, glow: 'var(--n-amber)', sub: activeIssues.length > 0 ? 'Needs attention' : 'All clear' },
-    { count: cOver,    label: 'Overdue',         icon: Clock,         glow: overdueCount > 0 ? 'var(--n-red)' : 'var(--n-text3)', sub: overdueCount > 0 ? `${overdueCount} urgent` : 'None' },
-    { count: cApprove, label: 'Approvals',       icon: CheckCircle,   glow: pendingApprovals.length > 0 ? 'var(--n-accent)' : 'var(--n-text3)', sub: pendingApprovals.length > 0 ? `${pendingApprovals.length} pending` : 'None' },
+    { count: cProps,   label: 'Live properties', icon: Building2,     glow: 'var(--status-info)',    sub: 'All quiet' },
+    { count: cCleans,  label: 'Cleans running',  icon: Sparkles,      glow: 'var(--text-muted)',     sub: 'In progress' },
+    { count: cCheckin, label: 'Guests arriving', icon: CalendarCheck, glow: 'var(--accent)',         sub: 'Today' },
+    { count: cReq,     label: 'Guests waiting',  icon: AlertTriangle, glow: 'var(--status-warning)', sub: activeIssues.length > 0 ? 'On you' : 'All clear' },
+    { count: cOver,    label: 'Tasks slipped',   icon: Clock,         glow: overdueCount > 0 ? 'var(--status-danger)' : 'var(--text-subtle)', sub: overdueCount > 0 ? `${overdueCount} urgent` : 'None' },
+    { count: cApprove, label: 'Your sign-off',   icon: CheckCircle,   glow: pendingApprovals.length > 0 ? 'var(--accent)' : 'var(--text-subtle)', sub: pendingApprovals.length > 0 ? 'Pending' : 'None' },
   ]
 
   if (!mounted) return (
@@ -337,9 +337,79 @@ export default function OperatorDashboard() {
     </div>
   )
 
+  const PulseBlock = (
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: 300, maxHeight: 380, overflow: 'hidden', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span className="live-dot" />
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '.05em' }}>PULSE</span>
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {feedBlocked > 0 && <span style={{ fontSize: 11, color: 'var(--status-danger)', fontFamily: 'var(--font-mono)' }}>{feedBlocked} blocked</span>}
+          {feedActive > 0 && <span style={{ fontSize: 11, color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{feedActive} active</span>}
+        </div>
+      </div>
+      <div style={{ display: 'flex', background: 'var(--bg-elevated)', borderRadius: 8, padding: 2, marginBottom: 12, gap: 1 }}>
+        {(['all', 'in_progress', 'issues', 'completed'] as const).map(tab => (
+          <button key={tab} onClick={() => setFeedTab(tab)} style={{
+            flex: 1, padding: '7px 0', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+            border: 'none',
+            background: feedTab === tab ? 'var(--bg-card)' : 'transparent',
+            color: feedTab === tab ? 'var(--text-primary)' : 'var(--text-subtle)',
+            textTransform: 'capitalize', letterSpacing: '.04em',
+            transition: 'background 0.12s, color 0.12s',
+          }}>
+            {tab === 'in_progress' ? 'Active' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
+      </div>
+      <div style={{ overflowY: 'auto', flex: 1 }}>
+        {filterFeed(FEED_ITEMS, feedTab).map((item, i, arr) => {
+          const statusInfo = feedStatusStyle(item.type)
+          const initials = item.actor.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+          return (
+            <div key={item.id} className="feed-item-enter" style={{ padding: '10px 0', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                <div style={{ width: 26, height: 26, borderRadius: '50%', background: item.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                  {initials}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 4 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.actor}</span>
+                    <span style={{ fontSize: 10.5, color: 'var(--text-subtle)', flexShrink: 0, fontFamily: 'var(--font-mono)' }}>{item.time}</span>
+                  </div>
+                  <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 1 }}>{item.action}{item.detail ? ` · ${item.detail}` : ''}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginTop: 1 }}>{item.property}</div>
+                </div>
+              </div>
+              {item.progress !== undefined && (
+                <div style={{ marginLeft: 32, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ flex: 1, height: 3, borderRadius: 2, background: 'var(--border-subtle)' }}>
+                    <div style={{ width: `${item.progress}%`, height: '100%', background: 'var(--accent)', borderRadius: 2 }} />
+                  </div>
+                  <span style={{ fontSize: 9, color: 'var(--text-subtle)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{item.progress}%</span>
+                </div>
+              )}
+              {statusInfo && (
+                <div style={{ marginLeft: 32 }}>
+                  <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 4, background: statusInfo.bg, color: statusInfo.fg }}>{statusInfo.label}</span>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+
   if (topView === 'kanban') {
     return (
-      <OperatorPanelAside slot={<ScheduledRail />}>
+      <OperatorPanelAside slot={
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, height: '100%', minHeight: 0 }}>
+          {PulseBlock}
+          <ScheduledRail />
+        </div>
+      }>
         <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
           {ViewTabs}
           <OperationsKanban />
@@ -352,23 +422,21 @@ export default function OperatorDashboard() {
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
 
       {/* ═══ CENTER COLUMN ══════════════════════════════════════════════════════ */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '24px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 20 }}>
-
-        <PageHeader title="Dashboard" subtitle="Operator command center" />
+      <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
 
         {ViewTabs}
 
         {/* A. Live Ticker */}
-        <div style={{ background: 'var(--n-bg3)', height: 36, borderRadius: 8, overflow: 'hidden', position: 'relative', display: 'flex', alignItems: 'center', border: '1px solid var(--n-border)' }}>
-          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, display: 'flex', alignItems: 'center', paddingLeft: 10, paddingRight: 8, background: 'var(--n-bg3)', zIndex: 1, borderRight: '1px solid var(--n-border)' }}>
-            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', color: 'var(--n-text3)', textTransform: 'uppercase' }}>LIVE</span>
+        <div style={{ background: 'var(--bg-elevated)', height: 36, borderRadius: 8, overflow: 'hidden', position: 'relative', display: 'flex', alignItems: 'center', border: '1px solid var(--border)' }}>
+          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, display: 'flex', alignItems: 'center', paddingLeft: 10, paddingRight: 8, background: 'var(--bg-elevated)', zIndex: 1, borderRight: '1px solid var(--border)' }}>
+            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', color: 'var(--text-subtle)', textTransform: 'uppercase' }}>LIVE</span>
           </div>
           <div style={{ flex: 1, marginLeft: 52, overflow: 'hidden', maskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)' }}>
             <div style={{ display: 'inline-flex', gap: 28, whiteSpace: 'nowrap', animation: 'ticker 28s linear infinite' }}>
               {[...FEED_ITEMS.slice(0, 4), ...FEED_ITEMS.slice(0, 4)].map((item, i) => (
-                <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--n-text2)', flexShrink: 0 }}>
+                <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--text-muted)', flexShrink: 0 }}>
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: item.color, display: 'inline-block', flexShrink: 0 }} />
-                  <span style={{ fontWeight: 600, color: 'var(--n-text)' }}>{item.actor}</span>
+                  <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.actor}</span>
                   <span>{item.action}</span>
                 </span>
               ))}
@@ -377,19 +445,30 @@ export default function OperatorDashboard() {
         </div>
 
         {/* B. Page Heading */}
-        <div>
-          <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--n-text)', letterSpacing: '-0.02em' }}>{greeting}, Peter</div>
-          <div style={{ fontSize: 11, color: 'var(--n-text3)', fontFamily: 'var(--n-mono)', marginTop: 2 }}>{dateStr}</div>
-        </div>
+        <PageHeader title={`${greeting}, Peter`} subtitle={dateStr} />
 
         {/* C. Stat Grid 3×2 */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-          {STAT_CARDS.map(({ count, label, icon: Icon, glow, sub }) => (
-            <div key={label} className="stat-card-new" style={{ '--sc-glow': glow } as React.CSSProperties}>
-              <Icon size={13} style={{ color: glow, opacity: 0.8, marginBottom: 8 }} />
-              <div style={{ fontSize: 32, fontWeight: 300, fontFamily: 'var(--n-mono)', color: 'var(--n-text)', lineHeight: 1 }}>{count}</div>
-              <div style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--n-text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 6 }}>{label}</div>
-              <div style={{ fontSize: 10, color: 'var(--n-text3)', marginTop: 2 }}>{sub}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10 }}>
+          {STAT_CARDS.map(({ count, label, icon: Icon, sub }) => (
+            <div
+              key={label}
+              className="kpi-tile"
+              style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border)',
+                borderRadius: 12,
+                padding: '14px 14px 12px',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
+                transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
+                display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Icon size={16} strokeWidth={1.5} style={{ color: 'var(--accent)' }} />
+                <div style={{ fontSize: 26, fontWeight: 600, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', lineHeight: 1, letterSpacing: '-0.02em' }}>{count}</div>
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', marginTop: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub}</div>
             </div>
           ))}
         </div>
@@ -397,11 +476,11 @@ export default function OperatorDashboard() {
         {/* D. Alert Banners */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {urgentCheckins.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--n-amber-bg)', borderLeft: '3px solid var(--n-amber)', borderRadius: 8, border: '1px solid var(--n-amber-border)' }}>
-              <span className="pulse-urgent" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--n-amber)', flexShrink: 0 }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--status-warning-bg)', borderLeft: '3px solid var(--status-warning)', borderRadius: 8, border: '1px solid var(--status-warning)' }}>
+              <span className="pulse-urgent" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--status-warning)', flexShrink: 0 }} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--n-amber)' }}>Pre-check-in Stock Alert</div>
-                <div style={{ fontSize: 11, color: 'var(--n-amber)', opacity: 0.8, marginTop: 1 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--status-warning)' }}>Pre-check-in Stock Alert</div>
+                <div style={{ fontSize: 11, color: 'var(--status-warning)', opacity: 0.8, marginTop: 1 }}>
                   {urgentCheckins.map(ci => {
                     const lowItems = ci.stockItemIds.map(id => STOCK_ITEMS.find(s => s.id === id)).filter(i => i && i.status !== 'ok').map(i => i!.name)
                     const hrs = Math.round((new Date(ci.date).getTime() - today.getTime()) / 3600000)
@@ -409,65 +488,73 @@ export default function OperatorDashboard() {
                   }).join(' · ')}
                 </div>
               </div>
-              <button style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6, background: 'transparent', color: 'var(--n-amber)', border: '1px solid var(--n-amber-border)', cursor: 'pointer', flexShrink: 0 }}>View</button>
+              <button style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6, background: 'transparent', color: 'var(--status-warning)', border: '1px solid var(--status-warning)', cursor: 'pointer', flexShrink: 0 }}>View</button>
             </div>
           )}
           {activeIssues.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--n-red-bg)', borderLeft: '3px solid var(--n-red)', borderRadius: 8, border: '1px solid var(--n-red-border)' }}>
-              <span className="pulse-urgent" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--n-red)', flexShrink: 0 }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--status-danger-bg)', borderLeft: '3px solid var(--status-danger)', borderRadius: 8, border: '1px solid var(--status-danger)' }}>
+              <span className="pulse-urgent" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--status-danger)', flexShrink: 0 }} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--n-red)' }}>PTE pending 4+ hours — Inspect heating system</div>
-                <div style={{ fontSize: 11, color: 'var(--n-red)', opacity: 0.7, marginTop: 1 }}>Downtown Loft · Guest Services not yet responded</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--status-danger)' }}>PTE pending 4+ hours — Inspect heating system</div>
+                <div style={{ fontSize: 11, color: 'var(--status-danger)', opacity: 0.7, marginTop: 1 }}>Downtown Loft · Guest Services not yet responded</div>
               </div>
-              <button style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6, background: 'var(--n-red)', color: '#fff', border: 'none', cursor: 'pointer', flexShrink: 0 }}>View Task</button>
+              <button style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6, background: 'var(--status-danger)', color: '#fff', border: 'none', cursor: 'pointer', flexShrink: 0 }}>View Task</button>
             </div>
           )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', background: 'var(--n-accent-bg)', borderLeft: '3px solid var(--n-accent)', borderRadius: 8, border: '1px solid var(--n-accent-border)' }}>
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="var(--n-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="2 7 5.5 10.5 12 3.5"/></svg>
-            <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--n-accent)' }}>1 task auto-granted PTE · Properties vacant — no guest access needed</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', background: 'var(--accent-bg)', borderLeft: '3px solid var(--accent)', borderRadius: 8, border: '1px solid var(--accent-border)' }}>
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="2 7 5.5 10.5 12 3.5"/></svg>
+            <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--accent)' }}>1 task auto-granted PTE · Properties vacant — no guest access needed</span>
           </div>
         </div>
 
         {/* E. Portfolio Bar */}
-        <div style={{ background: 'var(--n-bg3)', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--n-border)', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--n-text3)', textTransform: 'uppercase', letterSpacing: '.08em', flexShrink: 0 }}>PORTFOLIO</span>
+        <div style={{ background: 'var(--bg-elevated)', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-subtle)', textTransform: 'uppercase', letterSpacing: '.08em', flexShrink: 0 }}>PORTFOLIO</span>
           {PROPERTIES.map(p => {
             const { score } = computeHealthScore(p.id)
             const color = scoreColor(score)
             return (
               <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0 }} />
-                <span style={{ fontSize: 11, color: 'var(--n-text2)', whiteSpace: 'nowrap' }}>{p.name.split(' ')[0]}</span>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{p.name.split(' ')[0]}</span>
               </div>
             )
           })}
         </div>
 
-        {/* F. Team Grid — 6 columns */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8 }}>
-          {TEAM_CLOCK_STATUS.map(member => (
-            <div key={member.id} className="team-card-new">
-              <div style={{ position: 'absolute', top: 8, right: 8, width: 7, height: 7, borderRadius: '50%', background: statusDotColor(member.status) }} />
-              <div style={{ width: 32, height: 32, borderRadius: '50%', background: member.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', marginBottom: 6 }}>
-                {member.initials}
+        {/* F. Team on shift — horizontal strip matching Pulse row grammar */}
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '14px 16px', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '.06em' }}>Team on shift</span>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{TEAM_CLOCK_STATUS.filter(m => m.status === 'active').length} active · {TEAM_CLOCK_STATUS.filter(m => m.status === 'blocked').length} blocked</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px 20px' }}>
+            {TEAM_CLOCK_STATUS.map(member => (
+              <div key={member.id} style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: member.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#fff' }}>
+                    {member.initials}
+                  </div>
+                  <span style={{ position: 'absolute', bottom: -1, right: -1, width: 8, height: 8, borderRadius: '50%', background: statusDotColor(member.status), border: '2px solid var(--bg-card)' }} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.name} <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>· {member.role}</span></div>
+                  <div style={{ fontSize: 11, color: statusTaskColor(member.status), whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.task}</div>
+                </div>
               </div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--n-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.name}</div>
-              <div style={{ fontSize: 10, color: 'var(--n-text3)', marginTop: 1 }}>{member.role}</div>
-              <div style={{ fontSize: 10, color: 'var(--n-text3)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.property}</div>
-              <div style={{ fontSize: 10, color: statusTaskColor(member.status), marginTop: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.task}</div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* G. Tab Row + Filter Chips */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ display: 'inline-flex', background: 'var(--n-bg3)', borderRadius: 20, padding: 3, border: '1px solid var(--n-border)' }}>
+          <div style={{ display: 'inline-flex', background: 'var(--bg-elevated)', borderRadius: 20, padding: 3, border: '1px solid var(--border)' }}>
             {(['work', 'portfolio'] as const).map(v => (
               <button key={v} onClick={() => setDashView(v)} style={{
                 padding: '4px 16px', borderRadius: 18, fontSize: 12, fontWeight: 500, cursor: 'pointer',
                 border: 'none',
                 background: dashView === v ? accent : 'transparent',
-                color: dashView === v ? '#fff' : 'var(--n-text2)',
+                color: dashView === v ? '#fff' : 'var(--text-muted)',
                 transition: 'background 0.15s, color 0.15s',
               }}>
                 {v === 'work' ? 'My Work' : 'Portfolio'}
@@ -480,12 +567,12 @@ export default function OperatorDashboard() {
                 <button key={f} onClick={() => setWorkFilter(f)} style={{
                   display: 'flex', alignItems: 'center', gap: 5,
                   padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 500, cursor: 'pointer',
-                  border: `1px solid ${workFilter === f ? accent : 'var(--n-border)'}`,
+                  border: `1px solid ${workFilter === f ? accent : 'var(--border)'}`,
                   background: workFilter === f ? `${accent}1a` : 'transparent',
-                  color: workFilter === f ? accent : 'var(--n-text2)',
+                  color: workFilter === f ? accent : 'var(--text-muted)',
                 }}>
                   {WORK_FILTER_LABELS[f]}
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '0 5px', borderRadius: 8, background: workFilter === f ? `${accent}30` : 'var(--n-bg3)', color: workFilter === f ? accent : 'var(--n-text3)' }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '0 5px', borderRadius: 8, background: workFilter === f ? `${accent}30` : 'var(--bg-elevated)', color: workFilter === f ? accent : 'var(--text-subtle)' }}>
                     {workCounts[f]}
                   </span>
                 </button>
@@ -496,16 +583,16 @@ export default function OperatorDashboard() {
 
         {/* H. Work Table OR Portfolio Health */}
         {dashView === 'work' ? (
-          <div style={{ background: 'var(--n-card)', border: '1px solid var(--n-border)', borderRadius: 14, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
             {filteredWork.length === 0 ? (
-              <div style={{ padding: 24, textAlign: 'center', fontSize: 13, color: 'var(--n-text3)' }}>No items in this category</div>
+              <div style={{ padding: 24, textAlign: 'center', fontSize: 13, color: 'var(--text-subtle)' }}>No items in this category</div>
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr style={{ background: 'var(--n-bg3)', borderBottom: '1px solid var(--n-border)' }}>
+                    <tr style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
                       {['Type', 'Title', 'Property', 'Priority', 'Status'].map(h => (
-                        <th key={h} style={{ padding: '8px 14px', textAlign: 'left', fontSize: 10, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--n-text3)', whiteSpace: 'nowrap' }}>{h}</th>
+                        <th key={h} style={{ padding: '8px 14px', textAlign: 'left', fontSize: 10, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-subtle)', whiteSpace: 'nowrap' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -513,20 +600,20 @@ export default function OperatorDashboard() {
                     {filteredWork.map((item, i) => (
                       <tr
                         key={item.id}
-                        style={{ borderBottom: i < filteredWork.length - 1 ? '1px solid var(--n-border)' : 'none', cursor: 'pointer', borderLeft: `3px solid ${PRIORITY_COLORS[item.priority]}`, background: item.priority === 'urgent' ? 'rgba(239,68,68,0.04)' : 'transparent' }}
+                        style={{ borderBottom: i < filteredWork.length - 1 ? '1px solid var(--border)' : 'none', cursor: 'pointer', borderLeft: `3px solid ${PRIORITY_COLORS[item.priority]}`, background: item.priority === 'urgent' ? 'rgba(239,68,68,0.04)' : 'transparent' }}
                         onClick={() => { if (typeof window !== 'undefined') window.location.href = item.href }}
-                        onMouseEnter={e => (e.currentTarget.style.background = item.priority === 'urgent' ? 'rgba(239,68,68,0.07)' : 'var(--n-bg3)')}
+                        onMouseEnter={e => (e.currentTarget.style.background = item.priority === 'urgent' ? 'rgba(239,68,68,0.07)' : 'var(--bg-elevated)')}
                         onMouseLeave={e => (e.currentTarget.style.background = item.priority === 'urgent' ? 'rgba(239,68,68,0.04)' : 'transparent')}
                       >
                         <td style={{ padding: '9px 14px' }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 4, background: TYPE_BADGE_STYLE[item.type]?.bg ?? 'var(--n-bg3)', color: TYPE_BADGE_STYLE[item.type]?.fg ?? 'var(--n-text2)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 4, background: TYPE_BADGE_STYLE[item.type]?.bg ?? 'var(--bg-elevated)', color: TYPE_BADGE_STYLE[item.type]?.fg ?? 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
                             {TYPE_LABELS[item.type]}
                           </span>
                         </td>
-                        <td style={{ padding: '9px 14px', fontSize: 12, fontWeight: 500, color: 'var(--n-text)', maxWidth: 220 }}>
+                        <td style={{ padding: '9px 14px', fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', maxWidth: 220 }}>
                           <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</span>
                         </td>
-                        <td style={{ padding: '9px 14px', fontSize: 11, color: 'var(--n-text2)', whiteSpace: 'nowrap' }}>{item.property}</td>
+                        <td style={{ padding: '9px 14px', fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{item.property}</td>
                         <td style={{ padding: '9px 14px' }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: PRIORITY_COLORS[item.priority] }}>
                             <span style={{ width: 5, height: 5, borderRadius: '50%', background: PRIORITY_COLORS[item.priority], flexShrink: 0 }} />
@@ -534,7 +621,7 @@ export default function OperatorDashboard() {
                           </span>
                         </td>
                         <td style={{ padding: '9px 14px' }}>
-                          <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20, background: 'var(--n-bg3)', color: 'var(--n-text2)', textTransform: 'capitalize', whiteSpace: 'nowrap' }}>
+                          <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20, background: 'var(--bg-elevated)', color: 'var(--text-muted)', textTransform: 'capitalize', whiteSpace: 'nowrap' }}>
                             {item.status.replace(/_/g, ' ')}
                           </span>
                         </td>
@@ -555,15 +642,15 @@ export default function OperatorDashboard() {
               return (
                 <Link key={prop.id} href="/operator/properties" style={{ textDecoration: 'none' }}>
                   <div
-                    style={{ borderRadius: 14, border: '1px solid var(--n-border)', background: 'var(--n-card)', padding: 16, display: 'flex', flexDirection: 'column', gap: 12, transition: 'border-color 0.15s', cursor: 'pointer' }}
+                    style={{ borderRadius: 14, border: '1px solid var(--border)', background: 'var(--bg-card)', padding: 16, display: 'flex', flexDirection: 'column', gap: 12, transition: 'border-color 0.15s', cursor: 'pointer' }}
                     onMouseEnter={e => ((e.currentTarget as HTMLDivElement).style.borderColor = color)}
-                    onMouseLeave={e => ((e.currentTarget as HTMLDivElement).style.borderColor = 'var(--n-border)')}
+                    onMouseLeave={e => ((e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border)')}
                   >
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--n-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{prop.name}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{prop.name}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{ position: 'relative', width: 56, height: 56, flexShrink: 0 }}>
                         <svg width="56" height="56" viewBox="0 0 56 56">
-                          <circle cx="28" cy="28" r="24" fill="none" stroke="var(--n-border2)" strokeWidth="4" />
+                          <circle cx="28" cy="28" r="24" fill="none" stroke="var(--border-subtle)" strokeWidth="4" />
                           <circle cx="28" cy="28" r="24" fill="none" stroke={color} strokeWidth="4" strokeDasharray={circumference} strokeDashoffset={dashOffset} strokeLinecap="round" transform="rotate(-90 28 28)" style={{ transition: 'stroke-dashoffset 0.6s ease' }} />
                         </svg>
                         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color }}>{score}</div>
@@ -571,9 +658,9 @@ export default function OperatorDashboard() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 11, fontWeight: 600, color, marginBottom: 4 }}>{score >= 80 ? 'Healthy' : score >= 50 ? 'Watch' : 'Alert'}</div>
                         {pills.length === 0 ? (
-                          <div style={{ fontSize: 11, color: 'var(--n-text3)' }}>No issues</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>No issues</div>
                         ) : pills.slice(0, 3).map((pill, i) => (
-                          <div key={i} style={{ fontSize: 10, color: 'var(--n-text2)', lineHeight: 1.6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>· {pill}</div>
+                          <div key={i} style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>· {pill}</div>
                         ))}
                       </div>
                     </div>
@@ -588,122 +675,59 @@ export default function OperatorDashboard() {
       {/* ═══ end CENTER COLUMN ═══════════════════════════════════════════════════ */}
 
       {/* ═══ RIGHT PANEL ════════════════════════════════════════════════════════ */}
-      <aside className="rp-new" style={{ display: isMobile ? 'none' : undefined }}>
+      <aside style={{ display: isMobile ? 'none' : 'flex', width: 300, minWidth: 300, flexShrink: 0, flexDirection: 'column', gap: 16, padding: '24px 24px 24px 0', overflowY: 'auto', height: '100%' }}>
 
         {/* I. Pulse */}
-        <div className="rp-block-new" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span className="live-dot" />
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--n-text)', textTransform: 'uppercase', letterSpacing: '.05em' }}>PULSE</span>
-            </div>
-            <div style={{ display: 'flex', gap: 6 }}>
-              {feedBlocked > 0 && <span style={{ fontSize: 10, color: 'var(--n-red)', fontFamily: 'var(--n-mono)' }}>{feedBlocked} blocked</span>}
-              {feedActive > 0 && <span style={{ fontSize: 10, color: 'var(--n-accent)', fontFamily: 'var(--n-mono)' }}>{feedActive} active</span>}
-            </div>
-          </div>
-          {/* Feed tab pills */}
-          <div style={{ display: 'flex', background: 'var(--n-bg3)', borderRadius: 8, padding: 2, marginBottom: 10, gap: 1 }}>
-            {(['all', 'in_progress', 'issues', 'completed'] as const).map(tab => (
-              <button key={tab} onClick={() => setFeedTab(tab)} style={{
-                flex: 1, padding: '4px 0', borderRadius: 6, fontSize: 9.5, fontWeight: 600, cursor: 'pointer',
-                border: 'none',
-                background: feedTab === tab ? 'var(--n-card)' : 'transparent',
-                color: feedTab === tab ? 'var(--n-text)' : 'var(--n-text3)',
-                textTransform: 'capitalize', letterSpacing: '.04em',
-                transition: 'background 0.12s, color 0.12s',
-              }}>
-                {tab === 'in_progress' ? 'Active' : tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
-          </div>
-          {/* Feed items */}
-          <div style={{ overflowY: 'auto', flex: 1 }}>
-            {filterFeed(FEED_ITEMS, feedTab).map((item, i, arr) => {
-              const statusInfo = feedStatusStyle(item.type)
-              const initials = item.actor.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
-              return (
-                <div key={item.id} className="feed-item-enter" style={{ padding: '8px 0', borderBottom: i < arr.length - 1 ? '1px solid var(--n-border)' : 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: item.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                      {initials}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 4 }}>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--n-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.actor}</span>
-                        <span style={{ fontSize: 9.5, color: 'var(--n-text3)', flexShrink: 0, fontFamily: 'var(--n-mono)' }}>{item.time}</span>
-                      </div>
-                      <div style={{ fontSize: 10.5, color: 'var(--n-text2)', marginTop: 1 }}>{item.action}{item.detail ? ` · ${item.detail}` : ''}</div>
-                      <div style={{ fontSize: 10, color: 'var(--n-text3)', marginTop: 1 }}>{item.property}</div>
-                    </div>
-                  </div>
-                  {item.progress !== undefined && (
-                    <div style={{ marginLeft: 32, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div style={{ flex: 1, height: 2, borderRadius: 2, background: 'var(--n-border2)' }}>
-                        <div style={{ width: `${item.progress}%`, height: '100%', background: 'var(--n-accent)', borderRadius: 2 }} />
-                      </div>
-                      <span style={{ fontSize: 9, color: 'var(--n-text3)', fontFamily: 'var(--n-mono)', flexShrink: 0 }}>{item.progress}%</span>
-                    </div>
-                  )}
-                  {statusInfo && (
-                    <div style={{ marginLeft: 32 }}>
-                      <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 4, background: statusInfo.bg, color: statusInfo.fg }}>{statusInfo.label}</span>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </div>
+        {PulseBlock}
 
         {/* J. Today's Check-ins */}
-        <div className="rp-block-new">
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--n-text)', textTransform: 'uppercase', letterSpacing: '.05em' }}>Today&apos;s Check-ins</span>
-            <span style={{ fontSize: 10, color: 'var(--n-text2)' }}>1 ready · 1 at risk</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '.05em' }}>Today&apos;s Check-ins</span>
+            <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>1 ready · 1 at risk</span>
           </div>
           {checkInJobs.length === 0 ? (
-            <div style={{ fontSize: 12, color: 'var(--n-text2)' }}>No check-ins scheduled today</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>No check-ins scheduled today</div>
           ) : checkInJobs.map((job, i) => {
             const isAtRisk = i === 1
             return (
-              <div key={i} style={{ paddingTop: i > 0 ? 8 : 0, paddingBottom: 8, borderTop: i > 0 ? '1px solid var(--n-border)' : 'none' }}>
+              <div key={i} style={{ paddingTop: i > 0 ? 8 : 0, paddingBottom: 8, borderTop: i > 0 ? '1px solid var(--border)' : 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--n-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{job.propertyName}</div>
-                    <div style={{ fontSize: 11, color: 'var(--n-text2)' }}>{job.reservation?.guestName ?? 'Guest'}</div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{job.propertyName}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{job.reservation?.guestName ?? 'Guest'}</div>
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: isAtRisk ? 'var(--n-amber-bg)' : 'var(--n-accent-bg)', color: isAtRisk ? 'var(--n-amber)' : 'var(--n-accent)', border: `1px solid ${isAtRisk ? 'var(--n-amber-border)' : 'var(--n-accent-border)'}`, flexShrink: 0 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: isAtRisk ? 'var(--status-warning-bg)' : 'var(--accent-bg)', color: isAtRisk ? 'var(--status-warning)' : 'var(--accent)', border: `1px solid ${isAtRisk ? 'var(--status-warning)' : 'var(--accent-border)'}`, flexShrink: 0 }}>
                     {isAtRisk ? 'At risk' : 'Ready'}
                   </span>
                 </div>
-                {isAtRisk && <div style={{ fontSize: 10, color: 'var(--n-amber)', marginTop: 3 }}>Cleaning finishes at 17:00</div>}
+                {isAtRisk && <div style={{ fontSize: 10, color: 'var(--status-warning)', marginTop: 3 }}>Cleaning finishes at 17:00</div>}
               </div>
             )
           })}
         </div>
 
         {/* K. Owner Approvals */}
-        <div className="rp-block-new">
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--n-text)', textTransform: 'uppercase', letterSpacing: '.05em' }}>Owner Approvals</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '.05em' }}>Owner Approvals</span>
             {pendingApprovals.length > 0 && (
-              <span style={{ fontSize: 10, color: 'var(--n-amber)', fontFamily: 'var(--n-mono)' }}>{totalApprovalAmt.toLocaleString()} NOK · {pendingApprovals.length}</span>
+              <span style={{ fontSize: 10, color: 'var(--status-warning)', fontFamily: 'var(--font-mono)' }}>{totalApprovalAmt.toLocaleString()} NOK · {pendingApprovals.length}</span>
             )}
           </div>
           {pendingApprovals.length === 0 ? (
-            <div style={{ fontSize: 12, color: 'var(--n-text2)', textAlign: 'center', padding: '8px 0' }}>No pending approvals</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '8px 0' }}>No pending approvals</div>
           ) : pendingApprovals.map((a, i) => (
-            <div key={a.id} style={{ paddingBottom: 12, marginBottom: i < pendingApprovals.length - 1 ? 12 : 0, borderBottom: i < pendingApprovals.length - 1 ? '1px solid var(--n-border)' : 'none' }}>
+            <div key={a.id} style={{ paddingBottom: 12, marginBottom: i < pendingApprovals.length - 1 ? 12 : 0, borderBottom: i < pendingApprovals.length - 1 ? '1px solid var(--border)' : 'none' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 2 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--n-text)', flex: 1, marginRight: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.title}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--n-accent)', flexShrink: 0, fontFamily: 'var(--n-mono)' }}>{a.amount.toLocaleString()} {a.currency}</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', flex: 1, marginRight: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.title}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)', flexShrink: 0, fontFamily: 'var(--font-mono)' }}>{a.amount.toLocaleString()} {a.currency}</span>
               </div>
-              <div style={{ fontSize: 10.5, color: 'var(--n-text2)', marginBottom: 8 }}>{a.property} · {a.category}</div>
+              <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginBottom: 8 }}>{a.property} · {a.category}</div>
               <div style={{ display: 'flex', gap: 5 }}>
-                <button onClick={() => { setPendingApprovals(p => p.filter(x => x.id !== a.id)); showToast('Approved — owner notified') }} style={{ flex: 1, height: 26, borderRadius: 5, border: 'none', background: 'var(--n-accent)', color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Approve</button>
-                <button onClick={() => showToast('Invoiced later')} style={{ flex: 1, height: 26, borderRadius: 5, border: '1px solid var(--n-blue-border)', background: 'var(--n-blue-bg)', color: 'var(--n-blue)', fontSize: 11, cursor: 'pointer' }}>Invoice Later</button>
-                <button onClick={() => showToast('Follow-up sent')} style={{ flex: 1, height: 26, borderRadius: 5, border: '1px solid var(--n-border2)', background: 'transparent', color: 'var(--n-text2)', fontSize: 11, cursor: 'pointer' }}>Follow-Up</button>
+                <button onClick={() => { setPendingApprovals(p => p.filter(x => x.id !== a.id)); showToast('Approved — owner notified') }} style={{ flex: 1, height: 26, borderRadius: 5, border: 'none', background: 'var(--accent)', color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Approve</button>
+                <button onClick={() => showToast('Invoiced later')} style={{ flex: 1, height: 26, borderRadius: 5, border: '1px solid var(--status-info)', background: 'var(--status-info-bg)', color: 'var(--status-info)', fontSize: 11, cursor: 'pointer' }}>Invoice Later</button>
+                <button onClick={() => showToast('Follow-up sent')} style={{ flex: 1, height: 26, borderRadius: 5, border: '1px solid var(--border-subtle)', background: 'transparent', color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer' }}>Follow-Up</button>
               </div>
             </div>
           ))}
@@ -725,7 +749,7 @@ export default function OperatorDashboard() {
                 </div>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Rating</div>
-                  <div style={{ fontSize: 18, color: '#f59e0b', lineHeight: 1 }}>
+                  <div style={{ fontSize: 18, color: 'var(--text-muted)', lineHeight: 1 }}>
                     {'★'.repeat(qaReviewItem.rating)}<span style={{ color: 'var(--border)' }}>{'★'.repeat(5 - qaReviewItem.rating)}</span>
                   </div>
                 </div>
@@ -750,15 +774,15 @@ export default function OperatorDashboard() {
             </div>
           )}
           <SheetFooter>
-            <button onClick={() => qaReviewItem && handleQaAction(qaReviewItem.id, 'redo')} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: '1px solid var(--n-red)', background: 'transparent', color: 'var(--n-red)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Flag for Redo</button>
-            <button onClick={() => qaReviewItem && handleQaAction(qaReviewItem.id, 'approved')} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', background: 'var(--n-accent)', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Approve</button>
+            <button onClick={() => qaReviewItem && handleQaAction(qaReviewItem.id, 'redo')} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: '1px solid var(--status-danger)', background: 'transparent', color: 'var(--status-danger)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Flag for Redo</button>
+            <button onClick={() => qaReviewItem && handleQaAction(qaReviewItem.id, 'approved')} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', background: 'var(--accent)', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Approve</button>
           </SheetFooter>
         </SheetContent>
       </Sheet>
 
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, right: 24, background: 'var(--n-accent)', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+        <div style={{ position: 'fixed', bottom: 24, right: 24, background: 'var(--accent)', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
           {toast}
         </div>
       )}

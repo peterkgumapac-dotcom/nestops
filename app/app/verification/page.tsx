@@ -265,12 +265,11 @@ export default function AppVerificationPage() {
                 borderBottom: i < filtered.length - 1 ? '1px solid var(--border-subtle)' : 'none',
                 cursor: 'pointer',
                 alignItems: 'center',
-                background: amber ? '#d9770608' : 'transparent',
+                background: 'transparent',
                 transition: 'background 0.12s',
-                borderLeft: amber ? '3px solid #d97706' : '3px solid transparent',
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = amber ? '#d9770614' : 'var(--bg-elevated)')}
-              onMouseLeave={e => (e.currentTarget.style.background = amber ? '#d9770608' : 'transparent')}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-elevated)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             >
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

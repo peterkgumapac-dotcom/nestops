@@ -19,7 +19,7 @@ interface DemoUser {
 }
 
 const DEMO_USERS: DemoUser[] = [
-  { userId: 'pk', initials: 'PK', name: 'Peter K.',   role: 'operator', avatarBg: '#c4622d', badgeLabel: 'Operator',      group: 'Operator' },
+  { userId: 'pk', initials: 'PK', name: 'Peter K.',   role: 'operator', avatarBg: '#14b8a6', badgeLabel: 'Operator',      group: 'Operator' },
   { userId: 'fn', initials: 'FN', name: 'Fatima N.',  role: 'operator', accessTier: 'guest-services', subRole: 'Guest Services Agent', avatarBg: '#ec4899', badgeLabel: 'GS Agent',        group: 'Guest Services' },
   { userId: 'cm', initials: 'CM', name: 'Carlos M.',  role: 'operator', accessTier: 'guest-services', subRole: 'GS Supervisor',        avatarBg: '#8b5cf6', badgeLabel: 'GS Supervisor',   group: 'Guest Services' },
   { userId: 'ms', initials: 'MS', name: 'Maria S.',   role: 'staff',    subRole: 'Cleaner',             jobRole: 'cleaner',       avatarBg: '#d97706', badgeLabel: 'Cleaner',         group: 'Staff' },
@@ -55,11 +55,11 @@ const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
   :root {
-    --bg:#0e0a08; --bg2:#161009; --bg3:#1e1510; --card:#161009;
-    --border:#2a1f16; --border2:rgba(196,98,45,0.15);
-    --text:#f5ede6; --text2:#8a6a58; --text3:#5a4a3b;
-    --green:#c4622d; --green2:#e07a45;
-    --green-bg:rgba(196,98,45,0.08); --green-border:rgba(196,98,45,0.2);
+    --bg:#0c0d14; --bg2:#14151e; --bg3:#1c1d2a; --card:#14151e;
+    --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.12);
+    --text:#eae8e4; --text2:#8a8f9c; --text3:#4a4f5c;
+    --green:#14b8a6; --green2:#2dd4bf;
+    --green-bg:rgba(20,184,166,0.08); --green-border:rgba(20,184,166,0.2);
     --red:#e24b4a;
     --sans:'Inter',system-ui,sans-serif;
     --mono:'JetBrains Mono',monospace;

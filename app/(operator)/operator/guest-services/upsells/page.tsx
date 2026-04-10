@@ -301,7 +301,6 @@ export default function UpsellsPage() {
                   style={{
                     background: 'var(--bg-card)', border: '1px solid var(--border)',
                     borderRadius: 10, padding: '12px 14px',
-                    borderLeft: `4px solid ${isApproved ? '#059669' : isPending ? '#d97706' : isDeclined ? '#ef4444' : 'var(--border)'}`,
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>

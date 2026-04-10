@@ -30,7 +30,7 @@ const CONTRACT_STATUS: Record<string, 'Active' | 'Expiring Soon' | 'Expired' | '
   s1: 'Active', s2: 'Active', s3: 'Expiring Soon', s4: 'Active',
 }
 const CONTRACT_STATUS_COLOR: Record<string, string> = {
-  Active: '#16a34a', 'Expiring Soon': '#d97706', Expired: '#dc2626', Missing: '#d97706',
+  Active: '#16a34a', 'Expiring Soon': 'var(--text-muted)', Expired: '#dc2626', Missing: 'var(--text-muted)',
 }
 const EMPLOYMENT_TYPE_COLOR: Record<string, string> = {
   Hourly: '#2563eb', Salaried: '#7c3aed', Contractor: '#d97706',
@@ -516,7 +516,7 @@ export default function TeamPage() {
               <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-subtle)' }}>Utilization:</span>
               {[
                 { color: 'var(--status-success)', label: '<70% On track' },
-                { color: 'var(--status-warning)', label: '70–89% Busy' },
+                { color: 'var(--text-muted)', label: '70–89% Busy' },
                 { color: 'var(--status-danger)', label: '≥90% Overloaded' },
               ].map(({ color, label }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -822,7 +822,7 @@ export default function TeamPage() {
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>{c.email}</div>
                   <div style={{ height: 1, background: 'var(--border)', marginBottom: 12 }} />
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Star size={12} style={{ color: 'var(--status-warning)', fill: '#fbbf24' }} />
+                    <Star size={12} style={{ color: 'var(--text-muted)', fill: 'var(--text-muted)' }} />
                     <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{c.rating}</span>
                     <span style={{ fontSize: 12, color: 'var(--text-subtle)' }}>/ 5.0</span>
                   </div>
@@ -1010,7 +1010,7 @@ export default function TeamPage() {
                 const s = statusMap[req.status]
                 return (
                   <div key={req.id} style={{ borderBottom: i < leaveRequests.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 1fr 50px 1fr 100px 130px', gap: 0, padding: '13px 20px', alignItems: 'center', background: req.status === 'pending' ? '#d9770606' : 'transparent' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 1fr 50px 1fr 100px 130px', gap: 0, padding: '13px 20px', alignItems: 'center', background: 'transparent' }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{req.staffName}</div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', textTransform: 'capitalize' }}>{req.type}</div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{req.from} – {req.to}</div>
@@ -1042,7 +1042,7 @@ export default function TeamPage() {
                     )}
                   </div>
                   {pendingApproveId === req.id && (
-                    <div style={{ margin: '0 20px 14px', padding: '12px 14px', background: '#d9770612', borderLeft: '2px solid #d97706', borderRadius: 6, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ margin: '0 20px 14px', padding: '12px 14px', background: 'var(--bg-card)', borderLeft: '2px solid var(--border)', borderRadius: 6, display: 'flex', flexDirection: 'column', gap: 10 }}>
                       <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 500 }}>
                         {req.staffId === 's1' || req.id === 'lr1'
                           ? '⚠ Approving this leave will leave Harbor Studio and Sunset Villa unassigned Mar 25–28. Reassign before confirming.'

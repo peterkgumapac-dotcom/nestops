@@ -5,12 +5,21 @@ const GREEN2 = '#15d492'
 const RED = '#e24b4a'
 const PURPLE = '#7c3aed'
 
-const THREADS = [
+const TEAM_THREADS = [
   { id: 'bjorn', name: 'Bjorn L.', initials: 'BL', color: RED, online: false, time: '1:52 PM', ctx: ['Sunset Villa', 'Maintenance'], preview: "i cant make it. can we do tomorrow?", unread: true },
   { id: 'fatima', name: 'Fatima N.', initials: 'FN', color: PURPLE, online: true, time: '10:08 AM', ctx: ['Harbor Studio'], preview: 'Linen delivery confirmed — ETA 09:45', unread: true },
   { id: 'maria', name: 'Maria S.', initials: 'MS', color: '#1D9E75', online: true, time: '9:05 AM', ctx: ['Ocean View Apt', 'Cleaning'], preview: 'Clocked in — starting turnover now 👍', unread: false },
   { id: 'johan', name: 'Johan L.', initials: 'JL', color: '#5a5f6b', online: false, time: 'Yesterday', ctx: ['Harbor Studio'], preview: 'Deep clean done — photos attached', unread: false },
 ]
+
+const GUEST_THREADS = [
+  { id: 'guest_sarah', name: 'Sarah K.', initials: 'SK', color: '#e67e22', online: true, time: '11:30 AM', ctx: ['Ocean View Apt', 'Check-in'], preview: 'Hi, what time can I check in today?', unread: true },
+  { id: 'guest_thomas', name: 'Thomas B.', initials: 'TB', color: '#3498db', online: false, time: '10:15 AM', ctx: ['Sunset Villa', 'Upsell'], preview: 'I\'d like to add the welcome basket please', unread: true },
+  { id: 'guest_emma', name: 'Emma L.', initials: 'EL', color: '#9b59b6', online: false, time: 'Yesterday', ctx: ['Harbor Studio', 'Issue'], preview: 'The Wi-Fi password isn\'t working', unread: false },
+  { id: 'guest_anders', name: 'Anders M.', initials: 'AM', color: '#1abc9c', online: false, time: 'Apr 8', ctx: ['Downtown Loft', 'Checkout'], preview: 'Thanks for a wonderful stay! 🙏', unread: false },
+]
+
+const THREADS = TEAM_THREADS
 
 interface Props {
   currentUserId: string
@@ -21,9 +30,12 @@ export function ChatThreadList({ currentUserId, onSelectThread }: Props) {
   const [activeTab, setActiveTab] = useState(0)
   const tabs = [
     { label: 'Team', badge: 2 },
+    { label: 'Guests', badge: 2 },
     { label: 'Tasks', badge: 1 },
     { label: 'Properties', badge: 0 },
   ]
+
+  const activeThreads = activeTab === 1 ? GUEST_THREADS : TEAM_THREADS
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -51,7 +63,7 @@ export function ChatThreadList({ currentUserId, onSelectThread }: Props) {
 
       {/* Thread list */}
       <div style={{ padding: '0 6px 10px', display: 'flex', flexDirection: 'column', gap: 1, overflowY: 'auto', flex: 1 }}>
-        {THREADS.map(t => (
+        {activeThreads.map(t => (
           <div key={t.id} onClick={() => onSelectThread(t.id)}
             style={{ display: 'flex', gap: 9, padding: '9px 8px', borderRadius: 10, cursor: 'pointer', background: t.unread ? 'rgba(255,255,255,0.03)' : 'transparent', transition: 'background .12s' }}
             onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-card)')}

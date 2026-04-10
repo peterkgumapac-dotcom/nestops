@@ -5,7 +5,7 @@ import {
   BookOpen, ShieldCheck, AlertCircle, Plus, Eye, Edit,
   Globe, QrCode, ToggleLeft, ToggleRight, ChevronRight,
   Sparkles, Check, X, ExternalLink, Users, KeyRound, Copy,
-  Zap, Clock, Building2,
+  Zap, Clock, Building2, Layout, Palette, Blocks,
 } from 'lucide-react'
 import Link from 'next/link'
 import PageHeader from '@/components/shared/PageHeader'
@@ -14,8 +14,18 @@ import AppDrawer from '@/components/shared/AppDrawer'
 import { useRole } from '@/context/RoleContext'
 import { GUIDEBOOKS } from '@/lib/data/guidebooks'
 import { PROPERTIES } from '@/lib/data/properties'
+import { TEMPLATES, type Template } from '../../guest-portal/components/templates'
+import TemplateCard from '../../guest-portal/components/TemplateCard'
+import PreviewModal, { type Device } from '../../guest-portal/components/PreviewModal'
+import CustomizationPanel from '../../guest-portal/components/CustomizationPanel'
+import VerificationPanel from '../../guest-portal/components/VerificationPanel'
+import GuidebookPanel from '../../guest-portal/components/GuidebookPanel'
+import MessagingPanel from '../../guest-portal/components/MessagingPanel'
+import UpsellsPanel from '../../guest-portal/components/UpsellsPanel'
+import SmartAccessPanel from '../../guest-portal/components/SmartAccessPanel'
+import SetupBanner from '../../guest-portal/components/SetupBanner'
 
-type Tab = 'portal' | 'guidebooks' | 'issues'
+type Tab = 'portal' | 'guidebooks' | 'issues' | 'templates' | 'customize' | 'modules'
 
 type BookingSource = 'all' | 'airbnb' | 'direct' | 'vrbo' | 'booking_com'
 
@@ -63,11 +73,11 @@ const GUEST_ISSUES = [
   { id: 'gi3', guestName: 'Lars Nielsen', property: 'Downtown Loft', issue: 'Dishwasher not draining', pteWindow: 'Today 15:00–17:00', status: 'assigned', createdAt: '2026-03-19T18:45:00' },
 ]
 
-const ISSUE_STATUS: Record<string, { label: string; color: string }> = {
-  draft_task: { label: 'Draft Task', color: '#6366f1' },
-  open:       { label: 'Open',       color: '#ef4444' },
-  assigned:   { label: 'Assigned',   color: '#d97706' },
-  resolved:   { label: 'Resolved',   color: '#10b981' },
+const ISSUE_STATUS: Record<string, { label: string; fg: string; bg: string }> = {
+  draft_task: { label: 'Draft Task', fg: 'var(--status-purple-fg)', bg: 'var(--status-purple-bg)' },
+  open:       { label: 'Open',       fg: 'var(--status-red-fg)',    bg: 'var(--status-red-bg)' },
+  assigned:   { label: 'Assigned',   fg: 'var(--status-amber-fg)',  bg: 'var(--status-amber-bg)' },
+  resolved:   { label: 'Resolved',   fg: 'var(--status-green-fg)',  bg: 'var(--status-green-bg)' },
 }
 
 const inputStyle: React.CSSProperties = {
@@ -88,6 +98,9 @@ export default function GuestExperiencePage() {
   const [newGuideProperty, setNewGuideProperty] = useState('')
   const [generating, setGenerating] = useState(false)
   const [toast, setToast] = useState('')
+  const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null)
+  const [activeTemplateId, setActiveTemplateId] = useState<Template['id']>('default')
+  const [device, setDevice] = useState<Device>('phone')
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
@@ -119,12 +132,15 @@ export default function GuestExperiencePage() {
     { key: 'portal', label: 'Portal Builder', icon: ShieldCheck },
     { key: 'guidebooks', label: 'Guidebooks', icon: BookOpen },
     { key: 'issues', label: 'Guest-Initiated Issues', icon: AlertCircle },
+    { key: 'templates', label: 'Templates', icon: Layout },
+    { key: 'customize', label: 'Customize', icon: Palette },
+    { key: 'modules', label: 'Modules', icon: Blocks },
   ]
 
   return (
     <div>
       <PageHeader
-        title="Guest Experience"
+        title="Guest Portal"
         subtitle="Verification gates · Guidebooks · Guest-initiated issues"
         action={
           tab === 'guidebooks' ? (
@@ -175,7 +191,7 @@ export default function GuestExperiencePage() {
                   cursor: 'pointer', textAlign: 'left',
                 }}
               >
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: pc.brandColor, flexShrink: 0 }} />
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: accent, flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pc.propertyName}</div>
                   <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginTop: 1 }}>{pc.guestsVerified} verified</div>
@@ -376,15 +392,15 @@ export default function GuestExperiencePage() {
                       </div>
                     </div>
                   </div>
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: `${cfg.color}15`, color: cfg.color, flexShrink: 0 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: cfg.bg, color: cfg.fg, flexShrink: 0 }}>
                     {cfg.label}
                   </span>
                 </div>
                 {issue.pteWindow && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, background: '#10b98110', border: '1px solid #10b98130' }}>
-                    <KeyRound size={12} color="#10b981" />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, background: 'var(--status-green-bg)', border: '1px solid color-mix(in srgb, var(--status-green-fg) 30%, transparent)' }}>
+                    <KeyRound size={12} style={{ color: 'var(--status-green-fg)' }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: '#10b981' }}>Guest provided PTE window</div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--status-green-fg)' }}>Guest provided PTE window</div>
                       <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>{issue.pteWindow}</div>
                     </div>
                     <Link href="/operator/operations" style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 600, color: accent, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3 }}>
@@ -404,6 +420,77 @@ export default function GuestExperiencePage() {
             )
           })}
         </div>
+      )}
+
+      {/* ── TEMPLATES ── */}
+      {tab === 'templates' && (
+        <div>
+          <SetupBanner />
+          <motion.div
+            key="templates"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {TEMPLATES.map((t) => (
+                <TemplateCard
+                  key={t.id}
+                  template={t}
+                  isActive={t.id === activeTemplateId}
+                  onPreview={() => {
+                    setDevice('phone')
+                    setPreviewTemplate(t)
+                  }}
+                  onUse={() => setActiveTemplateId(t.id)}
+                />
+              ))}
+            </div>
+          </motion.div>
+
+          {previewTemplate && (
+            <PreviewModal
+              template={previewTemplate}
+              device={device}
+              onDeviceChange={setDevice}
+              onClose={() => setPreviewTemplate(null)}
+              onUse={() => {
+                setActiveTemplateId(previewTemplate.id)
+                setPreviewTemplate(null)
+              }}
+            />
+          )}
+        </div>
+      )}
+
+      {/* ── CUSTOMIZE ── */}
+      {tab === 'customize' && (
+        <motion.div
+          key="customize"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <CustomizationPanel activeTemplateId={activeTemplateId} />
+        </motion.div>
+      )}
+
+      {/* ── MODULES ── */}
+      {tab === 'modules' && (
+        <motion.div
+          key="modules"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <VerificationPanel />
+            <GuidebookPanel />
+            <MessagingPanel />
+            <UpsellsPanel />
+            <SmartAccessPanel />
+          </div>
+        </motion.div>
       )}
 
       {/* New guidebook drawer */}
@@ -440,7 +527,7 @@ export default function GuestExperiencePage() {
       </AppDrawer>
 
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#16a34a', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+        <div style={{ position: 'fixed', bottom: 24, right: 24, background: 'var(--status-success)', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
           {toast}
         </div>
       )}

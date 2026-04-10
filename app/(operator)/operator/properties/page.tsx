@@ -418,7 +418,7 @@ export default function PropertiesPage() {
                     {librarySearchResults.missing.map(prop => (
                       <div
                         key={prop.id}
-                        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 12px', background: 'var(--bg-card)', border: '1px solid #d9770630', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 12px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}
                         onClick={() => router.push(`/operator/properties/${prop.id}`)}
                       >
                         <AlertTriangle size={11} style={{ color: 'var(--status-warning)', flexShrink: 0 }} />

@@ -196,7 +196,7 @@ export default function MyGuestServicesPage() {
                 </div>
               )}
               {refundReviewIssue?.id === issue.id && (
-                <div style={{ padding: '10px 12px', borderRadius: 8, background: 'var(--bg-elevated)', border: '1px solid #d9770640', marginBottom: 10 }}>
+                <div style={{ padding: '10px 12px', borderRadius: 8, background: 'var(--bg-elevated)', border: '1px solid var(--border)', marginBottom: 10 }}>
                   <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>Refund Details</div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>
                     <span style={{ color: 'var(--text-subtle)' }}>Amount: </span>{fmtNok(issue.refund?.suggestedAmount ?? 0)}

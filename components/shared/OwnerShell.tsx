@@ -2,10 +2,11 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Menu, X, LogOut, Bell } from 'lucide-react'
+import { X, LogOut } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { OWNER_NAV } from '@/lib/nav'
 import { useRole } from '@/context/RoleContext'
+import ShellHeader from './ShellHeader'
 
 const ACCENT = '#2563eb'
 
@@ -197,31 +198,7 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
       )}
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {/* Top bar */}
-        <div className="shell-header" style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '0 20px', height: 52, borderBottom: '1px solid var(--border)',
-          background: 'var(--bg-surface)', flexShrink: 0, gap: 8,
-        }}>
-          <button
-            className="md:hidden"
-            onClick={() => setMobileOpen(true)}
-            style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}
-          >
-            <Menu size={20} />
-          </button>
-          <span className="md:hidden" style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>AfterStay</span>
-          <div className="hidden md:block" />
-          <button
-            aria-label="Notifications"
-            style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 6, borderRadius: 8, display: 'flex', alignItems: 'center' }}
-          >
-            <Bell size={18} strokeWidth={1.6} />
-            <span style={{ position: 'absolute', top: 2, right: 2, width: 16, height: 16, borderRadius: '50%', background: ACCENT, color: '#fff', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              3
-            </span>
-          </button>
-        </div>
+        <ShellHeader variant="full" onMobileOpen={() => setMobileOpen(true)} />
 
         <main className="shell-main" style={{ flex: 1, overflowY: 'auto', padding: 24, position: 'relative' }}>
           {children}
