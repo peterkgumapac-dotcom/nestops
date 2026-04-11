@@ -43,13 +43,13 @@ const PREVIEW_IMAGES = {
 
 /* ——— Colored icon config ———————————————————————————————————— */
 const GUIDE_ICONS: { icon: typeof ClipboardList; color: string; rgb: string }[] = [
-  { icon: ClipboardList, color: '#F5A623', rgb: '245,166,35' },
-  { icon: Plug,          color: '#4A9EFF', rgb: '74,158,255' },
-  { icon: KeyRound,      color: G.accent,  rgb: '91,107,47' },
-  { icon: ArrowUpDown,   color: '#A78BFA', rgb: '167,139,250' },
-  { icon: HelpCircle,    color: '#3ECF8E', rgb: '62,207,142' },
-  { icon: Map,           color: '#4A9EFF', rgb: '74,158,255' },
-  { icon: ShieldAlert,   color: '#FF4D4D', rgb: '255,77,77' },
+  { icon: ClipboardList, color: '#F5A623', rgb: '245,166,35' },   // info — amber
+  { icon: Plug,          color: '#4A9EFF', rgb: '74,158,255' },   // access — blue
+  { icon: KeyRound,      color: '#4A9EFF', rgb: '74,158,255' },   // access — blue
+  { icon: ArrowUpDown,   color: '#F5A623', rgb: '245,166,35' },   // info — amber
+  { icon: HelpCircle,    color: G.accent,  rgb: '91,107,47' },    // status — green
+  { icon: Map,           color: G.accent,  rgb: '91,107,47' },    // status — green
+  { icon: ShieldAlert,   color: '#FF4D4D', rgb: '255,77,77' },    // safety — red
 ]
 
 const GUIDE_DETAIL_CONTENT: Record<string, React.ReactNode> = {
@@ -509,7 +509,7 @@ export default function GuestPortalPreview() {
             className="gp-press"
             onClick={() => setTripPlannerState('questions')}
             style={{
-              width: '100%', padding: 18, borderRadius: 20,
+              width: '100%', padding: 18, borderRadius: 18,
               background: 'linear-gradient(135deg, #EEF2E2 0%, #D8E4B8 100%)',
               border: `1px solid ${G.accent}33`,
               boxShadow: `0 4px 16px ${G.accent}22`,
@@ -536,7 +536,7 @@ export default function GuestPortalPreview() {
 
         {tripPlannerState === 'questions' && (
           <div style={{
-            padding: 18, borderRadius: 20, marginBottom: 18,
+            padding: 18, borderRadius: 18, marginBottom: 18,
             background: G.surface, border: `1px solid ${G.border}`,
             boxShadow: G.shadowMd,
           }}>
@@ -617,7 +617,7 @@ export default function GuestPortalPreview() {
 
         {tripPlannerState === 'loading' && (
           <div style={{
-            padding: 40, borderRadius: 20, marginBottom: 18,
+            padding: 40, borderRadius: 18, marginBottom: 18,
             background: G.surface, border: `1px solid ${G.border}`,
             boxShadow: G.shadowMd,
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
@@ -631,7 +631,7 @@ export default function GuestPortalPreview() {
 
         {tripPlannerState === 'results' && (
           <div style={{
-            padding: 18, borderRadius: 20, marginBottom: 18,
+            padding: 18, borderRadius: 18, marginBottom: 18,
             background: G.surface, border: `1px solid ${G.border}`,
             boxShadow: G.shadowMd,
           }}>
@@ -794,7 +794,7 @@ export default function GuestPortalPreview() {
               cursor: 'pointer', textAlign: 'left',
             }}
           >
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', color: G.textMuted, textTransform: 'uppercase', marginBottom: 6 }}>WiFi Network</div>
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: G.textMuted, textTransform: 'uppercase', marginBottom: 6 }}>WiFi Network</div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: G.text }}>{ssid}</div>
               <Copy size={10} color={G.accent} />
@@ -809,7 +809,7 @@ export default function GuestPortalPreview() {
               cursor: 'pointer', textAlign: 'left',
             }}
           >
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', color: `${G.accent}99`, textTransform: 'uppercase', marginBottom: 6 }}>Door Code</div>
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: `${G.accent}99`, textTransform: 'uppercase', marginBottom: 6 }}>Door Code</div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: 22, fontWeight: 900, color: G.accent, letterSpacing: '0.14em' }}>4821</div>
               <span style={{ fontSize: 14 }}>🔑</span>
@@ -821,7 +821,7 @@ export default function GuestPortalPreview() {
             background: G.surface, borderRadius: 18, padding: 12, textAlign: 'center',
             boxShadow: G.shadowSm, border: `1px solid ${G.border}`,
           }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', color: G.textMuted, textTransform: 'uppercase', marginBottom: 4 }}>Check-in</div>
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: G.textMuted, textTransform: 'uppercase', marginBottom: 4 }}>Check-in</div>
             <div style={{ fontSize: 20, fontWeight: 900, color: G.text }}>15:00</div>
             <div style={{ fontSize: 9, fontWeight: 600, color: G.textMuted, marginTop: 2 }}>Sat Mar 22</div>
           </div>
@@ -829,7 +829,7 @@ export default function GuestPortalPreview() {
             background: G.surface, borderRadius: 18, padding: 12, textAlign: 'center',
             boxShadow: G.shadowSm, border: `1px solid ${G.border}`,
           }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', color: G.textMuted, textTransform: 'uppercase', marginBottom: 4 }}>Check-out</div>
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: G.textMuted, textTransform: 'uppercase', marginBottom: 4 }}>Check-out</div>
             <div style={{ fontSize: 20, fontWeight: 900, color: G.text }}>11:00</div>
             <div style={{ fontSize: 9, fontWeight: 600, color: G.textMuted, marginTop: 2 }}>Thu Mar 27</div>
           </div>
@@ -972,7 +972,7 @@ export default function GuestPortalPreview() {
       <div className="gp-press" style={{
         display: 'flex', alignItems: 'center', gap: 14,
         padding: 16, marginBottom: 20,
-        background: G.surface, borderRadius: 20,
+        background: G.surface, borderRadius: 18,
         boxShadow: G.shadowMd, border: `1px solid ${G.border}`,
       }}>
         <div style={{
@@ -1160,7 +1160,7 @@ export default function GuestPortalPreview() {
           const saved = savedRecs.has(globalIdx)
           return (
             <div key={globalIdx} className="gp-press" style={{
-              background: G.surface, borderRadius: 22,
+              background: G.surface, borderRadius: 18,
               boxShadow: G.shadowMd, overflow: 'hidden',
               border: `1px solid ${G.border}`,
               transition: 'border-color 0.15s',
@@ -1216,7 +1216,7 @@ export default function GuestPortalPreview() {
                   letterSpacing: '-0.01em', marginBottom: 4,
                 }}>{rec.name}</div>
                 <div style={{
-                  fontSize: 11, fontWeight: 600, color: G.textBody, lineHeight: 1.45,
+                  fontSize: 12, fontWeight: 600, color: G.textBody, lineHeight: 1.45,
                   marginBottom: 10,
                 }}>{rec.desc}</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -1317,7 +1317,7 @@ export default function GuestPortalPreview() {
           const added = addedServices.has(u.id)
           return (
             <div key={u.id} className="gp-press" style={{
-              background: G.surface, borderRadius: 20,
+              background: G.surface, borderRadius: 18,
               boxShadow: G.shadowMd, overflow: 'hidden',
               border: `1px solid ${G.border}`,
               transition: 'border-color 0.15s',
@@ -1327,7 +1327,7 @@ export default function GuestPortalPreview() {
                 backgroundImage: `url(${PREVIEW_IMAGES.services[i % PREVIEW_IMAGES.services.length].url})`,
                 backgroundSize: 'cover', backgroundPosition: 'center',
               }} />
-              <div style={{ padding: '12px 12px 14px' }}>
+              <div style={{ padding: '14px 16px' }}>
                 <div style={{
                   fontSize: 13, fontWeight: 800, color: G.text,
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -1381,7 +1381,7 @@ export default function GuestPortalPreview() {
 
       {/* Section 1 — Invite Your Group */}
       <div style={{
-        padding: 18, borderRadius: 20, marginBottom: 20,
+        padding: 18, borderRadius: 18, marginBottom: 20,
         background: G.surface, border: `1px solid ${G.border}`,
         boxShadow: G.shadowMd,
       }}>
