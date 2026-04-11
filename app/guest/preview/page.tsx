@@ -4,15 +4,20 @@ import {
   AlertTriangle, Phone, ChevronRight, ChevronUp, ChevronDown,
   Search, Heart, Check, Star, MapPin, Copy, Bookmark,
   ClipboardList, Plug, KeyRound, ArrowUpDown, HelpCircle,
-  MessageSquare, MessageCircle, Wrench, CircleHelp,
+  MessageSquare, MessageCircle, Wrench,
   Users, Map, ShieldAlert, CloudSun, ThumbsUp, ThumbsDown,
   Sparkles, Send, Link2, RefreshCw, Loader2,
+  Sun, Cloud, CloudRain, CloudSnow, CloudLightning, Wind, Droplets,
+  Plane, Plus,
+  Navigation2, Clock, Car,
 } from 'lucide-react'
 import { GUIDEBOOKS } from '@/lib/data/guidebooks'
 import { PROPERTIES } from '@/lib/data/properties'
 import { GUEST_VERIFICATIONS } from '@/lib/data/verification'
 import { UPSELL_RULES, PROPERTY_GROUPS } from '@/lib/data/upsells'
 import { G } from '@/lib/guest/theme'
+import { useGuestTheme, GuestThemeProvider } from '@/lib/guest/theme-context'
+import { STAY_FORECAST, type DayForecast } from '@/lib/data/weather'
 import GuestPortalShell, { GuestTab } from '@/components/guest/GuestPortalShell'
 import ReportIssueSheet from '@/components/guest/ReportIssueSheet'
 
@@ -38,13 +43,14 @@ const PREVIEW_IMAGES = {
     { url: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0afe?w=400&h=200&fit=crop', label: 'Car Rental' },
     { url: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400&h=200&fit=crop', label: 'Late Checkout' },
   ],
-  hostAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
+  hostAvatar: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=100&h=100&fit=crop',
 }
 
 /* ——— Colored icon config ———————————————————————————————————— */
 const GUIDE_ICONS: { icon: typeof ClipboardList; color: string; rgb: string }[] = [
   { icon: ClipboardList, color: '#F5A623', rgb: '245,166,35' },   // info — amber
   { icon: Plug,          color: '#4A9EFF', rgb: '74,158,255' },   // access — blue
+  { icon: Navigation2,   color: '#3ECF8E', rgb: '62,207,142' },   // transport — green
   { icon: KeyRound,      color: '#4A9EFF', rgb: '74,158,255' },   // access — blue
   { icon: ArrowUpDown,   color: '#F5A623', rgb: '245,166,35' },   // info — amber
   { icon: HelpCircle,    color: G.accent,  rgb: '91,107,47' },    // status — green
@@ -131,7 +137,7 @@ const GUIDE_DETAIL_CONTENT: Record<string, React.ReactNode> = {
       <div style={{ padding: '8px 12px', borderRadius: 10, background: `${G.red}0d` }}>
         <div style={{ fontWeight: 800, color: G.red, marginBottom: 4 }}>Emergency Numbers</div>
         <div>112 (police) · 113 (ambulance) · 110 (fire)</div>
-        <div style={{ marginTop: 4 }}>Host emergency: +47 900 12 345</div>
+        <div style={{ marginTop: 4 }}>Lev Collection emergency: +47 900 12 345</div>
       </div>
     </div>
   ),
@@ -143,11 +149,6 @@ const SUPPORT_ICONS: { icon: typeof MessageSquare; color: string; rgb: string }[
   { icon: Wrench,        color: '#FF4D4D', rgb: '255,77,77' },
 ]
 
-const QUICK_ACTIONS = [
-  { label: 'Help',    icon: CircleHelp,    color: '#FF4D4D', rgb: '255,77,77' },
-  { label: 'Add-ons', icon: ClipboardList, color: '#F5A623', rgb: '245,166,35' },
-  { label: 'Message', icon: MessageSquare, color: '#4A9EFF', rgb: '74,158,255' },
-]
 
 const DISCOVER_CATEGORIES = [
   { emoji: '✨', label: 'All',       key: 'all' },
@@ -233,27 +234,90 @@ const TRIP_PLANNER_RESULTS: Record<string, Array<{
   ],
 }
 
+/* ——— Departure & Getting There mock data ————————————————————— */
+const MOCK_DEPARTURE = {
+  flightTime: '14:30',
+  flightNumber: 'SK1473',
+  airline: 'SAS',
+  destination: 'Stockholm (ARN)',
+  terminal: 'T2',
+  gate: 'B22',
+  checkoutTime: '11:00',
+  travelMinutes: 60,
+  bufferHours: 2,
+  departureDate: 'Thu Mar 27',
+}
+
+const MOCK_ARRIVAL_FLIGHT = {
+  flightNumber: 'SK1472',
+  airline: 'SAS',
+  from: 'Stockholm (ARN)',
+  arrivalTime: '14:10',
+  terminal: 'T2',
+  gate: 'A15',
+  arrivalDate: 'Sat Mar 22',
+}
+
+const GETTING_THERE_DATA = {
+  airport: {
+    title: 'From Oslo Airport (Gardermoen)',
+    options: [
+      { mode: 'Flytoget (express train)', time: '20 min', cost: '~220 NOK', icon: '🚄' },
+      { mode: 'Airport bus (Flybussen)', time: '45 min', cost: '~190 NOK', icon: '🚌' },
+      { mode: 'Taxi / Uber', time: '~45 min', cost: '600–900 NOK', icon: '🚕' },
+    ],
+    lastMile: 'From Oslo S → Walk 12 min or Tram 17 to Grünerløkka (8 min)',
+  },
+  train: {
+    title: 'From Oslo Central Station (Oslo S)',
+    options: [
+      { mode: 'Walk via Karl Johans gate', time: '12 min', cost: 'Free', icon: '🚶' },
+      { mode: 'Tram 17 to Grünerløkka', time: '8 min', cost: '~40 NOK', icon: '🚋' },
+    ],
+    lastMile: null,
+  },
+  local: {
+    title: 'Driving to the property',
+    options: [
+      { mode: 'Street parking (metered)', time: '', cost: '30 NOK/hr', icon: '🅿️' },
+      { mode: 'Basement spot B14', time: '', cost: 'Included', icon: '🏠' },
+    ],
+    lastMile: null,
+  },
+}
+
+const PROPERTY_ADDRESS = 'Thorvald Meyers gate 15, 0555 Oslo'
+
 /* ——— Our Trip mock data ——————————————————————————————————— */
 const MOCK_GROUP = [
-  { name: 'Sarah', role: 'host' as const },
-  { name: 'Marcus', role: 'guest' as const },
-  { name: 'Lin', role: 'guest' as const },
+  { name: 'Emma',   role: 'host'  as const, avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Marcus', role: 'guest' as const, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Lin',    role: 'guest' as const, avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face' },
 ]
 
 const MOCK_TRIP_BOARD = [
-  { id: 'tb1', name: 'Maemo', cat: '🍽', addedBy: 'Sarah', source: 'trip-planner' as const, votes: { up: 3, down: 0 } },
-  { id: 'tb2', name: 'Fjord Kayaking', cat: '⛵', addedBy: 'Marcus', source: 'manual' as const, votes: { up: 2, down: 1 } },
-  { id: 'tb3', name: 'Bar Boca', cat: '🌙', addedBy: 'Lin', source: 'manual' as const, votes: { up: 1, down: 2 } },
-  { id: 'tb4', name: 'Nordmarka Trails', cat: '🌲', addedBy: 'Sarah', source: 'trip-planner' as const, votes: { up: 3, down: 0 } },
+  { id: 'tb1', name: 'Maemo', cat: '🍽', addedBy: 'Emma', source: 'trip-planner' as const, votes: { up: 3, down: 0 },
+    location: 'Grünerløkka · 1.2 km', pricePerPax: '~$180', desc: 'Michelin-starred Nordic tasting menu. Book 2 weeks ahead.' },
+  { id: 'tb2', name: 'Fjord Kayaking', cat: '⛵', addedBy: 'Marcus', source: 'manual' as const, votes: { up: 2, down: 1 },
+    location: 'Aker Brygge · 2.5 km', pricePerPax: '~$65', desc: '2-hour guided kayak on the Oslofjord. All gear included.' },
+  { id: 'tb3', name: 'Bar Boca', cat: '🌙', addedBy: 'Lin', source: 'manual' as const, votes: { up: 1, down: 2 },
+    location: 'Grünerløkka · 1.5 km', pricePerPax: '~$25', desc: 'Relaxed cocktail bar with a Latin-inspired menu.' },
+  { id: 'tb4', name: 'Nordmarka Trails', cat: '🌲', addedBy: 'Emma', source: 'trip-planner' as const, votes: { up: 3, down: 0 },
+    location: 'Frognerseteren · 6 km', pricePerPax: 'Free', desc: 'Forest trails 30 min from the city. Bring layers.' },
 ]
 
-const MOCK_CHECKLIST_INIT = [
-  { id: 'c1', task: 'Dishes washed', done: true, by: 'Marcus' as string | null },
-  { id: 'c2', task: 'Trash taken out', done: true, by: 'Lin' as string | null },
-  { id: 'c3', task: 'Windows closed', done: true, by: 'Sarah' as string | null },
-  { id: 'c4', task: 'Thermostat reset', done: false, by: null as string | null },
-  { id: 'c5', task: 'Keys on counter', done: false, by: null as string | null },
-  { id: 'c6', task: 'Towels in hamper', done: false, by: null as string | null },
+const MOCK_FLIGHTS = [
+  { id: 'f1', name: 'Emma',   flight: 'SK1472', airline: 'SAS',       from: 'Stockholm (ARN)', arriving: 'Mar 22, 15:30', terminal: 'T2', gate: 'A15', status: 'confirmed' as const },
+  { id: 'f2', name: 'Marcus', flight: 'DY1802', airline: 'Norwegian', from: 'Berlin (BER)',    arriving: 'Mar 22, 17:10', terminal: 'T1', gate: 'C08', status: 'confirmed' as const },
+  { id: 'f3', name: 'Lin',    flight: null,      airline: null,        from: null,              arriving: null,            terminal: null, gate: null,  status: 'pending'   as const },
+]
+
+const MOCK_PACKING_INIT = [
+  { id: 'p1', item: 'Sunscreen SPF 50', checked: true, addedBy: 'Emma' },
+  { id: 'p2', item: 'Power bank', checked: false, addedBy: 'Marcus' },
+  { id: 'p3', item: 'Hiking boots', checked: false, addedBy: 'Emma' },
+  { id: 'p4', item: 'Rain jacket', checked: true, addedBy: 'Lin' },
+  { id: 'p5', item: 'Scuba gear (rental confirmed)', checked: false, addedBy: 'Marcus' },
 ]
 
 /* ——— Guest recommendations mock data ——————————————————————— */
@@ -267,7 +331,16 @@ const GUEST_RECS = [
  * Guest Portal preview — photo-forward travel-app aesthetic.
  * Interactive: category filters, copy-to-clipboard, save/bookmark, press feedback.
  */
-export default function GuestPortalPreview() {
+export default function GuestPortalPreviewPage() {
+  return (
+    <GuestThemeProvider>
+      <GuestPortalPreview />
+    </GuestThemeProvider>
+  )
+}
+
+function GuestPortalPreview() {
+  const { theme: G } = useGuestTheme()
   const guidebook = GUIDEBOOKS[0]
   const property  = PROPERTIES.find(p => p.id === guidebook.propertyId)
   const verif     = GUEST_VERIFICATIONS.find(v => v.propertyId === guidebook.propertyId)
@@ -298,12 +371,28 @@ export default function GuestPortalPreview() {
   const [tripFirstTime, setTripFirstTime] = useState<string | null>(null)
   const [tripSaved, setTripSaved] = useState<Set<string>>(new Set())
 
+  // Getting There / Departure state
+  const [travelMode, setTravelMode] = useState<'airport' | 'train' | 'local' | null>(null)
+  const [gettingThereOpen, setGettingThereOpen] = useState(false)
+
+  // Discover search
+  const [discoverSearch, setDiscoverSearch] = useState('')
+
   // Our Trip state
   const [tripVotes, setTripVotes] = useState<Record<string, 'up' | 'down' | null>>({})
-  const [checklist, setChecklist] = useState(MOCK_CHECKLIST_INIT)
+  const [flightInput, setFlightInput] = useState('')
+  const [packingList, setPackingList] = useState(MOCK_PACKING_INIT)
+  const [packingInput, setPackingInput] = useState('')
 
   const guestName = verif?.guestName?.split(' ')[0] ?? 'Sarah'
   const ssid = `${guidebook.propertyName.replace(/\s+/g, '')}_5G`
+
+  // Computed leave-by time for departure nudge
+  const leaveByTime = (() => {
+    const [h, m] = MOCK_DEPARTURE.flightTime.split(':').map(Number)
+    const total = h * 60 + m - MOCK_DEPARTURE.travelMinutes - MOCK_DEPARTURE.bufferHours * 60
+    return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
+  })()
 
   // Hero carousel auto-advance
   useEffect(() => {
@@ -374,17 +463,29 @@ export default function GuestPortalPreview() {
     }))
   }, [])
 
-  const toggleChecklistItem = useCallback((id: string) => {
-    setChecklist(prev => prev.map(item =>
-      item.id === id
-        ? { ...item, done: !item.done, by: !item.done ? guestName : null }
-        : item
+  const togglePackingItem = useCallback((id: string) => {
+    setPackingList(prev => prev.map(item =>
+      item.id === id ? { ...item, checked: !item.checked } : item
     ))
-  }, [guestName])
+  }, [])
 
-  const filteredDiscover = activeCat === 'all'
+  const addPackingItem = useCallback(() => {
+    const trimmed = packingInput.trim()
+    if (!trimmed) return
+    setPackingList(prev => [
+      ...prev,
+      { id: `p${Date.now()}`, item: trimmed, checked: false, addedBy: guestName },
+    ])
+    setPackingInput('')
+  }, [packingInput, guestName])
+
+  const filteredDiscover = (activeCat === 'all'
     ? PREVIEW_IMAGES.discover
     : PREVIEW_IMAGES.discover.filter(r => r.cat === activeCat)
+  ).filter(r => !discoverSearch ||
+    r.name.toLowerCase().includes(discoverSearch.toLowerCase()) ||
+    r.desc.toLowerCase().includes(discoverSearch.toLowerCase())
+  )
 
   // ——— Home ————————————————————————————————————————————————
   const HomePanel = (
@@ -485,23 +586,62 @@ export default function GuestPortalPreview() {
           </div>
         </div>
 
-        {/* AI Concierge Search Bar */}
-        <button
-          className="gp-press"
-          onClick={() => showToast('AI Concierge coming soon')}
-          style={{
-            width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-            padding: '13px 18px', borderRadius: 999,
-            background: G.surfaceHover, border: `1px solid ${G.border}`,
-            cursor: 'pointer', marginBottom: 16,
-            fontFamily: 'inherit',
-          }}
-        >
-          <Search size={16} color={G.textMuted} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: G.textMuted }}>
-            Ask anything about your stay...
-          </span>
-        </button>
+        {/* Weather Forecast Card */}
+        <div style={{
+          padding: 16, borderRadius: 18, marginBottom: 16,
+          background: G.surface, border: `1px solid ${G.border}`,
+          boxShadow: G.shadowSm,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+            <Sun size={16} color="#F5A623" />
+            <span style={{ fontSize: 14, fontWeight: 800, color: G.text }}>Your Stay Weather</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: G.textMuted }}>· Oslo</span>
+          </div>
+          <HorizontalRail style={{ marginBottom: STAY_FORECAST.some(d => d.alert) ? 12 : 0, gap: 8 }}>
+            {STAY_FORECAST.map((day, i) => {
+              const isToday = i === 0
+              return (
+                <div key={day.date} style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center',
+                  gap: 6, padding: '8px 6px', borderRadius: 14,
+                  minWidth: 56, flexShrink: 0,
+                  background: isToday ? G.accentBg : G.surfaceHover,
+                  border: isToday ? `1.5px solid ${G.accent}44` : '1.5px solid transparent',
+                }}>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                    color: isToday ? G.accent : G.textMuted,
+                  }}>
+                    {isToday ? 'Today' : day.dayOfWeek}
+                  </span>
+                  <WeatherIcon condition={day.condition} size={22} />
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: G.text }}>{day.high}°</span>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: G.textMuted }}>{day.low}°</span>
+                  </div>
+                  {day.precipChance > 30 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Droplets size={10} color="#4A9EFF" />
+                      <span style={{ fontSize: 9, fontWeight: 700, color: '#4A9EFF' }}>{day.precipChance}%</span>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </HorizontalRail>
+          {STAY_FORECAST.filter(d => d.alert).map(day => (
+            <div key={day.date} style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '8px 12px', borderRadius: 10, marginTop: 8,
+              background: 'rgba(194,118,43,0.06)',
+            }}>
+              <AlertTriangle size={14} color="#C2762B" style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: 11, fontWeight: 600, color: G.textBody }}>
+                {day.dayOfWeek}: {day.alert}
+              </span>
+            </div>
+          ))}
+        </div>
 
         {/* Trip Planner — Inline Expansion */}
         {tripPlannerState === 'collapsed' && (
@@ -510,9 +650,9 @@ export default function GuestPortalPreview() {
             onClick={() => setTripPlannerState('questions')}
             style={{
               width: '100%', padding: 18, borderRadius: 18,
-              background: 'linear-gradient(135deg, #EEF2E2 0%, #D8E4B8 100%)',
+              background: G.accentBg,
               border: `1px solid ${G.accent}33`,
-              boxShadow: `0 4px 16px ${G.accent}22`,
+              boxShadow: `0 4px 16px ${G.accent}15`,
               cursor: 'pointer', textAlign: 'left',
               marginBottom: 18,
               fontFamily: 'inherit',
@@ -542,7 +682,19 @@ export default function GuestPortalPreview() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
               <Sparkles size={18} color={G.accent} />
-              <span style={{ fontSize: 16, fontWeight: 900, color: G.text }}>Plan Your Trip</span>
+              <span style={{ flex: 1, fontSize: 16, fontWeight: 900, color: G.text }}>Plan Your Trip</span>
+              <button className="gp-press-sm"
+                onClick={() => setTripPlannerState('collapsed')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  padding: '5px 12px', borderRadius: 10,
+                  background: G.surfaceHover, border: `1px solid ${G.border}`,
+                  fontSize: 11, fontWeight: 700, color: G.textMuted,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                <ChevronUp size={12} /> Minimize
+              </button>
             </div>
 
             {/* First time question */}
@@ -635,22 +787,21 @@ export default function GuestPortalPreview() {
             background: G.surface, border: `1px solid ${G.border}`,
             boxShadow: G.shadowMd,
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Sparkles size={18} color={G.accent} />
-                <span style={{ fontSize: 16, fontWeight: 900, color: G.text }}>Your Top Picks</span>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <Sparkles size={18} color={G.accent} />
+              <span style={{ flex: 1, fontSize: 16, fontWeight: 900, color: G.text }}>Your Top Picks</span>
               <button
                 className="gp-press-sm"
                 onClick={() => setTripPlannerState('collapsed')}
                 style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: 4,
+                  padding: '5px 12px', borderRadius: 10,
+                  background: G.surfaceHover, border: `1px solid ${G.border}`,
                   fontSize: 11, fontWeight: 700, color: G.textMuted,
-                  fontFamily: 'inherit',
+                  cursor: 'pointer', fontFamily: 'inherit',
                 }}
               >
-                Collapse <ChevronUp size={14} />
+                <ChevronUp size={12} /> Minimize
               </button>
             </div>
 
@@ -750,36 +901,138 @@ export default function GuestPortalPreview() {
           </div>
         )}
 
-        {/* Quick Actions — 3-col row */}
+        {/* Getting There — compact when travelMode set, full selector when not */}
         <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10,
-          marginBottom: 18,
+          borderRadius: 18, marginBottom: 18, overflow: 'hidden',
+          background: G.surface, border: `1px solid ${gettingThereOpen ? G.accent + '33' : G.border}`,
+          boxShadow: G.shadowSm, transition: 'border-color 0.15s',
         }}>
-          {QUICK_ACTIONS.map(qa => {
-            const QaIcon = qa.icon
-            return (
-              <button
-                key={qa.label}
-                className="gp-press"
-                onClick={qa.label === 'Add-ons' ? () => setTab('services') : () => showToast('Coming soon')}
-                style={{
-                  background: G.surface, border: `1px solid ${G.border}`,
-                  borderRadius: 18, padding: '14px 8px',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-                  cursor: 'pointer', boxShadow: G.shadowSm,
-                }}
-              >
-                <div style={{
-                  width: 36, height: 36, borderRadius: 12,
-                  background: `rgba(${qa.rgb}, 0.1)`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <QaIcon size={18} color={qa.color} />
+          <button
+            className="gp-press"
+            onClick={() => setGettingThereOpen(v => !v)}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+              padding: 14, cursor: 'pointer', fontFamily: 'inherit',
+              background: 'transparent', border: 'none',
+            }}
+          >
+            <div style={{
+              width: 44, height: 44, borderRadius: 14, flexShrink: 0,
+              background: 'rgba(62,207,142,0.08)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Navigation2 size={22} color="rgba(62,207,142,0.7)" />
+            </div>
+            <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 14, fontWeight: 800, color: G.text }}>Getting There</span>
+                {travelMode && !gettingThereOpen && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 999,
+                    background: G.accentBg, color: G.accent, border: `1px solid ${G.accent}33`,
+                  }}>
+                    {travelMode === 'airport' ? '✈️ Airport' : travelMode === 'train' ? '🚆 Train' : '🚗 Driving'}
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: G.textBody, marginTop: 2 }}>
+                {travelMode && !gettingThereOpen ? 'Tap to change transport mode' : 'Directions · Transport options'}
+              </div>
+            </div>
+            {gettingThereOpen
+              ? <ChevronDown size={18} color={G.accent} style={{ transform: 'rotate(180deg)', transition: 'transform 0.2s' }} />
+              : <ChevronRight size={18} color={G.textFaint} />
+            }
+          </button>
+          {gettingThereOpen && (
+            <div style={{
+              padding: '0 16px 16px',
+              fontSize: 12, fontWeight: 600, color: G.textBody,
+              lineHeight: 1.55,
+            }}>
+              {/* Pill selector */}
+              <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+                {([
+                  { key: 'airport' as const, label: '✈️ Airport' },
+                  { key: 'train' as const, label: '🚆 Train Station' },
+                  { key: 'local' as const, label: '🚗 Local / Driving' },
+                ]).map(opt => (
+                  <button
+                    key={opt.key}
+                    className="gp-press-sm"
+                    onClick={() => setTravelMode(travelMode === opt.key ? null : opt.key)}
+                    style={{
+                      padding: '7px 14px', borderRadius: 999,
+                      background: travelMode === opt.key ? G.accent : G.surfaceHover,
+                      color: travelMode === opt.key ? '#fff' : G.textBody,
+                      border: travelMode === opt.key ? 'none' : `1px solid ${G.border}`,
+                      fontSize: 12, fontWeight: 700,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                      transition: 'all 0.2s',
+                    }}
+                  >{opt.label}</button>
+                ))}
+              </div>
+
+              {/* Route cards */}
+              {travelMode && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: G.text, marginBottom: 4 }}>
+                    {GETTING_THERE_DATA[travelMode].title}
+                  </div>
+                  {GETTING_THERE_DATA[travelMode].options.map(opt => (
+                    <div key={opt.mode} style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '10px 12px', borderRadius: 12,
+                      background: G.surfaceHover, border: `1px solid ${G.border}`,
+                    }}>
+                      <span style={{ fontSize: 18 }}>{opt.icon}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: G.text }}>{opt.mode}</div>
+                        {opt.time && (
+                          <div style={{ fontSize: 11, fontWeight: 600, color: G.textMuted, marginTop: 2 }}>{opt.time}</div>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: G.accent }}>{opt.cost}</div>
+                    </div>
+                  ))}
+
+                  {/* Last mile */}
+                  {GETTING_THERE_DATA[travelMode].lastMile && (
+                    <div style={{
+                      padding: '10px 12px', borderRadius: 12,
+                      background: G.accentBg, border: `1px solid ${G.accent}22`,
+                      fontSize: 11, fontWeight: 600, color: G.textBody,
+                    }}>
+                      🚶 {GETTING_THERE_DATA[travelMode].lastMile}
+                    </div>
+                  )}
                 </div>
-                <span style={{ fontSize: 11, fontWeight: 800, color: G.text }}>{qa.label}</span>
-              </button>
-            )
-          })}
+              )}
+
+              {/* Address pin */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '10px 12px', borderRadius: 12,
+                background: G.surfaceHover, border: `1px solid ${G.border}`,
+              }}>
+                <MapPin size={14} color={G.accent} />
+                <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: G.text }}>{PROPERTY_ADDRESS}</span>
+                <button
+                  className="gp-press-sm"
+                  onClick={() => copyToClipboard(PROPERTY_ADDRESS, 'Address')}
+                  style={{
+                    padding: '4px 10px', borderRadius: 8,
+                    background: G.accentBg, border: 'none',
+                    fontSize: 10, fontWeight: 700, color: G.accent,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  <Copy size={10} /> Copy
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Compact Quick Access — 2×2 grid */}
@@ -893,6 +1146,129 @@ export default function GuestPortalPreview() {
           }}>{wifiConnected ? 'Connected ✓' : 'Connect'}</div>
         </button>
 
+        {/* Travel Reminders — shows when any travelMode is set */}
+        {travelMode !== null && (() => {
+          const modeData = GETTING_THERE_DATA[travelMode]
+          const firstOption = modeData.options[0]
+          return (
+            <div style={{
+              padding: 16, borderRadius: 18, marginBottom: 18,
+              background: G.surface, border: `1px solid ${G.border}`,
+              boxShadow: G.shadowMd,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                <MapPin size={16} color={G.accent} />
+                <span style={{ fontSize: 14, fontWeight: 800, color: G.text }}>Travel Reminders</span>
+              </div>
+
+              {/* Arrival section */}
+              <div style={{
+                padding: 12, borderRadius: 12, marginBottom: 10,
+                background: G.surfaceHover,
+              }}>
+                <div style={{
+                  fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', color: G.accent,
+                  textTransform: 'uppercase', marginBottom: 6,
+                }}>ARRIVING · {MOCK_ARRIVAL_FLIGHT.arrivalDate}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: G.text, marginBottom: 4 }}>
+                  {modeData.title} → Property
+                </div>
+                {firstOption && (
+                  <div style={{ fontSize: 11, fontWeight: 600, color: G.textBody, marginBottom: 4 }}>
+                    Recommended: {firstOption.mode}{firstOption.time ? ` (${firstOption.time})` : ''}
+                  </div>
+                )}
+                {travelMode === 'airport' && (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '8px 10px', borderRadius: 10, marginTop: 8,
+                    background: `${G.accent}0a`, border: `1px solid ${G.accent}1a`,
+                  }}>
+                    <Plane size={14} color={G.accent} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, fontWeight: 800, color: G.text }}>
+                        {MOCK_ARRIVAL_FLIGHT.airline} {MOCK_ARRIVAL_FLIGHT.flightNumber}
+                      </div>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: G.textMuted }}>
+                        {MOCK_ARRIVAL_FLIGHT.from} → Oslo · Arr {MOCK_ARRIVAL_FLIGHT.arrivalTime}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: G.textMuted }}>{MOCK_ARRIVAL_FLIGHT.terminal} · Gate {MOCK_ARRIVAL_FLIGHT.gate}</div>
+                    </div>
+                  </div>
+                )}
+                <div style={{ fontSize: 11, fontWeight: 600, color: G.textMuted, marginTop: 6 }}>
+                  Check-in from 15:00
+                </div>
+              </div>
+
+              {/* Departure section */}
+              <div style={{
+                padding: 12, borderRadius: 12, marginBottom: 10,
+                background: G.surfaceHover,
+              }}>
+                <div style={{
+                  fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', color: G.textMuted,
+                  textTransform: 'uppercase', marginBottom: 6,
+                }}>DEPARTING · {MOCK_DEPARTURE.departureDate}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: G.text, marginBottom: 4 }}>
+                  Property → {travelMode === 'airport' ? MOCK_DEPARTURE.destination.split('(')[0].trim() : modeData.title.replace(/^From /, '')}
+                </div>
+                {travelMode === 'airport' && (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '8px 10px', borderRadius: 10, marginTop: 4,
+                    background: `${G.accent}0a`, border: `1px solid ${G.accent}1a`,
+                  }}>
+                    <Plane size={14} color={G.accent} style={{ transform: 'rotate(45deg)' }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, fontWeight: 800, color: G.text }}>
+                        {MOCK_DEPARTURE.airline} {MOCK_DEPARTURE.flightNumber}
+                      </div>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: G.textMuted }}>
+                        Oslo → {MOCK_DEPARTURE.destination} · Dep {MOCK_DEPARTURE.flightTime}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: G.textMuted }}>{MOCK_DEPARTURE.terminal} · Gate {MOCK_DEPARTURE.gate}</div>
+                    </div>
+                  </div>
+                )}
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  marginTop: 8,
+                }}>
+                  <AlertTriangle size={12} color={G.amber} />
+                  <span style={{ fontSize: 12, fontWeight: 800, color: G.amber }}>
+                    Leave by {leaveByTime} at the latest
+                  </span>
+                </div>
+              </div>
+
+              {/* Airport transfer upsell — airport mode only */}
+              {travelMode === 'airport' && (
+                <button
+                  className="gp-press"
+                  onClick={() => toggleAddService('ur3')}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    padding: '12px 20px', borderRadius: 999,
+                    background: addedServices.has('ur3') ? G.accentBg : G.accent,
+                    color: addedServices.has('ur3') ? G.accent : '#fff',
+                    border: addedServices.has('ur3') ? `1px solid ${G.accent}44` : 'none',
+                    fontSize: 13, fontWeight: 800, cursor: 'pointer',
+                    fontFamily: 'inherit', transition: 'all 0.2s',
+                  }}
+                >
+                  <Car size={16} />
+                  {addedServices.has('ur3') ? 'Transfer Added ✓' : 'Book Airport Transfer — 850 NOK'}
+                </button>
+              )}
+            </div>
+          )
+        })()}
+
         {/* Upsell photo cards */}
         {upsells.length > 0 && (
           <>
@@ -949,6 +1325,68 @@ export default function GuestPortalPreview() {
           </>
         )}
 
+        {/* Post-Checkout Retention CTA */}
+        <div style={{
+          padding: 20, borderRadius: 18, marginTop: 8,
+          background: G.accentBg,
+          border: `1px solid ${G.accent}44`,
+          textAlign: 'center',
+        }}>
+          <div style={{ fontSize: 20 }}>🎉</div>
+          <div style={{ fontSize: 16, fontWeight: 900, color: G.text, marginTop: 8 }}>
+            Enjoying AfterStay?
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: G.textBody, margin: '8px 0 16px' }}>
+            Keep the app and plan your next trip with the same ease.
+          </div>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+            {/* Apple App Store badge */}
+            <button
+              className="gp-press"
+              onClick={() => showToast('Opening App Store...')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '8px 14px 8px 10px', borderRadius: 10,
+                background: '#000', color: '#fff', border: '1px solid rgba(255,255,255,0.15)',
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              <svg width="20" height="24" viewBox="0 0 20 24" fill="white">
+                <path d="M16.52 12.46c-.03-2.85 2.33-4.22 2.44-4.29-1.33-1.94-3.4-2.21-4.13-2.24-1.76-.18-3.43 1.04-4.32 1.04-.89 0-2.27-1.01-3.73-.99-1.92.03-3.69 1.12-4.68 2.84-2 3.46-.51 8.59 1.43 11.4.95 1.38 2.08 2.92 3.57 2.87 1.43-.06 1.97-.93 3.7-.93 1.73 0 2.22.93 3.73.9 1.54-.03 2.52-1.4 3.46-2.79 1.09-1.6 1.54-3.15 1.57-3.23-.03-.01-3.01-1.16-3.04-4.58zM13.69 3.97c.79-.96 1.32-2.29 1.17-3.62-1.13.05-2.5.75-3.31 1.7-.73.84-1.37 2.19-1.2 3.48 1.26.1 2.55-.64 3.34-1.56z"/>
+              </svg>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontSize: 8, fontWeight: 500, lineHeight: 1, letterSpacing: '0.02em' }}>Download on the</div>
+                <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.01em' }}>App Store</div>
+              </div>
+            </button>
+            {/* Google Play badge */}
+            <button
+              className="gp-press"
+              onClick={() => showToast('Opening Google Play...')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '8px 14px 8px 10px', borderRadius: 10,
+                background: '#000', color: '#fff', border: '1px solid rgba(255,255,255,0.15)',
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              <svg width="20" height="22" viewBox="0 0 20 22" fill="none">
+                <path d="M1.22.97L11.53 11 1.22 21.03c-.14-.18-.22-.42-.22-.7V1.67c0-.28.08-.52.22-.7z" fill="#4285F4"/>
+                <path d="M14.97 7.56L11.53 11l3.44 3.44 3.88-2.2c.66-.38.66-1.1 0-1.48l-3.88-2.2z" fill="#FBBC04"/>
+                <path d="M1.22 21.03c.28.36.72.52 1.16.3l13.03-7.33L11.53 11 1.22 21.03z" fill="#EA4335"/>
+                <path d="M1.22.97c-.44-.22-.88-.06-1.16.3L11.53 11l3.88-3.44L2.38.67c-.44-.22-.88-.06-1.16.3z" fill="#34A853"/>
+              </svg>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontSize: 8, fontWeight: 500, lineHeight: 1, letterSpacing: '0.02em' }}>GET IT ON</div>
+                <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.01em' }}>Google Play</div>
+              </div>
+            </button>
+          </div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: G.textMuted, marginTop: 12 }}>
+            Plan your next adventure →
+          </div>
+        </div>
+
         {/* Spacer at bottom for FAB clearance */}
         <div style={{ height: 60 }} />
       </div>
@@ -959,6 +1397,7 @@ export default function GuestPortalPreview() {
   const guideRows = [
     { t: 'House Rules',        s: 'Quiet hours · Pets · Extra guests' },
     { t: 'Appliances',         s: 'Oven · Washer · TV · Coffee' },
+    { t: 'Getting There',      s: 'Directions · Transport options' },
     { t: 'Access & Parking',   s: 'Gate codes · Building entry' },
     { t: 'Checkout Guide',     s: 'Checklist · 11:00 AM · Thu Mar 27' },
     { t: 'FAQs',               s: 'Common questions · Quick answers' },
@@ -986,7 +1425,7 @@ export default function GuestPortalPreview() {
             Welcome to {guidebook.propertyName}!
           </div>
           <div style={{ fontSize: 12, fontWeight: 600, color: G.textBody, marginTop: 2 }}>
-            I&apos;m Erik, your host. Reach out anytime!
+            Lev Collection — your hosts. Reach out anytime!
           </div>
         </div>
         <ChevronRight size={18} color={G.textFaint} />
@@ -1049,7 +1488,100 @@ export default function GuestPortalPreview() {
                 : <ChevronRight size={18} color={G.textFaint} />
               }
             </button>
-            {isExpanded && detail && (
+            {isExpanded && row.t === 'Getting There' && (
+              <div style={{
+                padding: '14px 16px 16px',
+                background: G.surfaceHover,
+                borderRadius: '0 0 18px 18px',
+                border: `1px solid ${G.accent}33`,
+                borderTop: 'none',
+                fontSize: 12, fontWeight: 600, color: G.textBody,
+                lineHeight: 1.55,
+              }}>
+                {/* Pill selector */}
+                <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+                  {([
+                    { key: 'airport' as const, label: '✈️ Airport' },
+                    { key: 'train' as const, label: '🚆 Train Station' },
+                    { key: 'local' as const, label: '🚗 Local / Driving' },
+                  ]).map(opt => (
+                    <button
+                      key={opt.key}
+                      className="gp-press-sm"
+                      onClick={() => setTravelMode(travelMode === opt.key ? null : opt.key)}
+                      style={{
+                        padding: '7px 14px', borderRadius: 999,
+                        background: travelMode === opt.key ? G.accent : G.surface,
+                        color: travelMode === opt.key ? '#fff' : G.textBody,
+                        border: travelMode === opt.key ? 'none' : `1px solid ${G.border}`,
+                        fontSize: 12, fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'inherit',
+                        transition: 'all 0.2s',
+                      }}
+                    >{opt.label}</button>
+                  ))}
+                </div>
+
+                {/* Route cards */}
+                {travelMode && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: G.text, marginBottom: 4 }}>
+                      {GETTING_THERE_DATA[travelMode].title}
+                    </div>
+                    {GETTING_THERE_DATA[travelMode].options.map(opt => (
+                      <div key={opt.mode} style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '10px 12px', borderRadius: 12,
+                        background: G.surface, border: `1px solid ${G.border}`,
+                      }}>
+                        <span style={{ fontSize: 18 }}>{opt.icon}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: G.text }}>{opt.mode}</div>
+                          {opt.time && (
+                            <div style={{ fontSize: 11, fontWeight: 600, color: G.textMuted, marginTop: 2 }}>{opt.time}</div>
+                          )}
+                        </div>
+                        <div style={{ fontSize: 12, fontWeight: 800, color: G.accent }}>{opt.cost}</div>
+                      </div>
+                    ))}
+
+                    {/* Last mile */}
+                    {GETTING_THERE_DATA[travelMode].lastMile && (
+                      <div style={{
+                        padding: '10px 12px', borderRadius: 12,
+                        background: G.accentBg, border: `1px solid ${G.accent}22`,
+                        fontSize: 11, fontWeight: 600, color: G.textBody,
+                      }}>
+                        🚶 {GETTING_THERE_DATA[travelMode].lastMile}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Address pin */}
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '10px 12px', borderRadius: 12,
+                  background: G.surface, border: `1px solid ${G.border}`,
+                }}>
+                  <MapPin size={14} color={G.accent} />
+                  <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: G.text }}>{PROPERTY_ADDRESS}</span>
+                  <button
+                    className="gp-press-sm"
+                    onClick={() => copyToClipboard(PROPERTY_ADDRESS, 'Address')}
+                    style={{
+                      padding: '4px 10px', borderRadius: 8,
+                      background: G.accentBg, border: 'none',
+                      fontSize: 10, fontWeight: 700, color: G.accent,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                  >
+                    <Copy size={10} /> Copy
+                  </button>
+                </div>
+              </div>
+            )}
+            {isExpanded && row.t !== 'Getting There' && detail && (
               <div style={{
                 padding: '14px 16px 16px',
                 background: G.surfaceHover,
@@ -1078,29 +1610,37 @@ export default function GuestPortalPreview() {
         background: G.surface, border: `1px solid ${G.border}`,
         boxShadow: G.shadowSm,
       }}>
-        <CloudSun size={20} color="#F5A623" />
+        <WeatherIcon condition={STAY_FORECAST[0].condition} size={20} />
         <span style={{ fontSize: 13, fontWeight: 700, color: G.text }}>Oslo</span>
         <span style={{ fontSize: 13, fontWeight: 600, color: G.textMuted }}>·</span>
-        <span style={{ fontSize: 13, fontWeight: 800, color: G.text }}>12°C</span>
+        <span style={{ fontSize: 13, fontWeight: 800, color: G.text }}>{STAY_FORECAST[0].high}°C</span>
         <span style={{ fontSize: 13, fontWeight: 600, color: G.textMuted }}>·</span>
-        <span style={{ fontSize: 12, fontWeight: 600, color: G.textMuted }}>Partly cloudy</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: G.textMuted }}>{CONDITION_LABELS[STAY_FORECAST[0].condition]}</span>
       </div>
 
-      {/* Search bar */}
-      <div className="gp-press" style={{
+      {/* Search bar — functional input */}
+      <div style={{
         display: 'flex', alignItems: 'center', gap: 10,
         padding: '12px 16px', borderRadius: 999,
-        background: G.surfaceHover, cursor: 'pointer',
+        background: G.surfaceHover,
         marginBottom: 16,
       }}>
-        <Search size={16} color={G.textMuted} />
-        <span style={{ fontSize: 14, fontWeight: 600, color: G.textMuted }}>
-          Search places, restaurants...
-        </span>
+        <Search size={16} color={G.textMuted} style={{ flexShrink: 0 }} />
+        <input
+          type="text"
+          placeholder="Search places, restaurants..."
+          value={discoverSearch}
+          onChange={e => setDiscoverSearch(e.target.value)}
+          style={{
+            flex: 1, background: 'transparent', border: 'none', outline: 'none',
+            fontSize: 14, fontWeight: 600, color: G.text,
+            fontFamily: 'inherit',
+          }}
+        />
       </div>
 
       {/* Category pills — functional filter */}
-      <HorizontalRail style={{ marginBottom: 18 }}>
+      <HorizontalRail style={{ marginBottom: 18, scrollSnapType: 'x proximity' }}>
         {DISCOVER_CATEGORIES.map(c => {
           const active = activeCat === c.key
           return (
@@ -1109,8 +1649,8 @@ export default function GuestPortalPreview() {
               className="gp-cat-pill"
               onClick={() => setActiveCat(c.key)}
               style={{
-                flexShrink: 0,
-                padding: '8px 18px', borderRadius: 999,
+                flexShrink: 0, scrollSnapAlign: 'start',
+                padding: '8px 14px', borderRadius: 999,
                 background: active ? G.accent : G.surface,
                 color: active ? '#fff' : G.textBody,
                 border: active ? 'none' : `1.5px solid ${G.border}`,
@@ -1128,10 +1668,10 @@ export default function GuestPortalPreview() {
         })}
       </HorizontalRail>
 
-      {/* Map View Stub */}
+      {/* Map View — opens Google Maps */}
       <button
         className="gp-press"
-        onClick={() => showToast('Map view coming soon')}
+        onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(PROPERTY_ADDRESS)}`, '_blank')}
         style={{
           width: '100%', height: 100, borderRadius: 18, marginBottom: 18,
           background: G.surfaceHover, border: `1px solid ${G.border}`,
@@ -1139,8 +1679,8 @@ export default function GuestPortalPreview() {
           cursor: 'pointer', fontFamily: 'inherit',
         }}
       >
-        <MapPin size={24} color={G.textMuted} />
-        <span style={{ fontSize: 12, fontWeight: 700, color: G.textMuted }}>View on map →</span>
+        <MapPin size={24} color={G.accent} />
+        <span style={{ fontSize: 12, fontWeight: 700, color: G.accent }}>Open in Maps →</span>
       </button>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
@@ -1371,7 +1911,6 @@ export default function GuestPortalPreview() {
   )
 
   // ——— Our Trip ————————————————————————————————————————————————
-  const checklistDoneCount = checklist.filter(c => c.done).length
   const TripPanel = (
     <div style={{ padding: '20px 20px 0' }}>
       <div style={{
@@ -1388,12 +1927,12 @@ export default function GuestPortalPreview() {
         <div style={{ fontSize: 15, fontWeight: 800, color: G.text, marginBottom: 4 }}>Invite your group</div>
         <div style={{ fontSize: 12, fontWeight: 600, color: G.textBody, marginBottom: 14 }}>Share access with everyone staying</div>
 
-        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
           <input
             type="text"
             placeholder="Name"
             style={{
-              flex: 1, padding: '10px 14px', borderRadius: 12,
+              width: '100%', padding: '10px 14px', borderRadius: 12,
               background: G.surfaceHover, border: `1px solid ${G.border}`,
               color: G.text, fontSize: 13, fontWeight: 500,
               fontFamily: 'inherit', outline: 'none',
@@ -1403,7 +1942,7 @@ export default function GuestPortalPreview() {
             type="text"
             placeholder="Email or phone"
             style={{
-              flex: 1.5, padding: '10px 14px', borderRadius: 12,
+              width: '100%', padding: '10px 14px', borderRadius: 12,
               background: G.surfaceHover, border: `1px solid ${G.border}`,
               color: G.text, fontSize: 13, fontWeight: 500,
               fontFamily: 'inherit', outline: 'none',
@@ -1460,14 +1999,15 @@ export default function GuestPortalPreview() {
         {MOCK_GROUP.map(m => (
           <div key={m.name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
             <div style={{ position: 'relative' }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: '50%',
-                background: `linear-gradient(135deg, ${G.accentBg}, ${G.accent}33)`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 18, fontWeight: 800, color: G.accent,
-              }}>
-                {m.name[0]}
-              </div>
+              <img
+                src={m.avatar}
+                alt={m.name}
+                style={{
+                  width: 44, height: 44, borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: `2px solid ${m.role === 'host' ? G.accent : G.border}`,
+                }}
+              />
               {m.role === 'host' && (
                 <span style={{
                   position: 'absolute', bottom: -2, right: -4,
@@ -1481,7 +2021,147 @@ export default function GuestPortalPreview() {
         ))}
       </div>
 
-      {/* Section 3 — Trip Board with Voting */}
+      {/* Section 3 — Flights */}
+      <SectionTitle>Flights</SectionTitle>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+        {MOCK_FLIGHTS.map(f => (
+          <div key={f.id} style={{
+            padding: 14, borderRadius: 18,
+            background: G.surface, border: `1px solid ${G.border}`,
+            boxShadow: G.shadowSm,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: f.status === 'confirmed' ? 8 : 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Plane size={16} color={f.status === 'confirmed' ? G.accent : G.textMuted} />
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: G.text }}>
+                    {f.flight ? `${f.name} · ${f.airline} ${f.flight}` : f.name}
+                  </div>
+                  {f.status === 'confirmed' ? (
+                    <div style={{ fontSize: 11, fontWeight: 600, color: G.textBody, marginTop: 2 }}>
+                      {f.from} → Oslo · Arriving {f.arriving}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 11, fontWeight: 600, color: G.textMuted, marginTop: 2 }}>
+                      No flight added yet
+                    </div>
+                  )}
+                </div>
+              </div>
+              <span style={{
+                fontSize: 9, fontWeight: 800, padding: '3px 8px', borderRadius: 8,
+                background: f.status === 'confirmed' ? G.accentBg : G.surfaceHover,
+                color: f.status === 'confirmed' ? G.accent : G.textMuted,
+                textTransform: 'uppercase', letterSpacing: '0.04em',
+              }}>{f.status}</span>
+            </div>
+            {f.status === 'confirmed' && f.terminal && (
+              <div style={{
+                display: 'flex', gap: 8, marginLeft: 26,
+              }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
+                  background: G.surfaceHover, color: G.textMuted,
+                }}>Terminal {f.terminal}</span>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
+                  background: G.surfaceHover, color: G.textMuted,
+                }}>Gate {f.gate}</span>
+              </div>
+            )}
+          </div>
+        ))}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            type="text"
+            placeholder="Enter flight number"
+            value={flightInput}
+            onChange={e => setFlightInput(e.target.value)}
+            style={{
+              flex: 1, padding: '10px 14px', borderRadius: 12,
+              background: G.surfaceHover, border: `1px solid ${G.border}`,
+              color: G.text, fontSize: 13, fontWeight: 500,
+              fontFamily: 'inherit', outline: 'none',
+            }}
+          />
+          <button
+            className="gp-press-sm"
+            onClick={() => { if (flightInput.trim()) { showToast('Flight added ✓'); setFlightInput('') } }}
+            style={{
+              padding: '10px 18px', borderRadius: 12,
+              background: G.accent, color: '#fff', border: 'none',
+              fontSize: 13, fontWeight: 800, cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >Add</button>
+        </div>
+      </div>
+
+      {/* Section 4 — Packing & Reminders */}
+      <SectionTitle>Packing &amp; Reminders</SectionTitle>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
+        {packingList.map(item => (
+          <button
+            key={item.id}
+            className="gp-press"
+            onClick={() => togglePackingItem(item.id)}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+              padding: '12px 14px', borderRadius: 14,
+              background: G.surface, border: `1px solid ${G.border}`,
+              cursor: 'pointer', fontFamily: 'inherit',
+              opacity: item.checked ? 0.7 : 1,
+            }}
+          >
+            <div style={{
+              width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+              background: item.checked ? G.accent : 'transparent',
+              border: item.checked ? 'none' : `2px solid ${G.border}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {item.checked && <Check size={14} color="#fff" strokeWidth={3} />}
+            </div>
+            <span style={{
+              flex: 1, textAlign: 'left',
+              fontSize: 13, fontWeight: 700,
+              color: item.checked ? G.textMuted : G.text,
+              textDecoration: item.checked ? 'line-through' : 'none',
+            }}>{item.item}</span>
+            <span style={{ fontSize: 10, fontWeight: 600, color: G.textMuted }}>
+              {item.addedBy}
+            </span>
+          </button>
+        ))}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            type="text"
+            placeholder="Add a reminder..."
+            value={packingInput}
+            onChange={e => setPackingInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') addPackingItem() }}
+            style={{
+              flex: 1, padding: '10px 14px', borderRadius: 12,
+              background: G.surfaceHover, border: `1px solid ${G.border}`,
+              color: G.text, fontSize: 13, fontWeight: 500,
+              fontFamily: 'inherit', outline: 'none',
+            }}
+          />
+          <button
+            className="gp-press-sm"
+            onClick={addPackingItem}
+            style={{
+              width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+              background: G.accent, color: '#fff', border: 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            <Plus size={18} />
+          </button>
+        </div>
+      </div>
+
+      {/* Section 5 — Trip Board with Voting */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <SectionTitle>Trip Board</SectionTitle>
         <span style={{ fontSize: 11, fontWeight: 600, color: G.textMuted }}>{MOCK_TRIP_BOARD.length} items</span>
@@ -1499,12 +2179,23 @@ export default function GuestPortalPreview() {
             background: G.surface, border: `1px solid ${G.border}`,
             boxShadow: G.shadowSm,
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <span style={{ fontSize: 16 }}>{item.cat}</span>
               <span style={{ fontSize: 14, fontWeight: 800, color: G.text }}>{item.name}</span>
             </div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: G.textBody, marginBottom: 10 }}>
-              {item.source === 'trip-planner' ? 'From Trip Planner' : `Added by ${item.addedBy}`}
+            {/* Location + price row */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: G.textMuted }}>
+                <MapPin size={11} /> {item.location}
+              </div>
+              <span style={{
+                fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 8,
+                background: G.accentBg, color: G.accent,
+              }}>{item.pricePerPax}</span>
+            </div>
+            {/* Description */}
+            <div style={{ fontSize: 12, fontWeight: 600, color: G.textBody, marginBottom: 10, lineHeight: 1.4 }}>
+              {item.desc}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <button
@@ -1561,61 +2252,6 @@ export default function GuestPortalPreview() {
           marginBottom: 24,
         }}
       >+ Add a suggestion</button>
-
-      {/* Section 4 — Collaborative Checkout Checklist */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <SectionTitle>Checkout Checklist</SectionTitle>
-        <span style={{ fontSize: 11, fontWeight: 600, color: G.textMuted }}>
-          {checklistDoneCount} of {checklist.length} done
-        </span>
-      </div>
-
-      {/* Progress bar */}
-      <div style={{
-        height: 6, borderRadius: 3, marginBottom: 14,
-        background: G.surfaceHover, overflow: 'hidden',
-      }}>
-        <div style={{
-          width: `${(checklistDoneCount / checklist.length) * 100}%`,
-          height: '100%', background: G.accent, borderRadius: 3,
-          transition: 'width 0.3s',
-        }} />
-      </div>
-
-      {checklist.map(item => (
-        <button
-          key={item.id}
-          className="gp-press"
-          onClick={() => toggleChecklistItem(item.id)}
-          style={{
-            width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-            padding: '12px 14px', marginBottom: 8, borderRadius: 14,
-            background: G.surface, border: `1px solid ${G.border}`,
-            cursor: 'pointer', fontFamily: 'inherit',
-            opacity: item.done ? 0.7 : 1,
-          }}
-        >
-          <div style={{
-            width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-            background: item.done ? G.accent : 'transparent',
-            border: item.done ? 'none' : `2px solid ${G.border}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            {item.done && <Check size={14} color="#fff" strokeWidth={3} />}
-          </div>
-          <span style={{
-            flex: 1, textAlign: 'left',
-            fontSize: 13, fontWeight: 700,
-            color: item.done ? G.textMuted : G.text,
-            textDecoration: item.done ? 'line-through' : 'none',
-          }}>{item.task}</span>
-          {item.done && item.by && (
-            <span style={{ fontSize: 10, fontWeight: 600, color: G.textMuted }}>
-              ✓ by {item.by}
-            </span>
-          )}
-        </button>
-      ))}
     </div>
   )
 
@@ -1798,68 +2434,161 @@ function PhoneFrame({ children, toast, fab }: { children: React.ReactNode; toast
           Guest Portal Preview
         </div>
 
-        <div
-          className="phone-frame-bezel"
-          style={{
-            position: 'relative',
-            width: 390, height: 844,
-            borderRadius: 48,
-            background: '#1c1d2a',
-            border: '3px solid #2a2b3a',
-            boxShadow: '0 24px 80px rgba(0,0,0,0.5), 0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
-            overflow: 'hidden',
-            display: 'flex', flexDirection: 'column',
-          }}
-        >
-          {/* Status bar */}
+        {/* ── Realistic iPhone 16 Pro Max frame ── */}
+        <div style={{ position: 'relative' }}>
+          {/* Side buttons — Left */}
+          {/* Silent switch */}
           <div style={{
-            height: 54, flexShrink: 0,
-            background: G.bg,
-            display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
-            padding: '0 28px 6px',
-          }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: G.text }}>9:41</span>
+            position: 'absolute', left: -2, top: 120,
+            width: 4, height: 28, borderRadius: 2,
+            background: 'linear-gradient(180deg, #3a3b4a 0%, #2a2b3a 100%)',
+            boxShadow: '-1px 0 3px rgba(0,0,0,0.4)',
+          }} />
+          {/* Volume Up */}
+          <div style={{
+            position: 'absolute', left: -2, top: 178,
+            width: 4, height: 56, borderRadius: 2,
+            background: 'linear-gradient(180deg, #3a3b4a 0%, #2a2b3a 100%)',
+            boxShadow: '-1px 0 3px rgba(0,0,0,0.4)',
+          }} />
+          {/* Volume Down */}
+          <div style={{
+            position: 'absolute', left: -2, top: 248,
+            width: 4, height: 56, borderRadius: 2,
+            background: 'linear-gradient(180deg, #3a3b4a 0%, #2a2b3a 100%)',
+            boxShadow: '-1px 0 3px rgba(0,0,0,0.4)',
+          }} />
+          {/* Side button — Right (Power) */}
+          <div style={{
+            position: 'absolute', right: -2, top: 200,
+            width: 4, height: 72, borderRadius: 2,
+            background: 'linear-gradient(180deg, #3a3b4a 0%, #2a2b3a 100%)',
+            boxShadow: '1px 0 3px rgba(0,0,0,0.4)',
+          }} />
+
+          {/* Outer titanium shell */}
+          <div
+            className="phone-frame-bezel"
+            style={{
+              position: 'relative',
+              width: 446, height: 948,
+              borderRadius: 58,
+              background: 'linear-gradient(145deg, #2e2f3e 0%, #1e1f2e 50%, #2a2b3a 100%)',
+              boxShadow: '0 32px 100px rgba(0,0,0,0.6), 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.3)',
+              padding: 8,
+            }}
+          >
+            {/* Titanium edge highlight */}
             <div style={{
-              position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
-              width: 120, height: 28, borderRadius: 14,
-              background: '#1c1d2a',
+              position: 'absolute', inset: 0, borderRadius: 58,
+              border: '1px solid rgba(255,255,255,0.06)',
+              pointerEvents: 'none',
             }} />
-            <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-              <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M1 8h2v4H1zM5 5h2v7H5zM9 2h2v10H9zM13 0h2v12h-2z" fill={G.text}/></svg>
-              <svg width="16" height="11" viewBox="0 0 16 11" fill="none"><path d="M8 3.5a5.5 5.5 0 0 1 3.9 1.6l1.1-1.1A7.5 7.5 0 0 0 8 1.5a7.5 7.5 0 0 0-5 2.5l1.1 1.1A5.5 5.5 0 0 1 8 3.5z" fill={G.text}/><path d="M8 6.5a3 3 0 0 1 2.1.9L11.2 6A5 5 0 0 0 8 4.5 5 5 0 0 0 4.8 6l1.1 1.4A3 3 0 0 1 8 6.5z" fill={G.text}/><circle cx="8" cy="9.5" r="1.5" fill={G.text}/></svg>
-              <svg width="24" height="12" viewBox="0 0 24 12" fill="none"><rect x="0.5" y="0.5" width="20" height="11" rx="2" stroke={G.text} strokeOpacity="0.4"/><rect x="2" y="2" width="14" height="8" rx="1" fill={G.accent}/><path d="M22 4.5v3a1.5 1.5 0 0 0 0-3z" fill={G.text} fillOpacity="0.4"/></svg>
+
+            {/* Speaker grille */}
+            <div style={{
+              position: 'absolute', top: 3, left: '50%', transform: 'translateX(-50%)',
+              width: 44, height: 3, borderRadius: 1.5,
+              background: '#15161e',
+              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.6)',
+            }} />
+
+            {/* Inner screen area */}
+            <div style={{
+              position: 'relative',
+              width: 430, height: 932,
+              borderRadius: 50,
+              overflow: 'hidden',
+              background: G.bg,
+              display: 'flex', flexDirection: 'column',
+            }}>
+              {/* Dynamic Island */}
+              <div style={{
+                position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
+                width: 126, height: 36, borderRadius: 18,
+                background: '#000',
+                zIndex: 200,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+              }}>
+                {/* Camera lens */}
+                <div style={{
+                  position: 'absolute', right: 28, top: '50%', transform: 'translateY(-50%)',
+                  width: 12, height: 12, borderRadius: '50%',
+                  background: 'radial-gradient(circle at 40% 40%, #1a1a2e 0%, #0a0a15 60%, #000 100%)',
+                  boxShadow: 'inset 0 0 2px rgba(255,255,255,0.1), 0 0 1px rgba(0,0,0,0.5)',
+                }}>
+                  {/* Lens reflection */}
+                  <div style={{
+                    position: 'absolute', top: 2, left: 3,
+                    width: 3, height: 2, borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.15)',
+                  }} />
+                </div>
+              </div>
+
+              {/* Status bar — flanking Dynamic Island */}
+              <div style={{
+                height: 54, flexShrink: 0,
+                background: G.bg,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '0 28px',
+                position: 'relative', zIndex: 100,
+              }}>
+                {/* Time — left of Dynamic Island */}
+                <span style={{ fontSize: 15, fontWeight: 700, color: G.text, marginTop: 2 }}>9:41</span>
+                {/* Icons — right of Dynamic Island */}
+                <div style={{ display: 'flex', gap: 5, alignItems: 'center', marginTop: 2 }}>
+                  <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M1 8h2v4H1zM5 5h2v7H5zM9 2h2v10H9zM13 0h2v12h-2z" fill={G.text}/></svg>
+                  <svg width="16" height="11" viewBox="0 0 16 11" fill="none"><path d="M8 3.5a5.5 5.5 0 0 1 3.9 1.6l1.1-1.1A7.5 7.5 0 0 0 8 1.5a7.5 7.5 0 0 0-5 2.5l1.1 1.1A5.5 5.5 0 0 1 8 3.5z" fill={G.text}/><path d="M8 6.5a3 3 0 0 1 2.1.9L11.2 6A5 5 0 0 0 8 4.5 5 5 0 0 0 4.8 6l1.1 1.4A3 3 0 0 1 8 6.5z" fill={G.text}/><circle cx="8" cy="9.5" r="1.5" fill={G.text}/></svg>
+                  <svg width="24" height="12" viewBox="0 0 24 12" fill="none"><rect x="0.5" y="0.5" width="20" height="11" rx="2" stroke={G.text} strokeOpacity="0.4"/><rect x="2" y="2" width="14" height="8" rx="1" fill={G.accent}/><path d="M22 4.5v3a1.5 1.5 0 0 0 0-3z" fill={G.text} fillOpacity="0.4"/></svg>
+                </div>
+              </div>
+
+              {/* Toast notification */}
+              <div style={{
+                position: 'absolute', left: '50%', top: 80, zIndex: 300,
+                transform: `translateX(-50%) translateY(${toast ? '0' : '-20px'})`,
+                opacity: toast ? 1 : 0,
+                background: G.accent, color: '#fff',
+                padding: '12px 20px', borderRadius: 24,
+                fontSize: 13, fontWeight: 900,
+                boxShadow: `0 8px 24px ${G.accent}66, 0 4px 12px rgba(0,0,0,0.3)`,
+                pointerEvents: 'none',
+                transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
+                whiteSpace: 'nowrap',
+                display: 'flex', alignItems: 'center', gap: 8,
+              }}>
+                <Check size={16} /> {toast}
+              </div>
+
+              {/* Scrollable content area */}
+              <div style={{
+                flex: 1,
+                overflow: 'auto',
+                scrollbarWidth: 'none',
+                position: 'relative',
+              }}>
+                {children}
+              </div>
+
+              {/* Home indicator */}
+              <div style={{
+                flexShrink: 0,
+                display: 'flex', justifyContent: 'center',
+                paddingBottom: 8, paddingTop: 4,
+                background: G.bg,
+              }}>
+                <div style={{
+                  width: 134, height: 5, borderRadius: 2.5,
+                  background: 'rgba(255,255,255,0.2)',
+                }} />
+              </div>
+
+              {/* Floating overlays (FAB) */}
+              {fab}
             </div>
           </div>
-
-          {/* Toast notification */}
-          <div style={{
-            position: 'absolute', left: '50%', top: 80, zIndex: 300,
-            transform: `translateX(-50%) translateY(${toast ? '0' : '-20px'})`,
-            opacity: toast ? 1 : 0,
-            background: G.accent, color: '#fff',
-            padding: '12px 20px', borderRadius: 24,
-            fontSize: 13, fontWeight: 900,
-            boxShadow: `0 8px 24px ${G.accent}66, 0 4px 12px rgba(0,0,0,0.3)`,
-            pointerEvents: 'none',
-            transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
-            whiteSpace: 'nowrap',
-            display: 'flex', alignItems: 'center', gap: 8,
-          }}>
-            <Check size={16} /> {toast}
-          </div>
-
-          {/* Scrollable content area */}
-          <div style={{
-            flex: 1,
-            overflow: 'auto',
-            scrollbarWidth: 'none',
-            position: 'relative',
-          }}>
-            {children}
-          </div>
-
-          {/* Floating overlays (FAB) */}
-          {fab}
         </div>
       </div>
 
@@ -1960,6 +2689,32 @@ function SectionHeader({
       )}
     </div>
   )
+}
+
+const CONDITION_LABELS: Record<DayForecast['condition'], string> = {
+  sunny: 'Sunny',
+  partly_cloudy: 'Partly cloudy',
+  cloudy: 'Cloudy',
+  rain: 'Rain',
+  snow: 'Snow',
+  storm: 'Storm',
+  windy: 'Windy',
+}
+
+const WEATHER_ICON_MAP: Record<DayForecast['condition'], { icon: typeof Sun; color: string | null }> = {
+  sunny:         { icon: Sun,            color: '#F5A623' },
+  partly_cloudy: { icon: CloudSun,       color: '#F5A623' },
+  cloudy:        { icon: Cloud,          color: null },
+  rain:          { icon: CloudRain,      color: '#4A9EFF' },
+  snow:          { icon: CloudSnow,      color: '#4A9EFF' },
+  storm:         { icon: CloudLightning, color: '#FF4D4D' },
+  windy:         { icon: Wind,           color: null },
+}
+
+function WeatherIcon({ condition, size }: { condition: DayForecast['condition']; size: number }) {
+  const { theme } = useGuestTheme()
+  const { icon: Icon, color } = WEATHER_ICON_MAP[condition]
+  return <Icon size={size} color={color ?? theme.textMuted} />
 }
 
 function HorizontalRail({
