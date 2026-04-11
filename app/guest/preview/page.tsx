@@ -4,18 +4,20 @@ import {
   AlertTriangle, Phone, ChevronRight, ChevronUp, ChevronDown,
   Search, Heart, Check, Star, MapPin, Copy, Bookmark,
   ClipboardList, Plug, KeyRound, ArrowUpDown, HelpCircle,
-  MessageSquare, MessageCircle, Wrench,
+  MessageSquare, MessageCircle, Wrench, Compass, Gift,
   Users, Map, ShieldAlert, CloudSun, ThumbsUp, ThumbsDown,
-  Sparkles, Send, Link2, RefreshCw, Loader2,
+  Sparkles, Send, Link2, RefreshCw, Loader2, LogOut, ShoppingCart, Trash2,
   Sun, Cloud, CloudRain, CloudSnow, CloudLightning, Wind, Droplets,
-  Plane, Plus,
+  Plane, Plus, Bell, Mail,
   Navigation2, Clock, Car,
+  Eye, EyeOff, Lock, Unlock, Shield, FileText, Palmtree,
+  X, Camera, ChevronLeft, CreditCard, ArrowLeft,
 } from 'lucide-react'
 import { GUIDEBOOKS } from '@/lib/data/guidebooks'
 import { PROPERTIES } from '@/lib/data/properties'
 import { GUEST_VERIFICATIONS } from '@/lib/data/verification'
 import { UPSELL_RULES, PROPERTY_GROUPS } from '@/lib/data/upsells'
-import { G } from '@/lib/guest/theme'
+import type { GuestTheme } from '@/lib/guest/theme'
 import { useGuestTheme, GuestThemeProvider } from '@/lib/guest/theme-context'
 import { STAY_FORECAST, type DayForecast } from '@/lib/data/weather'
 import GuestPortalShell, { GuestTab } from '@/components/guest/GuestPortalShell'
@@ -34,8 +36,10 @@ const PREVIEW_IMAGES = {
     { cat: 'food',      name: 'Café Sara',           loc: 'Torshov · 0.8 km',      rating: '4.7', reviews: '1,932', url: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=400&h=300&fit=crop', badge: 'CAFÉ', desc: 'Best cinnamon rolls in Oslo. Cozy upstairs nook.' },
     { cat: 'activity',  name: 'Fjord Kayaking',      loc: 'Aker Brygge · 2.5 km',  rating: '4.8', reviews: '4,102', url: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop', badge: 'WATER SPORTS', desc: '2-hour guided kayak on the Oslofjord. All gear included.' },
     { cat: 'outdoors',  name: 'Nordmarka Trails',    loc: 'Frognerseteren · 6 km',  rating: '4.9', reviews: '8,234', url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=400&h=300&fit=crop', badge: 'HIKING', desc: 'Forest trails 30 min from the city. Bring layers.' },
-    { cat: 'sights',    name: 'Oslo Opera House',     loc: 'Bjørvika · 3 km',       rating: '4.8', reviews: '12,456', url: 'https://images.unsplash.com/photo-1513519245088-0e12902e35a6?w=400&h=300&fit=crop', badge: 'LANDMARK', desc: 'Walk on the roof for panoramic fjord views. Free.' },
+    { cat: 'sights',    name: 'Oslo Opera House',     loc: 'Bjørvika · 3 km',       rating: '4.8', reviews: '12,456', url: 'https://images.unsplash.com/photo-1533929736458-ca588d08c8be?w=400&h=300&fit=crop', badge: 'LANDMARK', desc: 'Walk on the roof for panoramic fjord views. Free.' },
     { cat: 'nightlife', name: 'Blå',                  loc: 'Grünerløkka · 1.5 km',  rating: '4.3', reviews: '2,108', url: 'https://images.unsplash.com/photo-1566417713940-fe7c737a9ef2?w=400&h=300&fit=crop', badge: 'LIVE MUSIC', desc: 'Live jazz and electronic by the Akerselva river.' },
+    { cat: 'shopping',  name: 'Grünerløkka Markets',  loc: 'Grünerløkka · 1 km',    rating: '4.6', reviews: '3,421', url: 'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=400&h=300&fit=crop', badge: 'VINTAGE', desc: 'Vintage, vinyl, and local design. Sunday mornings are best.' },
+    { cat: 'shopping',  name: 'Aker Brygge',           loc: 'Aker Brygge · 2 km',    rating: '4.4', reviews: '5,891', url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop', badge: 'WATERFRONT', desc: 'Waterfront shops and restaurants with fjord views.' },
   ],
   services: [
     { url: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&h=200&fit=crop', label: 'Spa & Wellness' },
@@ -47,100 +51,104 @@ const PREVIEW_IMAGES = {
 }
 
 /* ——— Colored icon config ———————————————————————————————————— */
-const GUIDE_ICONS: { icon: typeof ClipboardList; color: string; rgb: string }[] = [
-  { icon: ClipboardList, color: '#F5A623', rgb: '245,166,35' },   // info — amber
-  { icon: Plug,          color: '#4A9EFF', rgb: '74,158,255' },   // access — blue
-  { icon: Navigation2,   color: '#3ECF8E', rgb: '62,207,142' },   // transport — green
-  { icon: KeyRound,      color: '#4A9EFF', rgb: '74,158,255' },   // access — blue
-  { icon: ArrowUpDown,   color: '#F5A623', rgb: '245,166,35' },   // info — amber
-  { icon: HelpCircle,    color: G.accent,  rgb: '91,107,47' },    // status — green
-  { icon: Map,           color: G.accent,  rgb: '91,107,47' },    // status — green
-  { icon: ShieldAlert,   color: '#FF4D4D', rgb: '255,77,77' },    // safety — red
-]
+function getGuideIcons(accent: string): { icon: typeof ClipboardList; color: string; rgb: string }[] {
+  return [
+    { icon: ClipboardList, color: '#F5A623', rgb: '245,166,35' },   // info — amber
+    { icon: Plug,          color: '#4A9EFF', rgb: '74,158,255' },   // access — blue
+    { icon: Navigation2,   color: '#3ECF8E', rgb: '62,207,142' },   // transport — green
+    { icon: KeyRound,      color: '#4A9EFF', rgb: '74,158,255' },   // access — blue
+    { icon: ArrowUpDown,   color: '#F5A623', rgb: '245,166,35' },   // info — amber
+    { icon: HelpCircle,    color: accent,    rgb: '91,107,47' },    // status — green
+    { icon: Map,           color: accent,    rgb: '91,107,47' },    // status — green
+    { icon: ShieldAlert,   color: '#FF4D4D', rgb: '255,77,77' },    // safety — red
+  ]
+}
 
-const GUIDE_DETAIL_CONTENT: Record<string, React.ReactNode> = {
-  'House Rules': (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      {['Quiet hours 10 PM – 8 AM', 'No smoking indoors', 'Max 2 extra guests', 'Pets allowed (notify host)', 'No parties or events'].map(r => (
-        <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ width: 4, height: 4, borderRadius: 2, background: G.accent, flexShrink: 0 }} />
-          <span>{r}</span>
-        </div>
-      ))}
-    </div>
-  ),
-  'Appliances': (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {[
-        { name: 'Oven', desc: 'Preheat 10 min, dial on left' },
-        { name: 'Washer', desc: 'Programs on door, pods under sink' },
-        { name: 'TV', desc: 'Remote in drawer, Netflix pre-logged' },
-        { name: 'Coffee', desc: 'Nespresso machine, capsules in cabinet' },
-      ].map(a => (
-        <div key={a.name}>
-          <span style={{ fontWeight: 800, color: G.text }}>{a.name}: </span>
-          <span>{a.desc}</span>
-        </div>
-      ))}
-    </div>
-  ),
-  'Access & Parking': (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {[
-        { name: 'Main door', desc: 'Code 4821' },
-        { name: 'Building gate', desc: 'Buzz #12' },
-        { name: 'Parking', desc: 'Spot B14 in basement' },
-        { name: 'Elevator', desc: 'Card in welcome pack' },
-      ].map(a => (
-        <div key={a.name}>
-          <span style={{ fontWeight: 800, color: G.text }}>{a.name}: </span>
-          <span>{a.desc}</span>
-        </div>
-      ))}
-    </div>
-  ),
-  'Checkout Guide': (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      {['Strip beds', 'Start dishwasher', 'Take out trash', 'Close windows', 'Leave keys on counter', 'Lock door (auto-locks)'].map(t => (
-        <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ width: 16, height: 16, borderRadius: 4, border: `1.5px solid ${G.border}`, flexShrink: 0 }} />
-          <span>{t}</span>
-        </div>
-      ))}
-    </div>
-  ),
-  'FAQs': (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {[
-        { q: 'Where are extra towels?', a: 'Hall closet, top shelf' },
-        { q: 'How does heating work?', a: 'Thermostat in hallway, set to 21°C' },
-        { q: 'Is there a hair dryer?', a: 'Under bathroom sink' },
-        { q: 'Nearest grocery store?', a: 'Kiwi, 200m east' },
-      ].map(f => (
-        <div key={f.q}>
-          <div style={{ fontWeight: 800, color: G.text, marginBottom: 2 }}>{f.q}</div>
-          <div>{f.a}</div>
-        </div>
-      ))}
-    </div>
-  ),
-  'Property Map': (
-    <div style={{ padding: '8px 0', lineHeight: 1.7 }}>
-      Kitchen → Living → Bedroom 1 → Bedroom 2<br />
-      Bathroom off hallway · Balcony via living room
-    </div>
-  ),
-  'Safety & Emergency': (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div><span style={{ fontWeight: 800, color: G.text }}>Fire exit: </span>Main door + balcony</div>
-      <div><span style={{ fontWeight: 800, color: G.text }}>First aid: </span>Under kitchen sink</div>
-      <div style={{ padding: '8px 12px', borderRadius: 10, background: `${G.red}0d` }}>
-        <div style={{ fontWeight: 800, color: G.red, marginBottom: 4 }}>Emergency Numbers</div>
-        <div>112 (police) · 113 (ambulance) · 110 (fire)</div>
-        <div style={{ marginTop: 4 }}>Lev Collection emergency: +47 900 12 345</div>
+function getGuideDetailContent(theme: GuestTheme): Record<string, React.ReactNode> {
+  return {
+    'House Rules': (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {['Quiet hours 10 PM – 8 AM', 'No smoking indoors', 'Max 2 extra guests', 'Pets allowed (notify host)', 'No parties or events'].map(r => (
+          <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ width: 4, height: 4, borderRadius: 2, background: theme.accent, flexShrink: 0 }} />
+            <span>{r}</span>
+          </div>
+        ))}
       </div>
-    </div>
-  ),
+    ),
+    'Appliances': (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {[
+          { name: 'Oven', desc: 'Preheat 10 min, dial on left' },
+          { name: 'Washer', desc: 'Programs on door, pods under sink' },
+          { name: 'TV', desc: 'Remote in drawer, Netflix pre-logged' },
+          { name: 'Coffee', desc: 'Nespresso machine, capsules in cabinet' },
+        ].map(a => (
+          <div key={a.name}>
+            <span style={{ fontWeight: 800, color: theme.text }}>{a.name}: </span>
+            <span>{a.desc}</span>
+          </div>
+        ))}
+      </div>
+    ),
+    'Access & Parking': (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {[
+          { name: 'Main door', desc: 'Code 4821' },
+          { name: 'Building gate', desc: 'Buzz #12' },
+          { name: 'Parking', desc: 'Spot B14 in basement' },
+          { name: 'Elevator', desc: 'Card in welcome pack' },
+        ].map(a => (
+          <div key={a.name}>
+            <span style={{ fontWeight: 800, color: theme.text }}>{a.name}: </span>
+            <span>{a.desc}</span>
+          </div>
+        ))}
+      </div>
+    ),
+    'Checkout Guide': (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {['Strip beds', 'Start dishwasher', 'Take out trash', 'Close windows', 'Leave keys on counter', 'Lock door (auto-locks)'].map(t => (
+          <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ width: 16, height: 16, borderRadius: 4, border: `1.5px solid ${theme.border}`, flexShrink: 0 }} />
+            <span>{t}</span>
+          </div>
+        ))}
+      </div>
+    ),
+    'FAQs': (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {[
+          { q: 'Where are extra towels?', a: 'Hall closet, top shelf' },
+          { q: 'How does heating work?', a: 'Thermostat in hallway, set to 21°C' },
+          { q: 'Is there a hair dryer?', a: 'Under bathroom sink' },
+          { q: 'Nearest grocery store?', a: 'Kiwi, 200m east' },
+        ].map(f => (
+          <div key={f.q}>
+            <div style={{ fontWeight: 800, color: theme.text, marginBottom: 2 }}>{f.q}</div>
+            <div>{f.a}</div>
+          </div>
+        ))}
+      </div>
+    ),
+    'Property Map': (
+      <div style={{ padding: '8px 0', lineHeight: 1.7 }}>
+        Kitchen → Living → Bedroom 1 → Bedroom 2<br />
+        Bathroom off hallway · Balcony via living room
+      </div>
+    ),
+    'Safety & Emergency': (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div><span style={{ fontWeight: 800, color: theme.text }}>Fire exit: </span>Main door + balcony</div>
+        <div><span style={{ fontWeight: 800, color: theme.text }}>First aid: </span>Under kitchen sink</div>
+        <div style={{ padding: '8px 12px', borderRadius: 10, background: `${theme.red}0d` }}>
+          <div style={{ fontWeight: 800, color: theme.red, marginBottom: 4 }}>Emergency Numbers</div>
+          <div>112 (police) · 113 (ambulance) · 110 (fire)</div>
+          <div style={{ marginTop: 4 }}>Lev Collection emergency: +47 900 12 345</div>
+        </div>
+      </div>
+    ),
+  }
 }
 
 const SUPPORT_ICONS: { icon: typeof MessageSquare; color: string; rgb: string }[] = [
@@ -158,6 +166,7 @@ const DISCOVER_CATEGORIES = [
   { emoji: '🌲', label: 'Outdoors',  key: 'outdoors' },
   { emoji: '🌙', label: 'Nightlife', key: 'nightlife' },
   { emoji: '⛵', label: 'Activities', key: 'activity' },
+  { emoji: '🛍', label: 'Shopping',   key: 'shopping' },
 ]
 
 /* ——— Trip Planner mock data ———————————————————————————————— */
@@ -288,11 +297,70 @@ const GETTING_THERE_DATA = {
 
 const PROPERTY_ADDRESS = 'Thorvald Meyers gate 15, 0555 Oslo'
 
+const WIFI_PASSWORD = 'SunsetGuest2026!'
+
+const GETTING_THERE_DEPARTURE_DATA = {
+  airport: {
+    title: 'To Oslo Airport (Gardermoen)',
+    options: [
+      { mode: 'Flytoget (express train)', time: '20 min', cost: '~220 NOK', icon: '🚄' },
+      { mode: 'Airport bus (Flybussen)', time: '45 min', cost: '~190 NOK', icon: '🚌' },
+      { mode: 'Taxi / Uber', time: '~45 min', cost: '600–900 NOK', icon: '🚕' },
+    ],
+    lastMile: 'Tram 17 from Grünerløkka to Oslo S (8 min) → Flytoget platform',
+  },
+  train: {
+    title: 'To Oslo Central Station (Oslo S)',
+    options: [
+      { mode: 'Walk via Karl Johans gate', time: '12 min', cost: 'Free', icon: '🚶' },
+      { mode: 'Tram 17 from Grünerløkka', time: '8 min', cost: '~40 NOK', icon: '🚋' },
+    ],
+    lastMile: null,
+  },
+  local: {
+    title: 'Driving from the property',
+    options: [
+      { mode: 'Return parking spot B14', time: '', cost: 'Keys on hook', icon: '🏠' },
+      { mode: 'Street parking ends', time: '', cost: 'Check meter', icon: '🅿️' },
+    ],
+    lastMile: null,
+  },
+}
+
+const UPSELL_CATEGORY_ICON: Record<string, { icon: typeof Clock; color: string; rgb: string }> = {
+  arrival:    { icon: Clock,   color: '#4A9EFF', rgb: '74,158,255' },
+  departure:  { icon: LogOut,  color: '#F5A623', rgb: '245,166,35' },
+  transport:  { icon: Car,     color: '#3ECF8E', rgb: '62,207,142' },
+  experience: { icon: Compass, color: '#A855F7', rgb: '168,85,247' },
+  extras:     { icon: Gift,    color: '#EC4899', rgb: '236,72,153' },
+}
+
+const MOCK_DEPARTURE_FLIGHTS = [
+  { id: 'd1', name: 'Emma',   flight: 'SK1473', airline: 'SAS',       to: 'Stockholm (ARN)', departing: 'Mar 27, 14:30', terminal: 'T2', gate: 'B22', status: 'confirmed' as const },
+  { id: 'd2', name: 'Marcus', flight: 'DY1803', airline: 'Norwegian', to: 'Berlin (BER)',    departing: 'Mar 27, 16:45', terminal: 'T1', gate: 'D12', status: 'confirmed' as const },
+  { id: 'd3', name: 'Lin',    flight: null,      airline: null,        to: null,              departing: null,            terminal: null, gate: null,  status: 'pending'   as const },
+]
+
+const MOCK_CHAT_MESSAGES = [
+  { id: 'c1', from: 'host' as const, text: 'Hi Emma! Welcome to Oslo 🇳🇴 Let me know if you need anything before check-in.', time: '10:15 AM' },
+  { id: 'c2', from: 'guest' as const, text: 'Thanks! Is there any chance we could check in a bit early? Our flight lands at 14:10.', time: '10:22 AM' },
+  { id: 'c3', from: 'host' as const, text: 'Absolutely! The previous guest checked out early, so the place will be ready by 13:00. I\'ll send you the door code once it\'s cleaned.', time: '10:25 AM' },
+  { id: 'c4', from: 'guest' as const, text: 'That\'s perfect! Thank you so much 🙏', time: '10:26 AM' },
+  { id: 'c5', from: 'host' as const, text: 'You\'re welcome! The door code is 4821. Have a great trip!', time: '10:30 AM' },
+]
+
+const CHAT_QUICK_REPLIES = [
+  'What time is check-in?',
+  'Where do I park?',
+  'Is early check-in possible?',
+  'How does the WiFi work?',
+]
+
 /* ——— Our Trip mock data ——————————————————————————————————— */
 const MOCK_GROUP = [
-  { name: 'Emma',   role: 'host'  as const, avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face' },
-  { name: 'Marcus', role: 'guest' as const, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face' },
-  { name: 'Lin',    role: 'guest' as const, avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face' },
+  { name: 'Emma',   role: 'host'  as const, avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face', email: 'emma.lindqvist@gmail.com', phone: '+46 70 123 4567' },
+  { name: 'Marcus', role: 'guest' as const, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face', email: 'marcus.weber@outlook.de', phone: '+49 170 987 6543' },
+  { name: 'Lin',    role: 'guest' as const, avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face', email: 'lin.chen@icloud.com', phone: '+86 138 0013 8000' },
 ]
 
 const MOCK_TRIP_BOARD = [
@@ -361,6 +429,8 @@ function GuestPortalPreview() {
   const [activeCat, setActiveCat] = useState('all')
   const [savedRecs, setSavedRecs] = useState<Set<number>>(new Set())
   const [addedServices, setAddedServices] = useState<Set<string>>(new Set())
+  const [cartOpen, setCartOpen] = useState(false)
+  const [checkingOut, setCheckingOut] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [wifiConnected, setWifiConnected] = useState(false)
   const [heroIdx, setHeroIdx] = useState(0)
@@ -374,13 +444,35 @@ function GuestPortalPreview() {
   // Getting There / Departure state
   const [travelMode, setTravelMode] = useState<'airport' | 'train' | 'local' | null>(null)
   const [gettingThereOpen, setGettingThereOpen] = useState(false)
+  const [departureOpen, setDepartureOpen] = useState(false)
 
   // Discover search
   const [discoverSearch, setDiscoverSearch] = useState('')
 
+  // WiFi expanded state
+  const [wifiExpanded, setWifiExpanded] = useState(false)
+  const [passwordVisible, setPasswordVisible] = useState(false)
+
+  // Chat state
+  const [chatOpen, setChatOpen] = useState(false)
+  const [chatMessages, setChatMessages] = useState(MOCK_CHAT_MESSAGES)
+  const [chatInput, setChatInput] = useState('')
+  const [chatTyping, setChatTyping] = useState(false)
+
+  // Trip flights collapsible
+  const [arrivingOpen, setArrivingOpen] = useState(true)
+  const [departingOpen, setDepartingOpen] = useState(true)
+
+  // Verification flow
+  const [verificationComplete, setVerificationComplete] = useState(false)
+  const [verificationStep, setVerificationStep] = useState(0)
+  const [showVerification, setShowVerification] = useState(false)
+
   // Our Trip state
   const [tripVotes, setTripVotes] = useState<Record<string, 'up' | 'down' | null>>({})
   const [flightInput, setFlightInput] = useState('')
+  const [flightTimeInput, setFlightTimeInput] = useState('')
+  const [addedFlight, setAddedFlight] = useState<{ code: string; airline: string; from: string; arriving: string; terminal: string; gate: string } | null>(null)
   const [packingList, setPackingList] = useState(MOCK_PACKING_INIT)
   const [packingInput, setPackingInput] = useState('')
 
@@ -393,6 +485,10 @@ function GuestPortalPreview() {
     const total = h * 60 + m - MOCK_DEPARTURE.travelMinutes - MOCK_DEPARTURE.bufferHours * 60
     return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
   })()
+
+  // Cart derived state
+  const cartItems = upsells.filter(u => addedServices.has(u.id))
+  const cartTotal = cartItems.reduce((sum, u) => sum + u.price, 0)
 
   // Hero carousel auto-advance
   useEffect(() => {
@@ -478,6 +574,34 @@ function GuestPortalPreview() {
     ])
     setPackingInput('')
   }, [packingInput, guestName])
+
+  const sendChatMessage = useCallback((text: string) => {
+    const trimmed = text.trim()
+    if (!trimmed) return
+    const newMsg = { id: `c${Date.now()}`, from: 'guest' as const, text: trimmed, time: 'Just now' }
+    setChatMessages(prev => [...prev, newMsg])
+    setChatInput('')
+    setChatTyping(true)
+    setTimeout(() => {
+      setChatTyping(false)
+      setChatMessages(prev => [...prev, {
+        id: `c${Date.now()}`,
+        from: 'host' as const,
+        text: 'Thanks for your message! I\'ll get back to you shortly 😊',
+        time: 'Just now',
+      }])
+    }, 1500)
+  }, [])
+
+  const handleCheckout = useCallback(() => {
+    setCheckingOut(true)
+    setTimeout(() => {
+      setCheckingOut(false)
+      setAddedServices(new Set())
+      setCartOpen(false)
+      showToast('Order confirmed ✓')
+    }, 800)
+  }, [showToast])
 
   const filteredDiscover = (activeCat === 'all'
     ? PREVIEW_IMAGES.discover
@@ -585,6 +709,37 @@ function GuestPortalPreview() {
             Let&apos;s make your stay effortless
           </div>
         </div>
+
+        {/* Locked Check-in Banner — shown when verification incomplete */}
+        {!verificationComplete && (
+          <button
+            className="gp-press"
+            onClick={() => setShowVerification(true)}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+              padding: 16, marginBottom: 16, borderRadius: 18,
+              background: `${G.amber}0a`,
+              border: `1px solid ${G.amber}22`,
+              boxShadow: G.shadowSm,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            <div style={{
+              width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+              background: `${G.amber}15`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Lock size={18} color={G.amber} />
+            </div>
+            <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: G.text }}>Check-in Instructions Locked</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: G.textMuted, marginTop: 2, lineHeight: 1.4 }}>
+                Complete verification to unlock door codes, access details, and check-in instructions
+              </div>
+            </div>
+            <ChevronRight size={16} color={G.textFaint} />
+          </button>
+        )}
 
         {/* Weather Forecast Card */}
         <div style={{
@@ -1010,6 +1165,68 @@ function GuestPortalPreview() {
                 </div>
               )}
 
+              {/* Departure directions */}
+              {travelMode && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 8, marginTop: 4,
+                  }}>
+                    <div style={{ flex: 1, height: 1, background: G.border }} />
+                    <span style={{
+                      fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', color: G.textMuted,
+                      textTransform: 'uppercase',
+                    }}>DEPARTURE</span>
+                    <div style={{ flex: 1, height: 1, background: G.border }} />
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: G.text, marginBottom: 4 }}>
+                    {GETTING_THERE_DEPARTURE_DATA[travelMode].title}
+                  </div>
+                  {GETTING_THERE_DEPARTURE_DATA[travelMode].options.map(opt => (
+                    <div key={opt.mode} style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '10px 12px', borderRadius: 12,
+                      background: G.surfaceHover, border: `1px solid ${G.border}`,
+                    }}>
+                      <span style={{ fontSize: 18 }}>{opt.icon}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: G.text }}>{opt.mode}</div>
+                        {opt.time && (
+                          <div style={{ fontSize: 11, fontWeight: 600, color: G.textMuted, marginTop: 2 }}>{opt.time}</div>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: G.accent }}>{opt.cost}</div>
+                    </div>
+                  ))}
+                  {GETTING_THERE_DEPARTURE_DATA[travelMode].lastMile && (
+                    <div style={{
+                      padding: '10px 12px', borderRadius: 12,
+                      background: G.accentBg, border: `1px solid ${G.accent}22`,
+                      fontSize: 11, fontWeight: 600, color: G.textBody,
+                    }}>
+                      🚶 {GETTING_THERE_DEPARTURE_DATA[travelMode].lastMile}
+                    </div>
+                  )}
+                  {travelMode === 'airport' && (
+                    <button
+                      className="gp-press"
+                      onClick={() => toggleAddService('ur3')}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                        padding: '10px 16px', borderRadius: 999,
+                        background: addedServices.has('ur3') ? G.accentBg : G.accent,
+                        color: addedServices.has('ur3') ? G.accent : G.accentFg,
+                        border: addedServices.has('ur3') ? `1px solid ${G.accent}44` : 'none',
+                        fontSize: 12, fontWeight: 800, cursor: 'pointer',
+                        fontFamily: 'inherit', transition: 'all 0.2s',
+                      }}
+                    >
+                      <Car size={14} />
+                      {addedServices.has('ur3') ? 'Transfer Added ✓' : 'Book Airport Transfer — 850 NOK'}
+                    </button>
+                  )}
+                </div>
+              )}
+
               {/* Address pin */}
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 8,
@@ -1035,6 +1252,130 @@ function GuestPortalPreview() {
           )}
         </div>
 
+        {/* Plan Your Departure — expandable section */}
+        <div style={{
+          borderRadius: 18, marginBottom: 18, overflow: 'hidden',
+          background: G.surface, border: `1px solid ${G.border}`,
+          boxShadow: G.shadowSm,
+        }}>
+          <button
+            className="gp-press"
+            onClick={() => setDepartureOpen(v => !v)}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+              padding: 16, background: 'none', border: 'none',
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            <div style={{
+              width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+              background: 'rgba(245,166,35,0.08)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Plane size={18} color="#F5A623" style={{ transform: 'rotate(45deg)' }} />
+            </div>
+            <div style={{ flex: 1, textAlign: 'left' }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: G.text }}>Plan Your Departure</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: G.textMuted }}>
+                {MOCK_DEPARTURE.departureDate} · Checkout {MOCK_DEPARTURE.checkoutTime}
+              </div>
+            </div>
+            {travelMode !== null && (
+              <span style={{
+                fontSize: 9, fontWeight: 800, padding: '3px 8px', borderRadius: 8,
+                background: G.accentBg, color: G.accent,
+                textTransform: 'uppercase', letterSpacing: '0.04em',
+              }}>
+                {travelMode === 'airport' ? 'Flight' : travelMode === 'train' ? 'Train' : 'Local'}
+              </span>
+            )}
+            {departureOpen
+              ? <ChevronUp size={16} color={G.textMuted} />
+              : <ChevronDown size={16} color={G.textMuted} />
+            }
+          </button>
+
+          {departureOpen && (
+            <div style={{ padding: '0 16px 16px' }}>
+              {travelMode === null ? (
+                <div style={{
+                  padding: '12px 14px', borderRadius: 12,
+                  background: G.surfaceHover, border: `1px solid ${G.border}`,
+                  fontSize: 12, fontWeight: 600, color: G.textMuted, textAlign: 'center',
+                }}>
+                  Select your travel mode in Getting There first
+                </div>
+              ) : (
+                <>
+                  {travelMode === 'airport' && (
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '10px 12px', borderRadius: 12, marginBottom: 10,
+                      background: G.surfaceHover, border: `1px solid ${G.border}`,
+                    }}>
+                      <Plane size={14} color={G.accent} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: G.text }}>
+                          {MOCK_DEPARTURE.airline} {MOCK_DEPARTURE.flightNumber} → {MOCK_DEPARTURE.destination}
+                        </div>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: G.textMuted }}>
+                          Departs {MOCK_DEPARTURE.flightTime} · {MOCK_DEPARTURE.terminal} · Gate {MOCK_DEPARTURE.gate}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Leave-by nudge */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '10px 12px', borderRadius: 12, marginBottom: 12,
+                    background: `${G.amber}0a`, border: `1px solid ${G.amber}22`,
+                  }}>
+                    <AlertTriangle size={14} color={G.amber} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: G.amber }}>
+                      Leave by {leaveByTime} to make your {travelMode === 'airport' ? 'flight' : 'departure'}
+                    </span>
+                  </div>
+
+                  {/* Quick actions */}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      className="gp-press-sm"
+                      onClick={() => setGettingThereOpen(true)}
+                      style={{
+                        flex: 1, padding: '10px 12px', borderRadius: 12,
+                        background: G.surfaceHover, border: `1px solid ${G.border}`,
+                        fontSize: 11, fontWeight: 700, color: G.text,
+                        cursor: 'pointer', fontFamily: 'inherit',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      }}
+                    >
+                      <Navigation2 size={12} color={G.accent} /> Get Directions
+                    </button>
+                    {travelMode === 'airport' && (
+                      <button
+                        className="gp-press-sm"
+                        onClick={() => toggleAddService('ur3')}
+                        style={{
+                          flex: 1, padding: '10px 12px', borderRadius: 12,
+                          background: addedServices.has('ur3') ? G.accentBg : G.accent,
+                          color: addedServices.has('ur3') ? G.accent : G.accentFg,
+                          border: addedServices.has('ur3') ? `1px solid ${G.accent}44` : 'none',
+                          fontSize: 11, fontWeight: 700,
+                          cursor: 'pointer', fontFamily: 'inherit',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                        }}
+                      >
+                        <Car size={12} /> {addedServices.has('ur3') ? 'Transfer Added ✓' : 'Book Transfer'}
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Compact Quick Access — 2×2 grid */}
         <SectionHeader title="Quick Access" />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
@@ -1055,17 +1396,34 @@ function GuestPortalPreview() {
           </button>
           <button
             className="gp-press"
-            onClick={() => copyToClipboard('4821', 'Door code')}
+            onClick={() => {
+              if (verificationComplete) {
+                copyToClipboard('4821', 'Door code')
+              } else {
+                setShowVerification(true)
+              }
+            }}
             style={{
-              background: `${G.accent}0a`, borderRadius: 18, padding: 12,
-              boxShadow: G.shadowSm, border: `1px solid ${G.accent}1a`,
+              background: verificationComplete ? `${G.accent}0a` : G.surfaceHover,
+              borderRadius: 18, padding: 12,
+              boxShadow: G.shadowSm,
+              border: `1px solid ${verificationComplete ? `${G.accent}1a` : G.border}`,
               cursor: 'pointer', textAlign: 'left',
             }}
           >
-            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: `${G.accent}99`, textTransform: 'uppercase', marginBottom: 6 }}>Door Code</div>
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: verificationComplete ? `${G.accent}99` : G.textMuted, textTransform: 'uppercase', marginBottom: 6 }}>Door Code</div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ fontSize: 22, fontWeight: 900, color: G.accent, letterSpacing: '0.14em' }}>4821</div>
-              <span style={{ fontSize: 14 }}>🔑</span>
+              {verificationComplete ? (
+                <>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: G.accent, letterSpacing: '0.14em' }}>4821</div>
+                  <span style={{ fontSize: 14 }}>🔑</span>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: G.textMuted, letterSpacing: '0.14em' }}>••••</div>
+                  <Lock size={14} color={G.textMuted} />
+                </>
+              )}
             </div>
           </button>
         </div>
@@ -1116,35 +1474,126 @@ function GuestPortalPreview() {
           }}>Scheduled ✓</span>
         </div>
 
-        {/* Compact WiFi connect bar */}
-        <button
-          className="gp-press"
-          onClick={() => { setWifiConnected(true); showToast('Connected to WiFi ✓') }}
-          style={{
-            width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-            background: G.surface, borderRadius: 18, padding: '10px 14px',
-            boxShadow: G.shadowSm, border: `1px solid ${G.border}`,
-            cursor: 'pointer', marginBottom: 18,
-            fontFamily: 'inherit',
-          }}
-        >
-          <div style={{
-            width: 28, height: 28, borderRadius: 8,
-            background: G.accentBg, border: `1px solid ${G.accent}33`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 14,
-          }}>📶</div>
-          <div style={{ flex: 1, textAlign: 'left' }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: G.text }}>Connect to {ssid}</div>
-          </div>
-          <div style={{
-            background: wifiConnected ? G.accentBg : G.accent,
-            color: wifiConnected ? G.accent : '#fff',
-            border: wifiConnected ? `1px solid ${G.accent}33` : 'none',
-            fontSize: 11, fontWeight: 800, padding: '6px 14px', borderRadius: 16,
-            letterSpacing: '0.02em',
-          }}>{wifiConnected ? 'Connected ✓' : 'Connect'}</div>
-        </button>
+        {/* WiFi expandable card */}
+        <div style={{
+          borderRadius: 18, marginBottom: 18, overflow: 'hidden',
+          background: G.surface, border: `1px solid ${wifiExpanded ? G.accent + '33' : G.border}`,
+          boxShadow: G.shadowSm, transition: 'border-color 0.15s',
+        }}>
+          <button
+            className="gp-press"
+            onClick={() => setWifiExpanded(v => !v)}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+              padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit',
+              background: 'transparent', border: 'none',
+            }}
+          >
+            <div style={{
+              width: 28, height: 28, borderRadius: 8,
+              background: G.accentBg, border: `1px solid ${G.accent}33`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 14,
+            }}>📶</div>
+            <div style={{ flex: 1, textAlign: 'left' }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: G.text }}>{ssid}</div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: G.textMuted, marginTop: 1 }}>
+                {wifiExpanded ? 'WiFi details' : 'Tap for password & instructions'}
+              </div>
+            </div>
+            {wifiExpanded
+              ? <ChevronDown size={16} color={G.accent} style={{ transform: 'rotate(180deg)', transition: 'transform 0.2s' }} />
+              : <ChevronRight size={16} color={G.textFaint} />
+            }
+          </button>
+          {wifiExpanded && (
+            <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {/* SSID row */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '8px 12px', borderRadius: 12,
+                background: G.surfaceHover, border: `1px solid ${G.border}`,
+              }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: G.textMuted, width: 52 }}>SSID</span>
+                <span style={{ flex: 1, fontSize: 12, fontWeight: 800, color: G.text }}>{ssid}</span>
+                <button
+                  className="gp-press-sm"
+                  onClick={() => copyToClipboard(ssid, 'SSID')}
+                  style={{
+                    padding: '4px 8px', borderRadius: 6,
+                    background: G.accentBg, border: 'none',
+                    fontSize: 10, fontWeight: 700, color: G.accent,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                    display: 'flex', alignItems: 'center', gap: 4,
+                  }}
+                ><Copy size={10} /> Copy</button>
+              </div>
+              {/* Password row */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '8px 12px', borderRadius: 12,
+                background: G.surfaceHover, border: `1px solid ${G.border}`,
+              }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: G.textMuted, width: 52 }}>Pass</span>
+                <span style={{ flex: 1, fontSize: 12, fontWeight: 800, color: G.text, letterSpacing: passwordVisible ? '0' : '0.12em' }}>
+                  {passwordVisible ? WIFI_PASSWORD : '••••••••••'}
+                </span>
+                <button
+                  className="gp-press-sm"
+                  onClick={() => setPasswordVisible(v => !v)}
+                  style={{
+                    padding: 4, borderRadius: 6,
+                    background: 'transparent', border: 'none',
+                    cursor: 'pointer', display: 'flex',
+                  }}
+                >
+                  {passwordVisible ? <EyeOff size={14} color={G.textMuted} /> : <Eye size={14} color={G.textMuted} />}
+                </button>
+                <button
+                  className="gp-press-sm"
+                  onClick={() => copyToClipboard(WIFI_PASSWORD, 'Password')}
+                  style={{
+                    padding: '4px 8px', borderRadius: 6,
+                    background: G.accentBg, border: 'none',
+                    fontSize: 10, fontWeight: 700, color: G.accent,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                    display: 'flex', alignItems: 'center', gap: 4,
+                  }}
+                ><Copy size={10} /> Copy</button>
+              </div>
+              {/* Instructions */}
+              <div style={{
+                padding: '10px 12px', borderRadius: 12,
+                background: G.accentBg, border: `1px solid ${G.accent}22`,
+              }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: G.accent, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+                  How to connect
+                </div>
+                {[
+                  `1. Open Settings → WiFi`,
+                  `2. Select "${ssid}"`,
+                  `3. Enter password`,
+                  `4. Done!`,
+                ].map(step => (
+                  <div key={step} style={{ fontSize: 11, fontWeight: 600, color: G.textBody, lineHeight: 1.7 }}>{step}</div>
+                ))}
+              </div>
+              {/* Connect button */}
+              <button
+                className="gp-press-sm"
+                onClick={() => { setWifiConnected(true); showToast('Connected to WiFi ✓') }}
+                style={{
+                  width: '100%', padding: '10px 16px', borderRadius: 999,
+                  background: wifiConnected ? G.accentBg : G.accent,
+                  color: wifiConnected ? G.accent : G.accentFg,
+                  border: wifiConnected ? `1px solid ${G.accent}33` : 'none',
+                  fontSize: 12, fontWeight: 800, cursor: 'pointer',
+                  fontFamily: 'inherit', transition: 'all 0.2s',
+                }}
+              >{wifiConnected ? 'Connected ✓' : 'Connect'}</button>
+            </div>
+          )}
+        </div>
 
         {/* Travel Reminders — shows when any travelMode is set */}
         {travelMode !== null && (() => {
@@ -1255,7 +1704,7 @@ function GuestPortalPreview() {
                     width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                     padding: '12px 20px', borderRadius: 999,
                     background: addedServices.has('ur3') ? G.accentBg : G.accent,
-                    color: addedServices.has('ur3') ? G.accent : '#fff',
+                    color: addedServices.has('ur3') ? G.accent : G.accentFg,
                     border: addedServices.has('ur3') ? `1px solid ${G.accent}44` : 'none',
                     fontSize: 13, fontWeight: 800, cursor: 'pointer',
                     fontFamily: 'inherit', transition: 'all 0.2s',
@@ -1287,11 +1736,27 @@ function GuestPortalPreview() {
                     boxShadow: G.shadowMd, border: `1px solid ${G.border}`,
                     overflow: 'hidden',
                   }}>
-                    <div style={{
-                      height: 130,
-                      backgroundImage: `url(${PREVIEW_IMAGES.services[i % PREVIEW_IMAGES.services.length].url})`,
-                      backgroundSize: 'cover', backgroundPosition: 'center',
-                    }} />
+                    {(() => {
+                      const cat = UPSELL_CATEGORY_ICON[u.category]
+                      const CatIcon = cat?.icon ?? Gift
+                      const catColor = cat?.color ?? '#EC4899'
+                      const catRgb = cat?.rgb ?? '236,72,153'
+                      return (
+                        <div style={{
+                          height: 130,
+                          background: `radial-gradient(circle at center, rgba(${catRgb}, 0.06), rgba(${catRgb}, 0.02))`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          <div style={{
+                            width: 56, height: 56, borderRadius: '50%',
+                            background: `rgba(${catRgb}, 0.12)`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            <CatIcon size={28} color={catColor} strokeWidth={1.5} />
+                          </div>
+                        </div>
+                      )
+                    })()}
                     <div style={{ padding: '12px 14px' }}>
                       <div style={{
                         fontSize: 13, fontWeight: 800, color: G.text,
@@ -1310,7 +1775,7 @@ function GuestPortalPreview() {
                           style={{
                             padding: '6px 14px', borderRadius: 999,
                             background: added ? G.accentBg : G.accent,
-                            color: added ? G.accent : '#fff',
+                            color: added ? G.accent : G.accentFg,
                             border: added ? `1px solid ${G.accent}44` : 'none',
                             fontSize: 11, fontWeight: 800, cursor: 'pointer',
                             fontFamily: 'inherit', transition: 'all 0.2s',
@@ -1451,10 +1916,12 @@ function GuestPortalPreview() {
 
       <SectionTitle>Property Guide</SectionTitle>
       {guideRows.map((row, i) => {
-        const iconCfg = GUIDE_ICONS[i]
+        const guideIcons = getGuideIcons(G.accent)
+        const iconCfg = guideIcons[i]
         const IconComp = iconCfg.icon
         const isExpanded = expandedGuide === row.t
-        const detail = GUIDE_DETAIL_CONTENT[row.t]
+        const guideContent = getGuideDetailContent(G)
+        const detail = guideContent[row.t]
         return (
           <div key={row.t} style={{ marginBottom: 10 }}>
             <button
@@ -1652,7 +2119,7 @@ function GuestPortalPreview() {
                 flexShrink: 0, scrollSnapAlign: 'start',
                 padding: '8px 14px', borderRadius: 999,
                 background: active ? G.accent : G.surface,
-                color: active ? '#fff' : G.textBody,
+                color: active ? G.accentFg : G.textBody,
                 border: active ? 'none' : `1.5px solid ${G.border}`,
                 fontSize: 13, fontWeight: 800,
                 cursor: 'pointer', fontFamily: 'inherit',
@@ -1730,7 +2197,7 @@ function GuestPortalPreview() {
                     position: 'absolute', top: 11, right: 11,
                     padding: '3px 9px', borderRadius: 10,
                     background: `${G.accent}ee`,
-                    fontSize: 9, fontWeight: 900, color: '#fff',
+                    fontSize: 9, fontWeight: 900, color: G.accentFg,
                     letterSpacing: '0.04em',
                     display: 'flex', alignItems: 'center', gap: 3,
                   }}>
@@ -1862,11 +2329,27 @@ function GuestPortalPreview() {
               border: `1px solid ${G.border}`,
               transition: 'border-color 0.15s',
             }}>
-              <div style={{
-                height: 100,
-                backgroundImage: `url(${PREVIEW_IMAGES.services[i % PREVIEW_IMAGES.services.length].url})`,
-                backgroundSize: 'cover', backgroundPosition: 'center',
-              }} />
+              {(() => {
+                const cat = UPSELL_CATEGORY_ICON[u.category]
+                const CatIcon = cat?.icon ?? Gift
+                const catColor = cat?.color ?? '#EC4899'
+                const catRgb = cat?.rgb ?? '236,72,153'
+                return (
+                  <div style={{
+                    height: 100,
+                    background: `radial-gradient(circle at center, rgba(${catRgb}, 0.06), rgba(${catRgb}, 0.02))`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <div style={{
+                      width: 44, height: 44, borderRadius: '50%',
+                      background: `rgba(${catRgb}, 0.12)`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <CatIcon size={22} color={catColor} strokeWidth={1.5} />
+                    </div>
+                  </div>
+                )
+              })()}
               <div style={{ padding: '14px 16px' }}>
                 <div style={{
                   fontSize: 13, fontWeight: 800, color: G.text,
@@ -1890,7 +2373,7 @@ function GuestPortalPreview() {
                     style={{
                       padding: '7px 14px', borderRadius: 14,
                       background: added ? G.accentBg : G.accent,
-                      color: added ? G.accent : '#fff',
+                      color: added ? G.accent : G.accentFg,
                       border: added ? `1px solid ${G.accent}44` : 'none',
                       fontSize: 11, fontWeight: 800, cursor: 'pointer',
                       fontFamily: 'inherit', transition: 'all 0.2s',
@@ -1907,6 +2390,26 @@ function GuestPortalPreview() {
           No services available.
         </div>
       )}
+      {/* Floating view cart bar */}
+      {addedServices.size > 0 && (
+        <div style={{ position: 'sticky', bottom: 0, padding: '12px 0 20px', background: `linear-gradient(transparent, ${G.bg})` }}>
+          <button
+            className="gp-press"
+            onClick={() => setCartOpen(true)}
+            style={{
+              width: '100%', padding: '14px 20px', borderRadius: 999,
+              background: G.accent, color: G.accentFg, border: 'none',
+              fontSize: 14, fontWeight: 800, cursor: 'pointer',
+              fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              boxShadow: `0 4px 16px ${G.accent}44`,
+            }}
+          >
+            <ShoppingCart size={16} />
+            View Cart ({addedServices.size}) — {cartTotal} NOK
+          </button>
+        </div>
+      )}
     </div>
   )
 
@@ -1918,13 +2421,143 @@ function GuestPortalPreview() {
         letterSpacing: '-0.02em',
       }}>Our Trip</div>
 
+      {/* Trip Overview */}
+      <div style={{
+        padding: 18, borderRadius: 18, marginBottom: 20,
+        background: G.surface, border: `1px solid ${G.border}`,
+        boxShadow: G.shadowMd,
+      }}>
+        {/* Property + Address */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+          <img
+            src={PREVIEW_IMAGES.hero[0]}
+            alt="Property"
+            style={{ width: 56, height: 56, borderRadius: 14, objectFit: 'cover', flexShrink: 0 }}
+          />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: G.text }}>{guidebook.propertyName}</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: G.textMuted, marginTop: 2 }}>
+              {PROPERTY_ADDRESS}
+            </div>
+          </div>
+        </div>
+
+        {/* Dates */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '10px 12px', borderRadius: 12, marginBottom: 10,
+          background: G.surfaceHover, border: `1px solid ${G.border}`,
+        }}>
+          <Clock size={14} color={G.accent} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: G.text }}>
+              Mar 22, 15:00 → Mar 27, 11:00
+            </div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: G.textMuted, marginTop: 2 }}>5 nights</div>
+          </div>
+        </div>
+
+        {/* Group */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '10px 12px', borderRadius: 12, marginBottom: 10,
+          background: G.surfaceHover, border: `1px solid ${G.border}`,
+        }}>
+          <div style={{ display: 'flex', marginRight: 4 }}>
+            {MOCK_GROUP.map((m, i) => (
+              <img
+                key={m.name}
+                src={m.avatar}
+                alt={m.name}
+                style={{
+                  width: 24, height: 24, borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: `2px solid ${G.surface}`,
+                  marginLeft: i > 0 ? -8 : 0,
+                }}
+              />
+            ))}
+          </div>
+          <span style={{ fontSize: 12, fontWeight: 700, color: G.text }}>{MOCK_GROUP.length} guests</span>
+        </div>
+
+        {/* Booked Services */}
+        {addedServices.size > 0 && (
+          <div style={{ marginBottom: 10 }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              marginBottom: 8, padding: '0 2px',
+            }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: G.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Booked Services
+              </span>
+              <span style={{ fontSize: 12, fontWeight: 800, color: G.accent }}>
+                {cartTotal} NOK
+              </span>
+            </div>
+            {cartItems.map(item => (
+              <div key={item.id} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '6px 12px', borderRadius: 8,
+                fontSize: 12, fontWeight: 600,
+              }}>
+                <span style={{ color: G.text }}>{item.title}</span>
+                <span style={{ color: G.textMuted }}>{item.price} NOK</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Flight summary */}
+        <button
+          className="gp-press-sm"
+          onClick={() => {
+            setArrivingOpen(true)
+            setTimeout(() => document.getElementById('flights-section')?.scrollIntoView({ behavior: 'smooth' }), 100)
+          }}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+            padding: '10px 12px', borderRadius: 12,
+            background: G.surfaceHover, border: `1px solid ${G.border}`,
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
+          <Plane size={14} color={G.accent} />
+          <span style={{ flex: 1, fontSize: 12, fontWeight: 700, color: G.text, textAlign: 'left' }}>
+            {MOCK_FLIGHTS.filter(f => f.status === 'confirmed').length + MOCK_DEPARTURE_FLIGHTS.filter(f => f.status === 'confirmed').length} flights tracked · {MOCK_FLIGHTS.filter(f => f.status === 'confirmed').length + MOCK_DEPARTURE_FLIGHTS.filter(f => f.status === 'confirmed').length} confirmed, {MOCK_FLIGHTS.filter(f => f.status === 'pending').length + MOCK_DEPARTURE_FLIGHTS.filter(f => f.status === 'pending').length} pending
+          </span>
+          <ChevronDown size={14} color={G.textFaint} />
+        </button>
+
+        {/* Email trip details */}
+        <button
+          className="gp-press-sm"
+          onClick={() => showToast('Trip details sent to group ✓')}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+            padding: '10px 12px', borderRadius: 12, marginTop: 8,
+            background: G.surfaceHover, border: `1px solid ${G.border}`,
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
+          <Mail size={14} color={G.accent} />
+          <span style={{ flex: 1, fontSize: 12, fontWeight: 700, color: G.text, textAlign: 'left' }}>
+            Email Trip Details
+          </span>
+          <ChevronRight size={14} color={G.textFaint} />
+        </button>
+      </div>
+
       {/* Section 1 — Invite Your Group */}
       <div style={{
         padding: 18, borderRadius: 18, marginBottom: 20,
         background: G.surface, border: `1px solid ${G.border}`,
         boxShadow: G.shadowMd,
       }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: G.text, marginBottom: 4 }}>Invite your group</div>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: G.text }}>Invite your group</div>
+          <span style={{ fontSize: 10, fontWeight: 700, color: G.textMuted }}>Max 8 guests</span>
+        </div>
         <div style={{ fontSize: 12, fontWeight: 600, color: G.textBody, marginBottom: 14 }}>Share access with everyone staying</div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
@@ -1939,8 +2572,18 @@ function GuestPortalPreview() {
             }}
           />
           <input
-            type="text"
-            placeholder="Email or phone"
+            type="email"
+            placeholder="Email (required)"
+            style={{
+              width: '100%', padding: '10px 14px', borderRadius: 12,
+              background: G.surfaceHover, border: `1px solid ${G.border}`,
+              color: G.text, fontSize: 13, fontWeight: 500,
+              fontFamily: 'inherit', outline: 'none',
+            }}
+          />
+          <input
+            type="tel"
+            placeholder="Phone number (required)"
             style={{
               width: '100%', padding: '10px 14px', borderRadius: 12,
               background: G.surfaceHover, border: `1px solid ${G.border}`,
@@ -1954,7 +2597,7 @@ function GuestPortalPreview() {
           onClick={() => showToast('Invite sent ✓')}
           style={{
             width: '100%', padding: '11px 20px', borderRadius: 14,
-            background: G.accent, color: '#fff', border: 'none',
+            background: G.accent, color: G.accentFg, border: 'none',
             fontSize: 13, fontWeight: 800, cursor: 'pointer',
             fontFamily: 'inherit',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -1989,7 +2632,7 @@ function GuestPortalPreview() {
         </button>
 
         <div style={{ marginTop: 12, fontSize: 11, fontWeight: 700, color: G.accent, textAlign: 'center' }}>
-          3 guests have joined
+          3 of 8 spots filled
         </div>
       </div>
 
@@ -2012,19 +2655,41 @@ function GuestPortalPreview() {
                 <span style={{
                   position: 'absolute', bottom: -2, right: -4,
                   fontSize: 8, fontWeight: 800, padding: '2px 6px', borderRadius: 6,
-                  background: G.accent, color: '#fff',
+                  background: G.accent, color: G.accentFg,
                 }}>Host</span>
               )}
             </div>
             <span style={{ fontSize: 11, fontWeight: 700, color: G.text }}>{m.name}</span>
+            <span style={{ fontSize: 9, fontWeight: 600, color: G.textMuted, maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.email}</span>
           </div>
         ))}
       </div>
 
       {/* Section 3 — Flights */}
-      <SectionTitle>Flights</SectionTitle>
+      <div id="flights-section"><SectionTitle>Flights</SectionTitle></div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
-        {MOCK_FLIGHTS.map(f => (
+        {/* Arriving sub-section */}
+        <button
+          className="gp-press"
+          onClick={() => setArrivingOpen(v => !v)}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+            padding: '10px 14px', borderRadius: 14,
+            background: G.surface, border: `1px solid ${G.border}`,
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
+          <Plane size={16} color={G.accent} />
+          <span style={{ flex: 1, textAlign: 'left', fontSize: 13, fontWeight: 800, color: G.text }}>
+            Arriving (Mar 22)
+          </span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: G.textMuted }}>{MOCK_FLIGHTS.filter(f => f.status === 'confirmed').length}/{MOCK_FLIGHTS.length}</span>
+          {arrivingOpen
+            ? <ChevronUp size={16} color={G.textMuted} />
+            : <ChevronDown size={16} color={G.textMuted} />
+          }
+        </button>
+        {arrivingOpen && MOCK_FLIGHTS.map(f => (
           <div key={f.id} style={{
             padding: 14, borderRadius: 18,
             background: G.surface, border: `1px solid ${G.border}`,
@@ -2056,9 +2721,7 @@ function GuestPortalPreview() {
               }}>{f.status}</span>
             </div>
             {f.status === 'confirmed' && f.terminal && (
-              <div style={{
-                display: 'flex', gap: 8, marginLeft: 26,
-              }}>
+              <div style={{ display: 'flex', gap: 8, marginLeft: 26 }}>
                 <span style={{
                   fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
                   background: G.surfaceHover, color: G.textMuted,
@@ -2071,66 +2734,234 @@ function GuestPortalPreview() {
             )}
           </div>
         ))}
-        <div style={{ display: 'flex', gap: 8 }}>
-          <input
-            type="text"
-            placeholder="Enter flight number"
-            value={flightInput}
-            onChange={e => setFlightInput(e.target.value)}
-            style={{
-              flex: 1, padding: '10px 14px', borderRadius: 12,
-              background: G.surfaceHover, border: `1px solid ${G.border}`,
-              color: G.text, fontSize: 13, fontWeight: 500,
-              fontFamily: 'inherit', outline: 'none',
-            }}
-          />
+
+        {/* Departing sub-section */}
+        <button
+          className="gp-press"
+          onClick={() => setDepartingOpen(v => !v)}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+            padding: '10px 14px', borderRadius: 14,
+            background: G.surface, border: `1px solid ${G.border}`,
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
+          <Plane size={16} color={G.textMuted} style={{ transform: 'rotate(45deg)' }} />
+          <span style={{ flex: 1, textAlign: 'left', fontSize: 13, fontWeight: 800, color: G.text }}>
+            Departing (Mar 27)
+          </span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: G.textMuted }}>{MOCK_DEPARTURE_FLIGHTS.filter(f => f.status === 'confirmed').length}/{MOCK_DEPARTURE_FLIGHTS.length}</span>
+          {departingOpen
+            ? <ChevronUp size={16} color={G.textMuted} />
+            : <ChevronDown size={16} color={G.textMuted} />
+          }
+        </button>
+        {departingOpen && MOCK_DEPARTURE_FLIGHTS.map(f => (
+          <div key={f.id} style={{
+            padding: 14, borderRadius: 18,
+            background: G.surface, border: `1px solid ${G.border}`,
+            boxShadow: G.shadowSm,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: f.status === 'confirmed' ? 8 : 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Plane size={16} color={f.status === 'confirmed' ? G.accent : G.textMuted} style={{ transform: 'rotate(45deg)' }} />
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: G.text }}>
+                    {f.flight ? `${f.name} · ${f.airline} ${f.flight}` : f.name}
+                  </div>
+                  {f.status === 'confirmed' ? (
+                    <div style={{ fontSize: 11, fontWeight: 600, color: G.textBody, marginTop: 2 }}>
+                      Oslo → {f.to} · Departing {f.departing}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 11, fontWeight: 600, color: G.textMuted, marginTop: 2 }}>
+                      No flight added yet
+                    </div>
+                  )}
+                </div>
+              </div>
+              <span style={{
+                fontSize: 9, fontWeight: 800, padding: '3px 8px', borderRadius: 8,
+                background: f.status === 'confirmed' ? G.accentBg : G.surfaceHover,
+                color: f.status === 'confirmed' ? G.accent : G.textMuted,
+                textTransform: 'uppercase', letterSpacing: '0.04em',
+              }}>{f.status}</span>
+            </div>
+            {f.status === 'confirmed' && f.terminal && (
+              <div style={{ display: 'flex', gap: 8, marginLeft: 26 }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
+                  background: G.surfaceHover, color: G.textMuted,
+                }}>Terminal {f.terminal}</span>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
+                  background: G.surfaceHover, color: G.textMuted,
+                }}>Gate {f.gate}</span>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Add flight input */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              type="text"
+              placeholder="Flight number (e.g. SK1472)"
+              value={flightInput}
+              onChange={e => setFlightInput(e.target.value)}
+              style={{
+                flex: 1, padding: '10px 14px', borderRadius: 12,
+                background: G.surfaceHover, border: `1px solid ${G.border}`,
+                color: G.text, fontSize: 13, fontWeight: 500,
+                fontFamily: 'inherit', outline: 'none',
+              }}
+            />
+            <input
+              type="text"
+              placeholder="Date & time (e.g. Mar 22, 19:45)"
+              value={flightTimeInput}
+              onChange={e => setFlightTimeInput(e.target.value)}
+              style={{
+                flex: 1, padding: '10px 14px', borderRadius: 12,
+                background: G.surfaceHover, border: `1px solid ${G.border}`,
+                color: G.text, fontSize: 13, fontWeight: 500,
+                fontFamily: 'inherit', outline: 'none',
+              }}
+            />
+          </div>
           <button
             className="gp-press-sm"
-            onClick={() => { if (flightInput.trim()) { showToast('Flight added ✓'); setFlightInput('') } }}
+            onClick={() => {
+              if (flightInput.trim()) {
+                const time = flightTimeInput.trim() || 'Mar 22, 19:45'
+                setAddedFlight({ code: flightInput.trim().toUpperCase(), airline: 'SAS', from: 'Copenhagen (CPH)', arriving: time, terminal: 'T2', gate: 'B12' })
+                showToast('Flight added ✓')
+                setFlightInput('')
+                setFlightTimeInput('')
+              }
+            }}
             style={{
-              padding: '10px 18px', borderRadius: 12,
-              background: G.accent, color: '#fff', border: 'none',
+              width: '100%', padding: '10px 18px', borderRadius: 12,
+              background: G.accent, color: G.accentFg, border: 'none',
               fontSize: 13, fontWeight: 800, cursor: 'pointer',
               fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             }}
-          >Add</button>
+          >
+            <Plane size={14} /> Add Flight
+          </button>
         </div>
+
+        {/* Recently added flight details */}
+        {addedFlight && (
+          <div style={{
+            padding: 14, borderRadius: 18, marginTop: 10,
+            background: G.surface, border: `1px solid ${G.border}`,
+            boxShadow: G.shadowSm,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Plane size={16} color={G.accent} />
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: G.text }}>
+                    {addedFlight.airline} {addedFlight.code}
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: G.textBody, marginTop: 2 }}>
+                    {addedFlight.from} → Oslo · Arriving {addedFlight.arriving}
+                  </div>
+                </div>
+              </div>
+              <span style={{
+                fontSize: 9, fontWeight: 800, padding: '3px 8px', borderRadius: 8,
+                background: G.accentBg, color: G.accent,
+                textTransform: 'uppercase', letterSpacing: '0.04em',
+              }}>confirmed</span>
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginLeft: 26 }}>
+              <span style={{
+                fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
+                background: G.surfaceHover, color: G.textMuted,
+              }}>Terminal {addedFlight.terminal}</span>
+              <span style={{
+                fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
+                background: G.surfaceHover, color: G.textMuted,
+              }}>Gate {addedFlight.gate}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Section 4 — Packing & Reminders */}
-      <SectionTitle>Packing &amp; Reminders</SectionTitle>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <SectionTitle>Packing &amp; Reminders</SectionTitle>
+        <button
+          className="gp-press-sm"
+          onClick={() => showToast('Reminders sent to all ✓')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 4,
+            padding: '5px 10px', borderRadius: 8,
+            background: G.surfaceHover, border: `1px solid ${G.border}`,
+            fontSize: 10, fontWeight: 700, color: G.textMuted,
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
+          <Bell size={11} /> Remind All
+        </button>
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
         {packingList.map(item => (
-          <button
+          <div
             key={item.id}
-            className="gp-press"
-            onClick={() => togglePackingItem(item.id)}
             style={{
               width: '100%', display: 'flex', alignItems: 'center', gap: 12,
               padding: '12px 14px', borderRadius: 14,
               background: G.surface, border: `1px solid ${G.border}`,
-              cursor: 'pointer', fontFamily: 'inherit',
               opacity: item.checked ? 0.7 : 1,
             }}
           >
-            <div style={{
-              width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-              background: item.checked ? G.accent : 'transparent',
-              border: item.checked ? 'none' : `2px solid ${G.border}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              {item.checked && <Check size={14} color="#fff" strokeWidth={3} />}
-            </div>
-            <span style={{
-              flex: 1, textAlign: 'left',
-              fontSize: 13, fontWeight: 700,
-              color: item.checked ? G.textMuted : G.text,
-              textDecoration: item.checked ? 'line-through' : 'none',
-            }}>{item.item}</span>
-            <span style={{ fontSize: 10, fontWeight: 600, color: G.textMuted }}>
-              {item.addedBy}
-            </span>
-          </button>
+            <button
+              className="gp-press"
+              onClick={() => togglePackingItem(item.id)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0,
+                background: 'none', border: 'none', padding: 0,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              <div style={{
+                width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+                background: item.checked ? G.accent : 'transparent',
+                border: item.checked ? 'none' : `2px solid ${G.border}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {item.checked && <Check size={14} color="#fff" strokeWidth={3} />}
+              </div>
+              <span style={{
+                flex: 1, textAlign: 'left',
+                fontSize: 13, fontWeight: 700,
+                color: item.checked ? G.textMuted : G.text,
+                textDecoration: item.checked ? 'line-through' : 'none',
+              }}>{item.item}</span>
+              <span style={{ fontSize: 10, fontWeight: 600, color: G.textMuted }}>
+                {item.addedBy}
+              </span>
+            </button>
+            {!item.checked && (
+              <button
+                className="gp-press-sm"
+                onClick={() => showToast(`Reminder sent to ${item.addedBy} ✓`)}
+                style={{
+                  width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                  background: G.surfaceHover, border: `1px solid ${G.border}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer',
+                }}
+              >
+                <Bell size={12} color={G.textMuted} />
+              </button>
+            )}
+          </div>
         ))}
         <div style={{ display: 'flex', gap: 8 }}>
           <input
@@ -2151,7 +2982,7 @@ function GuestPortalPreview() {
             onClick={addPackingItem}
             style={{
               width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
-              background: G.accent, color: '#fff', border: 'none',
+              background: G.accent, color: G.accentFg, border: 'none',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer',
             }}
@@ -2268,20 +3099,458 @@ function GuestPortalPreview() {
       tab={tab}
       onTabChange={setTab}
       panels={panels}
-      banner={
-        <div style={{
-          background: G.accentBg,
-          borderBottom: `1px solid ${G.border}`,
-          padding: '9px 16px', textAlign: 'center',
-          fontSize: 11, fontWeight: 700, color: G.accent,
-          letterSpacing: '0.04em',
-          fontFamily: 'var(--font-nunito), var(--font-sans)',
-        }}>
-          PREVIEW MODE — sample guest experience
-        </div>
-      }
+      banner={!verificationComplete ? (
+        <button
+          className="gp-press"
+          onClick={() => setShowVerification(true)}
+          style={{
+            width: '100%',
+            background: `${G.amber}12`,
+            borderBottom: `1px solid ${G.amber}22`,
+            padding: '9px 16px', textAlign: 'center',
+            fontSize: 11, fontWeight: 700, color: G.amber,
+            letterSpacing: '0.02em',
+            fontFamily: 'var(--font-nunito), var(--font-sans)',
+            border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          }}
+        >
+          <Lock size={11} /> Check-in instructions locked — complete verification to unlock
+        </button>
+      ) : undefined}
     />
   )
+
+  // ——— Verification Flow ——————————————————————————————————
+  const VERIFICATION_STEPS = [
+    {
+      title: 'Security Deposit / Damage Waiver',
+      icon: Shield,
+      color: '#4A9EFF',
+      content: (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* Card on file */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 14, background: G.surfaceHover, border: `1px solid ${G.border}` }}>
+            <CreditCard size={18} color="#4A9EFF" />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: G.text }}>Visa ••••4242</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: G.textMuted, marginTop: 2 }}>$200 hold · Pre-authorized</div>
+            </div>
+            <span style={{ fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 8, background: G.accentBg, color: G.accent }}>Active</span>
+          </div>
+
+          {/* What it covers */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: G.text, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>What this covers</div>
+            {[
+              'Accidental damage to furniture or fixtures',
+              'Excessive cleaning beyond normal wear',
+              'Missing or broken inventory items',
+              'Key / access device replacement',
+            ].map(item => (
+              <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
+                <div style={{ width: 4, height: 4, borderRadius: 2, background: '#4A9EFF', flexShrink: 0 }} />
+                <span style={{ fontSize: 11, fontWeight: 600, color: G.textBody }}>{item}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Refund timeline */}
+          <div style={{ padding: '10px 12px', borderRadius: 12, background: G.accentBg, border: `1px solid ${G.accent}22` }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: G.accent, marginBottom: 4 }}>Refund Timeline</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: G.textBody, lineHeight: 1.5 }}>
+              The $200 hold is <span style={{ fontWeight: 800 }}>not a charge</span>. It will be automatically released within 48 hours after checkout, provided no damage claim is filed by the host.
+            </div>
+          </div>
+
+          {/* Note */}
+          <div style={{ fontSize: 10, fontWeight: 600, color: G.textMuted, lineHeight: 1.5 }}>
+            You will not be charged unless the host submits a documented damage report with photos. Any dispute can be resolved through AfterStay support.
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: 'ID Verification',
+      icon: FileText,
+      color: '#3ECF8E',
+      content: (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* Document row */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 14, background: G.surfaceHover, border: `1px solid ${G.border}` }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(62,207,142,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <FileText size={20} color="#3ECF8E" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: G.text }}>Emma Lindqvist</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: G.textMuted, marginTop: 2 }}>Passport · Sweden</div>
+            </div>
+            <span style={{ fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 8, background: G.accentBg, color: G.accent }}>Verified</span>
+          </div>
+          {/* Selfie match */}
+          <div style={{ padding: '12px 14px', borderRadius: 14, background: G.surfaceHover, border: `1px solid ${G.border}` }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: G.text, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Selfie Verification</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {/* Selfie photo */}
+              <div style={{ position: 'relative' }}>
+                <div style={{
+                  width: 56, height: 56, borderRadius: '50%', overflow: 'hidden',
+                  border: `2px solid ${G.accent}`,
+                }}>
+                  <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop&crop=face" alt="Selfie" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+                <div style={{
+                  position: 'absolute', bottom: -2, right: -2,
+                  width: 20, height: 20, borderRadius: '50%',
+                  background: G.accent, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  border: `2px solid ${G.surface}`,
+                }}>
+                  <Check size={10} color="#fff" strokeWidth={3} />
+                </div>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: G.accent }}>Face match confirmed</div>
+                <div style={{ fontSize: 10, fontWeight: 600, color: G.textMuted, marginTop: 2 }}>Photo matches passport ID</div>
+              </div>
+              <Camera size={18} color={G.textMuted} />
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: 'House Rules',
+      icon: ClipboardList,
+      color: '#F5A623',
+      content: (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {['Quiet hours 10 PM – 8 AM', 'No smoking indoors', 'Max 2 extra guests', 'Pets allowed (notify host)', 'No parties or events'].map(rule => (
+            <div key={rule} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0' }}>
+              <div style={{ width: 18, height: 18, borderRadius: 5, background: G.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Check size={12} color="#fff" strokeWidth={3} />
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 600, color: G.text }}>{rule}</span>
+            </div>
+          ))}
+        </div>
+      ),
+    },
+    {
+      title: 'Travel Purpose',
+      icon: Palmtree,
+      color: '#A855F7',
+      content: (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {['Vacation', 'Business', 'Family visit', 'Event', 'Other'].map(purpose => (
+            <div key={purpose} style={{
+              padding: '8px 16px', borderRadius: 999,
+              background: purpose === 'Vacation' ? G.accent : G.surfaceHover,
+              color: purpose === 'Vacation' ? '#fff' : G.textBody,
+              border: purpose === 'Vacation' ? 'none' : `1px solid ${G.border}`,
+              fontSize: 12, fontWeight: 700,
+            }}>{purpose}</div>
+          ))}
+        </div>
+      ),
+    },
+  ]
+
+  const verificationFlow = (
+    <div style={{
+      display: 'flex', flexDirection: 'column', minHeight: '100%',
+      background: G.bg,
+      fontFamily: 'var(--font-nunito), var(--font-sans)',
+    }}>
+      {/* Hero image (blurred) + back button */}
+      <div style={{
+        position: 'relative', height: 200, overflow: 'hidden',
+      }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: `url(${PREVIEW_IMAGES.hero[0]})`,
+          backgroundSize: 'cover', backgroundPosition: 'center',
+          filter: 'blur(3px) brightness(0.6)',
+          transform: 'scale(1.1)',
+        }} />
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%)',
+        }} />
+        {/* Back button */}
+        <button
+          className="gp-press-sm"
+          onClick={() => setShowVerification(false)}
+          style={{
+            position: 'absolute', top: 14, left: 14, zIndex: 10,
+            width: 36, height: 36, borderRadius: '50%',
+            background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)',
+            border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          <ArrowLeft size={18} color="#fff" />
+        </button>
+        <div style={{
+          position: 'absolute', bottom: 20, left: 20, right: 20,
+        }}>
+          <div style={{ fontSize: 20, fontWeight: 900, color: '#fff', marginBottom: 4 }}>
+            {guidebook.propertyName}
+          </div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.7)' }}>
+            Mar 22 – Mar 27 · 5 nights
+          </div>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div style={{ padding: '16px 20px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+          <span style={{ fontSize: 11, fontWeight: 800, color: G.text }}>Pre-Check-in Verification</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: G.textMuted }}>Step {verificationStep + 1} of {VERIFICATION_STEPS.length}</span>
+        </div>
+        <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
+          {VERIFICATION_STEPS.map((_, idx) => (
+            <div key={idx} style={{
+              flex: 1, height: 4, borderRadius: 2,
+              background: idx <= verificationStep ? G.accent : G.surfaceHover,
+              transition: 'background 0.3s',
+            }} />
+          ))}
+        </div>
+        {/* Disclaimer */}
+        <div style={{
+          padding: '8px 12px', borderRadius: 10, marginBottom: 16,
+          background: `${G.amber}0a`, border: `1px solid ${G.amber}18`,
+          display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <Lock size={12} color={G.amber} />
+          <span style={{ fontSize: 11, fontWeight: 600, color: G.textBody, lineHeight: 1.4 }}>
+            Complete all steps to unlock check-in instructions, door codes, and access details
+          </span>
+        </div>
+      </div>
+
+      {/* Current step card */}
+      <div style={{ padding: '0 20px', flex: 1 }}>
+        {(() => {
+          const step = VERIFICATION_STEPS[verificationStep]
+          const StepIcon = step.icon
+          return (
+            <div style={{
+              padding: 18, borderRadius: 18,
+              background: G.surface, border: `1px solid ${G.border}`,
+              boxShadow: G.shadowMd, marginBottom: 16,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10,
+                  background: `${step.color}18`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <StepIcon size={18} color={step.color} />
+                </div>
+                <span style={{ fontSize: 15, fontWeight: 800, color: G.text }}>{step.title}</span>
+              </div>
+              {step.content}
+            </div>
+          )
+        })()}
+      </div>
+
+      {/* CTA buttons */}
+      <div style={{ padding: '0 20px 24px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <button
+          className="gp-press"
+          onClick={() => {
+            if (verificationStep < VERIFICATION_STEPS.length - 1) {
+              setVerificationStep(s => s + 1)
+            } else {
+              showToast('All verified! Check-in unlocked ✓')
+              setVerificationComplete(true)
+              setTimeout(() => setShowVerification(false), 600)
+            }
+          }}
+          style={{
+            width: '100%', padding: '14px 24px', borderRadius: 999,
+            background: G.accent, color: G.accentFg, border: 'none',
+            fontSize: 14, fontWeight: 800, cursor: 'pointer',
+            fontFamily: 'inherit', transition: 'all 0.2s',
+            boxShadow: `0 4px 16px ${G.accent}44`,
+          }}
+        >
+          {verificationStep < VERIFICATION_STEPS.length - 1 ? 'Confirm & Continue' : 'Complete Verification'}
+        </button>
+        {verificationStep > 0 && (
+          <button
+            className="gp-press-sm"
+            onClick={() => setVerificationStep(s => s - 1)}
+            style={{
+              width: '100%', padding: '10px 20px', borderRadius: 999,
+              background: 'transparent', border: `1px solid ${G.border}`,
+              color: G.textMuted, fontSize: 13, fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >Back</button>
+        )}
+      </div>
+    </div>
+  )
+
+  // ——— Chat Sheet ———————————————————————————————————————
+  const chatSheet = chatOpen && (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 500,
+      fontFamily: 'var(--font-nunito), var(--font-sans)',
+    }}>
+      <div
+        onClick={() => setChatOpen(false)}
+        style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }}
+      />
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0,
+        maxHeight: '85vh',
+        background: G.surface, borderRadius: '20px 20px 0 0',
+        boxShadow: G.shadowLg,
+        display: 'flex', flexDirection: 'column',
+      }}>
+        {/* Header */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '14px 18px', borderBottom: `1px solid ${G.border}`,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <img
+              src={PREVIEW_IMAGES.hostAvatar}
+              alt="Host"
+              style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }}
+            />
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: G.text }}>Chat with Host</div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: G.accent }}>Online</div>
+            </div>
+          </div>
+          <button
+            className="gp-press-sm"
+            onClick={() => setChatOpen(false)}
+            style={{
+              width: 32, height: 32, borderRadius: 8,
+              background: G.surfaceHover, border: 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            <X size={16} color={G.textMuted} />
+          </button>
+        </div>
+
+        {/* Messages */}
+        <div style={{
+          flex: 1, overflow: 'auto', padding: '14px 18px',
+          display: 'flex', flexDirection: 'column', gap: 8,
+          maxHeight: '50vh', scrollbarWidth: 'none',
+        }}>
+          {chatMessages.map(msg => (
+            <div key={msg.id} style={{
+              display: 'flex', justifyContent: msg.from === 'guest' ? 'flex-end' : 'flex-start',
+            }}>
+              <div style={{
+                maxWidth: '80%', padding: '10px 14px', borderRadius: 16,
+                background: msg.from === 'guest' ? G.accent : G.surfaceHover,
+                color: msg.from === 'guest' ? '#fff' : G.text,
+                fontSize: 13, fontWeight: 600, lineHeight: 1.45,
+                borderBottomRightRadius: msg.from === 'guest' ? 4 : 16,
+                borderBottomLeftRadius: msg.from === 'host' ? 4 : 16,
+              }}>
+                {msg.text}
+                <div style={{
+                  fontSize: 9, fontWeight: 600, marginTop: 4,
+                  color: msg.from === 'guest' ? 'rgba(255,255,255,0.6)' : G.textMuted,
+                  textAlign: msg.from === 'guest' ? 'right' : 'left',
+                }}>{msg.time}</div>
+              </div>
+            </div>
+          ))}
+          {chatTyping && (
+            <div style={{
+              display: 'flex', justifyContent: 'flex-start',
+            }}>
+              <div style={{
+                padding: '10px 14px', borderRadius: 16, borderBottomLeftRadius: 4,
+                background: G.surfaceHover,
+                fontSize: 13, fontWeight: 600, color: G.textMuted,
+              }}>
+                Typing...
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Quick replies */}
+        <div style={{
+          display: 'flex', gap: 6, padding: '8px 18px',
+          overflowX: 'auto', scrollbarWidth: 'none',
+        }}>
+          {CHAT_QUICK_REPLIES.map(reply => (
+            <button
+              key={reply}
+              className="gp-press-sm"
+              onClick={() => sendChatMessage(reply)}
+              style={{
+                padding: '6px 12px', borderRadius: 999, flexShrink: 0,
+                background: G.accentBg, border: `1px solid ${G.accent}33`,
+                color: G.accent, fontSize: 11, fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+              }}
+            >{reply}</button>
+          ))}
+        </div>
+
+        {/* Input */}
+        <div style={{
+          display: 'flex', gap: 8, padding: '10px 18px 18px',
+          borderTop: `1px solid ${G.border}`,
+        }}>
+          <input
+            type="text"
+            placeholder="Type a message..."
+            value={chatInput}
+            onChange={e => setChatInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') sendChatMessage(chatInput) }}
+            style={{
+              flex: 1, padding: '10px 14px', borderRadius: 14,
+              background: G.surfaceHover, border: `1px solid ${G.border}`,
+              color: G.text, fontSize: 13, fontWeight: 500,
+              fontFamily: 'inherit', outline: 'none',
+            }}
+          />
+          <button
+            className="gp-press-sm"
+            onClick={() => sendChatMessage(chatInput)}
+            style={{
+              width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+              background: G.accent, border: 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            <Send size={16} color="#fff" />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+
+  // ——— Verification screen (toggled, not gate) ——————————————
+  if (showVerification) {
+    return (
+      <>
+        <PhoneFrame toast={toast}>
+          {verificationFlow}
+        </PhoneFrame>
+        {chatSheet}
+      </>
+    )
+  }
 
   return (
     <>
@@ -2308,7 +3577,7 @@ function GuestPortalPreview() {
                     { label: 'Emergency', icon: AlertTriangle, color: G.red, rgb: '196,51,51',
                       action: () => { setHelpMenuOpen(false); showToast('Calling emergency...') } },
                     { label: 'Message Host', icon: MessageSquare, color: '#4A9EFF', rgb: '74,158,255',
-                      action: () => { setHelpMenuOpen(false); showToast('Coming soon') } },
+                      action: () => { setHelpMenuOpen(false); setChatOpen(true) } },
                     { label: 'Call Host', icon: Phone, color: '#3ECF8E', rgb: '62,207,142',
                       action: () => { setHelpMenuOpen(false); showToast('Coming soon') } },
                     { label: 'Report Issue', icon: Wrench, color: '#FF4D4D', rgb: '255,77,77',
@@ -2348,6 +3617,31 @@ function GuestPortalPreview() {
               </>
             )}
 
+            {/* Cart FAB badge */}
+            {addedServices.size > 0 && !helpMenuOpen && (
+              <button
+                onClick={() => setCartOpen(true)}
+                className="gp-press-sm"
+                style={{
+                  position: 'absolute', bottom: 150, right: 20, zIndex: 199,
+                  width: 48, height: 48, borderRadius: '50%',
+                  background: G.surface, border: `1px solid ${G.border}`,
+                  boxShadow: G.shadowLg,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer',
+                }}
+              >
+                <ShoppingCart size={20} color={G.accent} />
+                <span style={{
+                  position: 'absolute', top: -4, right: -4,
+                  width: 20, height: 20, borderRadius: '50%',
+                  background: G.red ?? '#C43333', color: '#fff',
+                  fontSize: 10, fontWeight: 800,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>{addedServices.size}</span>
+              </button>
+            )}
+
             {/* FAB button */}
             <button
               onClick={() => setHelpMenuOpen(v => !v)}
@@ -2362,7 +3656,7 @@ function GuestPortalPreview() {
                 transition: 'transform 0.2s, box-shadow 0.2s',
               }}
             >
-              <MessageCircle size={22} color="#fff" />
+              <MessageCircle size={22} color={G.accentFg} />
             </button>
           </>
         }
@@ -2374,12 +3668,149 @@ function GuestPortalPreview() {
         guidebook={guidebook}
         verification={verif}
       />
+      {/* Cart Sheet */}
+      {cartOpen && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 400,
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+        }}>
+          <div onClick={() => setCartOpen(false)} style={{
+            position: 'absolute', inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+          }} />
+          <div style={{
+            position: 'relative', zIndex: 1,
+            width: '100%', maxWidth: 430, maxHeight: '80vh',
+            background: G.bg, borderRadius: '24px 24px 0 0',
+            overflow: 'auto',
+          }}>
+            {/* Header */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '20px 20px 0',
+            }}>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 900, color: G.text }}>Your Cart</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: G.textMuted, marginTop: 2 }}>
+                  {cartItems.length} item{cartItems.length !== 1 ? 's' : ''}
+                </div>
+              </div>
+              <button onClick={() => setCartOpen(false)} style={{
+                width: 36, height: 36, borderRadius: '50%',
+                background: G.surfaceHover, border: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+              }}>
+                <X size={18} color={G.textMuted} />
+              </button>
+            </div>
+
+            {/* Items */}
+            <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {cartItems.map(item => {
+                const cat = UPSELL_CATEGORY_ICON[item.category]
+                const CatIcon = cat?.icon ?? Gift
+                return (
+                  <div key={item.id} style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '12px 14px', borderRadius: 14,
+                    background: G.surface, border: `1px solid ${G.border}`,
+                  }}>
+                    <div style={{
+                      width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+                      background: `rgba(${cat?.rgb ?? '236,72,153'}, 0.12)`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <CatIcon size={18} color={cat?.color ?? '#EC4899'} strokeWidth={1.5} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: G.text }}>{item.title}</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: G.accent, marginTop: 2 }}>
+                        {item.price} {item.currency ?? 'NOK'}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => toggleAddService(item.id)}
+                      style={{
+                        width: 32, height: 32, borderRadius: '50%',
+                        background: `${G.red ?? '#C43333'}12`, border: 'none',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <Trash2 size={14} color={G.red ?? '#C43333'} />
+                    </button>
+                  </div>
+                )
+              })}
+
+              {cartItems.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '24px 0', color: G.textMuted, fontSize: 13 }}>
+                  Your cart is empty
+                </div>
+              )}
+            </div>
+
+            {/* Subtotal & Payment */}
+            {cartItems.length > 0 && (
+              <div style={{ padding: '0 20px 24px' }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '12px 0', borderTop: `1px solid ${G.border}`,
+                  marginBottom: 14,
+                }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: G.text }}>Subtotal</span>
+                  <span style={{ fontSize: 16, fontWeight: 900, color: G.text }}>{cartTotal} NOK</span>
+                </div>
+
+                {/* Payment method */}
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '12px 14px', borderRadius: 12,
+                  background: G.surface, border: `1px solid ${G.border}`,
+                  marginBottom: 14,
+                }}>
+                  <CreditCard size={18} color={G.textMuted} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: G.text }}>Visa ••••4242</div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: G.textMuted }}>From verification</div>
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: G.textFaint }}>Change</span>
+                </div>
+
+                {/* Checkout CTA */}
+                <button
+                  className="gp-press"
+                  onClick={handleCheckout}
+                  disabled={checkingOut}
+                  style={{
+                    width: '100%', padding: '15px 20px', borderRadius: 999,
+                    background: G.accent, color: G.accentFg, border: 'none',
+                    fontSize: 15, fontWeight: 800, cursor: 'pointer',
+                    fontFamily: 'inherit', opacity: checkingOut ? 0.7 : 1,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    boxShadow: `0 4px 16px ${G.accent}44`,
+                  }}
+                >
+                  {checkingOut ? (
+                    <><Loader2 size={16} className="animate-spin" /> Processing...</>
+                  ) : (
+                    <>Confirm & Pay — {cartTotal} NOK</>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      {chatSheet}
     </>
   )
 }
 
 // ——— Phone device frame ——————————————————————————————————————
 function PhoneFrame({ children, toast, fab }: { children: React.ReactNode; toast: string | null; fab?: React.ReactNode }) {
+  const { theme: G } = useGuestTheme()
   return (
     <>
       {/* ── Mobile: direct fullscreen rendering ── */}
@@ -2394,7 +3825,7 @@ function PhoneFrame({ children, toast, fab }: { children: React.ReactNode; toast
           position: 'fixed', left: '50%', top: 48, zIndex: 300,
           transform: `translateX(-50%) translateY(${toast ? '0' : '-20px'})`,
           opacity: toast ? 1 : 0,
-          background: G.accent, color: '#fff',
+          background: G.accent, color: G.accentFg,
           padding: '12px 20px', borderRadius: 24,
           fontSize: 13, fontWeight: 900,
           boxShadow: `0 8px 24px ${G.accent}66, 0 4px 12px rgba(0,0,0,0.3)`,
@@ -2550,7 +3981,7 @@ function PhoneFrame({ children, toast, fab }: { children: React.ReactNode; toast
                 position: 'absolute', left: '50%', top: 80, zIndex: 300,
                 transform: `translateX(-50%) translateY(${toast ? '0' : '-20px'})`,
                 opacity: toast ? 1 : 0,
-                background: G.accent, color: '#fff',
+                background: G.accent, color: G.accentFg,
                 padding: '12px 20px', borderRadius: 24,
                 fontSize: 13, fontWeight: 900,
                 boxShadow: `0 8px 24px ${G.accent}66, 0 4px 12px rgba(0,0,0,0.3)`,
@@ -2658,6 +4089,7 @@ function PhoneFrame({ children, toast, fab }: { children: React.ReactNode; toast
 
 // ——— Local UI helpers ————————————————————————————————————————
 function SectionTitle({ children }: { children: React.ReactNode }) {
+  const { theme: G } = useGuestTheme()
   return (
     <div style={{
       fontSize: 10, fontWeight: 700, color: G.textMuted,
@@ -2670,6 +4102,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 function SectionHeader({
   title, action, onAction,
 }: { title: string; action?: string; onAction?: () => void }) {
+  const { theme: G } = useGuestTheme()
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
