@@ -1,3 +1,22 @@
+export interface DayForecast {
+  date: string
+  dayOfWeek: string
+  high: number
+  low: number
+  condition: 'sunny' | 'cloudy' | 'rain' | 'snow' | 'storm' | 'partly_cloudy' | 'windy'
+  precipChance: number
+  alert?: string
+}
+
+export const STAY_FORECAST: DayForecast[] = [
+  { date: 'Mar 22', dayOfWeek: 'Sat', high: 8, low: 2, condition: 'partly_cloudy', precipChance: 20 },
+  { date: 'Mar 23', dayOfWeek: 'Sun', high: 6, low: 1, condition: 'rain', precipChance: 80, alert: 'Bring an umbrella — rain expected all afternoon' },
+  { date: 'Mar 24', dayOfWeek: 'Mon', high: 5, low: -1, condition: 'rain', precipChance: 70, alert: 'Wet morning — plan indoor activities' },
+  { date: 'Mar 25', dayOfWeek: 'Tue', high: 7, low: 0, condition: 'cloudy', precipChance: 30 },
+  { date: 'Mar 26', dayOfWeek: 'Wed', high: 10, low: 3, condition: 'sunny', precipChance: 5 },
+  { date: 'Mar 27', dayOfWeek: 'Thu', high: 9, low: 2, condition: 'partly_cloudy', precipChance: 15 },
+]
+
 export interface PropertyWeather {
   propertyId: string
   location: string

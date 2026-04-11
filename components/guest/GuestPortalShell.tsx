@@ -1,8 +1,8 @@
 'use client'
 import { useState, useRef, ReactNode } from 'react'
 import { motion, AnimatePresence, LayoutGroup, useReducedMotion } from 'framer-motion'
-import { Home, BookOpen, Compass, ShoppingBag, Users, LucideIcon } from 'lucide-react'
-import { G } from '@/lib/guest/theme'
+import { Home, BookOpen, Compass, ShoppingBag, Users, LucideIcon, Moon, Sun } from 'lucide-react'
+import { useGuestTheme } from '@/lib/guest/theme-context'
 
 export type GuestTab = 'home' | 'guide' | 'discover' | 'services' | 'trip'
 
@@ -32,14 +32,12 @@ interface Props {
   banner?: ReactNode
 }
 
-/**
- * 5-tab warm cream bottom-nav shell for the guest portal preview.
- * Frosted white glass nav with olive active state, always-visible labels.
- * Uses sticky positioning so it works inside both viewport and phone frame containers.
- */
 export default function GuestPortalShell({
   initial = 'home', tab: controlledTab, onTabChange, panels, banner,
 }: Props) {
+  const { theme: G, resolved, toggle } = useGuestTheme()
+  const isDark = resolved === 'dark'
+
   const [internalTab, setInternalTab] = useState<GuestTab>(initial)
   const tab = controlledTab ?? internalTab
   const reduced = useReducedMotion()
@@ -56,6 +54,17 @@ export default function GuestPortalShell({
 
   const spring = { type: 'spring' as const, stiffness: 320, damping: 32, mass: 0.9 }
 
+  // Nav glass colors adapt to theme
+  const navGlass = isDark
+    ? 'rgba(34,37,41,0.92)'
+    : 'rgba(255,255,255,0.92)'
+  const navBorder = isDark
+    ? 'rgba(255,255,255,0.06)'
+    : 'rgba(28,25,23,0.06)'
+  const navShadow = isDark
+    ? '0 -4px 24px rgba(0,0,0,0.20), 0 4px 16px rgba(0,0,0,0.24)'
+    : '0 -4px 24px rgba(28,25,23,0.06), 0 4px 16px rgba(28,25,23,0.08)'
+
   return (
     <div
       className="guest-portal-shell"
@@ -69,9 +78,45 @@ export default function GuestPortalShell({
         flexDirection: 'column',
         alignItems: 'center',
         position: 'relative',
+        transition: 'background 0.35s ease, color 0.35s ease',
       }}
     >
       {banner}
+
+      {/* Theme toggle — top-right */}
+      <button
+        onClick={toggle}
+        aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        style={{
+          position: 'absolute',
+          top: 16,
+          right: 16,
+          zIndex: 110,
+          width: 40,
+          height: 40,
+          borderRadius: '50%',
+          border: `1px solid ${G.border}`,
+          background: G.surface,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          boxShadow: G.shadowSm,
+          transition: 'background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease',
+        }}
+      >
+        <motion.div
+          key={resolved}
+          initial={{ rotate: -30, opacity: 0, scale: 0.5 }}
+          animate={{ rotate: 0, opacity: 1, scale: 1 }}
+          exit={{ rotate: 30, opacity: 0, scale: 0.5 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+        >
+          {isDark
+            ? <Sun size={18} color={G.accent} strokeWidth={2} />
+            : <Moon size={18} color={G.textMuted} strokeWidth={2} />}
+        </motion.div>
+      </button>
 
       {/* Scrollable content */}
       <div style={{
@@ -121,7 +166,7 @@ export default function GuestPortalShell({
         >
           <div style={{
             height: 68,
-            background: 'rgba(255,255,255,0.92)',
+            background: navGlass,
             backdropFilter: 'blur(24px)',
             WebkitBackdropFilter: 'blur(24px)',
             borderRadius: 31,
@@ -129,9 +174,10 @@ export default function GuestPortalShell({
             alignItems: 'center',
             justifyContent: 'space-around',
             padding: '0 8px',
-            border: '1px solid rgba(28,25,23,0.06)',
-            boxShadow: '0 -4px 24px rgba(28,25,23,0.06), 0 4px 16px rgba(28,25,23,0.08)',
+            border: `1px solid ${navBorder}`,
+            boxShadow: navShadow,
             pointerEvents: 'auto',
+            transition: 'background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease',
           }}>
             {TABS.map(t => {
               const active = tab === t.id
@@ -173,7 +219,7 @@ export default function GuestPortalShell({
                     )}
                     <Icon
                       size={20}
-                      color={active ? '#FFFFFF' : G.textMuted}
+                      color={active ? G.accentFg : G.textMuted}
                       strokeWidth={1.75}
                       style={{ position: 'relative', zIndex: 1 }}
                     />
