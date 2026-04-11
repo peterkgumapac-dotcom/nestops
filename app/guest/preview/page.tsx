@@ -1746,7 +1746,45 @@ export default function GuestPortalPreview() {
 function PhoneFrame({ children, toast, fab }: { children: React.ReactNode; toast: string | null; fab?: React.ReactNode }) {
   return (
     <>
-      <div style={{
+      {/* ── Mobile: direct fullscreen rendering ── */}
+      <div className="gp-mobile-shell" style={{
+        position: 'fixed', inset: 0,
+        display: 'none', flexDirection: 'column',
+        fontFamily: 'var(--font-nunito), var(--font-sans)',
+        background: G.bg,
+      }}>
+        {/* Toast notification */}
+        <div style={{
+          position: 'fixed', left: '50%', top: 48, zIndex: 300,
+          transform: `translateX(-50%) translateY(${toast ? '0' : '-20px'})`,
+          opacity: toast ? 1 : 0,
+          background: G.accent, color: '#fff',
+          padding: '12px 20px', borderRadius: 24,
+          fontSize: 13, fontWeight: 900,
+          boxShadow: `0 8px 24px ${G.accent}66, 0 4px 12px rgba(0,0,0,0.3)`,
+          pointerEvents: 'none',
+          transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
+          whiteSpace: 'nowrap',
+          display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <Check size={16} /> {toast}
+        </div>
+
+        {/* Scrollable content */}
+        <div style={{
+          flex: 1, overflow: 'auto',
+          scrollbarWidth: 'none',
+          position: 'relative',
+        }}>
+          {children}
+        </div>
+
+        {/* Floating overlays (FAB) */}
+        {fab}
+      </div>
+
+      {/* ── Desktop: phone bezel frame ── */}
+      <div className="gp-desktop-shell" style={{
         position: 'fixed', inset: 0,
         background: '#0c0d14',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1826,11 +1864,18 @@ function PhoneFrame({ children, toast, fab }: { children: React.ReactNode; toast
       </div>
 
       <style>{`
+        /* Mobile: show direct shell, hide bezel */
         @media (max-width: 500px) {
-          .phone-frame-bezel {
-            display: none !important;
-          }
+          .gp-mobile-shell { display: flex !important; }
+          .gp-desktop-shell { display: none !important; }
         }
+        /* Desktop: show bezel, hide mobile shell */
+        @media (min-width: 501px) {
+          .gp-mobile-shell { display: none !important; }
+          .gp-desktop-shell { display: flex !important; }
+        }
+        .gp-mobile-shell::-webkit-scrollbar,
+        .gp-mobile-shell *::-webkit-scrollbar,
         .phone-frame-bezel::-webkit-scrollbar,
         .phone-frame-bezel *::-webkit-scrollbar {
           display: none;
