@@ -93,7 +93,7 @@ const CSS = `
   .hero-glow {
     position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
     width: 800px; height: 600px;
-    background: radial-gradient(ellipse, rgba(196,98,45,0.08) 0%, transparent 70%);
+    background: radial-gradient(ellipse, rgba(20,184,166,0.08) 0%, transparent 70%);
     pointer-events: none;
   }
 
@@ -101,7 +101,7 @@ const CSS = `
   .lp-nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
     padding: 14px 0;
-    background: rgba(14,10,8,0.9);
+    background: rgba(12,13,20,0.9);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
   }
@@ -184,8 +184,8 @@ const CSS = `
     box-sizing: border-box;
   }
   .login-input:focus {
-    border-color: rgba(196,98,45,0.4);
-    box-shadow: 0 0 0 3px rgba(196,98,45,0.12);
+    border-color: rgba(20,184,166,0.4);
+    box-shadow: 0 0 0 3px rgba(20,184,166,0.12);
   }
   .login-input.error { border-color: var(--red); }
   .login-input-wrap { position: relative; }
@@ -205,7 +205,7 @@ const CSS = `
   .cta-primary:hover {
     background: var(--accent-light);
     transform: translateY(-1px);
-    box-shadow: 0 8px 30px rgba(196,98,45,0.25);
+    box-shadow: 0 8px 30px rgba(20,184,166,0.25);
   }
   .cta-primary:disabled { opacity: 0.7; cursor: not-allowed; transform: none; box-shadow: none; }
   .cta-ghost {
@@ -330,24 +330,33 @@ export default function LoginPage() {
     avatarColor: user.avatarBg,
   })
 
+  const getDestination = (profile: UserProfile): string => {
+    if (profile.role === 'operator') {
+      if (profile.accessTier === 'guest-services') {
+        if (profile.subRole?.includes('Supervisor')) return '/briefing/gs-supervisor'
+        return '/briefing/guest-services'
+      }
+      return '/operator'
+    }
+    if (profile.role === 'owner') return '/owner'
+    if (profile.role === 'staff') {
+      if (profile.jobRole === 'maintenance')               return '/briefing/maintenance'
+      else if (profile.jobRole === 'supervisor')           return '/briefing/supervisor'
+      else if (profile.jobRole === 'cleaner')              return '/briefing/cleaners'
+      else if (profile.subRole?.includes('Maintenance'))   return '/briefing/maintenance'
+      else if (profile.subRole?.includes('Cleaner') || profile.subRole?.includes('Cleaning'))
+                                                           return '/briefing/cleaners'
+    }
+    return '/briefing'
+  }
+
   const handleDemoSelect = (user: DemoUser) => {
     if (isLoading) return
     setIsLoading(true)
     const profile = buildProfile(user)
     localStorage.setItem('afterstay_user', JSON.stringify(profile))
     setUser(profile)
-    let dest = '/briefing'
-    if (profile.role === 'owner') {
-      dest = '/owner'
-    } else if (profile.role === 'staff') {
-      if (profile.jobRole === 'maintenance')               dest = '/briefing/maintenance'
-      else if (profile.jobRole === 'supervisor')           dest = '/briefing/supervisor'
-      else if (profile.jobRole === 'cleaner')              dest = '/briefing/cleaners'
-      else if (profile.subRole?.includes('Maintenance'))   dest = '/briefing/maintenance'
-      else if (profile.subRole?.includes('Cleaner') || profile.subRole?.includes('Cleaning'))
-                                                           dest = '/briefing/cleaners'
-    }
-    router.push(dest)
+    router.push(getDestination(profile))
   }
 
   const handleFloatingLogin = (userId: string) => {
@@ -357,11 +366,7 @@ export default function LoginPage() {
     const profile = buildProfile(user)
     localStorage.setItem('afterstay_user', JSON.stringify(profile))
     setUser(profile)
-    let dest = '/app/my-tasks'
-    if (user.role === 'operator') dest = '/app/dashboard'
-    else if (user.role === 'owner') dest = '/owner'
-    else if (user.jobRole === 'supervisor') dest = '/app/dashboard'
-    router.push(dest)
+    router.push(getDestination(profile))
   }
 
   const handleLogin = () => {
@@ -377,15 +382,7 @@ export default function LoginPage() {
           const profile = buildProfile(demoUser)
           localStorage.setItem('afterstay_user', JSON.stringify(profile))
           setUser(profile)
-          // Route by role — same logic as handleDemoSelect
-          let dest = '/briefing'
-          if (profile.role === 'owner') dest = '/owner'
-          else if (profile.role === 'staff') {
-            if (profile.jobRole === 'maintenance')         dest = '/briefing/maintenance'
-            else if (profile.jobRole === 'supervisor')     dest = '/briefing/supervisor'
-            else if (profile.jobRole === 'cleaner')        dest = '/briefing/cleaners'
-          }
-          router.push(dest)
+          router.push(getDestination(profile))
         }, 150)
       }
     } else {
@@ -600,12 +597,12 @@ export default function LoginPage() {
               <div className="floating-panel-title">Demo Personas</div>
               <div className="floating-panel-divider" />
               {[
-                { userId: 'pk', emoji: '⚙️', label: 'Operator',       sub: 'Peter K. · /app/dashboard' },
-                { userId: 'fn', emoji: '🛎️', label: 'GS Agent',        sub: 'Fatima N. · /app/dashboard' },
-                { userId: 'cm', emoji: '🎧', label: 'GS Supervisor',   sub: 'Carlos M. · /app/dashboard' },
-                { userId: 'ms', emoji: '🧹', label: 'Cleaner',         sub: 'Maria S. · /app/my-tasks' },
-                { userId: 'bl', emoji: '🔧', label: 'Maintenance',     sub: 'Bjorn L. · /app/my-tasks' },
-                { userId: 'ak', emoji: '👷', label: 'Supervisor',      sub: 'Anna K. · /app/dashboard' },
+                { userId: 'pk', emoji: '⚙️', label: 'Operator',       sub: 'Peter K. · /operator' },
+                { userId: 'fn', emoji: '🛎️', label: 'GS Agent',        sub: 'Fatima N. · /briefing/guest-services' },
+                { userId: 'cm', emoji: '🎧', label: 'GS Supervisor',   sub: 'Carlos M. · /briefing/gs-supervisor' },
+                { userId: 'ms', emoji: '🧹', label: 'Cleaner',         sub: 'Maria S. · /briefing/cleaners' },
+                { userId: 'bl', emoji: '🔧', label: 'Maintenance',     sub: 'Bjorn L. · /briefing/maintenance' },
+                { userId: 'ak', emoji: '👷', label: 'Supervisor',      sub: 'Anna K. · /briefing/supervisor' },
                 { userId: 'sj', emoji: '🏠', label: 'Owner',           sub: 'Sarah J. · /owner' },
                 { userId: 'mc', emoji: '🏠', label: 'Owner',           sub: 'Michael C. · /owner' },
               ].map(p => (

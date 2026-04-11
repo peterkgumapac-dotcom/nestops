@@ -189,7 +189,7 @@ export default function SupervisorBriefingPage() {
                 .filter(e => pulseTab === 'all' ? true : e.status === pulseTab)
                 .map((e, i, arr) => {
                   const isUrgent = e.status === 'blocked' || e.status === 'at_risk'
-                  const statusColor = e.status === 'blocked' ? '#E07A45'
+                  const statusColor = e.status === 'blocked' ? '#f59e0b'
                     : e.status === 'at_risk' ? 'rgba(255,255,255,0.65)'
                     : e.status === 'complete' ? '#10b981' : 'rgba(255,255,255,0.5)'
                   const actions: { label: string; onClick?: () => void }[] =
@@ -202,7 +202,7 @@ export default function SupervisorBriefingPage() {
                     <div key={e.id} style={{
                       display: 'flex', flexDirection: 'column', gap: 6,
                       padding: '10px 10px 10px 12px',
-                      borderLeft: isUrgent ? '2px solid #E07A45' : '2px solid transparent',
+                      borderLeft: isUrgent ? '2px solid #f59e0b' : '2px solid transparent',
                       borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
                     }}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>

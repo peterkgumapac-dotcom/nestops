@@ -391,7 +391,7 @@ export default function GuestServicesPage() {
                       display: 'flex', alignItems: 'flex-start', gap: 12,
                       padding: '12px 18px',
                       borderBottom: i < filteredFeed.length - 1 ? '1px solid var(--border-subtle)' : 'none',
-                      borderLeft: isUrgent ? '2px solid #E07A45' : '2px solid transparent',
+                      borderLeft: isUrgent ? '2px solid #f59e0b' : '2px solid transparent',
                     }}
                   >
                     {/* Dot */}

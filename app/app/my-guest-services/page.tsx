@@ -118,7 +118,7 @@ export default function MyGuestServicesPage() {
                 style={{
                   display: 'flex', alignItems: 'flex-start', gap: 10,
                   padding: '10px 16px',
-                  borderLeft: isUrgent ? '2px solid #E07A45' : '2px solid transparent',
+                  borderLeft: isUrgent ? '2px solid #f59e0b' : '2px solid transparent',
                   borderBottom: i < arr.length - 1 ? '1px solid var(--border-subtle)' : 'none',
                   cursor: 'pointer',
                 }}

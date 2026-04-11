@@ -132,7 +132,7 @@ export const FEATURES: Record<string, FeatureContent> = {
     headline: 'Every guest issue, tracked end-to-end.',
     subhead:
       'A kanban with SLA timers, threaded comments, and a built-in refund calculator — so nothing falls through WhatsApp.',
-    color: '#E07A45',
+    color: '#f59e0b',
     icon: '💬',
     problem:
       'Guest complaints live in WhatsApp threads. Nobody tracks resolution time. When the same complaint hits twice in a month, nobody notices — and the owner finds out from the review.',
