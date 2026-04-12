@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#08090a;--bg2:#0e0f11;--bg3:#16181c;--card:#11141a;--border:#1f2126;--border2:rgba(94,106,210,0.25);--text:#f5f6f8;--text2:#9ba3af;--text3:#5b626d;--accent:#5e6ad2;--accent-light:#8a93e8;--accent-lt:#8a93e8;--accent-bg:rgba(94,106,210,0.08);--accent-border:rgba(94,106,210,0.2);--red:#e24b4a;--red-bg:rgba(226,75,74,0.08);--amber:#ef9f27;--blue:#378ADD;--sans:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace}
+:root{--bg:#08090a;--bg2:#0e0f11;--bg3:#16181c;--card:#11141a;--border:#1f2126;--border2:rgba(94,106,210,0.25);--text:#f5f6f8;--text2:#9ba3af;--text3:#7a8290;--accent:#5e6ad2;--accent-light:#8a93e8;--accent-lt:#8a93e8;--accent-bg:rgba(94,106,210,0.08);--accent-border:rgba(94,106,210,0.2);--red:#e24b4a;--red-bg:rgba(226,75,74,0.08);--amber:#ef9f27;--blue:#378ADD;--sans:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;overflow-x:hidden}
 body{font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
@@ -386,13 +386,13 @@ footer p{font-size:12px;color:var(--text3)}
 .mb-nos-wm{display:flex;align-items:center;gap:5px;margin-bottom:6px}
 .mb-nos-logo{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff}
 .mb-nos-nm{font-size:12px;font-weight:700;color:#f9fafb}
-.mb-nos-vr{font-size:7px;background:rgba(94,106,210,.15);color:var(--accent);padding:1px 4px;border-radius:3px;font-weight:600}
+.mb-nos-vr{font-size:9px;background:rgba(94,106,210,.15);color:var(--accent);padding:1px 4px;border-radius:3px;font-weight:600}
 .mb-nos-greet{font-size:14px;font-weight:700;color:#f9fafb;margin-bottom:2px}
 .mb-nos-rolerow{display:flex;align-items:center;gap:4px;margin-bottom:2px}
 .mb-nos-badge{font-size:11px;font-weight:700;padding:2px 6px;border-radius:3px;color:#fff;text-transform:uppercase;letter-spacing:.04em}
 .mb-nos-meta{font-size:11px;color:#4b5563}
 .mb-nos-shift{background:#111827;border:1px solid #1f2937;border-radius:9px;padding:9px 11px;margin:7px 12px 0}
-.mb-nos-shift-lbl{font-size:7px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1px}
+.mb-nos-shift-lbl{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1px}
 .mb-nos-shift-tm{font-size:24px;font-weight:800;letter-spacing:.02em;line-height:1;font-family:var(--mono)}
 .mb-nos-shift-sub{font-size:11px;color:#4b5563;margin-top:2px}
 .mb-nos-cards{padding:6px 12px;display:flex;flex-direction:column;gap:4px;flex:1;overflow-y:auto}
@@ -415,7 +415,7 @@ footer p{font-size:12px;color:var(--text3)}
 .mb-nc-amber .mb-nc-s{color:#fcd34d}
 .mb-nc-red .mb-nc-s{color:#fca5a5}
 .mb-nc-tags{display:flex;gap:3px;flex-wrap:wrap;margin-top:2px}
-.mb-nc-tag{font-size:6.5px;font-weight:600;padding:1px 4px;border-radius:2px;text-transform:uppercase;letter-spacing:.04em}
+.mb-nc-tag{font-size:9px;font-weight:600;padding:1px 4px;border-radius:2px;text-transform:uppercase;letter-spacing:.04em}
 
 /* Progress bar */
 .mb-filmbar{display:flex;align-items:center;gap:12px;margin-top:12px;width:270px}
@@ -559,7 +559,8 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 /* ── Moats section ── */
 .moats-section{padding:80px 0;position:relative}
 .moats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:40px}
-.moat-card{padding:20px 22px;border-radius:16px;background:var(--bg3);border:1px solid var(--border);transition:border-color .15s}
+.moat-card{padding:20px 22px;border-radius:16px;background:var(--bg3);border:1px solid var(--border);transition:border-color .15s;cursor:pointer}
+.moat-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-color:rgba(94,106,210,0.3)}
 .moat-card:hover{border-color:rgba(94,106,210,0.3)}
 .moat-icon{font-size:18px;margin-bottom:10px}
 .moat-title{font-size:14px;font-weight:600;color:#fff;margin-bottom:6px;letter-spacing:-0.01em}
@@ -782,7 +783,7 @@ body.drawer-open #globe-canvas{opacity:0.35}
     </p>
   </div>
   <div class="globe-container">
-    <canvas id="globe"></canvas>
+    <canvas id="globe" role="img" aria-label="Interactive globe showing AfterStay's 9 connected modules: Work Orders, Guest Services, Cleaning, Inventory, Owner Portal, Compliance, Team and Staffing, Pulse, and Daily Briefing"></canvas>
   </div>
   <div class="container" style="margin-top:24px">
     <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:880px;margin:0 auto">
@@ -807,7 +808,7 @@ body.drawer-open #globe-canvas{opacity:0.35}
       The six things AfterStay does that nothing else can.
     </h2>
     <p style="font-size:clamp(14px,1.3vw,16px);color:var(--text2);max-width:560px;margin:0 auto;line-height:1.6">
-      Hover any card to see it in action.
+      Tap any card to see it in action.
     </p>
   </div>
   <div class="afm-root">
@@ -819,39 +820,39 @@ body.drawer-open #globe-canvas{opacity:0.35}
           <div class="afm-cc-num">6</div>
           <div class="afm-cc-label">moats<br>zero competitors</div>
         </div>
-        <div class="afm-cover-hint">hover to explore →</div>
+        <div class="afm-cover-hint">tap or hover to explore →</div>
       </div>
-      <div class="afm-card" data-m="pte" data-i="0"><div class="afm-card-inner">
+      <div class="afm-card" data-m="pte" data-i="0" tabindex="0" role="button" aria-label="PTE / Access Window — tap to explore"><div class="afm-card-inner">
         <div class="afm-card-icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="4" width="32" height="40" rx="4"/><circle cx="24" cy="20" r="5"/><path d="M24 25v5"/><path d="M16 38h16"/><path d="M14 10h6M28 10h6"/><path d="M12 34h10" stroke-dasharray="3 2" opacity="0.4"/><path d="M26 34h10"/></svg></div>
         <div class="afm-card-num">Moat 01</div>
         <div class="afm-card-title">PTE / Access Window</div>
         <div class="afm-card-desc">Knows if a guest is inside. Auto-activates time-bound access codes.</div>
         <div class="afm-card-badge"><span class="afm-dot"></span> Zero competitors</div></div></div>
-      <div class="afm-card" data-m="briefing" data-i="1"><div class="afm-card-inner">
+      <div class="afm-card" data-m="briefing" data-i="1" tabindex="0" role="button" aria-label="Morning Briefing — tap to explore"><div class="afm-card-inner">
         <div class="afm-card-icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="14" r="6"/><path d="M24 4v2M24 24v2M33 14h2M13 14h2"/><path d="M30 8l1.5-1.5M16.5 21.5l1.5-1.5M30 20l1.5 1.5M16.5 6.5l1.5 1.5"/><rect x="10" y="30" width="28" height="14" rx="3"/><path d="M15 35h8M15 39h12"/><circle cx="33" cy="35" r="2" fill="currentColor" stroke="none"/></svg></div>
         <div class="afm-card-num">Moat 02</div>
         <div class="afm-card-title">Morning Briefing</div>
         <div class="afm-card-desc">Role-based daily brief auto-sent before shift. Different view per role.</div>
         <div class="afm-card-badge"><span class="afm-dot"></span> Zero competitors</div></div></div>
-      <div class="afm-card" data-m="inventory" data-i="2"><div class="afm-card-inner">
+      <div class="afm-card" data-m="inventory" data-i="2" tabindex="0" role="button" aria-label="Inventory Auto-Deduction — tap to explore"><div class="afm-card-inner">
         <div class="afm-card-icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20l18-14 18 14"/><path d="M12 17v24h24V17"/><rect x="17" y="27" width="4" height="11" rx="1" opacity="0.35"/><rect x="23" y="32" width="4" height="6" rx="1" opacity="0.6"/><rect x="29" y="23" width="4" height="15" rx="1"/><circle cx="38" cy="12" r="5" fill="currentColor" stroke="none" opacity="0.25"/><path d="M38 10v4M38 15.5v.5" stroke-width="1.5" stroke="#080B12"/></svg></div>
         <div class="afm-card-num">Moat 03</div>
         <div class="afm-card-title">Inventory Auto-Deduction</div>
         <div class="afm-card-desc">Clean completes → stock deducts → alerts fire → PO drafts. Closed loop.</div>
         <div class="afm-card-badge"><span class="afm-dot"></span> Zero competitors</div></div></div>
-      <div class="afm-card" data-m="pulse" data-i="3"><div class="afm-card-inner">
+      <div class="afm-card" data-m="pulse" data-i="3" tabindex="0" role="button" aria-label="Pulse Control Center — tap to explore"><div class="afm-card-inner">
         <div class="afm-card-icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 24h8l4-12 6 24 4-14 4 8h14"/><circle cx="38" cy="30" r="3" fill="currentColor" stroke="none" opacity="0.4"/></svg></div>
         <div class="afm-card-num">Moat 04</div>
         <div class="afm-card-title">Pulse · Control Center</div>
         <div class="afm-card-desc">Real-time ops feed. Every role sees their reality on one clock.</div>
         <div class="afm-card-badge"><span class="afm-dot"></span> Zero competitors</div></div></div>
-      <div class="afm-card" data-m="library" data-i="4"><div class="afm-card-inner">
+      <div class="afm-card" data-m="library" data-i="4" tabindex="0" role="button" aria-label="Property Library — tap to explore"><div class="afm-card-inner">
         <div class="afm-card-icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h16a2 2 0 012 2v34a1 1 0 01-1-1H6V6z"/><path d="M42 6H26a2 2 0 00-2 2v34a1 1 0 011-1h17V6z"/><path d="M11 14h6M11 19h8M11 24h4"/><path d="M31 14h6M31 19h8M31 24h4"/><path d="M24 16v6" stroke-dasharray="1.5 2" opacity="0.3"/><circle cx="24" cy="28" r="3" fill="currentColor" stroke="none" opacity="0.25"/></svg></div>
         <div class="afm-card-num">Moat 05</div>
         <div class="afm-card-title">Property Library</div>
         <div class="afm-card-desc">One intake. Ten tabs of truth. Guidebooks, staff cards, owner portal — all from one source.</div>
         <div class="afm-card-badge"><span class="afm-dot"></span> Zero competitors</div></div></div>
-      <div class="afm-card" data-m="autonomy" data-i="5"><div class="afm-card-inner">
+      <div class="afm-card" data-m="autonomy" data-i="5" tabindex="0" role="button" aria-label="Staff Autonomy — tap to explore"><div class="afm-card-inner">
         <div class="afm-card-icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="17" cy="16" r="6"/><path d="M7 38c0-5.523 4.477-10 10-10s10 4.477 10 10"/><path d="M31 24h10M37 19l5 5-5 5"/><rect x="33" y="31" width="10" height="11" rx="2"/><path d="M35 35h6M35 38h4"/></svg></div>
         <div class="afm-card-num">Moat 06</div>
         <div class="afm-card-title">Staff Autonomy</div>
@@ -1851,6 +1852,7 @@ plSetTab(0,false);
     c.addEventListener('mouseenter',function(){if(state==='scattered'){c.style.transform='rotateZ(0deg) scale(1.1) translateY(-10px)';c.style.zIndex=20;c.style.opacity=1;c.style.borderColor='rgba(255,255,255,0.12)';c.style.boxShadow='0 35px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.06)';cards.forEach(function(oc,oi){if(oi!==i){oc.style.opacity='0.5';oc.style.filter='brightness(0.6)';}});}});
     c.addEventListener('mouseleave',function(){if(state==='scattered'){var s=scattered[i];c.style.transform='rotateZ('+s.rot+'deg) scale(1)';c.style.zIndex=N-i;c.style.opacity=1;c.style.borderColor='rgba(255,255,255,0.07)';c.style.boxShadow='0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)';cards.forEach(function(oc){oc.style.opacity='1';oc.style.filter='none';});}});
     c.addEventListener('click',function(e){e.stopPropagation();toScattered();if(window.afmOpenModal)window.afmOpenModal(c.dataset.m);});
+    c.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();toScattered();if(window.afmOpenModal)window.afmOpenModal(c.dataset.m);}});
   });
   cover.addEventListener('click',function(){if(state==='deck')toScattered();});
   scene.addEventListener('click',function(e){if(e.target===scene||e.target===hint){if(state==='focused')toScattered();else if(state==='scattered')toDeck();}});
@@ -3385,8 +3387,13 @@ function handleClick(cx2,cy2){
 
 function arcPts(p1,p2,n){const pts=[],md=[(p1[0]+p2[0])/2,(p1[1]+p2[1])/2,(p1[2]+p2[2])/2],ln=Math.sqrt(md[0]**2+md[1]**2+md[2]**2)||1,ds=Math.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2+(p1[2]-p2[2])**2),lift=1+ds*.22,cp=[md[0]/ln*lift,md[1]/ln*lift,md[2]/ln*lift];for(let i=0;i<=n;i++){const t=i/n,u=1-t;pts.push([u*u*p1[0]+2*u*t*cp[0]+t*t*p2[0],u*u*p1[1]+2*u*t*cp[1]+t*t*p2[1],u*u*p1[2]+2*u*t*cp[2]+t*t*p2[2]]);}return pts;}
 
+let globeVisible=true;
+const globeObs=new IntersectionObserver(([e])=>{globeVisible=e.isIntersecting;},{threshold:0.05});
+globeObs.observe(cvs.closest('.globe-section')||cvs);
+
 function draw(){
   requestAnimationFrame(draw);
+  if(!globeVisible)return;
   time+=.016;
   const W=rect.width,H=rect.height,cx=W/2,cy=H/2,R=Math.min(W,H)*.44;
   c.clearRect(0,0,W,H);
