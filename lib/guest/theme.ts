@@ -69,10 +69,10 @@ export const G_DARK: GuestTheme = {
   textMuted:    'rgba(255,255,255,0.55)',
   textFaint:    'rgba(255,255,255,0.3)',
 
-  accent:       '#8FB83A',
-  accentLight:  '#7FA332',
-  accentBg:     'rgba(143,184,58,0.10)',
-  accentFg:     '#1A1C20',
+  accent:       '#5B9A6F',
+  accentLight:  '#4E8760',
+  accentBg:     'rgba(91,154,111,0.10)',
+  accentFg:     '#FFFFFF',
 
   green:        '#3ECF8E',
   amber:        '#F5A623',
