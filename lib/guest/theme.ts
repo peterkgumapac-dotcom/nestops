@@ -74,7 +74,7 @@ export const G_DARK: GuestTheme = {
   accentBg:     'rgba(91,154,111,0.10)',
   accentFg:     '#FFFFFF',
 
-  green:        '#3ECF8E',
+  green:        '#6AAD7E',
   amber:        '#F5A623',
   red:          '#FF4D4D',
   blue:         '#4A9EFF',

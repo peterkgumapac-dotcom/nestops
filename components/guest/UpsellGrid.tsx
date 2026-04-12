@@ -90,13 +90,13 @@ export default function UpsellGrid({ upsells, accentColor }: Props) {
 
               <div style={{ padding: '14px 14px 16px' }}>
                 <div style={{
-                  width: 44, height: 44, borderRadius: 13,
+                  width: 34, height: 34, borderRadius: 10,
                   background: isAdded
                     ? `linear-gradient(135deg, ${G.green}20, ${G.green}08)`
                     : `linear-gradient(135deg, ${meta.gradient[0]}22, ${meta.gradient[0]}08)`,
                   border: isAdded ? `1px solid ${G.green}25` : `1px solid ${meta.gradient[0]}25`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 22, marginBottom: 10,
+                  fontSize: 17, marginBottom: 10,
                 }}>
                   {isAdded ? '✓' : meta.emoji}
                 </div>
@@ -158,11 +158,11 @@ export default function UpsellGrid({ upsells, accentColor }: Props) {
           return (
             <div>
               <div style={{
-                width: 64, height: 64, borderRadius: 18, marginBottom: 14,
+                width: 48, height: 48, borderRadius: 14, marginBottom: 14,
                 background: `linear-gradient(135deg, ${meta.gradient[0]}, ${meta.gradient[1]})`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 32,
-                boxShadow: `0 8px 24px ${meta.gradient[0]}40`,
+                fontSize: 24,
+                boxShadow: `0 6px 18px ${meta.gradient[0]}40`,
               }}>
                 {meta.emoji}
               </div>

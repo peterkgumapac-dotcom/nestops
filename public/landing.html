@@ -1938,26 +1938,191 @@ plSetTab(0,false);
   <div class="gt-cta" id="gt-cta" style="margin-top:6px;font-size:12px;color:var(--accent-light);font-weight:500;opacity:.7;display:none">Click to explore →</div>
 </div>
 
-<!-- ── GUEST PORTAL AD ── -->
+<!-- ── GUEST PORTAL SHOWCASE (Stampy-inspired fan layout) ── -->
+<style>
+/* Guest Portal Showcase */
+.gp-showcase{position:relative;max-width:1100px;margin:0 auto;height:580px}
+.gp-phone{position:absolute;border-radius:36px;overflow:hidden;box-shadow:0 25px 80px rgba(0,0,0,0.5);transition:transform 0.4s ease,filter 0.3s;cursor:pointer}
+.gp-phone img{display:block;width:100%;height:auto}
+.gp-phone:hover{filter:drop-shadow(0 0 20px rgba(94,106,210,0.15))}
+
+/* Hero phone — center, large */
+.gp-hero{width:280px;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3}
+.gp-hero:hover{transform:translate(-50%,-50%) translateY(-4px)}
+
+/* Flanking phones — angled, behind, smaller */
+.gp-left{width:240px;left:8%;top:50%;transform:translate(0,-50%) rotate(-12deg);z-index:1;opacity:0.85}
+.gp-left:hover{transform:translate(0,-50%) rotate(-12deg) translateY(-4px)}
+.gp-right{width:240px;right:8%;top:50%;transform:translate(0,-50%) rotate(12deg);z-index:1;opacity:0.85}
+.gp-right:hover{transform:translate(0,-50%) rotate(12deg) translateY(-4px)}
+
+
+/* Background glow */
+.gp-glow{position:absolute;width:500px;height:500px;left:50%;top:50%;transform:translate(-50%,-50%);background:radial-gradient(ellipse,rgba(94,106,210,0.06) 0%,transparent 70%);pointer-events:none;z-index:0}
+
+/* Breathe animation */
+.gp-hero{animation:gpBreathe 5s ease-in-out infinite}
+@keyframes gpBreathe{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.01) translateY(-3px)}}
+.gp-left{animation:gpBreatheL 6s ease-in-out 1s infinite}
+@keyframes gpBreatheL{0%,100%{transform:translate(0,-50%) rotate(-12deg) scale(1)}50%{transform:translate(0,-50%) rotate(-12deg) scale(1.008) translateY(-2px)}}
+.gp-right{animation:gpBreatheR 6s ease-in-out 2s infinite}
+@keyframes gpBreatheR{0%,100%{transform:translate(0,-50%) rotate(12deg) scale(1)}50%{transform:translate(0,-50%) rotate(12deg) scale(1.008) translateY(-2px)}}
+
+/* App branding + stores */
+
+/* Detail overlay */
+.gp-overlay{position:fixed;inset:0;z-index:9000;display:none;background:rgba(0,0,0,0.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+.gp-overlay.open{display:flex;align-items:center;justify-content:center}
+.gp-detail{display:flex;align-items:center;gap:clamp(24px,4vw,60px);max-width:900px;width:90vw;animation:gpZoomIn .4s ease}
+@keyframes gpZoomIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.gp-detail-phone{flex-shrink:0;border-radius:36px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.5),0 0 30px rgba(94,106,210,0.05)}
+.gp-detail-phone img{width:clamp(180px,22vw,260px);display:block}
+.gp-detail-info{flex:1;min-width:0}
+.gp-detail-tab{font-size:clamp(10px,1.2vw,13px);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-light);margin-bottom:6px}
+.gp-detail-title{font-size:clamp(20px,3vw,32px);font-weight:700;letter-spacing:-.02em;margin-bottom:8px;line-height:1.2}
+.gp-detail-desc{font-size:clamp(12px,1.4vw,15px);color:var(--text2);line-height:1.6;margin-bottom:16px}
+.gp-detail-features{list-style:none;display:flex;flex-direction:column;gap:8px;padding:0;margin:0}
+.gp-detail-features li{display:flex;align-items:flex-start;gap:10px;font-size:clamp(11px,1.2vw,14px);color:rgba(255,255,255,0.7);line-height:1.5}
+.gp-detail-features li .icon{flex-shrink:0;width:20px;height:20px;display:flex;align-items:center;justify-content:center;background:var(--accent-bg);border-radius:5px;font-size:11px;margin-top:1px}
+.gp-close{position:fixed;top:18px;right:18px;z-index:9100;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 0.2s}
+.gp-close:hover{background:rgba(255,255,255,0.2)}
+.gp-close svg{width:16px;height:16px;stroke:#fff;stroke-width:2}
+
+/* Responsive */
+@media(max-width:768px){
+  .gp-showcase{height:500px}
+  .gp-hero{width:200px}
+  .gp-left,.gp-right{width:160px}
+  .gp-left{left:2%}.gp-right{right:2%}
+  .gp-detail{flex-direction:column;gap:16px;text-align:center}
+  .gp-detail-phone img{width:clamp(150px,40vw,200px)}
+  .gp-detail-features{align-items:center}
+}
+@media(prefers-reduced-motion:reduce){
+  .gp-hero,.gp-left,.gp-right{animation:none!important}
+}
+</style>
+
 <section class="reveal" style="padding:60px 0 80px;text-align:center;position:relative">
   <div class="container" style="margin-bottom:32px">
     <div class="feat-label">GUEST PORTAL</div>
     <h2 style="font-size:clamp(28px,4vw,40px);font-weight:700;letter-spacing:-0.03em;line-height:1.15;color:#fff;margin-bottom:12px">
-      One link. Every booking. Zero messages.
+      Every booking gets a travel companion.
     </h2>
     <p style="font-size:clamp(14px,1.3vw,16px);color:var(--text2);max-width:560px;margin:0 auto;line-height:1.6">
-      Drag to rotate. Click any screen to explore the guest experience.
+      Set it up once. Guests get five tabs &mdash; check-in, guides, local picks, services, and trip planning. No more repeat questions.
     </p>
   </div>
-  <div class="gp-iframe-wrap" style="max-width:1100px;margin:0 auto;border-radius:24px;overflow:hidden;box-shadow:0 25px 80px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.05)">
-    <iframe
-      src="/guest-portal-ad.html"
-      title="AfterStay Guest Portal Preview"
-      style="width:100%;height:1000px;border:none;display:block"
-      loading="lazy"
-    ></iframe>
+
+  <div class="gp-showcase">
+    <div class="gp-glow"></div>
+
+    <!-- Left phone (Our Trip) — angled -->
+    <div class="gp-phone gp-left" onclick="gpShowDetail(4)">
+      <img src="/gp-screens/ourtrip.jpg" alt="Our Trip tab" loading="lazy">
+    </div>
+
+    <!-- Hero phone (Home) — center, large -->
+    <div class="gp-phone gp-hero" onclick="gpShowDetail(0)">
+      <img src="/gp-screens/home.jpg" alt="Home tab" loading="lazy">
+    </div>
+
+    <!-- Right phone (Guide) — angled -->
+    <div class="gp-phone gp-right" onclick="gpShowDetail(1)">
+      <img src="/gp-screens/guide.jpg" alt="Guide tab" loading="lazy">
+    </div>
+
   </div>
+
 </section>
+
+<!-- Detail overlay -->
+<div class="gp-overlay" id="gpOverlay" onclick="gpHideDetail(event)">
+  <div class="gp-close" onclick="gpHideDetail()"><svg viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg></div>
+  <div class="gp-detail" id="gpDetail" onclick="event.stopPropagation()">
+    <div class="gp-detail-phone"><img id="gpDetailImg" src="" alt=""></div>
+    <div class="gp-detail-info">
+      <div class="gp-detail-tab" id="gpDetailTab"></div>
+      <div class="gp-detail-title" id="gpDetailTitle"></div>
+      <div class="gp-detail-desc" id="gpDetailDesc"></div>
+      <ul class="gp-detail-features" id="gpDetailFeatures"></ul>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var gpTabs = [
+    {tab:"Home",img:"/gp-screens/home.jpg",title:"Your stay at a glance",desc:"The moment the booking is confirmed, guests get one link. Everything they need — from arrival to checkout — lives here.",features:[
+      {icon:"🏠",text:"Property photo, name, dates & verified badge"},
+      {icon:"🌤",text:"5-day weather forecast with activity suggestions"},
+      {icon:"📶",text:"WiFi name & password — one tap to copy"},
+      {icon:"🔑",text:"Door code & check-in/checkout times"},
+      {icon:"🔧",text:"PTE / Access Window — maintenance visits shown automatically"},
+      {icon:"🛒",text:"Quick upsell cards — Early Check-in, Late Checkout"}
+    ]},
+    {tab:"Guide",img:"/gp-screens/guide.jpg",title:"The property guidebook",desc:"Everything a guest would normally message you about — answered before they ask. Replaces Touchstay, PDF guidebooks, and WhatsApp.",features:[
+      {icon:"📋",text:"House Rules — quiet hours, pets, extra guests"},
+      {icon:"☕",text:"Appliances — oven, washer, TV, coffee machine instructions"},
+      {icon:"🚗",text:"Getting There — airport, train, driving directions with prices"},
+      {icon:"🅿️",text:"Access & Parking — gate codes, building entry, parking spot"},
+      {icon:"✅",text:"Checkout Guide — checklist with time & date"},
+      {icon:"❓",text:"FAQs — common questions, quick answers"}
+    ]},
+    {tab:"Discover",img:"/gp-screens/discover.jpg",title:"Host's local picks",desc:"Curated recommendations your guests actually trust — because they come from you, not a search engine.",features:[
+      {icon:"🍽",text:"Restaurants, cafés, bars — with ratings, distance & photos"},
+      {icon:"🏔",text:"Activities & sights — kayaking, trails, landmarks"},
+      {icon:"📍",text:"Open in Maps — one tap navigation to any spot"},
+      {icon:"💾",text:"Save & Navigate — guests bookmark favorites"},
+      {icon:"👥",text:"Guest Recommendations — crowd-sourced picks"},
+      {icon:"🏷",text:"Category filters — Food, Coffee, Sights, Outdoor"}
+    ]},
+    {tab:"Services",img:"/gp-screens/services.jpg",title:"Upsell revenue on autopilot",desc:"A built-in storefront for add-on services. Guests purchase at the right moment — you earn while they enjoy.",features:[
+      {icon:"⏰",text:"Early Check-in (+2h) — 350 NOK"},
+      {icon:"🌙",text:"Late Checkout (+2h) — 350 NOK"},
+      {icon:"🚕",text:"Airport Transfer — 850 NOK"},
+      {icon:"🎁",text:"Welcome Basket — local produce, wine & snacks"},
+      {icon:"🧹",text:"Mid-Stay Refresh — linen change, towel swap"},
+      {icon:"💑",text:"Romantic Package — champagne, fruit basket, rose petals"}
+    ]},
+    {tab:"Our Trip",img:"/gp-screens/ourtrip.jpg",title:"The shared travel planner",desc:"Guests collaborate with travel companions in real-time — packing lists, itineraries, and shared notes.",features:[
+      {icon:"📝",text:"Shared packing list with check-off"},
+      {icon:"🗓",text:"Day-by-day itinerary builder"},
+      {icon:"👥",text:"Invite travel companions"},
+      {icon:"💬",text:"Group notes & reminders"},
+      {icon:"📸",text:"Shared photo album"},
+      {icon:"✈️",text:"Flight & transport details"}
+    ]}
+  ];
+
+  window.gpShowDetail = function(i) {
+    var t = gpTabs[i];
+    document.getElementById('gpDetailImg').src = t.img;
+    document.getElementById('gpDetailTab').textContent = t.tab;
+    document.getElementById('gpDetailTitle').textContent = t.title;
+    document.getElementById('gpDetailDesc').textContent = t.desc;
+    var fl = document.getElementById('gpDetailFeatures');
+    fl.innerHTML = '';
+    t.features.forEach(function(f) {
+      var li = document.createElement('li');
+      li.innerHTML = '<span class="icon">'+f.icon+'</span><span>'+f.text+'</span>';
+      fl.appendChild(li);
+    });
+    document.getElementById('gpOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.gpHideDetail = function(e) {
+    if (e && e.target.closest && e.target.closest('.gp-detail')) return;
+    document.getElementById('gpOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') gpHideDetail();
+  });
+})();
+</script>
 
 <div class="section-divider"></div>
 

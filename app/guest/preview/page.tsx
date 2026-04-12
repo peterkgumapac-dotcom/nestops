@@ -105,16 +105,7 @@ function getGuideDetailContent(theme: GuestTheme): Record<string, React.ReactNod
         ))}
       </div>
     ),
-    'Checkout Guide': (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {['Strip beds', 'Start dishwasher', 'Take out trash', 'Close windows', 'Leave keys on counter', 'Lock door (auto-locks)'].map(t => (
-          <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 16, height: 16, borderRadius: 4, border: `1.5px solid ${theme.border}`, flexShrink: 0 }} />
-            <span>{t}</span>
-          </div>
-        ))}
-      </div>
-    ),
+    'Checkout Guide': null, // rendered inline with interactive checklist
     'FAQs': (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {[
@@ -1869,7 +1860,7 @@ function GuestPortalPreview() {
           )
         })()}
 
-        {/* Upsell photo cards */}
+        {/* Upsell compact row */}
         {upsells.length > 0 && (
           <>
             <SectionHeader
@@ -1880,55 +1871,49 @@ function GuestPortalPreview() {
             <HorizontalRail>
               {upsells.slice(0, 4).map((u, i) => {
                 const added = addedServices.has(u.id)
+                const cat = UPSELL_CATEGORY_ICON[u.category]
+                const CatIcon = cat?.icon ?? Gift
+                const catColor = cat?.color ?? '#EC4899'
+                const catRgb = cat?.rgb ?? '236,72,153'
                 return (
                   <div key={u.id} className="gp-press" style={{
-                    width: 200, flexShrink: 0,
-                    background: G.surface, borderRadius: 18,
-                    boxShadow: G.shadowMd, border: `1px solid ${G.border}`,
+                    width: 160, flexShrink: 0,
+                    background: G.surface, borderRadius: 14,
+                    boxShadow: G.shadowSm, border: `1px solid ${G.border}`,
                     overflow: 'hidden',
                   }}>
-                    {(() => {
-                      const cat = UPSELL_CATEGORY_ICON[u.category]
-                      const CatIcon = cat?.icon ?? Gift
-                      const catColor = cat?.color ?? '#EC4899'
-                      const catRgb = cat?.rgb ?? '236,72,153'
-                      return (
+                    <div style={{ padding: '12px 12px 10px' }}>
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
+                      }}>
                         <div style={{
-                          height: 130,
-                          background: `radial-gradient(circle at center, rgba(${catRgb}, 0.06), rgba(${catRgb}, 0.02))`,
+                          width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                          background: `rgba(${catRgb}, 0.10)`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>
-                          <div style={{
-                            width: 56, height: 56, borderRadius: '50%',
-                            background: `rgba(${catRgb}, 0.12)`,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          }}>
-                            <CatIcon size={28} color={catColor} strokeWidth={1.5} />
-                          </div>
+                          <CatIcon size={14} color={catColor} strokeWidth={1.5} />
                         </div>
-                      )
-                    })()}
-                    <div style={{ padding: '12px 14px' }}>
-                      <div style={{
-                        fontSize: 13, fontWeight: 800, color: G.text,
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      }}>{u.title}</div>
+                        <div style={{
+                          fontSize: 12, fontWeight: 800, color: G.text,
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          flex: 1,
+                        }}>{u.title}</div>
+                      </div>
                       <div style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        marginTop: 8,
                       }}>
-                        <div style={{ fontSize: 14, fontWeight: 900, color: G.accent }}>
+                        <div style={{ fontSize: 13, fontWeight: 900, color: G.accent }}>
                           {u.price} {u.currency ?? 'NOK'}
                         </div>
                         <button
                           className="gp-press-sm"
                           onClick={() => toggleAddService(u.id)}
                           style={{
-                            padding: '6px 14px', borderRadius: 999,
+                            padding: '4px 10px', borderRadius: 999,
                             background: added ? G.accentBg : G.accent,
                             color: added ? G.accent : G.accentFg,
                             border: added ? `1px solid ${G.accent}44` : 'none',
-                            fontSize: 11, fontWeight: 800, cursor: 'pointer',
+                            fontSize: 10, fontWeight: 800, cursor: 'pointer',
                             fontFamily: 'inherit', transition: 'all 0.2s',
                           }}
                         >{added ? 'Added ✓' : 'Add'}</button>
@@ -1941,172 +1926,89 @@ function GuestPortalPreview() {
           </>
         )}
 
-        {/* Checkout Checklist */}
+        {/* Lev Collection — powered by AfterStay */}
         <div style={{
-          padding: 16, borderRadius: 18, marginBottom: 16,
-          background: G.surface, border: `1px solid ${G.border}`,
-          boxShadow: G.shadowSm,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <ClipboardList size={16} color={G.accent} />
-            <span style={{ fontSize: 14, fontWeight: 800, color: G.text }}>Checkout Checklist</span>
-          </div>
-          <div style={{ fontSize: 11, fontWeight: 600, color: G.textMuted, marginBottom: 14 }}>
-            Checkout · 11:00 AM · Thu Mar 27
-          </div>
-          {/* Progress bar */}
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: G.textMuted }}>
-                {checkoutList.filter(i => i.checked).length}/{checkoutList.length} completed
-              </span>
-              {checkoutList.every(i => i.checked) && (
-                <span style={{ fontSize: 11, fontWeight: 800, color: G.accent }}>All done!</span>
-              )}
-            </div>
-            <div style={{ height: 6, borderRadius: 999, background: G.surfaceHover, overflow: 'hidden' }}>
-              <div style={{
-                height: '100%', borderRadius: 999,
-                background: G.accent,
-                width: `${(checkoutList.filter(i => i.checked).length / checkoutList.length) * 100}%`,
-                transition: 'width 0.3s ease',
-              }} />
-            </div>
-          </div>
-          {/* Checklist items */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {checkoutList.map(item => (
-              <button
-                key={item.id}
-                className="gp-press"
-                onClick={() => toggleCheckoutItem(item.id)}
-                style={{
-                  width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '10px 14px', borderRadius: 14,
-                  background: item.checked ? G.accentBg : G.surfaceHover,
-                  border: item.checked ? `1px solid ${G.accent}22` : `1px solid ${G.border}`,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  opacity: item.checked ? 0.8 : 1,
-                  transition: 'all 0.2s',
-                }}
-              >
-                <div style={{
-                  width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-                  background: item.checked ? G.accent : 'transparent',
-                  border: item.checked ? 'none' : `2px solid ${G.border}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  {item.checked && <Check size={14} color={G.accentFg} strokeWidth={3} />}
-                </div>
-                <span style={{
-                  flex: 1, textAlign: 'left',
-                  fontSize: 13, fontWeight: 700,
-                  color: item.checked ? G.textMuted : G.text,
-                  textDecoration: item.checked ? 'line-through' : 'none',
-                }}>{item.item}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Rate Your Stay CTA */}
-        {!reviewSubmitted && (
-          <button
-            className="gp-press"
-            onClick={() => setReviewOpen(true)}
-            style={{
-              width: '100%', padding: 16, borderRadius: 18, marginBottom: 16,
-              background: G.surface, border: `1px solid ${G.border}`,
-              boxShadow: G.shadowSm,
-              cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
-              display: 'flex', alignItems: 'center', gap: 12,
-            }}
-          >
-            <div style={{
-              width: 40, height: 40, borderRadius: 12, flexShrink: 0,
-              background: 'rgba(255,193,7,0.1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Star size={20} color="#FFC107" fill="#FFC107" />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: G.text }}>Rate Your Stay ★</div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: G.textMuted, marginTop: 2 }}>Share your feedback before you go</div>
-            </div>
-            <ChevronRight size={16} color={G.textFaint} />
-          </button>
-        )}
-        {reviewSubmitted && (
-          <div style={{
-            padding: 16, borderRadius: 18, marginBottom: 16,
-            background: G.accentBg, border: `1px solid ${G.accent}22`,
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: G.accent }}>Thank you for your review!</div>
-          </div>
-        )}
-
-        {/* Post-Checkout Retention CTA */}
-        <div style={{
-          padding: 20, borderRadius: 18, marginTop: 8,
-          background: G.accentBg,
-          border: `1px solid ${G.accent}44`,
+          padding: 16, borderRadius: 16, marginBottom: 12,
+          background: G.surface,
+          border: `1px solid ${G.border}`,
           textAlign: 'center',
         }}>
-          <div style={{ fontSize: 20 }}>🎉</div>
-          <div style={{ fontSize: 16, fontWeight: 900, color: G.text, marginTop: 8 }}>
-            Enjoying AfterStay?
+          <div style={{ fontSize: 15, fontWeight: 900, color: G.text, letterSpacing: '-0.01em' }}>
+            Lev Collection
           </div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: G.textBody, margin: '8px 0 16px' }}>
-            Keep the app and plan your next trip with the same ease.
+          <div style={{ fontSize: 10, fontWeight: 600, color: G.textMuted, marginTop: 3, letterSpacing: '0.03em' }}>
+            powered by AfterStay
           </div>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-            {/* Apple App Store badge */}
+          <div style={{
+            width: 32, height: 1, background: G.border,
+            margin: '12px auto',
+          }} />
+          <div style={{ fontSize: 12, fontWeight: 600, color: G.textBody, marginBottom: 12 }}>
+            Use this travel companion for your next trip
+          </div>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
             <button
               className="gp-press"
               onClick={() => showToast('Opening App Store...')}
               style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '8px 14px 8px 10px', borderRadius: 10,
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 12px 6px 8px', borderRadius: 8,
                 background: '#000', color: '#fff', border: '1px solid rgba(255,255,255,0.15)',
                 cursor: 'pointer', fontFamily: 'inherit',
               }}
             >
-              <svg width="20" height="24" viewBox="0 0 20 24" fill="white">
+              <svg width="14" height="17" viewBox="0 0 20 24" fill="white">
                 <path d="M16.52 12.46c-.03-2.85 2.33-4.22 2.44-4.29-1.33-1.94-3.4-2.21-4.13-2.24-1.76-.18-3.43 1.04-4.32 1.04-.89 0-2.27-1.01-3.73-.99-1.92.03-3.69 1.12-4.68 2.84-2 3.46-.51 8.59 1.43 11.4.95 1.38 2.08 2.92 3.57 2.87 1.43-.06 1.97-.93 3.7-.93 1.73 0 2.22.93 3.73.9 1.54-.03 2.52-1.4 3.46-2.79 1.09-1.6 1.54-3.15 1.57-3.23-.03-.01-3.01-1.16-3.04-4.58zM13.69 3.97c.79-.96 1.32-2.29 1.17-3.62-1.13.05-2.5.75-3.31 1.7-.73.84-1.37 2.19-1.2 3.48 1.26.1 2.55-.64 3.34-1.56z"/>
               </svg>
-              <div style={{ textAlign: 'left' }}>
-                <div style={{ fontSize: 8, fontWeight: 500, lineHeight: 1, letterSpacing: '0.02em' }}>Download on the</div>
-                <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.01em' }}>App Store</div>
-              </div>
+              <span style={{ fontSize: 10, fontWeight: 700 }}>App Store</span>
             </button>
-            {/* Google Play badge */}
             <button
               className="gp-press"
               onClick={() => showToast('Opening Google Play...')}
               style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '8px 14px 8px 10px', borderRadius: 10,
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 12px 6px 8px', borderRadius: 8,
                 background: '#000', color: '#fff', border: '1px solid rgba(255,255,255,0.15)',
                 cursor: 'pointer', fontFamily: 'inherit',
               }}
             >
-              <svg width="20" height="22" viewBox="0 0 20 22" fill="none">
+              <svg width="14" height="16" viewBox="0 0 20 22" fill="none">
                 <path d="M1.22.97L11.53 11 1.22 21.03c-.14-.18-.22-.42-.22-.7V1.67c0-.28.08-.52.22-.7z" fill="#4285F4"/>
                 <path d="M14.97 7.56L11.53 11l3.44 3.44 3.88-2.2c.66-.38.66-1.1 0-1.48l-3.88-2.2z" fill="#FBBC04"/>
                 <path d="M1.22 21.03c.28.36.72.52 1.16.3l13.03-7.33L11.53 11 1.22 21.03z" fill="#EA4335"/>
                 <path d="M1.22.97c-.44-.22-.88-.06-1.16.3L11.53 11l3.88-3.44L2.38.67c-.44-.22-.88-.06-1.16.3z" fill="#34A853"/>
               </svg>
-              <div style={{ textAlign: 'left' }}>
-                <div style={{ fontSize: 8, fontWeight: 500, lineHeight: 1, letterSpacing: '0.02em' }}>GET IT ON</div>
-                <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.01em' }}>Google Play</div>
-              </div>
+              <span style={{ fontSize: 10, fontWeight: 700 }}>Google Play</span>
             </button>
           </div>
-          <div style={{ fontSize: 11, fontWeight: 600, color: G.textMuted, marginTop: 12 }}>
-            Plan your next adventure →
-          </div>
         </div>
+
+        {/* Rate Your Stay — compact, at bottom */}
+        {!reviewSubmitted && (
+          <button
+            className="gp-press"
+            onClick={() => setReviewOpen(true)}
+            style={{
+              width: '100%', padding: '10px 14px', borderRadius: 14, marginBottom: 8,
+              background: G.surface, border: `1px solid ${G.border}`,
+              cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+              display: 'flex', alignItems: 'center', gap: 10,
+            }}
+          >
+            <Star size={16} color="#FFC107" fill="#FFC107" />
+            <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: G.text }}>Rate your stay</span>
+            <ChevronRight size={14} color={G.textFaint} />
+          </button>
+        )}
+        {reviewSubmitted && (
+          <div style={{
+            padding: '10px 14px', borderRadius: 14, marginBottom: 8,
+            background: G.accentBg, border: `1px solid ${G.accent}22`,
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: G.accent }}>Thank you for your review!</div>
+          </div>
+        )}
 
         {/* Spacer at bottom for FAB clearance */}
         <div style={{ height: 60 }} />
@@ -2304,7 +2206,73 @@ function GuestPortalPreview() {
                 </div>
               </div>
             )}
-            {isExpanded && row.t !== 'Getting There' && detail && (
+            {isExpanded && row.t === 'Checkout Guide' && (
+              <div style={{
+                padding: '14px 16px 16px',
+                background: G.surfaceHover,
+                borderRadius: '0 0 18px 18px',
+                border: `1px solid ${G.accent}33`,
+                borderTop: 'none',
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: G.textMuted, marginBottom: 12 }}>
+                  Checkout · 11:00 AM · Thu Mar 27
+                </div>
+                {/* Progress bar */}
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: G.textMuted }}>
+                      {checkoutList.filter(i => i.checked).length}/{checkoutList.length} completed
+                    </span>
+                    {checkoutList.every(i => i.checked) && (
+                      <span style={{ fontSize: 11, fontWeight: 800, color: G.green }}>All done!</span>
+                    )}
+                  </div>
+                  <div style={{ height: 5, borderRadius: 999, background: G.surface, overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%', borderRadius: 999,
+                      background: G.green,
+                      width: `${(checkoutList.filter(i => i.checked).length / checkoutList.length) * 100}%`,
+                      transition: 'width 0.3s ease',
+                    }} />
+                  </div>
+                </div>
+                {/* Checklist items */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {checkoutList.map(item => (
+                    <button
+                      key={item.id}
+                      className="gp-press"
+                      onClick={() => toggleCheckoutItem(item.id)}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '9px 12px', borderRadius: 12,
+                        background: item.checked ? `${G.green}0d` : G.surface,
+                        border: item.checked ? `1px solid ${G.green}22` : `1px solid ${G.border}`,
+                        cursor: 'pointer', fontFamily: 'inherit',
+                        opacity: item.checked ? 0.8 : 1,
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      <div style={{
+                        width: 20, height: 20, borderRadius: 5, flexShrink: 0,
+                        background: item.checked ? G.green : 'transparent',
+                        border: item.checked ? 'none' : `2px solid ${G.border}`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        {item.checked && <Check size={12} color="#fff" strokeWidth={3} />}
+                      </div>
+                      <span style={{
+                        flex: 1, textAlign: 'left',
+                        fontSize: 12, fontWeight: 700,
+                        color: item.checked ? G.textMuted : G.text,
+                        textDecoration: item.checked ? 'line-through' : 'none',
+                      }}>{item.item}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {isExpanded && row.t !== 'Getting There' && row.t !== 'Checkout Guide' && detail && (
               <div style={{
                 padding: '14px 16px 16px',
                 background: G.surfaceHover,
@@ -2592,16 +2560,16 @@ function GuestPortalPreview() {
                 const catRgb = cat?.rgb ?? '236,72,153'
                 return (
                   <div style={{
-                    height: 100,
+                    height: 72,
                     background: `radial-gradient(circle at center, rgba(${catRgb}, 0.06), rgba(${catRgb}, 0.02))`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <div style={{
-                      width: 44, height: 44, borderRadius: '50%',
+                      width: 36, height: 36, borderRadius: '50%',
                       background: `rgba(${catRgb}, 0.12)`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
-                      <CatIcon size={22} color={catColor} strokeWidth={1.5} />
+                      <CatIcon size={18} color={catColor} strokeWidth={1.5} />
                     </div>
                   </div>
                 )
@@ -4085,7 +4053,7 @@ function GuestPortalPreview() {
               padding: '20px 20px 0',
             }}>
               <div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: G.text }}>How was your stay at {guidebook.propertyName}?</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: G.text }}>Rate your stay at {guidebook.propertyName}</div>
               </div>
               <button onClick={() => setReviewOpen(false)} style={{
                 width: 36, height: 36, borderRadius: '50%',
