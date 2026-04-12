@@ -21,7 +21,6 @@ import type { GuestTheme } from '@/lib/guest/theme'
 import { useGuestTheme, GuestThemeProvider } from '@/lib/guest/theme-context'
 import { STAY_FORECAST, type DayForecast } from '@/lib/data/weather'
 import GuestPortalShell, { GuestTab } from '@/components/guest/GuestPortalShell'
-import ReportIssueSheet from '@/components/guest/ReportIssueSheet'
 
 /* ——— Curated Unsplash imagery ——————————————————————————————— */
 const PREVIEW_IMAGES = {
@@ -388,6 +387,19 @@ const MOCK_PACKING_INIT = [
   { id: 'p5', item: 'Scuba gear (rental confirmed)', checked: false, addedBy: 'Marcus' },
 ]
 
+const MOCK_CHECKOUT_CHECKLIST = [
+  { id: 'co1', item: 'Return all keys & remotes', checked: false },
+  { id: 'co2', item: 'Lock all doors and windows', checked: false },
+  { id: 'co3', item: 'Start the dishwasher', checked: false },
+  { id: 'co4', item: 'Take out trash to designated area', checked: false },
+  { id: 'co5', item: 'Set thermostat to 20°C', checked: false },
+  { id: 'co6', item: 'Check for personal belongings', checked: false },
+]
+
+const ISSUE_CATEGORIES = ['Plumbing', 'Heating', 'Appliance', 'Cleanliness', 'Electrical', 'Other'] as const
+
+const REVIEW_CATEGORIES = ['Cleanliness', 'Communication', 'Location', 'Value', 'Check-in', 'Accuracy'] as const
+
 /* ——— Guest recommendations mock data ——————————————————————— */
 const GUEST_RECS = [
   { name: 'Tim Wendelboe', cat: 'Coffee', recCount: 18 },
@@ -475,6 +487,27 @@ function GuestPortalPreview() {
   const [addedFlight, setAddedFlight] = useState<{ code: string; airline: string; from: string; arriving: string; terminal: string; gate: string } | null>(null)
   const [packingList, setPackingList] = useState(MOCK_PACKING_INIT)
   const [packingInput, setPackingInput] = useState('')
+
+  // Checkout checklist state
+  const [checkoutList, setCheckoutList] = useState(MOCK_CHECKOUT_CHECKLIST)
+
+  // Mid-stay check-in state
+  const [midStayRating, setMidStayRating] = useState<number | null>(null)
+  const [midStaySubmitted, setMidStaySubmitted] = useState(false)
+
+  // WiFi QR code state
+  const [wifiQrVisible, setWifiQrVisible] = useState(false)
+
+  // Review & Feedback state
+  const [reviewOpen, setReviewOpen] = useState(false)
+  const [reviewRatings, setReviewRatings] = useState<Record<string, number>>({})
+  const [reviewText, setReviewText] = useState('')
+  const [reviewSubmitted, setReviewSubmitted] = useState(false)
+
+  // Structured issue reporting state
+  const [issueCategory, setIssueCategory] = useState<string | null>(null)
+  const [issueDesc, setIssueDesc] = useState('')
+  const [issuePte, setIssuePte] = useState(false)
 
   const guestName = verif?.guestName?.split(' ')[0] ?? 'Sarah'
   const ssid = `${guidebook.propertyName.replace(/\s+/g, '')}_5G`
@@ -564,6 +597,18 @@ function GuestPortalPreview() {
       item.id === id ? { ...item, checked: !item.checked } : item
     ))
   }, [])
+
+  const toggleCheckoutItem = useCallback((id: string) => {
+    setCheckoutList(prev => {
+      const next = prev.map(item =>
+        item.id === id ? { ...item, checked: !item.checked } : item
+      )
+      if (next.every(item => item.checked)) {
+        showToast('All done! Have a great trip home ✓')
+      }
+      return next
+    })
+  }, [showToast])
 
   const addPackingItem = useCallback(() => {
     const trimmed = packingInput.trim()
@@ -796,6 +841,64 @@ function GuestPortalPreview() {
               </span>
             </div>
           ))}
+        </div>
+
+        {/* Mid-Stay Check-in */}
+        <div style={{
+          padding: 16, borderRadius: 18, marginBottom: 16,
+          background: G.surface, border: `1px solid ${G.border}`,
+          boxShadow: G.shadowSm,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+            <Star size={16} color="#FFC107" />
+            <span style={{ fontSize: 14, fontWeight: 800, color: G.text }}>How&apos;s your stay so far?</span>
+          </div>
+          {midStaySubmitted ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: G.textBody }}>Thanks for the feedback!</span>
+              <div style={{ display: 'flex', gap: 2 }}>
+                {[1, 2, 3, 4, 5].map(s => (
+                  <Star key={s} size={16} color={s <= (midStayRating ?? 0) ? '#FFC107' : G.textFaint} fill={s <= (midStayRating ?? 0) ? '#FFC107' : 'none'} />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+                {[1, 2, 3, 4, 5].map(s => (
+                  <button
+                    key={s}
+                    className="gp-press-sm"
+                    onClick={() => setMidStayRating(s)}
+                    style={{
+                      background: 'none', border: 'none', padding: 4,
+                      cursor: 'pointer', transition: 'transform 0.15s',
+                      transform: midStayRating === s ? 'scale(1.2)' : 'scale(1)',
+                    }}
+                  >
+                    <Star size={28} color={s <= (midStayRating ?? 0) ? '#FFC107' : G.textFaint} fill={s <= (midStayRating ?? 0) ? '#FFC107' : 'none'} />
+                  </button>
+                ))}
+              </div>
+              {midStayRating !== null && (
+                <button
+                  className="gp-press"
+                  onClick={() => {
+                    setMidStaySubmitted(true)
+                    if (midStayRating <= 2) showToast("We're sorry — your host has been notified")
+                    else if (midStayRating === 3) showToast('Thank you for your feedback')
+                    else showToast('Glad you\'re enjoying it! ✓')
+                  }}
+                  style={{
+                    padding: '10px 20px', borderRadius: 999,
+                    background: G.accent, color: G.accentFg, border: 'none',
+                    fontSize: 13, fontWeight: 800, cursor: 'pointer',
+                    fontFamily: 'inherit',
+                  }}
+                >Submit</button>
+              )}
+            </>
+          )}
         </div>
 
         {/* Trip Planner — Inline Expansion */}
@@ -1591,6 +1694,54 @@ function GuestPortalPreview() {
                   fontFamily: 'inherit', transition: 'all 0.2s',
                 }}
               >{wifiConnected ? 'Connected ✓' : 'Connect'}</button>
+              {/* WiFi QR Code */}
+              <button
+                className="gp-press-sm"
+                onClick={() => setWifiQrVisible(v => !v)}
+                style={{
+                  width: '100%', padding: '10px 16px', borderRadius: 999,
+                  background: G.surfaceHover, border: `1px solid ${G.border}`,
+                  fontSize: 12, fontWeight: 800, color: G.textBody,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                }}
+              >
+                <Camera size={14} color={G.textMuted} />
+                {wifiQrVisible ? 'Hide QR Code' : 'Show QR Code'}
+              </button>
+              {wifiQrVisible && (
+                <div style={{
+                  padding: 16, borderRadius: 14,
+                  background: G.surfaceHover, border: `1px solid ${G.border}`,
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+                }}>
+                  {/* Mock QR code placeholder */}
+                  <div style={{
+                    width: 120, height: 120, borderRadius: 10,
+                    background: '#fff',
+                    display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gridTemplateRows: 'repeat(7, 1fr)',
+                    gap: 2, padding: 8,
+                  }}>
+                    {Array.from({ length: 49 }).map((_, i) => {
+                      const row = Math.floor(i / 7)
+                      const col = i % 7
+                      const isCorner = (row < 3 && col < 3) || (row < 3 && col > 3) || (row > 3 && col < 3)
+                      const isFilled = isCorner || [10, 12, 17, 22, 24, 26, 30, 31, 33, 36, 38, 40].includes(i)
+                      return (
+                        <div key={i} style={{
+                          borderRadius: 1,
+                          background: isFilled ? '#111' : '#e5e5e5',
+                        }} />
+                      )
+                    })}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Camera size={14} color={G.accent} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: G.textBody }}>Scan with camera</span>
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: G.textMuted }}>Scan to connect automatically</span>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1788,6 +1939,111 @@ function GuestPortalPreview() {
               })}
             </HorizontalRail>
           </>
+        )}
+
+        {/* Checkout Checklist */}
+        <div style={{
+          padding: 16, borderRadius: 18, marginBottom: 16,
+          background: G.surface, border: `1px solid ${G.border}`,
+          boxShadow: G.shadowSm,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <ClipboardList size={16} color={G.accent} />
+            <span style={{ fontSize: 14, fontWeight: 800, color: G.text }}>Checkout Checklist</span>
+          </div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: G.textMuted, marginBottom: 14 }}>
+            Checkout · 11:00 AM · Thu Mar 27
+          </div>
+          {/* Progress bar */}
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: G.textMuted }}>
+                {checkoutList.filter(i => i.checked).length}/{checkoutList.length} completed
+              </span>
+              {checkoutList.every(i => i.checked) && (
+                <span style={{ fontSize: 11, fontWeight: 800, color: G.accent }}>All done!</span>
+              )}
+            </div>
+            <div style={{ height: 6, borderRadius: 999, background: G.surfaceHover, overflow: 'hidden' }}>
+              <div style={{
+                height: '100%', borderRadius: 999,
+                background: G.accent,
+                width: `${(checkoutList.filter(i => i.checked).length / checkoutList.length) * 100}%`,
+                transition: 'width 0.3s ease',
+              }} />
+            </div>
+          </div>
+          {/* Checklist items */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {checkoutList.map(item => (
+              <button
+                key={item.id}
+                className="gp-press"
+                onClick={() => toggleCheckoutItem(item.id)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '10px 14px', borderRadius: 14,
+                  background: item.checked ? G.accentBg : G.surfaceHover,
+                  border: item.checked ? `1px solid ${G.accent}22` : `1px solid ${G.border}`,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  opacity: item.checked ? 0.8 : 1,
+                  transition: 'all 0.2s',
+                }}
+              >
+                <div style={{
+                  width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+                  background: item.checked ? G.accent : 'transparent',
+                  border: item.checked ? 'none' : `2px solid ${G.border}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {item.checked && <Check size={14} color={G.accentFg} strokeWidth={3} />}
+                </div>
+                <span style={{
+                  flex: 1, textAlign: 'left',
+                  fontSize: 13, fontWeight: 700,
+                  color: item.checked ? G.textMuted : G.text,
+                  textDecoration: item.checked ? 'line-through' : 'none',
+                }}>{item.item}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Rate Your Stay CTA */}
+        {!reviewSubmitted && (
+          <button
+            className="gp-press"
+            onClick={() => setReviewOpen(true)}
+            style={{
+              width: '100%', padding: 16, borderRadius: 18, marginBottom: 16,
+              background: G.surface, border: `1px solid ${G.border}`,
+              boxShadow: G.shadowSm,
+              cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+              display: 'flex', alignItems: 'center', gap: 12,
+            }}
+          >
+            <div style={{
+              width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+              background: 'rgba(255,193,7,0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Star size={20} color="#FFC107" fill="#FFC107" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: G.text }}>Rate Your Stay ★</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: G.textMuted, marginTop: 2 }}>Share your feedback before you go</div>
+            </div>
+            <ChevronRight size={16} color={G.textFaint} />
+          </button>
+        )}
+        {reviewSubmitted && (
+          <div style={{
+            padding: 16, borderRadius: 18, marginBottom: 16,
+            background: G.accentBg, border: `1px solid ${G.accent}22`,
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: G.accent }}>Thank you for your review!</div>
+          </div>
         )}
 
         {/* Post-Checkout Retention CTA */}
@@ -3662,12 +3918,283 @@ function GuestPortalPreview() {
         }
       >{portalContent}</PhoneFrame>
 
-      <ReportIssueSheet
-        open={issueOpen}
-        onClose={() => setIssueOpen(false)}
-        guidebook={guidebook}
-        verification={verif}
-      />
+      {/* Structured Issue Reporting Sheet */}
+      {issueOpen && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 400,
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+        }}>
+          <div onClick={() => setIssueOpen(false)} style={{
+            position: 'absolute', inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+          }} />
+          <div style={{
+            position: 'relative', zIndex: 1,
+            width: '100%', maxWidth: 430, maxHeight: '80vh',
+            background: G.bg, borderRadius: '24px 24px 0 0',
+            overflow: 'auto',
+          }}>
+            {/* Header */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '20px 20px 0',
+            }}>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: G.text }}>Report an Issue</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: G.textMuted, marginTop: 2 }}>We&apos;ll notify your host right away</div>
+              </div>
+              <button onClick={() => setIssueOpen(false)} style={{
+                width: 36, height: 36, borderRadius: '50%',
+                background: G.surfaceHover, border: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+              }}>
+                <X size={18} color={G.textMuted} />
+              </button>
+            </div>
+
+            <div style={{ padding: '16px 20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Category pills */}
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: G.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Category</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {ISSUE_CATEGORIES.map(cat => (
+                    <button
+                      key={cat}
+                      className="gp-press-sm"
+                      onClick={() => setIssueCategory(cat)}
+                      style={{
+                        padding: '8px 14px', borderRadius: 999,
+                        background: issueCategory === cat ? G.accent : G.surfaceHover,
+                        color: issueCategory === cat ? G.accentFg : G.textBody,
+                        border: issueCategory === cat ? 'none' : `1px solid ${G.border}`,
+                        fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                        fontFamily: 'inherit', transition: 'all 0.15s',
+                      }}
+                    >{cat}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Description textarea */}
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: G.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Description</div>
+                <textarea
+                  value={issueDesc}
+                  onChange={e => setIssueDesc(e.target.value)}
+                  placeholder="Describe the issue..."
+                  style={{
+                    width: '100%', minHeight: 80, padding: 12, borderRadius: 12,
+                    background: G.surfaceHover, border: `1px solid ${G.border}`,
+                    color: G.text, fontSize: 13, fontWeight: 600,
+                    fontFamily: 'inherit', resize: 'vertical',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              {/* Add Photo button */}
+              <button
+                className="gp-press-sm"
+                onClick={() => showToast('Camera opening...')}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  padding: '10px 16px', borderRadius: 12,
+                  background: G.surfaceHover, border: `1px dashed ${G.border}`,
+                  color: G.textBody, fontSize: 12, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                <Camera size={16} color={G.textMuted} /> Add Photo
+              </button>
+
+              {/* PTE toggle */}
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '12px 14px', borderRadius: 14,
+                background: G.surfaceHover, border: `1px solid ${G.border}`,
+              }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: G.text }}>Can we enter to fix it?</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: G.textMuted, marginTop: 2 }}>Permission to enter while you&apos;re out</div>
+                </div>
+                <button
+                  className="gp-press-sm"
+                  onClick={() => setIssuePte(v => !v)}
+                  style={{
+                    width: 44, height: 26, borderRadius: 999, padding: 2,
+                    background: issuePte ? G.accent : G.surfaceHover,
+                    border: issuePte ? 'none' : `2px solid ${G.border}`,
+                    cursor: 'pointer', position: 'relative',
+                    transition: 'background 0.2s',
+                    display: 'flex', alignItems: 'center',
+                  }}
+                >
+                  <div style={{
+                    width: 20, height: 20, borderRadius: '50%',
+                    background: issuePte ? G.accentFg : G.textMuted,
+                    transition: 'transform 0.2s',
+                    transform: issuePte ? 'translateX(18px)' : 'translateX(0)',
+                  }} />
+                </button>
+              </div>
+
+              {/* Submit */}
+              <button
+                className="gp-press"
+                onClick={() => {
+                  showToast('Issue reported — your host has been notified ✓')
+                  setIssueOpen(false)
+                  setIssueCategory(null)
+                  setIssueDesc('')
+                  setIssuePte(false)
+                }}
+                style={{
+                  width: '100%', padding: '14px 20px', borderRadius: 999,
+                  background: G.accent, color: G.accentFg, border: 'none',
+                  fontSize: 14, fontWeight: 800, cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  opacity: (!issueCategory && !issueDesc) ? 0.5 : 1,
+                  boxShadow: `0 4px 16px ${G.accent}44`,
+                }}
+              >Submit Report</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Review & Feedback Sheet */}
+      {reviewOpen && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 400,
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+        }}>
+          <div onClick={() => setReviewOpen(false)} style={{
+            position: 'absolute', inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+          }} />
+          <div style={{
+            position: 'relative', zIndex: 1,
+            width: '100%', maxWidth: 430, maxHeight: '85vh',
+            background: G.bg, borderRadius: '24px 24px 0 0',
+            overflow: 'auto',
+          }}>
+            {/* Header */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '20px 20px 0',
+            }}>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: G.text }}>How was your stay at {guidebook.propertyName}?</div>
+              </div>
+              <button onClick={() => setReviewOpen(false)} style={{
+                width: 36, height: 36, borderRadius: '50%',
+                background: G.surfaceHover, border: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', flexShrink: 0,
+              }}>
+                <X size={18} color={G.textMuted} />
+              </button>
+            </div>
+
+            <div style={{ padding: '16px 20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {!reviewSubmitted ? (
+                <>
+                  {/* Rating categories */}
+                  {REVIEW_CATEGORIES.map(cat => (
+                    <div key={cat} style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '10px 14px', borderRadius: 14,
+                      background: G.surfaceHover, border: `1px solid ${G.border}`,
+                    }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: G.text }}>{cat}</span>
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        {[1, 2, 3, 4, 5].map(s => (
+                          <button
+                            key={s}
+                            className="gp-press-sm"
+                            onClick={() => setReviewRatings(prev => ({ ...prev, [cat]: s }))}
+                            style={{
+                              background: 'none', border: 'none', padding: 2,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <Star size={18} color={s <= (reviewRatings[cat] ?? 0) ? '#FFC107' : G.textFaint} fill={s <= (reviewRatings[cat] ?? 0) ? '#FFC107' : 'none'} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Free text */}
+                  <textarea
+                    value={reviewText}
+                    onChange={e => setReviewText(e.target.value)}
+                    placeholder="Anything you'd like us to know?"
+                    style={{
+                      width: '100%', minHeight: 80, padding: 12, borderRadius: 12,
+                      background: G.surfaceHover, border: `1px solid ${G.border}`,
+                      color: G.text, fontSize: 13, fontWeight: 600,
+                      fontFamily: 'inherit', resize: 'vertical',
+                      outline: 'none',
+                    }}
+                  />
+
+                  {/* Submit */}
+                  <button
+                    className="gp-press"
+                    onClick={() => {
+                      setReviewSubmitted(true)
+                    }}
+                    style={{
+                      width: '100%', padding: '14px 20px', borderRadius: 999,
+                      background: G.accent, color: G.accentFg, border: 'none',
+                      fontSize: 14, fontWeight: 800, cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      opacity: Object.keys(reviewRatings).length === 0 ? 0.5 : 1,
+                      boxShadow: `0 4px 16px ${G.accent}44`,
+                    }}
+                  >Submit Review</button>
+                </>
+              ) : (() => {
+                const avg = Object.values(reviewRatings).length > 0
+                  ? Object.values(reviewRatings).reduce((a, b) => a + b, 0) / Object.values(reviewRatings).length
+                  : 0
+                return (
+                  <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                    <div style={{ fontSize: 32, marginBottom: 12 }}>🙏</div>
+                    {avg >= 4 ? (
+                      <>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: G.text, marginBottom: 8 }}>
+                          Thank you! Would you like to leave a public review?
+                        </div>
+                        <button
+                          className="gp-press"
+                          onClick={() => {
+                            showToast('Opening review page...')
+                            setReviewOpen(false)
+                          }}
+                          style={{
+                            padding: '12px 24px', borderRadius: 999,
+                            background: G.accent, color: G.accentFg, border: 'none',
+                            fontSize: 13, fontWeight: 800, cursor: 'pointer',
+                            fontFamily: 'inherit', marginTop: 8,
+                          }}
+                        >Leave Review →</button>
+                      </>
+                    ) : (
+                      <div style={{ fontSize: 15, fontWeight: 800, color: G.text }}>
+                        Thank you for your feedback — we&apos;ll use this to improve.
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Cart Sheet */}
       {cartOpen && (
         <div style={{
