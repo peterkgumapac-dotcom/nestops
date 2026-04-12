@@ -741,7 +741,7 @@ function GuestPortalPreview() {
         </div>
       </div>
 
-      <div style={{ padding: '20px 20px 0' }}>
+      <div className="gp-section-enter" style={{ padding: '20px 20px 0' }}>
         {/* Greeting */}
         <div style={{ marginBottom: 16 }}>
           <div style={{
@@ -4568,18 +4568,31 @@ function PhoneFrame({ children, toast, fab }: { children: React.ReactNode; toast
           display: none;
         }
 
-        /* ── Press feedback (tap scale) ── */
+        /* ── Press feedback (tap scale + hover lift) ── */
         .gp-press {
-          transition: transform 0.15s cubic-bezier(0.4,0,0.2,1), border-color 0.15s !important;
+          transition: transform 0.2s cubic-bezier(0.25,1,0.5,1), box-shadow 0.2s, border-color 0.15s !important;
+        }
+        @media (hover: hover) {
+          .gp-press:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+          }
         }
         .gp-press:active {
-          transform: scale(0.98) !important;
+          transform: scale(0.97) !important;
+          transition-duration: 0.1s !important;
         }
         .gp-press-sm {
-          transition: transform 0.15s cubic-bezier(0.4,0,0.2,1), background 0.15s, color 0.15s, border-color 0.15s !important;
+          transition: transform 0.2s cubic-bezier(0.25,1,0.5,1), background 0.15s, color 0.15s, border-color 0.15s !important;
+        }
+        @media (hover: hover) {
+          .gp-press-sm:hover {
+            transform: translateY(-1px) !important;
+          }
         }
         .gp-press-sm:active {
           transform: scale(0.94) !important;
+          transition-duration: 0.1s !important;
         }
 
         /* ── Category pill pop ── */
@@ -4608,6 +4621,29 @@ function PhoneFrame({ children, toast, fab }: { children: React.ReactNode; toast
         @keyframes gpPanelUp {
           from { opacity: 0; transform: translateY(8px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Staggered section entrance ── */
+        @keyframes gpFadeSlideUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .gp-section-enter > * {
+          animation: gpFadeSlideUp 0.4s cubic-bezier(0.25,1,0.5,1) both;
+        }
+        .gp-section-enter > *:nth-child(1) { animation-delay: 0.04s; }
+        .gp-section-enter > *:nth-child(2) { animation-delay: 0.08s; }
+        .gp-section-enter > *:nth-child(3) { animation-delay: 0.12s; }
+        .gp-section-enter > *:nth-child(4) { animation-delay: 0.16s; }
+        .gp-section-enter > *:nth-child(5) { animation-delay: 0.20s; }
+        .gp-section-enter > *:nth-child(6) { animation-delay: 0.24s; }
+        .gp-section-enter > *:nth-child(7) { animation-delay: 0.28s; }
+        .gp-section-enter > *:nth-child(8) { animation-delay: 0.32s; }
+        .gp-section-enter > *:nth-child(n+9) { animation-delay: 0.36s; }
+
+        @media (prefers-reduced-motion: reduce) {
+          .gp-section-enter > * { animation: none !important; }
+          .gp-press:hover, .gp-press-sm:hover { transform: none !important; }
         }
       `}</style>
     </>

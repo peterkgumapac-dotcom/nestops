@@ -43,6 +43,7 @@ export default function GuestPortalShell({
   const reduced = useReducedMotion()
   const prevIndexRef = useRef<number>(TAB_INDEX[tab])
 
+  const scrollRef = useRef<HTMLDivElement>(null)
   const currentIndex = TAB_INDEX[tab]
   const direction = currentIndex >= prevIndexRef.current ? 1 : -1
   prevIndexRef.current = currentIndex
@@ -50,6 +51,7 @@ export default function GuestPortalShell({
   function handleSelect(next: GuestTab) {
     if (controlledTab === undefined) setInternalTab(next)
     onTabChange?.(next)
+    scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const spring = { type: 'spring' as const, stiffness: 320, damping: 32, mass: 0.9 }
@@ -70,7 +72,7 @@ export default function GuestPortalShell({
       className="guest-portal-shell"
       style={{
         height: '100%',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: G.bg,
         color: G.text,
         fontFamily: 'var(--font-nunito), var(--font-sans)',
@@ -119,11 +121,12 @@ export default function GuestPortalShell({
       </button>
 
       {/* Scrollable content */}
-      <div style={{
+      <div ref={scrollRef} style={{
         flex: 1,
         width: '100%', maxWidth: 480,
         paddingBottom: 100,
         overflowX: 'hidden',
+        overflowY: 'auto',
       }}>
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
