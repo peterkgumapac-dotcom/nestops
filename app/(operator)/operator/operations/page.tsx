@@ -97,34 +97,34 @@ const COLUMNS = [
 
 const INITIAL_TASKS: KanbanTask[] = [
   // Property Ops
-  { id: 't1',  title: 'Update guest welcome pack',        type: 'Content',    priority: 'medium', assignee: 'Maria S.',  due: '2026-03-20', columnId: 'todo',       boardId: 'property-ops', property: 'Harbor Studio' },
-  { id: 't5',  title: 'Restock toiletry kits',            type: 'Inventory',  priority: 'low',    assignee: 'Maria S.',  due: '2026-03-15', columnId: 'done',       boardId: 'property-ops', property: 'Sunset Villa' },
-  { id: 't6',  title: 'Submit compliance docs',           type: 'Compliance', priority: 'medium', assignee: 'Bjorn L.',  due: '2026-03-14', columnId: 'done',       boardId: 'property-ops', property: 'Ocean View Apt' },
-  { id: 't7',  title: 'Update listing photos',            type: 'Content',    priority: 'low',    assignee: 'Ivan P.',   due: '2026-03-25', columnId: 'todo',       boardId: 'property-ops', property: 'Mountain Cabin' },
-  { id: 't8',  title: 'Pre-arrival inspection — Villa',   type: 'Compliance', priority: 'high',   assignee: 'Bjorn L.',  due: '2026-03-19', columnId: 'inprogress', boardId: 'property-ops', property: 'Sunset Villa' },
+  { id: 't1',  title: 'Update guest welcome pack',        type: 'Content',    priority: 'medium', assignee: 'Maria S.',  due: '2026-04-16', columnId: 'todo',       boardId: 'property-ops', property: 'Harbor Studio' },
+  { id: 't5',  title: 'Restock toiletry kits',            type: 'Inventory',  priority: 'low',    assignee: 'Maria S.',  due: '2026-04-10', columnId: 'done',       boardId: 'property-ops', property: 'Sunset Villa' },
+  { id: 't6',  title: 'Submit compliance docs',           type: 'Compliance', priority: 'medium', assignee: 'Bjorn L.',  due: '2026-04-08', columnId: 'done',       boardId: 'property-ops', property: 'Ocean View Apt' },
+  { id: 't7',  title: 'Update listing photos',            type: 'Content',    priority: 'low',    assignee: 'Ivan P.',   due: '2026-04-18', columnId: 'todo',       boardId: 'property-ops', property: 'Mountain Cabin' },
+  { id: 't8',  title: 'Pre-arrival inspection — Villa',   type: 'Compliance', priority: 'high',   assignee: 'Bjorn L.',  due: '2026-04-15', columnId: 'inprogress', boardId: 'property-ops', property: 'Sunset Villa' },
   // Onboarding
-  { id: 't4',  title: 'Owner onboarding — Kim',           type: 'Onboarding', priority: 'medium', assignee: 'Ivan P.',   due: '2026-03-22', columnId: 'inprogress', boardId: 'onboarding' },
-  { id: 't9',  title: 'Send property onboarding pack',    type: 'Onboarding', priority: 'high',   assignee: 'Peter K.',  due: '2026-03-20', columnId: 'todo',       boardId: 'onboarding' },
-  { id: 't10', title: 'Create listing — Kim Portfolio',   type: 'Onboarding', priority: 'medium', assignee: 'Ivan P.',   due: '2026-03-24', columnId: 'todo',       boardId: 'onboarding' },
-  { id: 't11', title: 'Property walkthrough complete',    type: 'Onboarding', priority: 'low',    assignee: 'Peter K.',  due: '2026-03-18', columnId: 'done',       boardId: 'onboarding' },
+  { id: 't4',  title: 'Owner onboarding — Kim',           type: 'Onboarding', priority: 'medium', assignee: 'Ivan P.',   due: '2026-04-17', columnId: 'inprogress', boardId: 'onboarding' },
+  { id: 't9',  title: 'Send property onboarding pack',    type: 'Onboarding', priority: 'high',   assignee: 'Peter K.',  due: '2026-04-16', columnId: 'todo',       boardId: 'onboarding' },
+  { id: 't10', title: 'Create listing — Kim Portfolio',   type: 'Onboarding', priority: 'medium', assignee: 'Ivan P.',   due: '2026-04-18', columnId: 'todo',       boardId: 'onboarding' },
+  { id: 't11', title: 'Property walkthrough complete',    type: 'Onboarding', priority: 'low',    assignee: 'Peter K.',  due: '2026-04-11', columnId: 'done',       boardId: 'onboarding' },
   // Maintenance
-  { id: 't2',  title: 'Fix bathroom extractor fan',       type: 'Maintenance',priority: 'high',   assignee: 'Bjorn L.',  due: '2026-03-18', columnId: 'todo',       boardId: 'maintenance', property: 'Downtown Loft', pteRequired: true, pteStatus: 'pending' },
-  { id: 't3',  title: 'Deep clean — Harbor Studio',       type: 'Cleaning',   priority: 'high',   assignee: 'Fatima N.', due: '2026-03-17', columnId: 'inprogress', boardId: 'maintenance', property: 'Harbor Studio' },
-  { id: 't12', title: 'Replace mattress — Downtown Loft', type: 'Maintenance',priority: 'medium', assignee: 'Bjorn L.',  due: '2026-03-26', columnId: 'todo',       boardId: 'maintenance', property: 'Downtown Loft', pteRequired: true, pteStatus: 'pending' },
-  { id: 't13', title: 'Heating system check — Sunset',    type: 'Maintenance',priority: 'low',    assignee: 'Bjorn L.',  due: '2026-03-28', columnId: 'todo',       boardId: 'maintenance', property: 'Sunset Villa',  pteRequired: true, pteStatus: 'auto_granted' },
-  { id: 't14', title: 'Leaking tap — Ocean View kitchen', type: 'Maintenance',priority: 'high',   assignee: 'Bjorn L.',  due: '2026-03-19', columnId: 'inprogress', boardId: 'maintenance', property: 'Ocean View Apt', pteRequired: true, pteStatus: 'granted' },
+  { id: 't2',  title: 'Fix bathroom extractor fan',       type: 'Maintenance',priority: 'high',   assignee: 'Bjorn L.',  due: '2026-04-15', columnId: 'todo',       boardId: 'maintenance', property: 'Downtown Loft', pteRequired: true, pteStatus: 'pending' },
+  { id: 't3',  title: 'Deep clean — Harbor Studio',       type: 'Cleaning',   priority: 'high',   assignee: 'Fatima N.', due: '2026-04-14', columnId: 'inprogress', boardId: 'maintenance', property: 'Harbor Studio' },
+  { id: 't12', title: 'Replace mattress — Downtown Loft', type: 'Maintenance',priority: 'medium', assignee: 'Bjorn L.',  due: '2026-04-18', columnId: 'todo',       boardId: 'maintenance', property: 'Downtown Loft', pteRequired: true, pteStatus: 'pending' },
+  { id: 't13', title: 'Heating system check — Sunset',    type: 'Maintenance',priority: 'low',    assignee: 'Bjorn L.',  due: '2026-04-20', columnId: 'todo',       boardId: 'maintenance', property: 'Sunset Villa',  pteRequired: true, pteStatus: 'auto_granted' },
+  { id: 't14', title: 'Leaking tap — Ocean View kitchen', type: 'Maintenance',priority: 'high',   assignee: 'Bjorn L.',  due: '2026-04-15', columnId: 'inprogress', boardId: 'maintenance', property: 'Ocean View Apt', pteRequired: true, pteStatus: 'granted' },
 ]
 
 const SOPS: SopRow[] = [
-  { id: 'sop-1', title: 'Guest Check-In Procedure',   category: 'Operations',   status: 'approved', lastUpdated: '2026-03-01', acknowledged: 8,  total: 10, body: 'Confirm booking details 24 hours before arrival. Send check-in instructions. Verify the lockbox code is active and tested. Complete the pre-arrival inspection checklist.' },
-  { id: 'sop-2', title: 'Linen Change Protocol',       category: 'Housekeeping', status: 'approved', lastUpdated: '2026-02-15', acknowledged: 10, total: 10, body: 'Strip all bedding and towels after each checkout. Use the correct washing programme for each fabric type. Replace with freshly laundered sets.' },
-  { id: 'sop-3', title: 'Maintenance Escalation Flow', category: 'Maintenance',  status: 'pending',  lastUpdated: '2026-03-10', acknowledged: 0,  total: 10, body: 'For minor issues, log via AfterStay and mark priority. For urgent issues (flooding, no heating), call the operator directly and submit a high-priority ticket immediately.' },
-  { id: 'sop-4', title: 'Lost & Found Policy',         category: 'Operations',   status: 'draft',    lastUpdated: '2026-03-14', acknowledged: 0,  total: 10, body: 'All found items must be logged in AfterStay within 24 hours. Photograph and tag items. Store in designated lost property area. Notify guest via messaging.' },
+  { id: 'sop-1', title: 'Guest Check-In Procedure',   category: 'Operations',   status: 'approved', lastUpdated: '2026-04-01', acknowledged: 8,  total: 10, body: 'Confirm booking details 24 hours before arrival. Send check-in instructions. Verify the lockbox code is active and tested. Complete the pre-arrival inspection checklist.' },
+  { id: 'sop-2', title: 'Linen Change Protocol',       category: 'Housekeeping', status: 'approved', lastUpdated: '2026-03-15', acknowledged: 10, total: 10, body: 'Strip all bedding and towels after each checkout. Use the correct washing programme for each fabric type. Replace with freshly laundered sets.' },
+  { id: 'sop-3', title: 'Maintenance Escalation Flow', category: 'Maintenance',  status: 'pending',  lastUpdated: '2026-04-10', acknowledged: 0,  total: 10, body: 'For minor issues, log via AfterStay and mark priority. For urgent issues (flooding, no heating), call the operator directly and submit a high-priority ticket immediately.' },
+  { id: 'sop-4', title: 'Lost & Found Policy',         category: 'Operations',   status: 'draft',    lastUpdated: '2026-04-12', acknowledged: 0,  total: 10, body: 'All found items must be logged in AfterStay within 24 hours. Photograph and tag items. Store in designated lost property area. Notify guest via messaging.' },
 ]
 
 const MEETINGS: Meeting[] = [
   {
-    id: 'm1', title: 'Weekly Ops Standup', date: '2026-03-19', time: '09:00', status: 'upcoming',
+    id: 'm1', title: 'Weekly Ops Standup', date: '2026-04-16', time: '09:00', status: 'upcoming',
     attendees: ['Peter K.', 'Maria S.', 'Bjorn L.'],
     agenda: '1. Review open tickets\n2. Upcoming checkouts this week\n3. Inventory restock status',
     notes: '',
@@ -134,7 +134,7 @@ const MEETINGS: Meeting[] = [
     ],
   },
   {
-    id: 'm2', title: 'Owner Onboarding — Kim Portfolio', date: '2026-03-21', time: '14:00', status: 'upcoming',
+    id: 'm2', title: 'Owner Onboarding — Kim Portfolio', date: '2026-04-17', time: '14:00', status: 'upcoming',
     attendees: ['Peter K.', 'David K.'],
     agenda: '1. Property overview\n2. Operational expectations\n3. Reporting cadence',
     notes: '',
@@ -143,7 +143,7 @@ const MEETINGS: Meeting[] = [
     ],
   },
   {
-    id: 'm3', title: 'Q1 Performance Review', date: '2026-03-10', time: '10:00', status: 'done',
+    id: 'm3', title: 'Q1 Performance Review', date: '2026-04-09', time: '10:00', status: 'done',
     attendees: ['Peter K.', 'Maria S.', 'Fatima N.', 'Bjorn L.'],
     agenda: 'Review Q1 metrics, occupancy, guest satisfaction scores.',
     notes: 'Strong Q1 overall. Harbor Studio underperformed — marketing to investigate. Cleaning scores improved 12%.',
@@ -179,23 +179,23 @@ const CLEANING_JOBS_SEED: CleaningJob[] = [
 ]
 
 const CLEANING_TEMPLATES = ['Full Turnover', 'Mid-Stay Refresh', 'Deep Clean', 'Inspection', 'Standard Turnover', 'Pre-Inspection', 'Seasonal Deep Clean']
-const STAFF_NAMES = ['Maria S.', 'Fatima N.', 'Bjorn L.', 'Ivan P.']
+const STAFF_NAMES = ['Johan L.', 'Anna K.', 'Bjorn L.', 'Fatima N.', 'Maria S.', 'Ivan P.']
 
 const SOP_STATUS_MAP: Record<SopStatus, 'draft' | 'pending' | 'published'> = {
   draft: 'draft', pending: 'pending', approved: 'published',
 }
 
 const ACK_DATA = [
-  { id: '1', name: 'Maria Santos',  status: 'done'    as const, date: '2026-03-02' },
-  { id: '2', name: 'Bjorn Larsen',  status: 'done'    as const, date: '2026-03-03' },
+  { id: '1', name: 'Maria Solberg', status: 'done'    as const, date: '2026-04-02' },
+  { id: '2', name: 'Bjorn Larsen',  status: 'done'    as const, date: '2026-04-03' },
   { id: '3', name: 'Fatima Ndiaye', status: 'pending' as const, date: '—' },
-  { id: '4', name: 'Ivan Petrov',   status: 'pending' as const, date: '—' },
+  { id: '4', name: 'Ivan Petersen', status: 'pending' as const, date: '—' },
 ]
 
 const STAFF_ON_DUTY: StaffMember[] = [
   { id: 'ms', name: 'Maria S.',  initials: 'MS', role: 'Cleaning',       property: 'Ocean View Apt', clockedIn: true,  clockInTime: '09:05', shiftStart: '09:00', late: false },
-  { id: 'fn', name: 'Fatima N.', initials: 'FN', role: 'Guest Services',  property: 'Remote',         clockedIn: true,  clockInTime: '08:55', shiftStart: '09:00', late: false },
-  { id: 'bl', name: 'Bjorn L.',  initials: 'BL', role: 'Maintenance',    property: 'Sunset Villa',   clockedIn: false, clockInTime: '',       shiftStart: '09:00', late: true  },
+  { id: 'fn', name: 'Fatima N.', initials: 'FN', role: 'Guest Services', property: 'Remote',         clockedIn: true,  clockInTime: '08:55', shiftStart: '09:00', late: false },
+  { id: 'bl', name: 'Bjorn L.',  initials: 'BL', role: 'Maintenance',    property: 'Sunset Villa',   clockedIn: true,  clockInTime: '09:15', shiftStart: '09:00', late: false },
   { id: 'ip', name: 'Ivan P.',   initials: 'IP', role: 'Cleaning',       property: 'Harbor Studio',  clockedIn: false, clockInTime: '',       shiftStart: '14:00', late: false },
 ]
 
@@ -573,7 +573,7 @@ function OperationsContent() {
 
       {/* ── Overview Tab ── */}
       {activeTab === 'overview' && (() => {
-        const today = '2026-03-19'
+        const today = '2026-04-14'
         const allOpen     = tasks.filter(t => t.columnId !== 'done')
         const overdue     = allOpen.filter(t => t.due < today)
         const maintActive = maintenanceTasks.filter(t => t.columnId !== 'done')

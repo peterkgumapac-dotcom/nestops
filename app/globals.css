@@ -172,13 +172,13 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 6px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 8px 32px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35), 0 10px 36px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
 .card-elevated {
@@ -299,6 +299,12 @@ html {
 }
 .feed-item-enter { animation: feedIn 0.3s ease; }
 
+@keyframes pulseGlow {
+  0%, 100% { border-color: var(--border); box-shadow: 0 0 0 0 rgba(20,184,166,0); }
+  50% { border-color: rgba(20,184,166,0.25); box-shadow: 0 0 12px 0 rgba(20,184,166,0.08); }
+}
+.pulse-card { animation: pulseGlow 3s ease-in-out infinite; }
+
 @keyframes livePulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
   50%      { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
@@ -357,6 +363,9 @@ html {
 .dash-left  { overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-bottom:24px; }
 .dash-right { display:flex; flex-direction:column; gap:0; overflow:hidden; }
 
+/* Stat tile grid: 4-col desktop, 2-col mobile */
+.stat-tile-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+
 /* ── Mobile responsive ─────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
   html, body { overflow-x: hidden; }
@@ -372,6 +381,13 @@ html {
   .dash-grid { grid-template-columns:1fr; }
   .dash-right { display:none; }
 
+  /* Stat grid: 2-col on mobile, hide last 2 KPIs */
+  .dash-stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .dash-stat-grid .hide-sm { display: none !important; }
+
+  /* Aside stacks below main on mobile */
+  .dash-aside { padding: 16px 0 0 !important; }
+
   /* Shell utilities — apply automatically on mobile */
   .shell-header { padding: 0 12px !important; gap: 8px; }
   .shell-main { padding: 12px !important; }
@@ -382,6 +398,9 @@ html {
 
   /* Mobile: collapse 2-col "1fr Npx" or "Npx 1fr" into a column stack */
   .stack-sm { display: flex !important; flex-direction: column !important; grid-template-columns: none !important; gap: 14px !important; }
+
+  /* Stat tile grid: 2-col on mobile */
+  .stat-tile-grid { grid-template-columns: repeat(2, 1fr) !important; }
 
   /* Mobile: render a normally-fixed table as a vertical card list */
   .cardify-sm { display: block !important; }
@@ -489,12 +508,12 @@ html {
 }
 
 .operator-panel:has(.panel-aside) {
-  grid-template-columns: 68px 1fr 300px;
+  grid-template-columns: 68px 1fr 340px;
   grid-template-areas: "rail main aside";
 }
 
 .operator-panel.rail-expanded:has(.panel-aside) {
-  grid-template-columns: 240px 1fr 300px;
+  grid-template-columns: 240px 1fr 340px;
 }
 
 .operator-panel > aside.app-shell-rail { grid-area: rail; position: relative; z-index: 5; }
@@ -530,6 +549,15 @@ html {
 .operator-panel .rail-scroll::-webkit-scrollbar { width: 0; display: none; }
 .operator-panel .rail-scroll { scrollbar-width: none; }
 
+/* Operator dashboard — staggered entrance for KPI tiles (Ren) */
+@keyframes kpi-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.kpi-tile {
+  animation: kpi-enter 0.25s cubic-bezier(0.25,0.1,0.25,1) both;
+}
+
 /* Operator dashboard — smooth hover lift for KPI & team cards */
 .kpi-tile:hover,
 .team-tile:hover {
@@ -543,4 +571,11 @@ html {
 }
 .kpi-tile:hover svg {
   transform: scale(1.08);
+}
+
+/* Operator dashboard — escalation expandable zone */
+.escalation-zone {
+  background: rgba(239, 68, 68, 0.03);
+  border-radius: var(--radius-xl);
+  padding: 12px;
 }

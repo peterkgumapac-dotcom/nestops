@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AfterStay — Your PMS runs bookings. AfterStay runs everything after.</title>
+<title>AfterStay — Built for hospitality. All-in-one solution.</title>
 <meta name="description" content="AfterStay is the operations platform for short-term rental teams. Replace Breezeway, SuiteOp, Asana, Notion, and WhatsApp with one platform that knows your properties, your guests, and your team.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://afterstay.com/landing.html">
-<meta property="og:title" content="AfterStay — Your PMS runs bookings. AfterStay runs everything after.">
-<meta property="og:description" content="Replace 6 tools with one operations platform built for STR teams. PTE access windows, morning briefing, inventory auto-deduction, property library, pulse live-ops. 6 moats no competitor has.">
+<meta property="og:title" content="AfterStay — Built for hospitality. All-in-one solution.">
+<meta property="og:description" content="Built for hospitality, AfterStay is the all-in-one that fills every operational gap your PMS leaves open. PTE access windows, morning briefing, inventory auto-deduction, property library, pulse live-ops.">
 <meta property="og:image" content="https://afterstay.com/og-image.jpg">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#08090a">
@@ -65,6 +65,12 @@ nav.scrolled{background:rgba(8,9,10,0.85);backdrop-filter:blur(12px);border-bott
 .hero h1{font-size:clamp(32px,6vw,48px);font-weight:700;letter-spacing:-0.035em;line-height:1.1;margin-bottom:16px;color:#fff}
 .hero h1 span{color:var(--text3)}
 .hero-sub{font-size:clamp(15px,1.4vw,17px);color:var(--text2);max-width:560px;margin:0 auto 40px;line-height:1.7}
+
+/* Module strip */
+.module-strip{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:28px;max-width:700px;margin-left:auto;margin-right:auto}
+.module-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:var(--accent-bg);border:1px solid var(--accent-border);font-size:12px;font-weight:500;color:var(--text2);letter-spacing:0.01em;white-space:nowrap;transition:border-color .15s,color .15s}
+.module-pill:hover{border-color:var(--accent);color:var(--text)}
+@media(max-width:600px){.module-strip{gap:8px;padding:0 8px}.module-pill{font-size:11px;padding:5px 11px}}
 
 /* Testimonial */
 .testimonial-section{padding:80px 0 60px;text-align:center}
@@ -140,7 +146,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 .cta-ghost:hover{border-color:var(--border2);color:var(--text)}
 
 /* Social Proof */
-.proof{text-align:center;padding:24px 0}
+.proof{text-align:center;padding:40px 0}
 .proof-line{font-size:14px;color:var(--text3);line-height:1.7}
 .proof-line strong{color:var(--text2);font-weight:500}
 
@@ -784,12 +790,24 @@ body.drawer-open #globe-canvas{opacity:0.35}
 <div class="dot-grid"></div>
 <div class="container" style="position:relative;z-index:1">
 <div class="hero-badge"><span class="pulse"></span>Now in early access — launching 2026</div>
-<h1>Your PMS runs bookings.<br><span>AfterStay runs everything after.</span></h1>
-<p class="hero-sub">Stop texting cleaners at 7am. Stop chasing access codes in WhatsApp. Stop paying $300–600/month for 6 tools that don't talk to each other — AfterStay replaces all of them, and does 6 things none of them can.</p>
+<h1>Built for hospitality.<br><span>All-in-one solution.</span></h1>
+<p class="hero-sub">AfterStay is the all-in-one that fills every operational gap your PMS leaves open. Not a generic tool you configure from scratch — designed for your hospitality business.</p>
+
+<div class="module-strip">
+<span class="module-pill">🧹 Cleaning</span>
+<span class="module-pill">🔧 Maintenance</span>
+<span class="module-pill">📦 Inventory</span>
+<span class="module-pill">📋 SOPs</span>
+<span class="module-pill">🏠 Property Library</span>
+<span class="module-pill">💬 Guest Experience</span>
+<span class="module-pill">👥 Team</span>
+<span class="module-pill">🛡 Compliance</span>
+<span class="module-pill">🔨 Contractors</span>
+</div>
 
 <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-top:32px;flex-wrap:wrap">
 <a href="/login" class="nav-cta" style="padding:12px 32px;font-size:14px">Start free trial</a>
-<a href="#proof" style="font-size:13px;color:var(--text2);text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:color .15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">See what it replaces <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3l5 5-5 5"/></svg></a>
+<a href="#features" style="font-size:13px;color:var(--text2);text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:color .15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">See how it works <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3l5 5-5 5"/></svg></a>
 </div>
 
 <div class="social-proof">
@@ -799,7 +817,7 @@ body.drawer-open #globe-canvas{opacity:0.35}
     <span style="background:#f59e0b">D</span>
     <span style="background:#8b5cf6">M</span>
   </div>
-  <div class="sp-text"><strong>Piloted at 1,000+ properties</strong><br>by STR operators across 4 markets</div>
+  <div class="sp-text"><strong>Designed from real-world experience</strong><br>managing 1,000+ STR properties</div>
 </div>
 
 </div>
@@ -838,9 +856,9 @@ body.drawer-open #globe-canvas{opacity:0.35}
 <!-- ── MOAT CARDS SECTION ── -->
 <section class="moat-section" style="padding:80px 0 100px;text-align:center;position:relative">
   <div class="container" style="margin-bottom:48px">
-    <div class="feat-label">SIX MOATS · ZERO COMPETITORS</div>
+    <div class="feat-label">ONLY IN AFTERSTAY</div>
     <h2 style="font-size:clamp(28px,4vw,40px);font-weight:700;letter-spacing:-0.03em;line-height:1.15;color:#fff;margin-bottom:12px">
-      The six things AfterStay does that nothing else can.
+      6 things your current stack can't do.
     </h2>
     <p style="font-size:clamp(14px,1.3vw,16px);color:var(--text2);max-width:560px;margin:0 auto;line-height:1.6">
       Tap any card to see it in action.
@@ -850,49 +868,49 @@ body.drawer-open #globe-canvas{opacity:0.35}
     <div class="afm-scene" id="afm-scene">
       <div class="afm-cover" id="afm-cover">
         <div class="afm-cover-logo">After<span>stay</span></div>
-        <div class="afm-cover-sub">Feature Moats</div>
+        <div class="afm-cover-sub">Built-in Systems</div>
         <div class="afm-cover-count">
           <div class="afm-cc-num">6</div>
-          <div class="afm-cc-label">moats<br>zero competitors</div>
+          <div class="afm-cc-label">systems<br>only in AfterStay</div>
         </div>
         <div class="afm-cover-hint">tap or hover to explore →</div>
       </div>
       <div class="afm-card" data-m="pte" data-i="0" tabindex="0" role="button" aria-label="PTE / Access Window — tap to explore"><div class="afm-card-inner">
         <div class="afm-card-icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="4" width="32" height="40" rx="4"/><circle cx="24" cy="20" r="5"/><path d="M24 25v5"/><path d="M16 38h16"/><path d="M14 10h6M28 10h6"/><path d="M12 34h10" stroke-dasharray="3 2" opacity="0.4"/><path d="M26 34h10"/></svg></div>
-        <div class="afm-card-num">Moat 01</div>
+        <div class="afm-card-num">01</div>
         <div class="afm-card-title">PTE / Access Window</div>
         <div class="afm-card-desc">Knows if a guest is inside. Auto-activates time-bound access codes.</div>
-        <div class="afm-card-badge"><span class="afm-dot"></span> Zero competitors</div></div></div>
+        <div class="afm-card-badge"><span class="afm-dot"></span> Only in AfterStay</div></div></div>
       <div class="afm-card" data-m="briefing" data-i="1" tabindex="0" role="button" aria-label="Morning Briefing — tap to explore"><div class="afm-card-inner">
         <div class="afm-card-icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="14" r="6"/><path d="M24 4v2M24 24v2M33 14h2M13 14h2"/><path d="M30 8l1.5-1.5M16.5 21.5l1.5-1.5M30 20l1.5 1.5M16.5 6.5l1.5 1.5"/><rect x="10" y="30" width="28" height="14" rx="3"/><path d="M15 35h8M15 39h12"/><circle cx="33" cy="35" r="2" fill="currentColor" stroke="none"/></svg></div>
-        <div class="afm-card-num">Moat 02</div>
+        <div class="afm-card-num">02</div>
         <div class="afm-card-title">Morning Briefing</div>
         <div class="afm-card-desc">Role-based daily brief auto-sent before shift. Different view per role.</div>
-        <div class="afm-card-badge"><span class="afm-dot"></span> Zero competitors</div></div></div>
+        <div class="afm-card-badge"><span class="afm-dot"></span> Only in AfterStay</div></div></div>
       <div class="afm-card" data-m="inventory" data-i="2" tabindex="0" role="button" aria-label="Inventory Auto-Deduction — tap to explore"><div class="afm-card-inner">
         <div class="afm-card-icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20l18-14 18 14"/><path d="M12 17v24h24V17"/><rect x="17" y="27" width="4" height="11" rx="1" opacity="0.35"/><rect x="23" y="32" width="4" height="6" rx="1" opacity="0.6"/><rect x="29" y="23" width="4" height="15" rx="1"/><circle cx="38" cy="12" r="5" fill="currentColor" stroke="none" opacity="0.25"/><path d="M38 10v4M38 15.5v.5" stroke-width="1.5" stroke="#080B12"/></svg></div>
-        <div class="afm-card-num">Moat 03</div>
+        <div class="afm-card-num">03</div>
         <div class="afm-card-title">Inventory Auto-Deduction</div>
         <div class="afm-card-desc">Clean completes → stock deducts → alerts fire → PO drafts. Closed loop.</div>
-        <div class="afm-card-badge"><span class="afm-dot"></span> Zero competitors</div></div></div>
+        <div class="afm-card-badge"><span class="afm-dot"></span> Only in AfterStay</div></div></div>
       <div class="afm-card" data-m="pulse" data-i="3" tabindex="0" role="button" aria-label="Pulse Control Center — tap to explore"><div class="afm-card-inner">
         <div class="afm-card-icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 24h8l4-12 6 24 4-14 4 8h14"/><circle cx="38" cy="30" r="3" fill="currentColor" stroke="none" opacity="0.4"/></svg></div>
-        <div class="afm-card-num">Moat 04</div>
+        <div class="afm-card-num">04</div>
         <div class="afm-card-title">Pulse · Control Center</div>
         <div class="afm-card-desc">Real-time ops feed. Every role sees their reality on one clock.</div>
-        <div class="afm-card-badge"><span class="afm-dot"></span> Zero competitors</div></div></div>
+        <div class="afm-card-badge"><span class="afm-dot"></span> Only in AfterStay</div></div></div>
       <div class="afm-card" data-m="library" data-i="4" tabindex="0" role="button" aria-label="Property Library — tap to explore"><div class="afm-card-inner">
         <div class="afm-card-icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h16a2 2 0 012 2v34a1 1 0 01-1-1H6V6z"/><path d="M42 6H26a2 2 0 00-2 2v34a1 1 0 011-1h17V6z"/><path d="M11 14h6M11 19h8M11 24h4"/><path d="M31 14h6M31 19h8M31 24h4"/><path d="M24 16v6" stroke-dasharray="1.5 2" opacity="0.3"/><circle cx="24" cy="28" r="3" fill="currentColor" stroke="none" opacity="0.25"/></svg></div>
-        <div class="afm-card-num">Moat 05</div>
+        <div class="afm-card-num">05</div>
         <div class="afm-card-title">Property Library</div>
         <div class="afm-card-desc">One intake. Ten tabs of truth. Guidebooks, staff cards, owner portal — all from one source.</div>
-        <div class="afm-card-badge"><span class="afm-dot"></span> Zero competitors</div></div></div>
+        <div class="afm-card-badge"><span class="afm-dot"></span> Only in AfterStay</div></div></div>
       <div class="afm-card" data-m="autonomy" data-i="5" tabindex="0" role="button" aria-label="Staff Autonomy — tap to explore"><div class="afm-card-inner">
         <div class="afm-card-icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="17" cy="16" r="6"/><path d="M7 38c0-5.523 4.477-10 10-10s10 4.477 10 10"/><path d="M31 24h10M37 19l5 5-5 5"/><rect x="33" y="31" width="10" height="11" rx="2"/><path d="M35 35h6M35 38h4"/></svg></div>
-        <div class="afm-card-num">Moat 06</div>
+        <div class="afm-card-num">06</div>
         <div class="afm-card-title">Staff Autonomy</div>
         <div class="afm-card-desc">Team acts without approvals. You're informed after, not before.</div>
-        <div class="afm-card-badge"><span class="afm-dot"></span> Zero competitors</div></div></div>
+        <div class="afm-card-badge"><span class="afm-dot"></span> Only in AfterStay</div></div></div>
       <div class="afm-hint" id="afm-hint"></div>
     </div>
   </div>
@@ -1915,7 +1933,7 @@ plSetTab(0,false);
     <ul id="dr-caps"></ul>
   </section>
   <section class="dr-section">
-    <div class="dr-label">THE MOAT</div>
+    <div class="dr-label">WHY THIS MATTERS</div>
     <p id="dr-moat"></p>
   </section>
   <section class="dr-section dr-replaces" id="dr-rep-wrap">
@@ -1941,7 +1959,7 @@ plSetTab(0,false);
 <!-- ── GUEST PORTAL SHOWCASE (Stampy-inspired fan layout) ── -->
 <style>
 /* Guest Portal Showcase */
-.gp-showcase{position:relative;max-width:1100px;margin:0 auto;height:580px}
+.gp-showcase{position:relative;max-width:1120px;margin:0 auto;height:580px}
 .gp-phone{position:absolute;border-radius:36px;overflow:hidden;box-shadow:0 25px 80px rgba(0,0,0,0.5);transition:transform 0.4s ease,filter 0.3s;cursor:pointer}
 .gp-phone img{display:block;width:100%;height:auto}
 .gp-phone:hover{filter:drop-shadow(0 0 20px rgba(94,106,210,0.15))}
@@ -2003,7 +2021,7 @@ plSetTab(0,false);
 }
 </style>
 
-<section class="reveal" style="padding:60px 0 80px;text-align:center;position:relative">
+<section class="reveal" style="padding:60px 0 100px;text-align:center;position:relative">
   <div class="container" style="margin-bottom:32px">
     <div class="feat-label">GUEST PORTAL</div>
     <h2 style="font-size:clamp(28px,4vw,40px);font-weight:700;letter-spacing:-0.03em;line-height:1.15;color:#fff;margin-bottom:12px">
@@ -2145,7 +2163,7 @@ plSetTab(0,false);
 <div class="section-divider"></div>
 
 <!-- NUMBERS BAR -->
-<div style="padding:20px 0;text-align:center">
+<div style="padding:36px 0;text-align:center">
 <div class="container">
 <div class="numbers-bar" style="display:flex;justify-content:center;gap:0;flex-wrap:wrap;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--bg3)">
 <div style="flex:1;min-width:140px;padding:16px 20px;border-right:1px solid var(--border);text-align:center">
@@ -2158,7 +2176,7 @@ plSetTab(0,false);
 </div>
 <div style="flex:1;min-width:140px;padding:16px 20px;border-right:1px solid var(--border);text-align:center">
 <div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--accent-light);letter-spacing:-0.02em">6</div>
-<div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.4">moats no competitor<br>has — even partially</div>
+<div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.4">built-in systems<br>only in AfterStay</div>
 </div>
 <div style="flex:1;min-width:140px;padding:16px 20px;text-align:center">
 <div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--accent-light);letter-spacing:-0.02em">9+</div>
@@ -2204,24 +2222,24 @@ plSetTab(0,false);
 
 <div class="section-divider"></div>
 
-<!-- WHY AFTERSTAY — COMPETITIVE MOATS -->
+<!-- WHY AFTERSTAY — BUILT DIFFERENT -->
 <section class="moats-section reveal">
 <div class="container">
 <div style="text-align:center">
   <div class="feat-label" style="text-align:center">Why AfterStay wins</div>
-  <div class="feat-title text-gradient" style="text-align:center;max-width:580px;margin:0 auto">12 things AfterStay does. No competitor does any of them.</div>
+  <div class="feat-title text-gradient" style="text-align:center;max-width:580px;margin:0 auto">Built by operators, for operators. Here's what that means.</div>
   <div class="feat-desc" style="text-align:center;max-width:480px;margin:8px auto 0">Every feature ships because we ran the operation first. That's not a tagline — it's why the product works.</div>
 </div>
 <div class="moats-grid">
   <div class="moat-card">
     <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
     <div class="moat-title">Role-aware, not role-limited</div>
-    <div class="moat-desc">Cleaners see their 3 properties. Maintenance sees 4 jobs. Supervisors see the full team. One platform, zero confusion.</div>
+    <div class="moat-desc">7 built-in portals — operator, supervisor, cleaner, maintenance, guest services, GS supervisor, owner. Each role gets their own dashboard, briefing, and permissions. Need more? Create custom roles with module-level access and property scoping.</div>
   </div>
   <div class="moat-card">
     <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
     <div class="moat-title">Automation that knows STR</div>
-    <div class="moat-desc">Rules that understand turnovers, PTE windows, and check-in logic — not generic if/then bolted onto a task app.</div>
+    <div class="moat-desc">Turnover templates trigger inventory deduction. PTE auto-grants on vacant properties. Briefings auto-generate per role before shift. Check-in logic drives cleaning schedules. Rules built for STR workflows — not generic if/then bolted onto a task app.</div>
   </div>
   <div class="moat-card">
     <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
@@ -2231,17 +2249,17 @@ plSetTab(0,false);
   <div class="moat-card">
     <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
     <div class="moat-title">No per-seat pricing. Ever.</div>
-    <div class="moat-desc">$5/property flat. Add your whole team free. Scales down as fast as it scales up — unlike Breezeway or SuiteOp.</div>
+    <div class="moat-desc">Starts at $8/property. Add your whole team free. Scales down as fast as it scales up. Unlimited users on every plan.</div>
   </div>
   <div class="moat-card">
     <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
     <div class="moat-title">Built by operators</div>
-    <div class="moat-desc">Our founding team runs 1,000+ listings. Every feature ships because we lived the problem first, not because a PM spec'd it.</div>
+    <div class="moat-desc">Designed from real-world experience managing 1,000+ STR properties. Every feature ships because we lived the problem first, not because a PM spec'd it.</div>
   </div>
   <div class="moat-card">
     <div class="moat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
-    <div class="moat-title">PMS-agnostic by design</div>
-    <div class="moat-desc">Works with Hostaway, Guesty, Lodgify, OwnerRez. Bring your PMS. We handle everything that happens after a booking lands.</div>
+    <div class="moat-title">Your PMS stays. We handle the rest.</div>
+    <div class="moat-desc">AfterStay isn't a PMS replacement. It's the operations layer that sits on top. Hostaway, Guesty, Lodgify, OwnerRez — bring whichever you use. We run everything your PMS doesn't.</div>
   </div>
 </div>
 </div>
@@ -2326,8 +2344,8 @@ plSetTab(0,false);
 <div class="pricing-grid">
 <div class="tier">
 <div class="tier-name">Starter</div>
-<div class="tier-price">$29</div>
-<div class="tier-unit">/month · up to 5 properties</div>
+<div class="tier-price">$8</div>
+<div class="tier-unit">/property/mo</div>
 <div class="tier-desc">For solo operators running their first listings.</div>
 <ul class="tier-list">
 <li>Tasks + Kanban boards</li>
@@ -2341,9 +2359,9 @@ plSetTab(0,false);
 </div>
 <div class="tier pop">
 <div class="tier-badge">Popular</div>
-<div class="tier-name">Operations</div>
-<div class="tier-price">$79</div>
-<div class="tier-unit">/month · up to 25 properties</div>
+<div class="tier-name">Professional</div>
+<div class="tier-price">$15</div>
+<div class="tier-unit">/property/mo</div>
 <div class="tier-desc">Everything that makes your team stop texting you.</div>
 <ul class="tier-list">
 <li>Everything in Starter</li>
@@ -2358,12 +2376,12 @@ plSetTab(0,false);
 <button class="cta-primary" style="margin-top:20px" onclick="location.href='/login'"><span class="btn-swap"><span>Start free trial</span><span>Start free trial</span></span></button>
 </div>
 <div class="tier">
-<div class="tier-name">Professional</div>
-<div class="tier-price">$149</div>
-<div class="tier-unit">/month · unlimited properties</div>
+<div class="tier-name">Enterprise</div>
+<div class="tier-price">Custom</div>
+<div class="tier-unit">&nbsp;</div>
 <div class="tier-desc">For agencies and multi-property operators.</div>
 <ul class="tier-list">
-<li>Everything in Operations</li>
+<li>Everything in Professional</li>
 <li>Owner portal + payouts</li>
 <li>People module (Roster · Timelog · Contracts)</li>
 <li>Dedicated onboarding</li>
@@ -2371,7 +2389,7 @@ plSetTab(0,false);
 <li>Bulk property import</li>
 <li>Account manager</li>
 </ul>
-<button class="cta-ghost" style="margin-top:20px" onclick="location.href='/login'"><span class="btn-swap"><span>Start free trial</span><span>Start free trial</span></span></button>
+<button class="cta-ghost" style="margin-top:20px" onclick="location.href='mailto:hello@afterstay.com'"><span class="btn-swap"><span>Contact us</span><span>Contact us</span></span></button>
 </div>
 </div>
 </div>
@@ -2398,7 +2416,7 @@ plSetTab(0,false);
 <div class="section-divider"></div>
 <section class="final-cta reveal">
 <div class="container">
-<h2>Six moats. Zero competitors.<br>One platform that runs everything after the booking.</h2>
+<h2>Ready for a quieter morning?<br>One platform that runs everything after the booking.</h2>
 <p>14-day free trial. No credit card required. Cancel anytime.</p>
 <button class="cta-primary" onclick="location.href='/login'"><span class="btn-swap"><span>Start free trial</span><span>Start free trial</span></span></button>
 </div>
@@ -2451,6 +2469,10 @@ var cats=[
 {name:"Productivity & Comms",tools:[
 {id:"asana",n:"Asana",m:"seat",p:11,d:"Task management"},
 {id:"notion",n:"Notion",m:"seat",p:10,d:"SOPs + docs"},
+{id:"trello",n:"Trello",m:"seat",p:5,d:"Board-based tasks"},
+{id:"monday",n:"Monday.com",m:"seat",p:10,d:"Work management"},
+{id:"clickup",n:"ClickUp",m:"seat",p:7,d:"Project management"},
+{id:"gsheets",n:"Google Sheets",m:"flat",p:0,hrs:true,d:"Manual tracking time"},
 {id:"slack",n:"Slack",m:"seat",p:7,d:"Team messaging"},
 {id:"whatsapp",n:"WhatsApp",m:"flat",p:0,hrs:true,d:"Coordination time"}
 ]}
@@ -2462,7 +2484,7 @@ var cats=[
 ]}
 ];
 var on=new Set();
-var repMap={breezeway:"Ops Hub + Cleaning",turno:"Cleaning Calendar",suiteop:"Guest Experience Engine",enso:"Guest Experience Engine",asana:"Ops Hub + Kanban",notion:"Property Library + SOPs",slack:"Live Updates + Threads",whatsapp:"Activity Threads",hubstaff:"People · Timelog",clockify:"People · Timelog",deel:"People · Contracts",whenIWork:"People · Roster + Schedule"};
+var repMap={breezeway:"Ops Hub + Cleaning",turno:"Cleaning Calendar",suiteop:"Guest Experience Engine",enso:"Guest Experience Engine",asana:"Ops Hub + Kanban",notion:"Property Library + SOPs",trello:"Ops Hub + Kanban",monday:"Ops Hub + Kanban",clickup:"Ops Hub + Tasks",gsheets:"Property Library + SOPs",slack:"Live Updates + Threads",whatsapp:"Activity Threads",hubstaff:"People · Timelog",clockify:"People · Timelog",deel:"People · Contracts",whenIWork:"People · Roster + Schedule"};
 function P(){return+document.getElementById('ps').value}
 function S(){return+document.getElementById('ts').value}
 function cost(t){if(t.hrs)return 0;if(t.m==='property')return t.p*P();if(t.m==='seat')return t.p*S();return t.p}
@@ -3574,7 +3596,7 @@ const M = [
     details:{ eyebrow:'LIVE OPS', headline:'Stop refreshing the WhatsApp group.',
       pain:'You refresh the WhatsApp group at 9am to see if the cleaner showed up. You shouldn\'t have to.',
       capabilities:['Real-time event stream across all properties','Glanceable green dots for who is on-shift right now','Anomaly alerts when something doesn\'t match the plan','Drill into any event for full task / guest context'],
-      moat:'Pulse only works because it sits on top of Property Library, Team & Staffing, Tasks, and PTE — all in one place. Architecture is the moat.',
+      moat:'Pulse only works because it sits on top of Property Library, Team & Staffing, Tasks, and PTE — all in one place. The architecture is the advantage.',
       replaces:[{name:'WhatsApp coordination',cost:'20–40 hrs/mo'}] } },
   { n:'Daily Briefing', icon:'📰', col:'#FBBF24', d:'Personalized morning screen. Tasks, properties, alerts — one glance.',     fl:'6am → briefing generated → staff opens app → knows the day in 30s',         s:'/features/briefing',       t:0.2, p:1.5,
     details:{ eyebrow:'MORNING', headline:'Your cleaner sees her day in 30 seconds.',

@@ -1,104 +1,57 @@
 'use client'
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { Building2, Sparkles, CalendarCheck, AlertTriangle, Clock, CheckCircle, ChevronRight } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Sparkles, CalendarCheck, AlertTriangle, Clock, Wrench, CircleDollarSign } from 'lucide-react'
+import { computeStatTiles, computeNeedsAttention, computeOperationsProgress } from '@/lib/data/dashboardAggregates'
+import { USE_SCALE_DATA, SCALE_PROPERTIES, SCALE_RESERVATIONS, SCALE_JOBS, SCALE_ISSUES } from '@/lib/data/mockScale'
+import StatTileRow from '@/components/dashboard/StatTileRow'
+import NeedsAttentionPanel from '@/components/dashboard/NeedsAttentionPanel'
+import OperationsProgress from '@/components/dashboard/OperationsProgress'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
 } from '@/components/ui/sheet'
 import { PROPERTIES } from '@/lib/data/properties'
-import { STOCK_ITEMS, PURCHASE_ORDERS, PROPERTY_CHECKINS } from '@/lib/data/inventory'
+import { STOCK_ITEMS, PROPERTY_CHECKINS } from '@/lib/data/inventory'
 import { GUEST_ISSUES, getActiveIssues } from '@/lib/data/guestServices'
 import { APPROVALS, type Approval } from '@/lib/data/approvals'
 import { JOBS } from '@/lib/data/staff'
 import { REQUESTS } from '@/lib/data/requests'
 import { COMPLIANCE_DOCS } from '@/lib/data/compliance'
 import { ASSETS } from '@/lib/data/assets'
+import { RESERVATIONS } from '@/lib/data/reservations'
 import { UPSELL_APPROVAL_REQUESTS } from '@/lib/data/upsellApprovals'
+import { STAFF_MEMBERS } from '@/lib/data/staff'
+import { GUIDEBOOKS } from '@/lib/data/guidebooks'
 import { useRole } from '@/context/RoleContext'
 import { FEED_ITEMS, filterFeed, type FeedTab } from '@/lib/data/activityFeed'
 import OperationsKanban from './_components/OperationsKanban'
 import ScheduledRail from './_components/ScheduledRail'
 import OperatorPanelAside from '@/components/shared/OperatorPanelAside'
 import PageHeader from '@/components/shared/PageHeader'
+import IntentCard from './_components/IntentCard'
 
 // ─── Team clock status (6 members) ───────────────────────────────────────────
 const TEAM_CLOCK_STATUS = [
-  { id: 'km', name: 'Kim',    initials: 'KM', avatarBg: 'var(--accent)',  role: 'Cleaning',       property: 'Ocean View Apt', status: 'active',  task: 'Turnover clean',          clockTime: '09:05' },
-  { id: 'nm', name: 'Nameda', initials: 'NM', avatarBg: '#7c3aed',         role: 'Guest Services', property: 'Remote',         status: 'busy',    task: 'Handling guest request',  clockTime: '08:55' },
-  { id: 'ar', name: 'Aron',   initials: 'AR', avatarBg: 'var(--status-info)',   role: 'Maintenance',    property: 'Harbor Studio',  status: 'active',  task: 'Fixing AC unit',          clockTime: '09:15' },
-  { id: 'jo', name: 'Jonas',  initials: 'JO', avatarBg: 'var(--status-warning)',  role: 'Cleaning',       property: 'Sunset Villa',   status: 'blocked', task: 'Waiting for supplies',    clockTime: null },
-  { id: 'ka', name: 'Kasper', initials: 'KA', avatarBg: 'var(--text-subtle)', role: 'Cleaning',       property: 'Downtown Loft',  status: 'idle',    task: 'Starts at 14:00',         clockTime: null },
-  { id: 'la', name: 'Lars',   initials: 'LA', avatarBg: '#e97575',         role: 'Maintenance',    property: 'Garden Suite',   status: 'active',  task: 'Deep clean in progress',  clockTime: '08:40' },
+  { id: 's5', name: 'Maria',   initials: 'MS', avatarBg: 'var(--accent)',       role: 'Cleaning',       property: 'Ocean View Apt', status: 'active',  task: 'Turnover clean',          clockTime: '09:05' },
+  { id: 's4', name: 'Fatima',  initials: 'FN', avatarBg: '#7c3aed',            role: 'Guest Services', property: 'Remote',         status: 'busy',    task: 'Handling guest request',  clockTime: '08:55' },
+  { id: 's3', name: 'Bjorn',   initials: 'BL', avatarBg: 'var(--status-info)', role: 'Maintenance',    property: 'Harbor Studio',  status: 'active',  task: 'Fixing AC unit',          clockTime: '09:15' },
+  { id: 's1', name: 'Johan',   initials: 'JL', avatarBg: 'var(--status-warning)', role: 'Cleaning',    property: 'Sunset Villa',   status: 'blocked', task: 'Waiting for supplies',    clockTime: null },
+  { id: 's2', name: 'Anna',    initials: 'AK', avatarBg: 'var(--text-subtle)',  role: 'Inspector',      property: 'Downtown Loft',  status: 'idle',    task: 'Starts at 14:00',         clockTime: null },
+  { id: 's6', name: 'Ivan',    initials: 'IP', avatarBg: '#e97575',            role: 'Cleaning',       property: 'Garden Suite',   status: 'active',  task: 'Deep clean in progress',  clockTime: '08:40' },
 ]
 
-function fmtCountdown(sec: number) {
-  const h = Math.floor(sec / 3600)
-  const m = Math.floor((sec % 3600) / 60)
-  const s = sec % 60
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+const SEVERITY_STYLE: Record<string, { bg: string; fg: string }> = {
+  critical: { bg: 'rgba(239,68,68,0.15)', fg: '#ef4444' },
+  high:     { bg: 'rgba(249,115,22,0.15)', fg: '#f97316' },
+  medium:   { bg: 'rgba(245,158,11,0.15)', fg: '#f59e0b' },
+  low:      { bg: 'rgba(107,114,128,0.15)', fg: '#6b7280' },
 }
 
-// ─── Count-up hook ────────────────────────────────────────────────────────────
-function useCountUp(target: number, duration = 600): number {
-  const [val, setVal] = useState(0)
-  const startRef = useRef<number | null>(null)
-  useEffect(() => {
-    if (target === 0) return
-    startRef.current = null
-    let raf: number
-    function step(ts: number) {
-      if (startRef.current === null) startRef.current = ts
-      const progress = Math.min((ts - startRef.current) / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setVal(Math.round(eased * target))
-      if (progress < 1) raf = requestAnimationFrame(step)
-    }
-    raf = requestAnimationFrame(step)
-    return () => cancelAnimationFrame(raf)
-  }, [target, duration])
-  return val
+const PRIORITY_DOT: Record<string, string> = {
+  urgent: '#ef4444', high: '#f97316', medium: '#f59e0b', low: '#6b7280',
 }
 
-// ─── Collapsible (kept for QA sheet compatibility) ────────────────────────────
-interface CollapsibleProps {
-  title: string
-  meta?: React.ReactNode
-  defaultOpen?: boolean
-  children: React.ReactNode
-  liveMode?: boolean
-}
-function Collapsible({ title, meta, defaultOpen = true, children, liveMode = false }: CollapsibleProps) {
-  const [open, setOpen] = useState(defaultOpen)
-  if (liveMode) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', flex: open ? '1 1 0' : '0 0 auto', minHeight: 0, overflow: 'hidden', borderBottom: '1px solid var(--border)', transition: 'flex 0.22s ease' }}>
-        <div className="coll-header" onClick={() => setOpen(o => !o)}>
-          <ChevronRight className={`coll-chevron${open ? ' open' : ''}`} />
-          <span className="coll-title">{title}</span>
-          {meta && <span className="coll-meta" style={{ marginLeft: 6 }}>{meta}</span>}
-        </div>
-        <div className={`coll-live-body${open ? '' : ' closed'}`} style={{ overflowY: 'auto' }}>{children}</div>
-      </div>
-    )
-  }
-  return (
-    <div style={{ borderBottom: '1px solid var(--border)' }}>
-      <div className="coll-header" onClick={() => setOpen(o => !o)}>
-        <ChevronRight className={`coll-chevron${open ? ' open' : ''}`} />
-        <span className="coll-title">{title}</span>
-        {meta && <span className="coll-meta" style={{ marginLeft: 6 }}>{meta}</span>}
-      </div>
-      <div className={`coll-body${open ? '' : ' closed'}`}>
-        <div className="coll-body-inner">{children}</div>
-      </div>
-    </div>
-  )
-}
-
-interface FieldReport {
-  id: string; property: string; issueType: string; urgency: 'Urgent' | 'Standard'
-  description: string; reporter: string; time: string
-}
 interface QaPendingItem {
   id: string; taskId: string; property: string; propertyId: string; cleaner: string
   rating: number; notes: string; photos: string[]; submittedAt: string
@@ -110,33 +63,19 @@ export default function OperatorDashboard() {
   const [mounted, setMounted] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [pendingApprovals, setPendingApprovals] = useState<Approval[]>(APPROVALS)
-  const [fieldReports, setFieldReports] = useState<FieldReport[]>([])
-  const [ownerWorkOrders, setOwnerWorkOrders] = useState<{ id: string; title: string; property: string; requestedBy: string }[]>([])
   const [qaPending, setQaPending] = useState<QaPendingItem[]>([])
   const [qaReviewItem, setQaReviewItem] = useState<QaPendingItem | null>(null)
   const [toast, setToast] = useState('')
   const [feedTab, setFeedTab] = useState<FeedTab>('all')
-  const [pendingPOApprovals, setPendingPOApprovals] = useState(
-    PURCHASE_ORDERS.filter(po => po.approvalTier === 'manager' && po.approvalStatus === 'pending')
-  )
-  const [countdownSec, setCountdownSec] = useState(285)
-
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   useEffect(() => {
-    try { const s = localStorage.getItem('afterstay_field_reports'); if (s) setFieldReports(JSON.parse(s)) } catch {}
-    try { const s = localStorage.getItem('afterstay_owner_work_orders'); if (s) setOwnerWorkOrders(JSON.parse(s)) } catch {}
     try { const s = localStorage.getItem('afterstay_qa_pending'); if (s) setQaPending(JSON.parse(s)) } catch {}
     setMounted(true)
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-
-  useEffect(() => {
-    const t = setInterval(() => setCountdownSec(s => Math.max(0, s - 1)), 1000)
-    return () => clearInterval(t)
   }, [])
 
   const handleQaAction = (id: string, action: 'approved' | 'redo') => {
@@ -147,16 +86,13 @@ export default function OperatorDashboard() {
     showToast(action === 'approved' ? 'Cleaning approved' : 'Flag sent — cleaner notified to redo')
   }
 
+  // ─── Scale data toggle ────────────────────────────────────────────────────────
+  const DATA_PROPERTIES = USE_SCALE_DATA ? SCALE_PROPERTIES : PROPERTIES
+  const DATA_RESERVATIONS = USE_SCALE_DATA ? SCALE_RESERVATIONS : RESERVATIONS
+  const DATA_JOBS = USE_SCALE_DATA ? SCALE_JOBS : JOBS
+  const DATA_ISSUES = USE_SCALE_DATA ? SCALE_ISSUES : GUEST_ISSUES
   // ─── Derived data ─────────────────────────────────────────────────────────────
-  const activeIssues = getActiveIssues(GUEST_ISSUES)
-  const lowStock = STOCK_ITEMS.filter(i => i.status === 'low' || i.status === 'critical' || i.status === 'out')
-  const pendingUpsells = UPSELL_APPROVAL_REQUESTS.filter(r => r.status === 'pending_cleaner' || r.status === 'pending_supervisor')
-  const checkInJobs = JOBS.filter(j => j.checkinTime)
-  const lateMembers = TEAM_CLOCK_STATUS.filter(m => m.status === 'blocked')
-  const onShift = TEAM_CLOCK_STATUS.filter(m => m.status === 'active')
-  const totalApprovalAmt = pendingApprovals.reduce((s, a) => s + a.amount, 0)
-  const activeCleans = JOBS.filter(j => j.type === 'cleaning' && j.status === 'in_progress').length
-  const overdueCount = JOBS.filter(j => j.status === 'pending' && j.priority === 'urgent').length
+  const activeIssues = getActiveIssues(DATA_ISSUES)
 
   const today = new Date('2026-03-21')
   const urgentCheckins = PROPERTY_CHECKINS.filter(ci => {
@@ -172,66 +108,119 @@ export default function OperatorDashboard() {
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
   const dateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
 
-  const cProps   = useCountUp(mounted ? PROPERTIES.length       : 0)
-  const cCleans  = useCountUp(mounted ? activeCleans            : 0)
-  const cCheckin = useCountUp(mounted ? checkInJobs.length      : 0)
-  const cReq     = useCountUp(mounted ? activeIssues.length     : 0)
-  const cOver    = useCountUp(mounted ? overdueCount            : 0)
-  const cApprove = useCountUp(mounted ? pendingApprovals.length : 0)
+  // Date label for Operations Progress
+  const now = new Date()
+  const opsDateLabel = `Today, ${now.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} · ${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`
+
+  // Relative time helper for Pulse feed
+  function relativeTime(timeStr: string): string {
+    const nowMinutes = now.getHours() * 60 + now.getMinutes()
+    const [h, m] = timeStr.split(':').map(Number)
+    if (isNaN(h) || isNaN(m)) return timeStr
+    const itemMinutes = h * 60 + m
+    const diff = nowMinutes - itemMinutes
+    if (diff < 0 || diff > 120) return timeStr
+    if (diff < 1) return 'just now'
+    if (diff === 1) return '1 min ago'
+    return `${diff} min ago`
+  }
 
   const [topView, setTopView] = useState<'kanban' | 'classic'>('classic')
   const [dashView, setDashView] = useState<'work' | 'portfolio'>('work')
-  const [workFilter, setWorkFilter] = useState<'all' | 'task' | 'ticket' | 'approval' | 'overdue'>('all')
 
-  interface WorkItem {
-    id: string
-    type: 'task' | 'ticket' | 'approval' | 'compliance'
-    title: string
-    property: string
-    priority: 'low' | 'medium' | 'high' | 'urgent'
-    dueDate?: string
-    status: string
-    href: string
-  }
+  const todayStr = '2026-04-14'
+  const tomorrowStr = '2026-04-15'
 
-  const todayStr = '2026-03-25'
+  // ─── Dashboard aggregates ────────────────────────────────────────────────────
+  const statTiles = useMemo(
+    () => computeStatTiles(DATA_RESERVATIONS, DATA_JOBS, DATA_ISSUES, GUIDEBOOKS, DATA_PROPERTIES, todayStr),
+    [DATA_RESERVATIONS, DATA_JOBS, DATA_ISSUES, DATA_PROPERTIES],
+  )
 
-  const workItems = useMemo((): WorkItem[] => {
-    const items: WorkItem[] = []
-    JOBS.filter(j => j.status !== 'done').forEach(j => {
-      items.push({ id: `j-${j.id}`, type: 'task', title: j.title, property: j.propertyName, priority: j.priority, status: j.status, href: '/operator/operations' })
-    })
-    REQUESTS.filter(r => r.status !== 'resolved').forEach(r => {
-      const prop = PROPERTIES.find(p => p.id === r.propertyId)?.name ?? r.propertyId
-      items.push({ id: `r-${r.id}`, type: 'ticket', title: r.title, property: prop, priority: r.priority, dueDate: r.date, status: r.status, href: r.source === 'guest' ? '/operator/tickets?source=guest' : '/operator/tickets' })
-    })
-    GUEST_ISSUES.filter(i => !['resolved', 'closed'].includes(i.status)).forEach(i => {
-      const priorityMap: Record<string, WorkItem['priority']> = { low: 'low', medium: 'medium', high: 'high', critical: 'urgent' }
-      items.push({ id: `gi-${i.id}`, type: 'ticket', title: i.title, property: i.propertyName, priority: priorityMap[i.severity] ?? 'medium', status: i.status, href: '/operator/tickets?source=guest' })
-    })
-    APPROVALS.filter(a => (a as any).status === 'pending' || !(a as any).status).forEach(a => {
-      items.push({ id: `ap-${a.id}`, type: 'approval', title: a.title, property: a.property, priority: 'high', status: 'pending', href: '/operator/properties' })
-    })
-    COMPLIANCE_DOCS.filter(d => d.status === 'expired' || d.status === 'missing' || d.status === 'expiring').forEach(d => {
-      const prop = PROPERTIES.find(p => p.id === d.propertyId)?.name ?? d.propertyId
-      items.push({ id: `cd-${d.id}`, type: 'compliance', title: d.category, property: prop, priority: (d.status === 'expired' || d.status === 'missing') ? 'urgent' : 'high', status: d.status, href: '/operator/compliance' })
-    })
-    return items
+  const attentionItems = useMemo(
+    () => computeNeedsAttention(
+      DATA_JOBS, DATA_ISSUES,
+      TEAM_CLOCK_STATUS, pendingApprovals,
+      UPSELL_APPROVAL_REQUESTS, PROPERTY_CHECKINS, STOCK_ITEMS,
+      todayStr,
+    ),
+    [DATA_JOBS, DATA_ISSUES, pendingApprovals, PROPERTY_CHECKINS, STOCK_ITEMS],
+  )
+
+  const opsProgress = useMemo(
+    () => computeOperationsProgress(DATA_JOBS),
+    [DATA_JOBS],
+  )
+
+  // ─── Intent-based data memos ──────────────────────────────────────────────────
+
+  // Cross-reference maps
+  const propertyCheckInTimes = useMemo(() => {
+    const map = new Map<string, string>()
+    GUIDEBOOKS.forEach(g => map.set(g.propertyId, g.checkInTime))
+    return map
   }, [])
 
-  const filteredWork = useMemo(() => {
-    if (workFilter === 'all') return workItems
-    if (workFilter === 'overdue') return workItems.filter(i => i.dueDate && i.dueDate < todayStr)
-    return workItems.filter(i => i.type === workFilter)
-  }, [workItems, workFilter])
+  const propertyIssueMap = useMemo(() => {
+    const map = new Map<string, typeof activeIssues>()
+    activeIssues.forEach(issue => {
+      const list = map.get(issue.propertyId) ?? []
+      map.set(issue.propertyId, [...list, issue])
+    })
+    return map
+  }, [activeIssues])
 
-  const workCounts = useMemo(() => ({
-    all: workItems.length,
-    task: workItems.filter(i => i.type === 'task').length,
-    ticket: workItems.filter(i => i.type === 'ticket').length,
-    approval: workItems.filter(i => i.type === 'approval').length,
-    overdue: workItems.filter(i => i.dueDate && i.dueDate < todayStr).length,
-  }), [workItems])
+  const guestUpsellMap = useMemo(() => {
+    const pending = UPSELL_APPROVAL_REQUESTS.filter(u => u.status === 'pending_cleaner' || u.status === 'pending_supervisor')
+    const map = new Map<string, typeof pending>()
+    pending.forEach(u => {
+      const list = map.get(u.guestName) ?? []
+      map.set(u.guestName, [...list, u])
+    })
+    return map
+  }, [])
+
+  const todayCheckins = useMemo(
+    () => DATA_RESERVATIONS.filter(r => r.checkInDate === todayStr),
+    [DATA_RESERVATIONS],
+  )
+
+  const todayCheckouts = useMemo(
+    () => DATA_RESERVATIONS.filter(r => r.checkOutDate === todayStr),
+    [DATA_RESERVATIONS],
+  )
+
+  const tomorrowActivity = useMemo(() => {
+    const ins = DATA_RESERVATIONS.filter(r => r.checkInDate === tomorrowStr).map(r => ({ ...r, direction: 'IN' as const }))
+    const outs = DATA_RESERVATIONS.filter(r => r.checkOutDate === tomorrowStr).map(r => ({ ...r, direction: 'OUT' as const }))
+    return [...ins, ...outs]
+  }, [DATA_RESERVATIONS])
+
+  const maintenancePending = useMemo(() => {
+    return DATA_JOBS.filter(j => j.type === 'maintenance' && j.status !== 'done').map(j => {
+      const staff = STAFF_MEMBERS.find(s => s.id === j.staffId)
+      return { ...j, staffName: staff?.name }
+    })
+  }, [DATA_JOBS])
+
+  const guestsWithIssues = useMemo(() => {
+    const currentResPropIds = new Set(
+      DATA_RESERVATIONS.filter(r => r.checkInDate <= todayStr && r.checkOutDate >= todayStr).map(r => r.propertyId),
+    )
+    return activeIssues
+      .filter(i => currentResPropIds.has(i.propertyId))
+      .map(issue => {
+        const res = DATA_RESERVATIONS.find(r => r.propertyId === issue.propertyId && r.checkInDate <= todayStr && r.checkOutDate >= todayStr)
+        return { ...issue, guestName: issue.guestName || res?.guestName || 'Guest' }
+      })
+  }, [activeIssues])
+
+  const pendingUpsells = useMemo(
+    () => UPSELL_APPROVAL_REQUESTS.filter(u => u.status === 'pending_cleaner' || u.status === 'pending_supervisor'),
+    [],
+  )
+
+  const totalApprovalAmt = pendingApprovals.reduce((s, a) => s + a.amount, 0)
 
   function computeHealthScore(propertyId: string): { score: number; pills: string[] } {
     const openTickets = REQUESTS.filter(r => r.propertyId === propertyId && r.status !== 'resolved').length
@@ -259,26 +248,10 @@ export default function OperatorDashboard() {
 
   function scoreColor(score: number): string {
     if (score >= 80) return '#10b981'
-    if (score >= 50) return '#ef4444'
+    if (score >= 50) return '#f59e0b'
     return '#ef4444'
   }
 
-  const PRIORITY_COLORS: Record<string, string> = { low: '#6b7280', medium: '#f59e0b', high: '#f97316', urgent: '#ef4444' }
-  const TYPE_LABELS: Record<string, string> = { task: 'Task', ticket: 'Ticket', approval: 'Approval', compliance: 'Compliance' }
-  const TYPE_BADGE_STYLE: Record<string, { bg: string; fg: string }> = {
-    task:       { bg: 'rgba(55,138,221,0.15)',  fg: '#378ADD' },
-    ticket:     { bg: 'rgba(239,159,39,0.15)',  fg: '#ef9f27' },
-    approval:   { bg: 'rgba(16,185,129,0.15)',  fg: '#10b981' },
-    compliance: { bg: 'rgba(124,58,237,0.15)',  fg: '#a78bfa' },
-  }
-  const WORK_FILTER_LABELS: Record<string, string> = { all: 'All', task: 'Tasks', ticket: 'Tickets', approval: 'Approvals', overdue: 'Overdue' }
-
-  function feedDotColor(type: string) {
-    if (type === 'blocked') return 'var(--status-danger)'
-    if (type === 'in_progress') return 'var(--accent)'
-    if (type === 'en_route') return 'var(--accent-light)'
-    return 'var(--text-subtle)'
-  }
   function feedStatusStyle(type: string) {
     if (type === 'in_progress') return { bg: 'var(--status-info-bg)', fg: 'var(--status-info)', label: 'In progress' }
     if (type === 'blocked')     return { bg: 'var(--status-danger-bg)',  fg: 'var(--status-danger)',  label: 'Blocked' }
@@ -293,20 +266,6 @@ export default function OperatorDashboard() {
     if (status === 'busy')    return 'var(--status-warning)'
     return 'var(--text-subtle)'
   }
-  function statusTaskColor(status: string) {
-    if (status === 'active')  return 'var(--accent)'
-    if (status === 'blocked') return 'var(--status-danger)'
-    return 'var(--text-muted)'
-  }
-
-  const STAT_CARDS = [
-    { count: cProps,   label: 'Live properties', icon: Building2,     glow: 'var(--status-info)',    sub: 'All quiet' },
-    { count: cCleans,  label: 'Cleans running',  icon: Sparkles,      glow: 'var(--text-muted)',     sub: 'In progress' },
-    { count: cCheckin, label: 'Guests arriving', icon: CalendarCheck, glow: 'var(--accent)',         sub: 'Today' },
-    { count: cReq,     label: 'Guests waiting',  icon: AlertTriangle, glow: 'var(--status-warning)', sub: activeIssues.length > 0 ? 'On you' : 'All clear' },
-    { count: cOver,    label: 'Tasks slipped',   icon: Clock,         glow: overdueCount > 0 ? 'var(--status-danger)' : 'var(--text-subtle)', sub: overdueCount > 0 ? `${overdueCount} urgent` : 'None' },
-    { count: cApprove, label: 'Your sign-off',   icon: CheckCircle,   glow: pendingApprovals.length > 0 ? 'var(--accent)' : 'var(--text-subtle)', sub: pendingApprovals.length > 0 ? 'Pending' : 'None' },
-  ]
 
   if (!mounted) return (
     <div style={{ padding: 24 }}>
@@ -317,7 +276,6 @@ export default function OperatorDashboard() {
   )
 
   // ─── Render ───────────────────────────────────────────────────────────────────
-  // Tab switcher — Kanban (new revamp) vs Classic (legacy rich dashboard)
   const ViewTabs = (
     <div style={{ display: 'inline-flex', gap: 4, padding: 4, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, marginBottom: 18 }}>
       {(['kanban', 'classic'] as const).map(v => (
@@ -338,7 +296,7 @@ export default function OperatorDashboard() {
   )
 
   const PulseBlock = (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: 300, maxHeight: 380, overflow: 'hidden', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: 16 }}>
+    <div className="pulse-card" style={{ display: 'flex', flexDirection: 'column', minHeight: 300, maxHeight: 380, overflow: 'hidden', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span className="live-dot" />
@@ -368,7 +326,19 @@ export default function OperatorDashboard() {
           const statusInfo = feedStatusStyle(item.type)
           const initials = item.actor.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
           return (
-            <div key={item.id} className="feed-item-enter" style={{ padding: '10px 0', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, delay: i * 0.04 }}
+              style={{
+                padding: '10px 0',
+                borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none',
+                display: 'flex', flexDirection: 'column', gap: 4,
+                borderLeft: i === 0 ? '2px solid var(--accent)' : '2px solid transparent',
+                paddingLeft: 8,
+              }}
+            >
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                 <div style={{ width: 26, height: 26, borderRadius: '50%', background: item.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
                   {initials}
@@ -376,7 +346,7 @@ export default function OperatorDashboard() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 4 }}>
                     <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.actor}</span>
-                    <span style={{ fontSize: 10.5, color: 'var(--text-subtle)', flexShrink: 0, fontFamily: 'var(--font-mono)' }}>{item.time}</span>
+                    <span style={{ fontSize: 10.5, color: 'var(--text-subtle)', flexShrink: 0, fontFamily: 'var(--font-mono)' }}>{relativeTime(item.time)}</span>
                   </div>
                   <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 1 }}>{item.action}{item.detail ? ` · ${item.detail}` : ''}</div>
                   <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginTop: 1 }}>{item.property}</div>
@@ -395,7 +365,7 @@ export default function OperatorDashboard() {
                   <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 4, background: statusInfo.bg, color: statusInfo.fg }}>{statusInfo.label}</span>
                 </div>
               )}
-            </div>
+            </motion.div>
           )
         })}
       </div>
@@ -418,136 +388,25 @@ export default function OperatorDashboard() {
     )
   }
 
+  // ─── Intent card row renderer helpers ─────────────────────────────────────────
+  const RowDivider = () => <div style={{ borderBottom: '1px solid var(--border)' }} />
+
   return (
-    <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: isMobile ? 'auto' : '100%', overflow: isMobile ? 'visible' : 'hidden' }}>
 
       {/* ═══ CENTER COLUMN ══════════════════════════════════════════════════════ */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '16px' : '20px 24px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
 
         {ViewTabs}
 
-        {/* A. Live Ticker */}
-        <div style={{ background: 'var(--bg-elevated)', height: 36, borderRadius: 8, overflow: 'hidden', position: 'relative', display: 'flex', alignItems: 'center', border: '1px solid var(--border)' }}>
-          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, display: 'flex', alignItems: 'center', paddingLeft: 10, paddingRight: 8, background: 'var(--bg-elevated)', zIndex: 1, borderRight: '1px solid var(--border)' }}>
-            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', color: 'var(--text-subtle)', textTransform: 'uppercase' }}>LIVE</span>
-          </div>
-          <div style={{ flex: 1, marginLeft: 52, overflow: 'hidden', maskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)' }}>
-            <div style={{ display: 'inline-flex', gap: 28, whiteSpace: 'nowrap', animation: 'ticker 28s linear infinite' }}>
-              {[...FEED_ITEMS.slice(0, 4), ...FEED_ITEMS.slice(0, 4)].map((item, i) => (
-                <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--text-muted)', flexShrink: 0 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: item.color, display: 'inline-block', flexShrink: 0 }} />
-                  <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.actor}</span>
-                  <span>{item.action}</span>
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* B. Page Heading */}
+        {/* A. Page Heading */}
         <PageHeader title={`${greeting}, Peter`} subtitle={dateStr} />
 
-        {/* C. Stat Grid 3×2 */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10 }}>
-          {STAT_CARDS.map(({ count, label, icon: Icon, sub }) => (
-            <div
-              key={label}
-              className="kpi-tile"
-              style={{
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border)',
-                borderRadius: 12,
-                padding: '14px 14px 12px',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
-                transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
-                display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0,
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Icon size={16} strokeWidth={1.5} style={{ color: 'var(--accent)' }} />
-                <div style={{ fontSize: 26, fontWeight: 600, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', lineHeight: 1, letterSpacing: '-0.02em' }}>{count}</div>
-              </div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', marginTop: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub}</div>
-            </div>
-          ))}
-        </div>
+        {/* B. Stat Tiles */}
+        <StatTileRow tiles={statTiles} />
 
-        {/* D. Alert Banners */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {urgentCheckins.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--status-warning-bg)', borderLeft: '3px solid var(--status-warning)', borderRadius: 8, border: '1px solid var(--status-warning)' }}>
-              <span className="pulse-urgent" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--status-warning)', flexShrink: 0 }} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--status-warning)' }}>Pre-check-in Stock Alert</div>
-                <div style={{ fontSize: 11, color: 'var(--status-warning)', opacity: 0.8, marginTop: 1 }}>
-                  {urgentCheckins.map(ci => {
-                    const lowItems = ci.stockItemIds.map(id => STOCK_ITEMS.find(s => s.id === id)).filter(i => i && i.status !== 'ok').map(i => i!.name)
-                    const hrs = Math.round((new Date(ci.date).getTime() - today.getTime()) / 3600000)
-                    return `${ci.property} in ${hrs}h — ${lowItems.join(', ')}`
-                  }).join(' · ')}
-                </div>
-              </div>
-              <button style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6, background: 'transparent', color: 'var(--status-warning)', border: '1px solid var(--status-warning)', cursor: 'pointer', flexShrink: 0 }}>View</button>
-            </div>
-          )}
-          {activeIssues.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--status-danger-bg)', borderLeft: '3px solid var(--status-danger)', borderRadius: 8, border: '1px solid var(--status-danger)' }}>
-              <span className="pulse-urgent" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--status-danger)', flexShrink: 0 }} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--status-danger)' }}>PTE pending 4+ hours — Inspect heating system</div>
-                <div style={{ fontSize: 11, color: 'var(--status-danger)', opacity: 0.7, marginTop: 1 }}>Downtown Loft · Guest Services not yet responded</div>
-              </div>
-              <button style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6, background: 'var(--status-danger)', color: '#fff', border: 'none', cursor: 'pointer', flexShrink: 0 }}>View Task</button>
-            </div>
-          )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', background: 'var(--accent-bg)', borderLeft: '3px solid var(--accent)', borderRadius: 8, border: '1px solid var(--accent-border)' }}>
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="2 7 5.5 10.5 12 3.5"/></svg>
-            <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--accent)' }}>1 task auto-granted PTE · Properties vacant — no guest access needed</span>
-          </div>
-        </div>
-
-        {/* E. Portfolio Bar */}
-        <div style={{ background: 'var(--bg-elevated)', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--text-subtle)', textTransform: 'uppercase', letterSpacing: '.08em', flexShrink: 0 }}>PORTFOLIO</span>
-          {PROPERTIES.map(p => {
-            const { score } = computeHealthScore(p.id)
-            const color = scoreColor(score)
-            return (
-              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0 }} />
-                <span style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{p.name.split(' ')[0]}</span>
-              </div>
-            )
-          })}
-        </div>
-
-        {/* F. Team on shift — horizontal strip matching Pulse row grammar */}
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '14px 16px', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '.06em' }}>Team on shift</span>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{TEAM_CLOCK_STATUS.filter(m => m.status === 'active').length} active · {TEAM_CLOCK_STATUS.filter(m => m.status === 'blocked').length} blocked</span>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px 20px' }}>
-            {TEAM_CLOCK_STATUS.map(member => (
-              <div key={member.id} style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                <div style={{ position: 'relative', flexShrink: 0 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: member.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#fff' }}>
-                    {member.initials}
-                  </div>
-                  <span style={{ position: 'absolute', bottom: -1, right: -1, width: 8, height: 8, borderRadius: '50%', background: statusDotColor(member.status), border: '2px solid var(--bg-card)' }} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.name} <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>· {member.role}</span></div>
-                  <div style={{ fontSize: 11, color: statusTaskColor(member.status), whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.task}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* G. Tab Row + Filter Chips */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        {/* C. Tab Row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ display: 'inline-flex', background: 'var(--bg-elevated)', borderRadius: 20, padding: 3, border: '1px solid var(--border)' }}>
             {(['work', 'portfolio'] as const).map(v => (
               <button key={v} onClick={() => setDashView(v)} style={{
@@ -561,76 +420,176 @@ export default function OperatorDashboard() {
               </button>
             ))}
           </div>
-          {dashView === 'work' && (
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {(['all', 'task', 'ticket', 'approval', 'overdue'] as const).map(f => (
-                <button key={f} onClick={() => setWorkFilter(f)} style={{
-                  display: 'flex', alignItems: 'center', gap: 5,
-                  padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 500, cursor: 'pointer',
-                  border: `1px solid ${workFilter === f ? accent : 'var(--border)'}`,
-                  background: workFilter === f ? `${accent}1a` : 'transparent',
-                  color: workFilter === f ? accent : 'var(--text-muted)',
-                }}>
-                  {WORK_FILTER_LABELS[f]}
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '0 5px', borderRadius: 8, background: workFilter === f ? `${accent}30` : 'var(--bg-elevated)', color: workFilter === f ? accent : 'var(--text-subtle)' }}>
-                    {workCounts[f]}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
-        {/* H. Work Table OR Portfolio Health */}
+        {/* D. Intent Cards (My Work) OR Portfolio Health */}
         {dashView === 'work' ? (
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
-            {filteredWork.length === 0 ? (
-              <div style={{ padding: 24, textAlign: 'center', fontSize: 13, color: 'var(--text-subtle)' }}>No items in this category</div>
-            ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
-                      {['Type', 'Title', 'Property', 'Priority', 'Status'].map(h => (
-                        <th key={h} style={{ padding: '8px 14px', textAlign: 'left', fontSize: 10, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-subtle)', whiteSpace: 'nowrap' }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredWork.map((item, i) => (
-                      <tr
-                        key={item.id}
-                        style={{ borderBottom: i < filteredWork.length - 1 ? '1px solid var(--border)' : 'none', cursor: 'pointer', borderLeft: `3px solid ${PRIORITY_COLORS[item.priority]}`, background: item.priority === 'urgent' ? 'rgba(239,68,68,0.04)' : 'transparent' }}
-                        onClick={() => { if (typeof window !== 'undefined') window.location.href = item.href }}
-                        onMouseEnter={e => (e.currentTarget.style.background = item.priority === 'urgent' ? 'rgba(239,68,68,0.07)' : 'var(--bg-elevated)')}
-                        onMouseLeave={e => (e.currentTarget.style.background = item.priority === 'urgent' ? 'rgba(239,68,68,0.04)' : 'transparent')}
-                      >
-                        <td style={{ padding: '9px 14px' }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 4, background: TYPE_BADGE_STYLE[item.type]?.bg ?? 'var(--bg-elevated)', color: TYPE_BADGE_STYLE[item.type]?.fg ?? 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
-                            {TYPE_LABELS[item.type]}
-                          </span>
-                        </td>
-                        <td style={{ padding: '9px 14px', fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', maxWidth: 220 }}>
-                          <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</span>
-                        </td>
-                        <td style={{ padding: '9px 14px', fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{item.property}</td>
-                        <td style={{ padding: '9px 14px' }}>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: PRIORITY_COLORS[item.priority] }}>
-                            <span style={{ width: 5, height: 5, borderRadius: '50%', background: PRIORITY_COLORS[item.priority], flexShrink: 0 }} />
-                            {item.priority}
-                          </span>
-                        </td>
-                        <td style={{ padding: '9px 14px' }}>
-                          <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20, background: 'var(--bg-elevated)', color: 'var(--text-muted)', textTransform: 'capitalize', whiteSpace: 'nowrap' }}>
-                            {item.status.replace(/_/g, ' ')}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
+
+            {/* 1. Check-ins Today */}
+            <IntentCard icon={CalendarCheck} iconColor="#10b981" title="Check-ins Today" count={todayCheckins.length} index={0}>
+              {todayCheckins.map((r, i) => {
+                const checkInTime = propertyCheckInTimes.get(r.propertyId) ?? '15:00'
+                const hasIssues = propertyIssueMap.has(r.propertyId)
+                const linkedUpsells = guestUpsellMap.get(r.guestName)
+                return (
+                  <div key={r.id}>
+                    {i > 0 && <RowDivider />}
+                    <div style={{ padding: '8px 0', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{r.propertyName}</span>
+                          {hasIssues && (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>
+                              <AlertTriangle size={9} /> Issue
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{r.guestName}</span>
+                          <span style={{ fontSize: 10, color: 'var(--text-subtle)' }}>{r.guestsCount} guest{r.guestsCount > 1 ? 's' : ''}</span>
+                          <span style={{ fontSize: 10, color: 'var(--text-subtle)', fontFamily: 'var(--font-mono)' }}>{r.bookingSource}</span>
+                        </div>
+                        {r.specialRequests && (
+                          <div style={{ fontSize: 10, color: 'var(--status-warning)', marginTop: 2 }}>{r.specialRequests}</div>
+                        )}
+                        {linkedUpsells && linkedUpsells.map(u => (
+                          <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 3 }}>
+                            <Sparkles size={10} style={{ color: '#a78bfa' }} />
+                            <span style={{ fontSize: 10, color: '#a78bfa', fontWeight: 500 }}>{u.upsellTitle}</span>
+                            <span style={{ fontSize: 10, color: '#a78bfa', fontFamily: 'var(--font-mono)' }}>{u.price.toLocaleString()} NOK</span>
+                          </div>
+                        ))}
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{checkInTime}</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </IntentCard>
+
+            {/* 2. Check-outs Today */}
+            <IntentCard icon={CalendarCheck} iconColor="#60a5fa" title="Check-outs Today" count={todayCheckouts.length} index={1}>
+              {todayCheckouts.map((r, i) => (
+                <div key={r.id}>
+                  {i > 0 && <RowDivider />}
+                  <div style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{r.propertyName}</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{r.guestName}</span>
+                  </div>
+                </div>
+              ))}
+            </IntentCard>
+
+            {/* 3. Tomorrow */}
+            <IntentCard icon={Clock} iconColor="var(--text-muted)" title="Tomorrow" count={tomorrowActivity.length} index={2}>
+              {tomorrowActivity.map((r, i) => (
+                <div key={`${r.id}-${r.direction}`}>
+                  {i > 0 && <RowDivider />}
+                  <div style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{
+                      fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, flexShrink: 0,
+                      background: r.direction === 'IN' ? 'rgba(16,185,129,0.15)' : 'rgba(96,165,250,0.15)',
+                      color: r.direction === 'IN' ? '#10b981' : '#60a5fa',
+                    }}>{r.direction}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{r.propertyName}</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{r.guestName}</span>
+                  </div>
+                </div>
+              ))}
+            </IntentCard>
+
+            {/* 4. Maintenance Pending */}
+            <IntentCard icon={Wrench} iconColor="#f59e0b" title="Maintenance Pending" count={maintenancePending.length} index={3}>
+              {maintenancePending.map((j, i) => (
+                <div key={j.id}>
+                  {i > 0 && <RowDivider />}
+                  <div style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: PRIORITY_DOT[j.priority] ?? '#6b7280', flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>{j.title}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                        <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{j.propertyName}</span>
+                        {j.staffName && <span style={{ fontSize: 10, color: 'var(--text-subtle)' }}>{j.staffName}</span>}
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 10, background: 'var(--bg-elevated)', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{j.status.replace(/_/g, ' ')}</span>
+                  </div>
+                </div>
+              ))}
+            </IntentCard>
+
+            {/* 5. For Approval */}
+            <IntentCard
+              icon={CircleDollarSign}
+              iconColor="#10b981"
+              title="For Approval"
+              count={pendingApprovals.length}
+              subtitle={pendingApprovals.length > 0 ? `${totalApprovalAmt.toLocaleString()} NOK` : undefined}
+              index={4}
+            >
+              {pendingApprovals.map((a, i) => (
+                <div key={a.id}>
+                  {i > 0 && <RowDivider />}
+                  <div style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>{a.title}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                        <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{a.property}</span>
+                        <span style={{ fontSize: 10, color: 'var(--text-subtle)' }}>{a.category}</span>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{a.amount.toLocaleString()} NOK</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setPendingApprovals(p => p.filter(x => x.id !== a.id)); showToast('Approved — owner notified') }}
+                      style={{ fontSize: 10, fontWeight: 600, padding: '4px 10px', borderRadius: 6, background: 'var(--accent)', color: '#fff', border: 'none', cursor: 'pointer', flexShrink: 0 }}
+                    >Approve</button>
+                  </div>
+                </div>
+              ))}
+            </IntentCard>
+
+            {/* 6. Guests with Issues */}
+            <IntentCard icon={AlertTriangle} iconColor="#ef4444" title="Guests with Issues" count={guestsWithIssues.length} index={5}>
+              {guestsWithIssues.map((issue, i) => {
+                const sev = SEVERITY_STYLE[issue.severity] ?? SEVERITY_STYLE.medium
+                return (
+                  <div key={issue.id}>
+                    {i > 0 && <RowDivider />}
+                    <div style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>{issue.title}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                          <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{issue.propertyName}</span>
+                          <span style={{ fontSize: 10, color: 'var(--text-subtle)' }}>{issue.guestName}</span>
+                        </div>
+                      </div>
+                      <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: sev.bg, color: sev.fg, textTransform: 'uppercase' }}>{issue.severity}</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </IntentCard>
+
+            {/* 7. Upsell Requests */}
+            <IntentCard icon={Sparkles} iconColor="#a78bfa" title="Upsell Requests" count={pendingUpsells.length} index={6}>
+              {pendingUpsells.map((u, i) => (
+                <div key={u.id}>
+                  {i > 0 && <RowDivider />}
+                  <div style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>{u.upsellTitle}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                        <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{u.guestName}</span>
+                        <span style={{ fontSize: 10, color: 'var(--text-subtle)' }}>{u.propertyName}</span>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#a78bfa', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{u.price.toLocaleString()} NOK</span>
+                  </div>
+                </div>
+              ))}
+            </IntentCard>
+
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14 }}>
@@ -671,69 +630,44 @@ export default function OperatorDashboard() {
           </div>
         )}
 
+        {/* E. Needs Attention */}
+        <NeedsAttentionPanel items={attentionItems} />
+
+        {/* F. Operations Progress */}
+        <OperationsProgress data={opsProgress} dateLabel={opsDateLabel} />
+
+        {/* G. Pulse — inline on mobile only */}
+        {isMobile && PulseBlock}
+
+        {/* H. Team on shift — compact avatar strip */}
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '12px 16px', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '.06em', flexShrink: 0 }}>Team</span>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            {TEAM_CLOCK_STATUS.map((member, i) => (
+              <div key={member.id} title={`${member.name} — ${member.task}`} style={{ position: 'relative', marginLeft: i > 0 ? -6 : 0, zIndex: TEAM_CLOCK_STATUS.length - i }}>
+                <div style={{ width: 30, height: 30, borderRadius: '50%', background: member.avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#fff', border: '2px solid var(--bg-card)' }}>
+                  {member.initials}
+                </div>
+                <span style={{ position: 'absolute', bottom: 0, right: 0, width: 8, height: 8, borderRadius: '50%', background: statusDotColor(member.status), border: '2px solid var(--bg-card)' }} />
+              </div>
+            ))}
+          </div>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)', marginLeft: 4 }}>
+            {TEAM_CLOCK_STATUS.filter(m => m.status === 'active').length} active
+            {TEAM_CLOCK_STATUS.filter(m => m.status === 'blocked').length > 0 && <span style={{ color: 'var(--status-danger)' }}> · {TEAM_CLOCK_STATUS.filter(m => m.status === 'blocked').length} blocked</span>}
+          </span>
+          <Link href="/operator/team" style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 600, color: 'var(--accent)', textDecoration: 'none', flexShrink: 0 }}>View all</Link>
+        </div>
+
       </div>
       {/* ═══ end CENTER COLUMN ═══════════════════════════════════════════════════ */}
 
-      {/* ═══ RIGHT PANEL ════════════════════════════════════════════════════════ */}
-      <aside style={{ display: isMobile ? 'none' : 'flex', width: 300, minWidth: 300, flexShrink: 0, flexDirection: 'column', gap: 16, padding: '24px 24px 24px 0', overflowY: 'auto', height: '100%' }}>
-
-        {/* I. Pulse */}
-        {PulseBlock}
-
-        {/* J. Today's Check-ins */}
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '.05em' }}>Today&apos;s Check-ins</span>
-            <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>1 ready · 1 at risk</span>
-          </div>
-          {checkInJobs.length === 0 ? (
-            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>No check-ins scheduled today</div>
-          ) : checkInJobs.map((job, i) => {
-            const isAtRisk = i === 1
-            return (
-              <div key={i} style={{ paddingTop: i > 0 ? 8 : 0, paddingBottom: 8, borderTop: i > 0 ? '1px solid var(--border)' : 'none' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{job.propertyName}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{job.reservation?.guestName ?? 'Guest'}</div>
-                  </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: isAtRisk ? 'var(--status-warning-bg)' : 'var(--accent-bg)', color: isAtRisk ? 'var(--status-warning)' : 'var(--accent)', border: `1px solid ${isAtRisk ? 'var(--status-warning)' : 'var(--accent-border)'}`, flexShrink: 0 }}>
-                    {isAtRisk ? 'At risk' : 'Ready'}
-                  </span>
-                </div>
-                {isAtRisk && <div style={{ fontSize: 10, color: 'var(--status-warning)', marginTop: 3 }}>Cleaning finishes at 17:00</div>}
-              </div>
-            )
-          })}
-        </div>
-
-        {/* K. Owner Approvals */}
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '.05em' }}>Owner Approvals</span>
-            {pendingApprovals.length > 0 && (
-              <span style={{ fontSize: 10, color: 'var(--status-warning)', fontFamily: 'var(--font-mono)' }}>{totalApprovalAmt.toLocaleString()} NOK · {pendingApprovals.length}</span>
-            )}
-          </div>
-          {pendingApprovals.length === 0 ? (
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '8px 0' }}>No pending approvals</div>
-          ) : pendingApprovals.map((a, i) => (
-            <div key={a.id} style={{ paddingBottom: 12, marginBottom: i < pendingApprovals.length - 1 ? 12 : 0, borderBottom: i < pendingApprovals.length - 1 ? '1px solid var(--border)' : 'none' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 2 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', flex: 1, marginRight: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.title}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)', flexShrink: 0, fontFamily: 'var(--font-mono)' }}>{a.amount.toLocaleString()} {a.currency}</span>
-              </div>
-              <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginBottom: 8 }}>{a.property} · {a.category}</div>
-              <div style={{ display: 'flex', gap: 5 }}>
-                <button onClick={() => { setPendingApprovals(p => p.filter(x => x.id !== a.id)); showToast('Approved — owner notified') }} style={{ flex: 1, height: 26, borderRadius: 5, border: 'none', background: 'var(--accent)', color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Approve</button>
-                <button onClick={() => showToast('Invoiced later')} style={{ flex: 1, height: 26, borderRadius: 5, border: '1px solid var(--status-info)', background: 'var(--status-info-bg)', color: 'var(--status-info)', fontSize: 11, cursor: 'pointer' }}>Invoice Later</button>
-                <button onClick={() => showToast('Follow-up sent')} style={{ flex: 1, height: 26, borderRadius: 5, border: '1px solid var(--border-subtle)', background: 'transparent', color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer' }}>Follow-Up</button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-      </aside>
+      {/* ═══ RIGHT PANEL — desktop aside / mobile stacked ═══════════════════════ */}
+      {!isMobile && (
+        <aside className="dash-aside" style={{ display: 'flex', width: 300, minWidth: 300, flexShrink: 0, flexDirection: 'column', gap: 16, padding: '24px 24px 24px 0', overflowY: 'auto', height: '100%' }}>
+          {PulseBlock}
+        </aside>
+      )}
       {/* ═══ end RIGHT PANEL ════════════════════════════════════════════════════ */}
 
       {/* QA Review Sheet */}

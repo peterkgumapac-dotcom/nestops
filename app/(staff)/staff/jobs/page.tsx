@@ -6,22 +6,22 @@ import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
 import AppDrawer from '@/components/shared/AppDrawer'
 import Tabs from '@/components/shared/Tabs'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { TaskCommentSection } from '@/components/comments/TaskCommentSection'
 import { JOBS, STAFF_MEMBERS, type Job, type StaffMember } from '@/lib/data/staff'
 import { useRole } from '@/context/RoleContext'
 
-const GREEN = '#1D9E75', GREEN2 = '#15d492', GBG = 'rgba(29,158,117,0.10)', GBORDER = 'rgba(29,158,117,0.22)'
-const RED = '#e24b4a', RBG = 'rgba(226,75,74,0.10)', RBORDER = 'rgba(226,75,74,0.22)'
-const AMBER = '#ef9f27', ABG = 'rgba(239,159,39,0.10)', ABORDER = 'rgba(239,159,39,0.22)'
-const BLUE = '#378ADD', BBG = 'rgba(55,138,221,0.10)', BBORDER = 'rgba(55,138,221,0.22)'
+const GREEN = 'var(--status-green-fg)', GBG = 'var(--status-green-bg)', GBORDER = 'rgba(29,158,117,0.22)'
+const RED = 'var(--status-red-fg)', RBG = 'var(--status-red-bg)', RBORDER = 'rgba(226,75,74,0.22)'
+const AMBER = 'var(--status-amber-fg)', ABG = 'var(--status-amber-bg)', ABORDER = 'rgba(239,159,39,0.22)'
+const BLUE = 'var(--status-blue-fg)', BBG = 'var(--status-blue-bg)', BBORDER = 'rgba(55,138,221,0.22)'
 
 const USER_TO_STAFF: Record<string, string> = {
   u3: 's1', u4: 's3', u5: 's4', u7: 's2',
 }
 
-// Maintenance staff IDs
 const MAINTENANCE_STAFF = new Set(['s3'])
-// Guest services staff IDs
 const GUEST_STAFF = new Set(['s4'])
 
 const TYPE_ICONS: Record<string, React.ElementType> = {
@@ -30,18 +30,16 @@ const TYPE_ICONS: Record<string, React.ElementType> = {
 
 const PIPELINE_STEPS = ['Assigned', 'En route', 'On site', 'Done']
 
-// Map job status → pipeline index
 function pipelineIndex(status: string, pipeStep: number): number {
   if (status === 'done') return 3
-  if (pipeStep >= 2) return 2 // on site
-  if (pipeStep >= 1) return 1 // en route
+  if (pipeStep >= 2) return 2
+  if (pipeStep >= 1) return 1
   return 0
 }
 
 function getJobColor(job: Job): { bar: string; bg: string; border: string } {
   if (job.status === 'done') return { bar: GREEN, bg: GBG, border: GBORDER }
   if (job.status === 'pending') return { bar: GREEN, bg: 'transparent', border: 'var(--border)' }
-  // in_progress: check due time
   const now = new Date()
   const dueStr = job.dueTime
   if (dueStr) {
@@ -68,7 +66,7 @@ function getBufferLabel(job: Job): string | null {
   const dueMs = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h || 0, m || 0).getTime()
   const mins = Math.round((dueMs - now.getTime()) / 60000)
   if (mins < 0) return `Overdue by ${Math.abs(mins)} min`
-  if (mins < 30) return `⚠ ${mins} min buffer`
+  if (mins < 30) return `${mins} min buffer`
   return `${mins} min buffer`
 }
 
@@ -79,6 +77,31 @@ function getStatusLabel(job: Job): string {
   if (col.bar === RED) return 'Overdue — not complete'
   if (col.bar === AMBER) return 'Approaching deadline'
   return 'In progress'
+}
+
+// Pipeline step visualization (shared between card and drawer)
+function PipelineSteps({ currentStep }: { currentStep: number }) {
+  return (
+    <div className="flex items-center">
+      {PIPELINE_STEPS.map((step, i) => (
+        <React.Fragment key={step}>
+          <div
+            className="flex-1 py-1 px-2 rounded text-[9px] font-semibold text-center whitespace-nowrap"
+            style={{
+              background: i < currentStep ? GBG : i === currentStep ? BBG : 'var(--bg-elevated)',
+              color: i < currentStep ? GREEN : i === currentStep ? BLUE : 'var(--text-subtle)',
+              border: `1px solid ${i < currentStep ? GBORDER : i === currentStep ? BBORDER : 'var(--border)'}`,
+            }}
+          >
+            {step}
+          </div>
+          {i < PIPELINE_STEPS.length - 1 && (
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="var(--text-subtle)" strokeWidth="2" className="shrink-0"><path d="M4 8h8M9 5l3 3-3 3"/></svg>
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  )
 }
 
 // Cleaning progress card
@@ -104,71 +127,88 @@ function CleaningCard({ job, onClick, menuOpen, onMenuToggle }: {
   ]
 
   return (
-    <div onClick={onClick} style={{
-      background: 'var(--bg-card)',
-      border: `1px solid ${isOverdue ? RBORDER : isAmber ? ABORDER : 'var(--border)'}`,
-      borderLeft: `3px solid ${col.bar}`,
-      borderRadius: 12, overflow: 'visible', position: 'relative', cursor: 'pointer',
-      transition: 'background .15s',
-    }}
-      onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-elevated)')}
-      onMouseLeave={e => (e.currentTarget.style.background = 'var(--bg-card)')}
+    <Card
+      onClick={onClick}
+      className="card overflow-visible relative cursor-pointer border-l-[3px]"
+      style={{
+        borderLeftColor: col.bar,
+        borderColor: isOverdue ? RBORDER : isAmber ? ABORDER : undefined,
+      }}
     >
       {/* Three-dot menu */}
-      <button onClick={e => { e.stopPropagation(); onMenuToggle() }}
-        style={{ position: 'absolute', top: 10, right: 10, width: 22, height: 22, borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: 'transparent', border: 'none', color: 'var(--text-subtle)', zIndex: 2 }}
+      <button
+        onClick={e => { e.stopPropagation(); onMenuToggle() }}
+        className="absolute top-2.5 right-2.5 w-6 h-6 rounded-[var(--radius-sm)] flex items-center justify-center cursor-pointer bg-transparent border-none text-[var(--text-subtle)] hover:text-[var(--text-muted)] z-[2]"
       >
         <MoreHorizontal size={14} />
       </button>
       {menuOpen && (
-        <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: 32, right: 10, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 4, zIndex: 20, width: 180, boxShadow: '0 8px 24px rgba(0,0,0,.5)' }}>
+        <Card
+          onClick={e => e.stopPropagation()}
+          className="absolute top-8 right-2.5 z-20 w-[180px] p-1 shadow-lg"
+          style={{ boxShadow: '0 8px 24px rgba(0,0,0,.5)' }}
+        >
           {MENU_ITEMS.map((item, i) =>
             item === null
-              ? <div key={i} style={{ height: 1, background: 'var(--border)', margin: '3px 0' }} />
-              : <div key={item.label}
-                style={{ padding: '7px 10px', fontSize: 11, color: 'var(--text-muted)', cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-elevated)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-              >
-                <item.Icon size={13} style={{ opacity: .6 }} /> {item.label}
-              </div>
+              ? <div key={i} className="h-px bg-[var(--border)] my-0.5" />
+              : <div
+                  key={item.label}
+                  className="px-2.5 py-1.5 text-[11px] text-[var(--text-muted)] cursor-pointer rounded-[var(--radius-sm)] flex items-center gap-2 hover:bg-[var(--bg-elevated)] transition-colors"
+                >
+                  <item.Icon size={13} className="opacity-60" /> {item.label}
+                </div>
           )}
-        </div>
+        </Card>
       )}
 
       {/* Head */}
-      <div style={{ padding: '12px 40px 10px 14px', borderBottom: '1px solid var(--border)', background: isOverdue ? RBG : isAmber ? ABG : 'transparent' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, fontWeight: 500, padding: '2px 8px', borderRadius: 4, background: BBG, color: BLUE, border: `1px solid ${BBORDER}`, marginBottom: 7 }}>
+      <div
+        className="px-3.5 pt-3 pb-2.5 border-b border-[var(--border)]"
+        style={{ background: isOverdue ? RBG : isAmber ? ABG : 'transparent' }}
+      >
+        <div
+          className="inline-flex items-center gap-1.5 text-[10px] font-medium px-2 py-0.5 rounded mb-1.5"
+          style={{ background: BBG, color: BLUE, border: `1px solid ${BBORDER}` }}
+        >
           {job.propertyName}
         </div>
-        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 3 }}>{job.title}</div>
-        <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Started {job.dueTime ? 'earlier' : '—'}</div>
+        <div className="text-sm font-medium text-[var(--text-primary)] mb-0.5">{job.title}</div>
+        <div className="text-[11px] text-[var(--text-subtle)]">Started {job.dueTime ? 'earlier' : '—'}</div>
       </div>
 
       {/* Body */}
-      <div style={{ padding: '12px 14px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-          <span style={{ fontSize: 13, fontWeight: 500, fontFamily: 'monospace', color: col.bar }}>{pct}%</span>
-          {buffer && <span style={{ fontSize: 10, fontFamily: 'monospace', color: isOverdue ? RED : isAmber ? AMBER : 'var(--text-subtle)' }}>{buffer}</span>}
+      <div className="px-3.5 py-3">
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-sm font-medium font-mono" style={{ color: col.bar }}>{pct}%</span>
+          {buffer && <span className="text-[10px] font-mono" style={{ color: isOverdue ? RED : isAmber ? AMBER : 'var(--text-subtle)' }}>{buffer}</span>}
         </div>
-        <div style={{ height: 6, background: 'var(--bg-elevated)', borderRadius: 3, overflow: 'hidden', marginBottom: 6, position: 'relative' }}>
-          <div style={{
-            height: '100%', width: `${pct}%`, background: col.bar, borderRadius: 3, transition: 'width .3s',
-            animation: isOverdue ? 'barPulse 1.5s ease infinite' : 'none',
-          }} />
-          {job.checkinTime && <div style={{ position: 'absolute', top: 0, right: '14%', width: 2, height: '100%', background: 'rgba(255,255,255,0.2)' }} />}
+        <div className="h-1.5 bg-[var(--bg-elevated)] rounded-full overflow-hidden mb-1.5 relative">
+          <div
+            className="h-full rounded-full transition-[width] duration-300"
+            style={{
+              width: `${pct}%`, background: col.bar,
+              animation: isOverdue ? 'barPulse 1.5s ease infinite' : 'none',
+            }}
+          />
+          {job.checkinTime && <div className="absolute top-0 right-[14%] w-0.5 h-full bg-white/20" />}
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text-subtle)', fontFamily: 'monospace', marginBottom: 10 }}>
+        <div className="flex justify-between text-[10px] text-[var(--text-subtle)] font-mono mb-2.5">
           <span>Due {job.dueTime ?? '—'}</span>
-          {job.checkinTime && <span style={{ color: isAmber ? AMBER : 'inherit' }}>Check-in {job.checkinTime}</span>}
+          {job.checkinTime && <span style={{ color: isAmber ? AMBER : undefined }}>Check-in {job.checkinTime}</span>}
         </div>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, fontWeight: 500, padding: '3px 9px', borderRadius: 20, background: col.bg, border: `1px solid ${col.border}` }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: col.bar, animation: isOverdue ? 'dotPulse 1.5s ease infinite' : 'none' }} />
+        <div
+          className="inline-flex items-center gap-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full"
+          style={{ background: col.bg, border: `1px solid ${col.border}` }}
+        >
+          <span
+            className="w-1.5 h-1.5 rounded-full"
+            style={{ background: col.bar, animation: isOverdue ? 'dotPulse 1.5s ease infinite' : 'none' }}
+          />
           <span style={{ color: col.bar }}>{statusLabel}</span>
         </div>
       </div>
       <style>{`@keyframes barPulse{0%,100%{opacity:1}50%{opacity:.45}}@keyframes dotPulse{0%,100%{opacity:1}50%{opacity:.3}}`}</style>
-    </div>
+    </Card>
   )
 }
 
@@ -177,70 +217,47 @@ function MaintenanceCard({ job, onClick, pipeStep, onPipeStepChange }: {
   job: Job; onClick: () => void; pipeStep: number; onPipeStepChange: (n: number) => void
 }) {
   const currentStep = pipelineIndex(job.status, pipeStep)
-  const col = getJobColor(job)
 
   return (
-    <div onClick={onClick} style={{
-      background: 'var(--bg-card)', border: `1px solid var(--border)`,
-      borderRadius: 12, overflow: 'hidden', cursor: 'pointer', transition: 'background .15s',
-    }}
-      onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-elevated)')}
-      onMouseLeave={e => (e.currentTarget.style.background = 'var(--bg-card)')}
-    >
+    <Card onClick={onClick} className="card overflow-hidden cursor-pointer">
       {/* Head */}
-      <div style={{ padding: '12px 14px 10px', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, fontWeight: 500, padding: '2px 8px', borderRadius: 4, background: col.bg, color: col.bar, border: `1px solid ${col.border}`, marginBottom: 7 }}>
+      <div className="px-3.5 pt-3 pb-2.5 border-b border-[var(--border)]">
+        <div
+          className="inline-flex items-center gap-1.5 text-[10px] font-medium px-2 py-0.5 rounded mb-1.5"
+          style={{ background: getJobColor(job).bg, color: getJobColor(job).bar, border: `1px solid ${getJobColor(job).border}` }}
+        >
           {job.propertyName}
         </div>
-        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 3 }}>{job.title}</div>
-        <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Assigned {job.dueTime ?? '—'}</div>
+        <div className="text-sm font-medium text-[var(--text-primary)] mb-0.5">{job.title}</div>
+        <div className="text-[11px] text-[var(--text-subtle)]">Assigned {job.dueTime ?? '—'}</div>
       </div>
       {/* Pipeline */}
-      <div style={{ padding: '12px 14px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-          {PIPELINE_STEPS.map((step, i) => (
-            <React.Fragment key={step}>
-              <div style={{
-                flex: 1, padding: '4px 8px', borderRadius: 4, fontSize: 9, fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap',
-                background: i < currentStep ? GBG : i === currentStep ? BBG : 'var(--bg-elevated)',
-                color: i < currentStep ? GREEN2 : i === currentStep ? BLUE : 'var(--text-subtle)',
-                border: `1px solid ${i < currentStep ? GBORDER : i === currentStep ? BBORDER : 'var(--border)'}`,
-              }}>{step}</div>
-              {i < PIPELINE_STEPS.length - 1 && (
-                <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="var(--text-subtle)" strokeWidth="2" style={{ flexShrink: 0 }}><path d="M4 8h8M9 5l3 3-3 3"/></svg>
-              )}
-            </React.Fragment>
-          ))}
+      <div className="px-3.5 py-3">
+        <div className="mb-3">
+          <PipelineSteps currentStep={currentStep} />
         </div>
-        {/* CTA */}
         {currentStep === 0 && (
-          <button onClick={e => { e.stopPropagation(); onPipeStepChange(1) }}
-            style={{ padding: '7px 14px', borderRadius: 8, background: BBG, color: BLUE, border: `1px solid ${BBORDER}`, fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'system-ui,sans-serif', display: 'flex', alignItems: 'center', gap: 6 }}
-          >
+          <Button onClick={e => { e.stopPropagation(); onPipeStepChange(1) }} variant="outline" size="sm" className="gap-1.5" style={{ background: BBG, color: BLUE, borderColor: BBORDER }}>
             <Clock size={12} /> En Route
-          </button>
+          </Button>
         )}
         {currentStep === 1 && (
-          <div style={{ display: 'flex', gap: 7 }}>
-            <button style={{ padding: '7px 14px', borderRadius: 8, background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'system-ui,sans-serif', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div className="flex gap-1.5">
+            <Button variant="outline" size="sm" className="gap-1.5">
               <Search size={12} /> Before photo
-            </button>
-            <button onClick={e => { e.stopPropagation(); onPipeStepChange(2) }}
-              style={{ padding: '7px 14px', borderRadius: 8, background: GREEN, color: '#fff', border: 'none', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'system-ui,sans-serif', display: 'flex', alignItems: 'center', gap: 6 }}
-            >
-              ▶ Start task
-            </button>
+            </Button>
+            <Button onClick={e => { e.stopPropagation(); onPipeStepChange(2) }} size="sm" className="gap-1.5" style={{ background: GREEN, color: '#fff' }}>
+              &#9654; Start task
+            </Button>
           </div>
         )}
         {currentStep >= 2 && currentStep < 3 && (
-          <button onClick={e => { e.stopPropagation(); onPipeStepChange(3) }}
-            style={{ padding: '7px 14px', borderRadius: 8, background: GREEN, color: '#fff', border: 'none', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'system-ui,sans-serif' }}
-          >
+          <Button onClick={e => { e.stopPropagation(); onPipeStepChange(3) }} size="sm" style={{ background: GREEN, color: '#fff' }}>
             Mark Complete
-          </button>
+          </Button>
         )}
       </div>
-    </div>
+    </Card>
   )
 }
 
@@ -249,29 +266,26 @@ function DefaultJobCard({ job, onClick, accent }: { job: Job; onClick: () => voi
   const Icon = TYPE_ICONS[job.type] ?? CheckSquare
   const borderColor = job.status === 'done' ? GREEN : job.status === 'in_progress' ? AMBER : 'var(--text-subtle)'
   return (
-    <div onClick={onClick} style={{
-      background: 'var(--bg-card)', border: '1px solid var(--border)',
-      borderLeft: `4px solid ${borderColor}`, borderRadius: 10, padding: 16, cursor: 'pointer', transition: 'background 0.15s',
-    }}
-      onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-elevated)')}
-      onMouseLeave={e => (e.currentTarget.style.background = 'var(--bg-card)')}
-    >
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-        <div style={{ width: 40, height: 40, borderRadius: 8, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Icon size={18} style={{ color: accent }} strokeWidth={1.5} />
+    <Card onClick={onClick} className="card p-4 cursor-pointer border-l-4" style={{ borderLeftColor: borderColor }}>
+      <div className="flex items-start gap-3">
+        <div
+          className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+          style={{ background: `${accent}18` }}
+        >
+          <Icon size={18} className="text-[var(--accent)]" strokeWidth={1.5} />
         </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
-            <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>{job.title}</span>
-            <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <span className="text-sm font-semibold text-[var(--text-primary)]">{job.title}</span>
+            <div className="flex gap-1.5 shrink-0">
               <StatusBadge status={job.priority} />
               <StatusBadge status={job.status} />
             </div>
           </div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>{job.propertyName} · Due {job.dueTime}</div>
+          <div className="text-xs text-[var(--text-muted)]">{job.propertyName} · Due {job.dueTime}</div>
         </div>
       </div>
-    </div>
+    </Card>
   )
 }
 
@@ -285,43 +299,32 @@ function MaintenanceDrawerContent({ job, pipeStep, onPipeStepChange }: {
 
   const RES_BUTTONS = [
     { key: 'minor', label: 'Minor fix', hoverColor: 'var(--text-primary)', hoverBg: 'var(--bg-elevated)', hoverBorder: 'var(--border)' },
-    { key: 'fixed', label: '✓ Fixed', hoverColor: GREEN2, hoverBg: GBG, hoverBorder: GBORDER },
+    { key: 'fixed', label: '\u2713 Fixed', hoverColor: GREEN, hoverBg: GBG, hoverBorder: GBORDER },
     { key: 'vendor', label: 'Needs vendor', hoverColor: BLUE, hoverBg: BBG, hoverBorder: BBORDER },
     { key: 'parts', label: 'Needs parts', hoverColor: AMBER, hoverBg: ABG, hoverBorder: ABORDER },
   ]
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="flex flex-col gap-4">
       {/* Pipeline */}
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        {PIPELINE_STEPS.map((step, i) => (
-          <React.Fragment key={step}>
-            <div style={{
-              flex: 1, padding: '4px 8px', borderRadius: 4, fontSize: 9, fontWeight: 600, textAlign: 'center',
-              background: i < currentStep ? GBG : i === currentStep ? BBG : 'var(--bg-elevated)',
-              color: i < currentStep ? GREEN2 : i === currentStep ? BLUE : 'var(--text-subtle)',
-              border: `1px solid ${i < currentStep ? GBORDER : i === currentStep ? BBORDER : 'var(--border)'}`,
-            }}>{step}</div>
-            {i < PIPELINE_STEPS.length - 1 && (
-              <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="var(--text-subtle)" strokeWidth="2" style={{ flexShrink: 0 }}><path d="M4 8h8M9 5l3 3-3 3"/></svg>
-            )}
-          </React.Fragment>
-        ))}
-      </div>
+      <PipelineSteps currentStep={currentStep} />
 
       {/* ETA badge (en route) */}
       {currentStep === 1 && (
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 9px', borderRadius: 20, fontSize: 10, fontWeight: 500, background: BBG, color: BLUE, border: `1px solid ${BBORDER}`, fontFamily: 'monospace', alignSelf: 'flex-start' }}>
+        <div
+          className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium font-mono self-start"
+          style={{ background: BBG, color: BLUE, border: `1px solid ${BBORDER}` }}
+        >
           <Clock size={10} /> ETA {job.dueTime ?? '—'} · in ~20 min
         </div>
       )}
 
       {/* Info grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+      <div className="grid grid-cols-2 gap-3">
         {([['Status', <StatusBadge key="s" status={job.status} />], ['Priority', <StatusBadge key="p" status={job.priority} />], ['Type', job.type], ['Due Time', job.dueTime ?? '—']] as [string, React.ReactNode][]).map(([k, v], i) => (
           <div key={i}>
-            <div className="label-upper" style={{ marginBottom: 4 }}>{k}</div>
-            <div style={{ fontSize: 13, color: 'var(--text-primary)', textTransform: 'capitalize' }}>{v}</div>
+            <div className="label-upper mb-1">{k}</div>
+            <div className="text-sm text-[var(--text-primary)] capitalize">{v}</div>
           </div>
         ))}
       </div>
@@ -329,20 +332,24 @@ function MaintenanceDrawerContent({ job, pipeStep, onPipeStepChange }: {
       {/* Before / After photos (on site) */}
       {currentStep >= 2 && (
         <div>
-          <div className="label-upper" style={{ marginBottom: 8 }}>Site Photos</div>
-          <div style={{ display: 'flex', gap: 16 }}>
+          <div className="label-upper mb-2">Site Photos</div>
+          <div className="flex gap-4">
             {['Before', 'After'].map(label => (
               <div key={label}>
-                <div style={{ fontSize: 9, color: 'var(--text-subtle)', marginBottom: 4, fontWeight: 500, letterSpacing: '.04em', textTransform: 'uppercase' }}>{label}</div>
+                <div className="text-[9px] text-[var(--text-subtle)] mb-1 font-medium tracking-wider uppercase">{label}</div>
                 <div
                   onClick={() => setPhotosDone(p => ({ ...p, [label]: !p[label] }))}
-                  style={{ width: 64, height: 48, borderRadius: 7, border: `1.5px ${photosDone[label] ? 'solid' : 'dashed'} ${photosDone[label] ? GBORDER : 'var(--border)'}`, background: photosDone[label] ? GBG : 'var(--bg-elevated)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, cursor: 'pointer' }}
+                  className="w-16 h-12 rounded-lg flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-colors"
+                  style={{
+                    border: `1.5px ${photosDone[label] ? 'solid' : 'dashed'} ${photosDone[label] ? GBORDER : 'var(--border)'}`,
+                    background: photosDone[label] ? GBG : 'var(--bg-elevated)',
+                  }}
                 >
                   {photosDone[label]
-                    ? <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={GREEN2} strokeWidth="1.5"><path d="M3 8l4 4 6-7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    ? <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={GREEN} strokeWidth="1.5"><path d="M3 8l4 4 6-7" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     : <>
                       <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--text-subtle)" strokeWidth="1.5"><rect x="2" y="3" width="12" height="10" rx="1.5"/><circle cx="8" cy="8" r="2.5"/></svg>
-                      <span style={{ fontSize: 9, color: 'var(--text-subtle)' }}>Add</span>
+                      <span className="text-[9px] text-[var(--text-subtle)]">Add</span>
                     </>
                   }
                 </div>
@@ -355,19 +362,22 @@ function MaintenanceDrawerContent({ job, pipeStep, onPipeStepChange }: {
       {/* Resolution (on site) */}
       {currentStep >= 2 && (
         <div>
-          <div style={{ height: 1, background: 'var(--border)', margin: '0 0 10px' }} />
-          <div style={{ fontSize: 10, fontWeight: 500, color: 'var(--text-subtle)', textAlign: 'center', marginBottom: 8, letterSpacing: '.04em', textTransform: 'uppercase' }}>How was this resolved?</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6 }}>
+          <div className="h-px bg-[var(--border)] mb-2.5" />
+          <div className="label-upper text-center mb-2">How was this resolved?</div>
+          <div className="grid grid-cols-4 gap-1.5">
             {RES_BUTTONS.map(rb => (
-              <button key={rb.key} onClick={() => setResolution(resolution === rb.key ? null : rb.key)}
+              <button
+                key={rb.key}
+                onClick={() => setResolution(resolution === rb.key ? null : rb.key)}
+                className="px-1.5 py-1.5 rounded-lg text-[10px] font-medium cursor-pointer text-center transition-all border"
                 style={{
-                  padding: '7px 6px', borderRadius: 8, fontSize: 10, fontWeight: 500, cursor: 'pointer', textAlign: 'center', fontFamily: 'system-ui,sans-serif',
-                  border: `1px solid ${resolution === rb.key ? rb.hoverBorder : 'var(--border)'}`,
+                  borderColor: resolution === rb.key ? rb.hoverBorder : 'var(--border)',
                   background: resolution === rb.key ? rb.hoverBg : 'var(--bg-elevated)',
                   color: resolution === rb.key ? rb.hoverColor : 'var(--text-muted)',
-                  transition: 'all .12s',
                 }}
-              >{rb.label}</button>
+              >
+                {rb.label}
+              </button>
             ))}
           </div>
         </div>
@@ -375,8 +385,8 @@ function MaintenanceDrawerContent({ job, pipeStep, onPipeStepChange }: {
 
       {/* Work order form (needs vendor/parts) */}
       {(resolution === 'vendor' || resolution === 'parts') && (
-        <div style={{ background: 'var(--bg-elevated)', border: `1px solid ${ABORDER}`, borderRadius: 10, padding: 12 }}>
-          <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <Card className="p-3" style={{ background: 'var(--bg-elevated)', borderColor: ABORDER }}>
+          <div className="text-[11px] font-medium text-[var(--text-primary)] mb-2.5 flex items-center gap-1.5">
             <Package size={13} style={{ color: AMBER }} /> Work Order
           </div>
           {[
@@ -385,29 +395,38 @@ function MaintenanceDrawerContent({ job, pipeStep, onPipeStepChange }: {
             { label: 'Estimate (NOK)', placeholder: '0' },
             { label: 'Notes / parts needed', placeholder: 'List parts...' },
           ].map(field => (
-            <div key={field.label} style={{ marginBottom: 8 }}>
-              <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-subtle)', marginBottom: 3 }}>{field.label}</div>
-              <input placeholder={field.placeholder} style={{ width: '100%', background: 'var(--bg-page)', border: '1px solid var(--border)', borderRadius: 6, padding: '6px 9px', fontSize: 11, color: 'var(--text-muted)', fontFamily: 'system-ui,sans-serif', outline: 'none' }} />
+            <div key={field.label} className="mb-2">
+              <div className="label-upper mb-0.5">{field.label}</div>
+              <input
+                placeholder={field.placeholder}
+                className="w-full bg-[var(--bg-page)] border border-[var(--border)] rounded-[var(--radius-sm)] px-2 py-1.5 text-[11px] text-[var(--text-muted)] outline-none"
+              />
             </div>
           ))}
-          <div style={{ display: 'flex', gap: 7, marginTop: 10 }}>
-            <button style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: GREEN, color: '#fff', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'system-ui,sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+          <div className="flex gap-1.5 mt-2.5">
+            <Button size="sm" className="flex-1 gap-1.5" style={{ background: GREEN, color: '#fff' }}>
               <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 8l4 4 6-7" strokeLinecap="round" strokeLinejoin="round"/></svg> Approve
-            </button>
-            <button style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer', fontFamily: 'system-ui,sans-serif' }}>Reject</button>
-            <button style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer', fontFamily: 'system-ui,sans-serif' }}>More info</button>
+            </Button>
+            <Button variant="outline" size="sm">Reject</Button>
+            <Button variant="outline" size="sm">More info</Button>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, padding: '7px 10px', background: ABG, borderRadius: 7, border: `1px solid ${ABORDER}` }}>
+          <div
+            className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 rounded-lg"
+            style={{ background: ABG, border: `1px solid ${ABORDER}` }}
+          >
             <AlertCircle size={12} style={{ color: AMBER }} />
-            <span style={{ fontSize: 10, color: AMBER }}>Above threshold · owner approval also required</span>
+            <span className="text-[10px]" style={{ color: AMBER }}>Above threshold · owner approval also required</span>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Notes */}
       <div>
-        <div className="label-upper" style={{ marginBottom: 6 }}>Notes</div>
-        <textarea style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontSize: 14, outline: 'none', minHeight: 80, resize: 'vertical', fontFamily: 'system-ui,sans-serif' }} placeholder="Add notes about this job…" />
+        <div className="label-upper mb-1.5">Notes</div>
+        <textarea
+          className="w-full px-3 py-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-sm outline-none min-h-[80px] resize-y"
+          placeholder="Add notes about this job…"
+        />
       </div>
 
       {/* Comments */}
@@ -438,7 +457,6 @@ export default function JobsPage() {
     }
   }, [])
 
-  // Close menus on outside click
   useEffect(() => {
     function handler() { setOpenMenu(null) }
     document.addEventListener('click', handler)
@@ -468,9 +486,9 @@ export default function JobsPage() {
       <PageHeader title={isMaintenance ? 'My Jobs' : 'My Cleanings'} subtitle="Your assigned tasks and jobs" />
       <Tabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div className="flex flex-col gap-2.5">
         {filtered.length === 0 && (
-          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-subtle)' }}>No jobs found</div>
+          <div className="py-10 text-center text-[var(--text-subtle)] text-sm">No jobs found</div>
         )}
         {filtered.map(job => {
           if (isMaintenance) {
@@ -485,7 +503,6 @@ export default function JobsPage() {
           if (isGuest) {
             return <DefaultJobCard key={job.id} job={job} onClick={() => setSelectedJob(job)} accent={accent} />
           }
-          // Cleaning card (default)
           return (
             <CleaningCard key={job.id} job={job}
               onClick={() => setSelectedJob(job)}
@@ -503,10 +520,10 @@ export default function JobsPage() {
         title={selectedJob?.title ?? ''}
         subtitle={selectedJob?.propertyName}
         footer={
-          <div style={{ display: 'flex', gap: 8, width: '100%' }}>
-            <button onClick={() => setSelectedJob(null)} style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>Close</button>
+          <div className="flex gap-2 w-full">
+            <Button onClick={() => setSelectedJob(null)} variant="outline" className="flex-1">Close</Button>
             {!isMaintenance && (
-              <button style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Mark Complete</button>
+              <Button className="flex-1 rounded-full">Mark Complete</Button>
             )}
           </div>
         }
@@ -521,24 +538,27 @@ export default function JobsPage() {
               }}
             />
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 {([['Status', <StatusBadge key="s" status={selectedJob.status} />], ['Priority', <StatusBadge key="p" status={selectedJob.priority} />], ['Type', selectedJob.type], ['Due Time', selectedJob.dueTime ?? '—']] as [string, React.ReactNode][]).map(([k, v], i) => (
                   <div key={i}>
-                    <div className="label-upper" style={{ marginBottom: 4 }}>{k as string}</div>
-                    <div style={{ fontSize: 13, color: 'var(--text-primary)', textTransform: 'capitalize' }}>{v as React.ReactNode}</div>
+                    <div className="label-upper mb-1">{k as string}</div>
+                    <div className="text-sm text-[var(--text-primary)] capitalize">{v as React.ReactNode}</div>
                   </div>
                 ))}
               </div>
               {selectedJob.checkoutTime && (
-                <div style={{ background: 'var(--bg-elevated)', borderRadius: 8, padding: 12, display: 'flex', gap: 16 }}>
-                  <div><div className="label-upper" style={{ marginBottom: 2 }}>Checkout</div><div style={{ fontSize: 13 }}>{selectedJob.checkoutTime}</div></div>
-                  {selectedJob.checkinTime && <div><div className="label-upper" style={{ marginBottom: 2 }}>Next Check-in</div><div style={{ fontSize: 13 }}>{selectedJob.checkinTime}</div></div>}
-                </div>
+                <Card className="p-3 flex gap-4" style={{ background: 'var(--bg-elevated)' }}>
+                  <div><div className="label-upper mb-0.5">Checkout</div><div className="text-sm">{selectedJob.checkoutTime}</div></div>
+                  {selectedJob.checkinTime && <div><div className="label-upper mb-0.5">Next Check-in</div><div className="text-sm">{selectedJob.checkinTime}</div></div>}
+                </Card>
               )}
               <div>
-                <div className="label-upper" style={{ marginBottom: 6 }}>Notes</div>
-                <textarea style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontSize: 14, outline: 'none', minHeight: 80, resize: 'vertical', fontFamily: 'system-ui,sans-serif' }} placeholder="Add notes about this job…" />
+                <div className="label-upper mb-1.5">Notes</div>
+                <textarea
+                  className="w-full px-3 py-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-sm outline-none min-h-[80px] resize-y"
+                  placeholder="Add notes about this job…"
+                />
               </div>
               <TaskCommentSection taskId={selectedJob.id} propertyId={selectedJob.propertyId ?? ''} />
             </div>

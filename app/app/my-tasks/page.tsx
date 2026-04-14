@@ -2,10 +2,13 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Filter, Camera, X, Check, ShoppingBag, Calendar, MapPin, Zap, Lock, Eye, ChevronDown } from 'lucide-react'
+import { Filter, Camera, X, Check, ShoppingBag, Calendar, MapPin, Zap, Lock, Eye, ChevronDown, Clock, AlertTriangle, Key, Wrench } from 'lucide-react'
+import { PROPERTY_WEATHER } from '@/lib/data/weather'
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
 import AppDrawer from '@/components/shared/AppDrawer'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { useRole } from '@/context/RoleContext'
 import type { UserProfile } from '@/context/RoleContext'
 import { PROPERTIES } from '@/lib/data/properties'
@@ -50,16 +53,22 @@ const TODAYS_CLEANINGS: CleaningJob[] = [
 // TODAYS_DELIVERIES is defined after DERIVED_DELIVERY_TASKS below
 
 const CLEANING_TYPE_COLOR: Record<CleaningJob['type'], string> = {
-  Turnover:   '#7c3aed',
-  'Deep Clean': '#3b82f6',
-  'Same-day': '#f97316',
-  Inspection: '#06b6d4',
+  Turnover:     'var(--accent)',
+  'Deep Clean': 'var(--accent)',
+  'Same-day':   'var(--status-amber-fg)',
+  Inspection:   'var(--accent)',
 }
 
 const CLEANING_STATUS_COLOR: Record<CleaningJob['status'], string> = {
-  pending:     '#6b7280',
-  'in-progress': '#10b981',
-  done:        '#374151',
+  pending:       'var(--text-muted)',
+  'in-progress': 'var(--status-green-fg)',
+  done:          'var(--text-subtle)',
+}
+
+const CLEANING_STATUS_BG: Record<CleaningJob['status'], string> = {
+  pending:       'var(--status-muted-bg)',
+  'in-progress': 'var(--status-green-bg)',
+  done:          'var(--status-muted-bg)',
 }
 
 function hasTightGap(checkoutTime: string, windowStart: string): boolean {
@@ -264,15 +273,15 @@ const USER_ASSIGNEE_MAP: Record<string, string> = {
 }
 
 const PRIORITY_BORDER: Record<string, string> = {
-  urgent: '#ef4444', high: '#f97316', medium: '#3b82f6', low: '#6b7280',
+  urgent: 'var(--status-red-fg)', high: 'var(--status-amber-fg)', medium: 'var(--accent)', low: 'var(--text-muted)',
 }
 
 const STATUS_GROUPS: { key: string; label: string; color: string }[] = [
-  { key: 'overdue',   label: 'Overdue',   color: '#ef4444' },
-  { key: 'today',     label: 'Today',     color: '#7c3aed' },
-  { key: 'this_week', label: 'This Week', color: '#3b82f6' },
-  { key: 'upcoming',  label: 'Upcoming',  color: '#6b7280' },
-  { key: 'completed', label: 'Completed', color: '#10b981' },
+  { key: 'overdue',   label: 'Overdue',   color: 'var(--status-red-fg)' },
+  { key: 'today',     label: 'Today',     color: 'var(--accent)' },
+  { key: 'this_week', label: 'This Week', color: 'var(--accent)' },
+  { key: 'upcoming',  label: 'Upcoming',  color: 'var(--text-muted)' },
+  { key: 'completed', label: 'Completed', color: 'var(--status-green-fg)' },
 ]
 
 function SheetItemRow({ item, sheetQtys, setSheetQtys, accent }: {
@@ -282,32 +291,33 @@ function SheetItemRow({ item, sheetQtys, setSheetQtys, accent }: {
   accent: string
 }) {
   const qty = sheetQtys[item.id] ?? 0
-  const statusColor = item.status === 'ok' ? '#10b981' : item.status === 'low' ? '#d97706' : item.status === 'critical' ? '#f97316' : '#ef4444'
+  const statusColor = item.status === 'ok' ? 'var(--status-green-fg)' : item.status === 'low' ? 'var(--status-amber-fg)' : item.status === 'critical' ? 'var(--status-amber-fg)' : 'var(--status-red-fg)'
   return (
-    <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 0', borderBottom:'1px solid var(--border-subtle)' }}>
-      <div style={{ flex:1, minWidth:0 }}>
-        <div style={{ fontSize:14, fontWeight:600, color:'var(--text-primary)' }}>{item.name}</div>
-        <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:1 }}>
+    <div className="flex items-center gap-2.5 py-2.5 border-b border-[var(--border-subtle)]">
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold text-[var(--text-primary)]">{item.name}</div>
+        <div className="text-xs text-[var(--text-muted)] mt-px">
           {item.inStock} in stock · <span style={{ color: statusColor }}>{item.status}</span>
         </div>
       </div>
-      <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
+      <div className="flex items-center gap-2 shrink-0">
         {qty === 0 ? (
           <button
             onClick={() => setSheetQtys(p => ({...p, [item.id]: 1}))}
-            style={{ height:40, padding:'0 16px', borderRadius:8, border:`1px solid ${accent}`, background:`${accent}15`, color: accent, fontSize:13, fontWeight:600, cursor:'pointer' }}>
+            className="h-10 px-4 rounded-lg text-[13px] font-semibold cursor-pointer"
+            style={{ border: `1px solid ${accent}`, background: `${accent}15`, color: accent }}>
             + Add
           </button>
         ) : (
           <>
             <button onClick={() => setSheetQtys(p => ({...p, [item.id]: Math.max(0, (p[item.id]??1)-1)}))}
-              style={{ width:40, height:40, borderRadius:8, border:'1px solid var(--border)', background:'var(--bg-elevated)', color:'var(--text-primary)', fontSize:18, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>−</button>
-            <span style={{ fontSize:16, fontWeight:700, minWidth:28, textAlign:'center', color:'var(--text-primary)' }}>{qty}</span>
+              className="w-10 h-10 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-lg cursor-pointer flex items-center justify-center">−</button>
+            <span className="text-base font-semibold min-w-[28px] text-center text-[var(--text-primary)]">{qty}</span>
             <button onClick={() => setSheetQtys(p => ({...p, [item.id]: (p[item.id]??0)+1}))}
-              style={{ width:40, height:40, borderRadius:8, border:'1px solid var(--border)', background:'var(--bg-elevated)', color:'var(--text-primary)', fontSize:18, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>+</button>
+              className="w-10 h-10 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-lg cursor-pointer flex items-center justify-center">+</button>
           </>
         )}
-        <span style={{ fontSize:11, color:'var(--text-muted)', minWidth:28 }}>{item.unit}</span>
+        <span className="text-[11px] text-[var(--text-muted)] min-w-[28px]">{item.unit}</span>
       </div>
     </div>
   )
@@ -316,14 +326,14 @@ function SheetItemRow({ item, sheetQtys, setSheetQtys, accent }: {
 function LibAccordionSection({ title, content, accent }: { title: string; content: string; accent: string }) {
   const [open, setOpen] = useState(false)
   return (
-    <div style={{ marginBottom:8, border:'1px solid var(--border)', borderRadius:8, overflow:'hidden' }}>
+    <div className="mb-2 border border-[var(--border)] rounded-lg overflow-hidden">
       <button onClick={() => setOpen(o => !o)}
-        style={{ width:'100%', display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 14px', background:'none', border:'none', cursor:'pointer', fontSize:13, fontWeight:600, color:'var(--text-primary)' }}>
+        className="w-full flex justify-between items-center px-3.5 py-3 bg-transparent border-none cursor-pointer text-[13px] font-semibold text-[var(--text-primary)]">
         {title}
-        <span style={{ fontSize:11, color:'var(--text-muted)' }}>{open ? '▼' : '▶'}</span>
+        <span className="text-[11px] text-[var(--text-muted)]">{open ? '▼' : '▶'}</span>
       </button>
       {open && (
-        <div style={{ padding:'0 14px 12px', fontSize:13, color:'var(--text-muted)', whiteSpace:'pre-line', lineHeight:1.6, borderTop:'1px solid var(--border-subtle)' }}>
+        <div className="px-3.5 pb-3 text-[13px] text-[var(--text-muted)] whitespace-pre-line leading-relaxed border-t border-[var(--border-subtle)]">
           {content}
         </div>
       )}
@@ -417,6 +427,8 @@ export default function MyTasksPage() {
 
   // Feature 5: Add a Cleaning Task
   const [showAddCleaning, setShowAddCleaning] = useState(false)
+  const [upsellsExpanded, setUpsellsExpanded] = useState(false)
+  const [showCodes, setShowCodes] = useState<Record<string, boolean>>({})
   const [extraCleanings, setExtraCleanings] = useState<CleaningJob[]>([])
   const [addProp, setAddProp] = useState('')
   const [addType, setAddType] = useState<CleaningJob['type']>('Turnover')
@@ -674,12 +686,7 @@ export default function MyTasksPage() {
     fileInputRef.current?.click()
   }
 
-  const stepperBtn: React.CSSProperties = {
-    width: 36, height: 36, borderRadius: 8, border: '1px solid var(--border)',
-    background: 'var(--bg-elevated)', color: 'var(--text-primary)',
-    fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    lineHeight: 1,
-  }
+  const stepperBtnCls = 'w-9 h-9 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-base cursor-pointer flex items-center justify-center leading-none'
 
   const handleSubmit = () => {
     if (!selectedTask) return
@@ -741,12 +748,12 @@ export default function MyTasksPage() {
     { key: 'high', label: 'High' }, { key: 'medium', label: 'Medium' }, { key: 'low', label: 'Low' },
   ]
 
-  const pillStyle = (active: boolean): React.CSSProperties => ({
-    padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: 'pointer',
-    border: `1px solid ${active ? accent : 'var(--border)'}`,
-    background: active ? `${accent}1a` : 'transparent',
-    color: active ? accent : 'var(--text-muted)',
-  })
+  const pillCls = (active: boolean) =>
+    `px-4 py-2 min-h-[40px] rounded-full text-xs font-medium cursor-pointer transition-colors whitespace-nowrap shrink-0 ${
+      active
+        ? 'text-[var(--accent)] border bg-[var(--accent-bg)] border-[var(--accent)]'
+        : 'text-[var(--text-muted)] border border-[var(--border)] bg-transparent'
+    }`
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -755,17 +762,17 @@ export default function MyTasksPage() {
         subtitle={isMaintenance ? 'Your assigned maintenance jobs — click to open job details' : isSupervisor ? 'All team cleaning tasks — click any task to open its checklist' : 'Your cleaning tasks — click any task to open its checklist'}
       />
 
-      {/* Filters */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-          <Filter size={13} style={{ color: 'var(--text-muted)' }} />
+      {/* Filters — scrollable on mobile */}
+      <div className="flex flex-col gap-2 mb-5">
+        <div className="flex gap-1.5 overflow-x-auto pb-1 pills-row items-center">
+          <Filter size={13} className="text-[var(--text-muted)] shrink-0" />
           {statusPills.map(p => (
-            <button key={p.key} onClick={() => setStatusFilter(p.key)} style={pillStyle(statusFilter === p.key)}>{p.label}</button>
+            <button key={p.key} onClick={() => setStatusFilter(p.key)} className={pillCls(statusFilter === p.key)}>{p.label}</button>
           ))}
         </div>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+        <div className="flex gap-1.5 overflow-x-auto pb-1 pills-row">
           {priorityPills.map(p => (
-            <button key={p.key} onClick={() => setPriorityFilter(p.key)} style={pillStyle(priorityFilter === p.key)}>{p.label}</button>
+            <button key={p.key} onClick={() => setPriorityFilter(p.key)} className={pillCls(priorityFilter === p.key)}>{p.label}</button>
           ))}
         </div>
       </div>
@@ -781,26 +788,24 @@ export default function MyTasksPage() {
         if (allJobs.length === 0) return null
         return (
           <div className="section-block">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <Zap size={14} style={{ color: '#7c3aed' }} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <div className="flex items-center gap-2 mb-2.5">
+              <Zap size={14} className="text-[var(--accent)]" />
+              <span className="label-upper text-[var(--accent)]">
                 Today&apos;s Cleanings
               </span>
-              <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 10, background: '#7c3aed20', color: '#7c3aed', fontWeight: 600 }}>
+              <span className="text-[11px] px-[7px] py-px rounded-[10px] bg-[var(--accent-bg)] text-[var(--accent)] font-semibold">
                 {allJobs.length}
               </span>
-              <button onClick={() => setShowAddCleaning(true)} style={{ marginLeft: 'auto', fontSize: 18, color: '#7c3aed', background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1, padding: '0 2px' }}>+</button>
+              <button onClick={() => setShowAddCleaning(true)} className="ml-auto text-lg text-[var(--accent)] bg-transparent border-none cursor-pointer leading-none px-0.5">+</button>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {allJobs.map(job => {
+            <div className="flex flex-col gap-3">
+              {allJobs.map((job, idx) => {
                 const isDelivery = (job as typeof TODAYS_DELIVERIES[0]).isDelivery === true
                 const [windowStart] = job.timeWindow.split('–')
                 const tight = !isDelivery && hasTightGap(job.checkoutTime, windowStart)
-                const typeColor = isDelivery ? '#d97706' : CLEANING_TYPE_COLOR[job.type]
                 const effectiveStatus = jobStatuses[job.id] ?? job.status
                 const statusColor = CLEANING_STATUS_COLOR[effectiveStatus]
                 const matchingTask = !isDelivery && ALL_TASKS.find(t => t.propertyName === job.property && t.type === 'Cleaning')
-                // Feature 4: timer
                 const startedAt = jobStartedAt[job.id]
                 const [winStart, winEnd] = job.timeWindow.split('–')
                 const [sh, sm] = (winStart ?? '00:00').split(':').map(Number)
@@ -811,74 +816,201 @@ export default function MyTasksPage() {
                 const estDone = startedAt
                   ? new Date(new Date(startedAt).getTime() + windowMins * 60_000).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
                   : winEnd
+
+                // Property data for image + weather + access + checklist
+                const prop = PROPERTIES.find(p => p.name === job.property)
+                const weather = prop ? PROPERTY_WEATHER.find(w => w.propertyId === prop.id) : null
+                const accessCode = prop?.accessCodes?.[0]
+                const checklist = prop ? getCleaningChecklist(prop.beds, prop.baths, prop.amenities ?? []) : []
+                const isFirst = idx === 0 && !isDelivery
+
+                // Delivery cards — compact style
+                if (isDelivery) {
+                  return (
+                    <Card
+                      key={job.id}
+                      className={`p-3.5 ${effectiveStatus === 'done' ? 'opacity-60' : ''}`}
+                      style={{ borderLeft: '4px solid var(--status-amber-fg)' }}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-semibold px-[7px] py-0.5 rounded-[10px] bg-[var(--status-amber-bg)] text-[var(--status-amber-fg)] border border-[var(--status-amber-fg)]">📦 Delivery</span>
+                        <span className="text-[13px] font-semibold text-[var(--text-primary)]">{job.property}</span>
+                      </div>
+                      <div className="text-xs text-[var(--text-muted)] mb-2">
+                        <Clock size={12} className="inline mr-1 -mt-px" />
+                        {job.timeWindow}
+                      </div>
+                      {effectiveStatus === 'pending' ? (
+                        <Button
+                          onClick={e => {
+                            e.stopPropagation()
+                            setJobStatuses(prev => ({ ...prev, [job.id]: 'in-progress' }))
+                            setJobStartedAt(prev => ({ ...prev, [job.id]: new Date().toISOString() }))
+                          }}
+                          className="w-full rounded-lg font-semibold bg-[var(--status-amber-fg)] hover:bg-[var(--status-amber-fg)]/80 text-white"
+                        >
+                          ▶ Start Delivery
+                        </Button>
+                      ) : (
+                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-[10px]" style={{ background: CLEANING_STATUS_BG[effectiveStatus], color: statusColor, border: `1px solid ${statusColor}` }}>
+                          {effectiveStatus === 'in-progress' ? 'In progress' : '✓ Done'}
+                        </span>
+                      )}
+                    </Card>
+                  )
+                }
+
+                // Cleaning cards — operator-quality
                 return (
-                  <div
+                  <Card
                     key={job.id}
-                    onClick={() => matchingTask && effectiveStatus !== 'done' && setSelectedTask(matchingTask)}
-                    className="task-card-inner"
-                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderLeft: `4px solid ${typeColor}`, borderRadius: 10, opacity: effectiveStatus === 'done' ? 0.6 : 1, cursor: (effectiveStatus === 'done' || (!matchingTask && !isDelivery)) ? 'default' : 'pointer' }}
+                    className={`overflow-hidden p-0 ${effectiveStatus === 'done' ? 'opacity-60' : ''}`}
                   >
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: `${typeColor}18`, color: typeColor, border: `1px solid ${typeColor}30` }}>{isDelivery ? '📦 Delivery run' : job.type}</span>
-                          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{job.property}</span>
-                          {tight && effectiveStatus !== 'done' && (
-                            <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: '#d9770618', color: '#d97706', border: '1px solid #d9770630' }}>⚡ Tight gap</span>
+                    {/* Property image */}
+                    {prop?.imageUrl && (
+                      <img
+                        src={prop.imageUrl}
+                        alt={job.property}
+                        className="w-full h-28 object-cover block"
+                      />
+                    )}
+
+                    <div className="p-4">
+                      {/* Title + badge */}
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[15px] font-semibold text-[var(--text-primary)]">{job.property}</span>
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded ${
+                          isFirst
+                            ? 'bg-[var(--status-blue-bg)] text-[var(--status-blue-fg)]'
+                            : 'bg-[var(--status-amber-bg)] text-[var(--status-amber-fg)]'
+                        }`}>
+                          {isFirst ? 'NEXT UP' : job.type}
+                        </span>
+                      </div>
+
+                      {/* Time + checkout/checkin */}
+                      <div className="text-xs text-[var(--text-muted)] mb-1">
+                        <Clock size={12} className="inline mr-1 -mt-px" />
+                        {job.timeWindow} · Out {job.checkoutTime} → In {job.checkinTime}
+                        {isSupervisor && <span> · {job.assignedTo}</span>}
+                      </div>
+
+                      {/* Per-property weather */}
+                      {weather && (
+                        <div className="text-xs text-[var(--text-muted)] mb-1.5">
+                          {weather.icon} {weather.temperature}°C · {weather.location}
+                          {weather.note ? ` · ${weather.note}` : ''}
+                        </div>
+                      )}
+
+                      {/* Tight turnaround */}
+                      {tight && effectiveStatus !== 'done' && (
+                        <div className="text-xs text-[var(--status-warning)] mb-2">
+                          <AlertTriangle size={12} className="inline mr-1 -mt-px" />
+                          Tight: next check-in {job.checkinTime}
+                        </div>
+                      )}
+
+                      {/* Access info */}
+                      {accessCode && (
+                        <div className="text-xs text-[var(--text-muted)] mb-2">
+                          Access: {accessCode.label}
+                          <button
+                            onClick={e => { e.stopPropagation(); setShowCodes(prev => ({ ...prev, [job.id]: !prev[job.id] })) }}
+                            className="ml-2 bg-transparent border-none text-[var(--status-info)] text-xs font-semibold cursor-pointer p-0"
+                          >
+                            Show Code 👁
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Progress bar */}
+                      {checklist.length > 0 && (
+                        <>
+                          <div className="h-1 w-full rounded-full bg-[var(--bg-elevated)] mb-2">
+                            <div
+                              className="h-full rounded-full bg-[var(--status-success)] transition-[width] duration-300"
+                              style={{ width: effectiveStatus === 'done' ? '100%' : effectiveStatus === 'in-progress' ? '35%' : '0%' }}
+                            />
+                          </div>
+                          <div className="text-xs text-[var(--text-muted)] mb-2.5">
+                            {effectiveStatus === 'done' ? checklist.length : effectiveStatus === 'in-progress' ? Math.round(checklist.length * 0.35) : 0} of {checklist.length} tasks complete
+                          </div>
+                        </>
+                      )}
+
+                      {/* Inline checklist preview (first 3 items) */}
+                      {effectiveStatus !== 'done' && checklist.length > 0 && (
+                        <div className="mb-3">
+                          {checklist.slice(0, 3).map((task, ti) => (
+                            <div
+                              key={ti}
+                              className={`flex items-start gap-2 py-1.5 ${ti < 2 ? 'border-b border-[var(--border)]' : ''}`}
+                            >
+                              <div className="w-4 h-4 rounded-full shrink-0 mt-0.5 flex items-center justify-center border-2 border-[var(--bg-elevated)] bg-transparent" />
+                              <span className="text-sm text-[var(--text-primary)]">{task.label}</span>
+                            </div>
+                          ))}
+                          {checklist.length > 3 && (
+                            <div className="text-xs text-[var(--text-subtle)] mt-1">+ {checklist.length - 3} more</div>
                           )}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>🕐 {job.timeWindow}</span>
-                          <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>·</span>
-                          <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Out {job.checkoutTime} → In {job.checkinTime}</span>
-                          {isSupervisor && <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>· {job.assignedTo}</span>}
+                      )}
+
+                      {/* Timer when in progress */}
+                      {effectiveStatus === 'in-progress' && startedAt && (
+                        <div className="text-[11px] text-[var(--status-green-fg)] mb-2">
+                          ⏱ {elapsedMins >= 60 ? `${Math.floor(elapsedMins / 60)}h ${elapsedMins % 60}m` : `${elapsedMins}m`} elapsed · Est. done {estDone}
                         </div>
-                        {effectiveStatus === 'in-progress' && startedAt && (
-                          <div style={{ fontSize: 11, color: '#10b981', marginTop: 4 }}>
-                            ⏱ {elapsedMins}m elapsed · Est. done {estDone}
-                          </div>
-                        )}
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
-                        {effectiveStatus === 'pending' ? (
-                          <button
-                            onClick={e => {
-                              e.stopPropagation()
-                              const ts = new Date().toISOString()
-                              setJobStatuses(prev => ({ ...prev, [job.id]: 'in-progress' }))
-                              setJobStartedAt(prev => ({ ...prev, [job.id]: ts }))
-                            }}
-                            className="touch-btn"
-                            style={{ fontWeight: 600, borderRadius: 10, background: isDelivery ? '#d97706' : '#7c3aed', color: '#fff', border: 'none', cursor: 'pointer', marginTop: 2 }}
+                      )}
+
+                      {/* CTA — full width, purple */}
+                      {effectiveStatus === 'pending' ? (
+                        <Button
+                          onClick={e => {
+                            e.stopPropagation()
+                            const ts = new Date().toISOString()
+                            setJobStatuses(prev => ({ ...prev, [job.id]: 'in-progress' }))
+                            setJobStartedAt(prev => ({ ...prev, [job.id]: ts }))
+                          }}
+                          className={`mt-1 w-full rounded-lg font-semibold ${
+                            isFirst
+                              ? 'bg-[#7c3aed] hover:bg-[#7c3aed]/80 text-white'
+                              : 'bg-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)]/80 text-white'
+                          }`}
+                        >
+                          ▶ {isFirst ? 'Start This Clean' : 'Start Clean'}
+                        </Button>
+                      ) : effectiveStatus === 'in-progress' ? (
+                        <div className="flex gap-2 mt-1">
+                          <Button
+                            onClick={() => matchingTask && setSelectedTask(matchingTask)}
+                            className="flex-1 rounded-lg font-semibold bg-[#7c3aed] hover:bg-[#7c3aed]/80 text-white"
                           >
-                            ▶ Start
-                          </button>
-                        ) : (
-                          <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 10, background: `${statusColor}18`, color: statusColor, border: `1px solid ${statusColor}30`, marginTop: 2 }}>
-                            {effectiveStatus === 'in-progress' ? 'In progress' : effectiveStatus === 'done' ? '✓ Done' : 'Pending'}
-                          </span>
-                        )}
-                        {matchingTask && effectiveStatus !== 'done' && (
-                          <span style={{ fontSize: 11, color: accent, fontWeight: 500 }}>→ Open checklist</span>
-                        )}
-                        {delegationPending.has(job.id) && (
-                          <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10,
-                            background: '#7c3aed18', color: '#7c3aed', border: '1px solid #7c3aed30' }}>
-                            ⏳ Pending reassignment
-                          </span>
-                        )}
-                        {matchingTask && effectiveStatus !== 'done' && (
-                          <button
+                            Resume Checklist
+                          </Button>
+                          <Button
                             onClick={e => { e.stopPropagation(); setReportingJob(job) }}
-                            className="touch-btn"
-                            style={{ color: '#d97706', fontWeight: 500, border: '1px solid #d9770630', borderRadius: 6, background: '#d9770610', cursor: 'pointer' }}
+                            variant="outline"
+                            className="rounded-lg font-medium"
                           >
-                            ⚠ Report
-                          </button>
-                        )}
-                      </div>
+                            <Wrench size={14} className="mr-1" /> Report
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-[10px]" style={{ background: CLEANING_STATUS_BG[effectiveStatus], color: statusColor, border: `1px solid ${statusColor}` }}>
+                            ✓ Done
+                          </span>
+                          {delegationPending.has(job.id) && (
+                            <span className="text-[10px] font-semibold px-1.5 py-px rounded-[10px] bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent-border)]">
+                              ⏳ Pending reassignment
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  </Card>
                 )
               })}
             </div>
@@ -886,67 +1018,54 @@ export default function MyTasksPage() {
         )
       })()}
 
-      {/* Cleaner Upsell Awareness — read-only, no actions */}
-      {jobRole === 'cleaner' && (
+      {/* Cleaner Upsell Awareness — collapsed by default */}
+      {jobRole === 'cleaner' && cleanerUpsellAwareness.length > 0 && (
         <div className="section-block">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-            <ShoppingBag size={14} style={{ color: '#d97706' }} />
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Upcoming Upsells
+          <button
+            onClick={() => setUpsellsExpanded(prev => !prev)}
+            className="flex items-center gap-2 w-full text-left bg-transparent border-none cursor-pointer p-0 mb-2.5"
+          >
+            <ShoppingBag size={14} className="text-[var(--text-muted)]" />
+            <span className="text-xs text-[var(--text-muted)]">
+              {cleanerUpsellAwareness.length} upcoming upsell{cleanerUpsellAwareness.length !== 1 ? 's' : ''} — prepare only
             </span>
-            {cleanerUpsellAwareness.length > 0 && (
-              <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 10, background: '#d9770620', color: '#d97706', fontWeight: 600 }}>
-                {cleanerUpsellAwareness.length}
-              </span>
-            )}
-            <span style={{ fontSize: 11, color: 'var(--text-subtle)', marginLeft: 'auto', fontStyle: 'italic' }}>
-              Prepare only — no action needed
-            </span>
-          </div>
-          {cleanerUpsellAwareness.length === 0 ? (
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px', fontSize: 13, color: 'var(--text-subtle)', textAlign: 'center' }}>
-              No upcoming upsell requests for your properties
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <ChevronDown size={14} className={`text-[var(--text-subtle)] ml-auto transition-transform ${upsellsExpanded ? 'rotate-180' : ''}`} />
+          </button>
+          {upsellsExpanded && (
+            <div className="flex flex-col gap-2">
               {cleanerUpsellAwareness.map(req => {
-                const statusColor = req.status === 'approved' || req.status === 'auth_held' ? '#059669' : '#d97706'
+                const statusColor = req.status === 'approved' || req.status === 'auth_held' ? 'var(--status-green-fg)' : 'var(--status-amber-fg)'
                 const statusLabel = req.status === 'approved' ? 'Confirmed' : req.status === 'auth_held' ? 'Confirmed' : 'Pending'
                 return (
-                  <div
+                  <Card
                     key={req.id}
-                    style={{
-                      background: 'var(--bg-card)',
-                      border: '1px solid var(--border)',
-                      borderLeft: `4px solid ${statusColor}`,
-                      borderRadius: 10,
-                      padding: '12px 14px',
-                    }}
+                    className="p-3"
+                    style={{ borderLeft: `4px solid ${statusColor}` }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                    <div className="flex items-start justify-between gap-2.5">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[13px] font-semibold text-[var(--text-primary)]">
                             {req.upsellTitle}
                           </span>
-                          <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: `${statusColor}18`, color: statusColor, border: `1px solid ${statusColor}30` }}>
+                          <span className="text-[10px] font-semibold px-1.5 py-px rounded-[10px]" style={{ background: (req.status === 'approved' || req.status === 'auth_held') ? 'var(--status-green-bg)' : 'var(--status-amber-bg)', color: statusColor, border: `1px solid ${statusColor}` }}>
                             {statusLabel}
                           </span>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-muted)' }}>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
                             <MapPin size={11} /> {req.propertyName}
                           </span>
-                          <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>·</span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-muted)' }}>
+                          <span className="text-[11px] text-[var(--text-subtle)]">·</span>
+                          <span className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
                             <Calendar size={11} /> Check-in {req.checkInDate}
                           </span>
-                          <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>·</span>
-                          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{req.guestName}</span>
+                          <span className="text-[11px] text-[var(--text-subtle)]">·</span>
+                          <span className="text-xs text-[var(--text-muted)]">{req.guestName}</span>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Card>
                 )
               })}
             </div>
@@ -957,66 +1076,59 @@ export default function MyTasksPage() {
       {/* Upsell Approvals Section */}
       {(isSupervisor || isGSSupervisor) && upsellApprovalRequests.length > 0 && (
         <div className="section-block">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-            <ShoppingBag size={14} style={{ color: '#d97706' }} />
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <div className="flex items-center gap-2 mb-2.5">
+            <ShoppingBag size={14} className="text-[var(--status-amber-fg)]" />
+            <span className="label-upper text-[var(--status-amber-fg)]">
               Upsell Approvals
             </span>
-            <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 10, background: '#d9770620', color: '#d97706', fontWeight: 600 }}>
+            <span className="text-[11px] px-[7px] py-px rounded-[10px] bg-[var(--status-amber-bg)] text-[var(--status-amber-fg)] font-semibold">
               {upsellApprovalRequests.length}
             </span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="flex flex-col gap-2">
             {upsellApprovalRequests.map(req => (
               <motion.div
                 key={req.id}
                 layout
                 onClick={() => setSelectedApprovalRequest(req)}
-                style={{
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 10,
-                  padding: '12px 14px',
-                  cursor: 'pointer',
-                  transition: 'box-shadow 0.15s',
-                }}
+                className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-3 cursor-pointer transition-shadow duration-150"
                 onHoverStart={e => {}}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                <div className="flex items-start justify-between gap-2.5">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                      <span className="text-[13px] font-semibold text-[var(--text-primary)]">
                         {req.upsellTitle}
                       </span>
                       {req.escalatedToSupervisor && (
-                        <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: '#7c3aed18', color: '#7c3aed', border: '1px solid #7c3aed30' }}>
+                        <span className="text-[10px] font-semibold px-1.5 py-px rounded-[10px] bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent-border)]">
                           ⬆ Escalated — No Cleaner Assigned
                         </span>
                       )}
                       {req.calendarSignal === 'available' && (
-                        <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: '#05966918', color: '#059669', border: '1px solid #05966930' }}>🟢 Available</span>
+                        <span className="text-[10px] font-semibold px-1.5 py-px rounded-[10px] bg-[var(--status-green-bg)] text-[var(--status-green-fg)] border border-[var(--status-green-fg)]">🟢 Available</span>
                       )}
                       {req.calendarSignal === 'tentative' && (
-                        <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: '#d9770618', color: '#d97706', border: '1px solid #d9770630' }}>🟡 Tentative</span>
+                        <span className="text-[10px] font-semibold px-1.5 py-px rounded-[10px] bg-[var(--status-amber-bg)] text-[var(--status-amber-fg)] border border-[var(--status-amber-fg)]">🟡 Tentative</span>
                       )}
                       {req.calendarSignal === 'blocked' && (
-                        <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: '#ef444418', color: '#ef4444', border: '1px solid #ef444430' }}>🔴 Blocked</span>
+                        <span className="text-[10px] font-semibold px-1.5 py-px rounded-[10px] bg-[var(--status-red-bg)] text-[var(--status-red-fg)] border border-[var(--status-red-fg)]">🔴 Blocked</span>
                       )}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-muted)' }}>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
                         <MapPin size={11} /> {req.propertyName}
                       </span>
-                      <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>·</span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-muted)' }}>
+                      <span className="text-[11px] text-[var(--text-subtle)]">·</span>
+                      <span className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
                         <Calendar size={11} /> {req.checkInDate}
                       </span>
-                      <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>·</span>
-                      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{req.guestName}</span>
+                      <span className="text-[11px] text-[var(--text-subtle)]">·</span>
+                      <span className="text-xs text-[var(--text-muted)]">{req.guestName}</span>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
-                    <span style={{ fontSize: 11, color: accent, fontWeight: 500 }}>→ Review</span>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className="text-[11px] text-[var(--accent)] font-medium">→ Review</span>
                   </div>
                 </div>
               </motion.div>
@@ -1027,7 +1139,7 @@ export default function MyTasksPage() {
 
       {/* Task groups */}
       {filteredTasks.length === 0 ? (
-        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-subtle)', fontSize: 13 }}>
+        <div className="p-10 text-center text-[var(--text-subtle)] text-[13px]">
           No tasks assigned to you right now.
         </div>
       ) : (
@@ -1035,15 +1147,15 @@ export default function MyTasksPage() {
           const groupTasks = filteredTasks.filter(t => (completedIds.has(t.id) ? 'completed' : t.status) === group.key)
           if (groupTasks.length === 0) return null
           return (
-            <div key={group.key} style={{ marginBottom: 24 }}>
+            <div key={group.key} className="mb-6">
               <div
                 onClick={() => setCollapsedGroups(prev => ({ ...prev, [group.key]: !prev[group.key] }))}
-                style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, cursor: 'pointer', userSelect: 'none' }}
+                className="flex items-center gap-2 mb-2.5 cursor-pointer select-none"
               >
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: group.color }} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: group.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{group.label}</span>
-                <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{groupTasks.length}</span>
-                <ChevronDown size={13} style={{ color: 'var(--text-subtle)', marginLeft: 'auto', transform: collapsedGroups[group.key] ? 'rotate(-90deg)' : 'none', transition: 'transform 0.2s' }} />
+                <div className="w-2 h-2 rounded-full" style={{ background: group.color }} />
+                <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: group.color }}>{group.label}</span>
+                <span className="text-[11px] text-[var(--text-subtle)]">{groupTasks.length}</span>
+                <ChevronDown size={13} className="text-[var(--text-subtle)] ml-auto transition-transform duration-200" style={{ transform: collapsedGroups[group.key] ? 'rotate(-90deg)' : 'none' }} />
               </div>
               {!collapsedGroups[group.key] && groupTasks.map(task => {
                 // Maintenance tasks get the pipeline card design
@@ -1070,51 +1182,45 @@ export default function MyTasksPage() {
                 <motion.div
                   layout key={task.id}
                   onClick={() => !completedIds.has(task.id) && setSelectedTask(task)}
-                  style={{
-                    background: 'var(--bg-card)', border: '1px solid var(--border)',
-                    borderRadius: 10, padding: '14px 16px', marginBottom: 8,
-                    opacity: completedIds.has(task.id) ? 0.5 : 1,
-                    cursor: completedIds.has(task.id) ? 'default' : 'pointer',
-                    transition: 'box-shadow 0.15s',
-                  }}
+                  className={`bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4 mb-2 transition-shadow duration-150 ${completedIds.has(task.id) ? 'opacity-50 cursor-default' : 'cursor-pointer'}`}
                 >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: completedIds.has(task.id) ? 'var(--text-subtle)' : 'var(--text-primary)', textDecoration: completedIds.has(task.id) ? 'line-through' : 'none' }}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                        <span className={`text-[13px] font-semibold ${completedIds.has(task.id) ? 'text-[var(--text-subtle)] line-through' : 'text-[var(--text-primary)]'}`}>
                           {task.title}
                         </span>
                         {task.isDeliveryTask && (
-                          <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: '#d9770618', color: '#d97706', border: '1px solid #d9770630' }}>📦 Delivery</span>
+                          <span className="text-[10px] font-semibold px-1.5 py-px rounded-[10px] bg-[var(--status-amber-bg)] text-[var(--status-amber-fg)] border border-[var(--status-amber-fg)]">📦 Delivery</span>
                         )}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                        <img src={task.propertyImage} alt="" style={{ width: 24, height: 24, borderRadius: 4, objectFit: 'cover' }} />
-                        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{task.propertyName}</span>
-                        <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>·</span>
-                        <span style={{ fontSize: 12, color: 'var(--text-subtle)' }}>{task.dueDisplay}</span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <img src={task.propertyImage} alt="" className="w-6 h-6 rounded object-cover" />
+                        <span className="text-xs text-[var(--text-muted)]">{task.propertyName}</span>
+                        <span className="text-[11px] text-[var(--text-subtle)]">·</span>
+                        <span className="text-xs text-[var(--text-subtle)]">{task.dueDisplay}</span>
                         {(task.type === 'Cleaning' || task.type === 'Maintenance') && !completedIds.has(task.id) && (
-                          <span style={{ fontSize: 11, color: accent, fontWeight: 500 }}>{isMaintenance ? '→ Open job' : '→ Open checklist'}</span>
+                          <span className="text-[11px] text-[var(--accent)] font-medium">{isMaintenance ? '→ Open job' : '→ Open checklist'}</span>
                         )}
                       </div>
                       {task.reservation && (
-                        <div style={{ fontSize: 11, color: 'var(--text-subtle)', marginTop: 3 }}>
+                        <div className="text-[11px] text-[var(--text-subtle)] mt-1">
                           Guest: {task.reservation.guestName.split(' ')[0]} {task.reservation.guestName.split(' ')[1]?.[0] ?? ''}. · Checkout {new Date(task.reservation.checkOut).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                         </div>
                       )}
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                    <div className="flex flex-col items-end gap-1.5">
                       <StatusBadge status={task.priority} />
                       {task.pteRequired && task.pteStatus && (() => {
                         const badge = getPTEBadge(task.pteStatus as 'not_required' | 'pending' | 'auto_granted' | 'granted' | 'denied' | 'expired')
-                        const bgMap: Record<string, string> = { pending: '#d9770620', granted: '#16a34a20', auto_granted: '#16a34a20', denied: '#dc262620', not_required: '#6b728020' }
+                        const bgMap: Record<string, string> = { pending: 'var(--status-amber-bg)', granted: 'var(--status-green-bg)', auto_granted: 'var(--status-green-bg)', denied: 'var(--status-red-bg)', not_required: 'var(--status-muted-bg)' }
                         return (
-                          <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: bgMap[task.pteStatus] ?? '#6b728020', color: badge.color, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold whitespace-nowrap" style={{ background: bgMap[task.pteStatus] ?? 'var(--status-muted-bg)', color: badge.color }}>
                             {badge.icon} {badge.label}
                           </span>
                         )
                       })()}
-                      {completedIds.has(task.id) && <span style={{ fontSize: 11, color: '#10b981' }}>✓ Done</span>}
+                      {completedIds.has(task.id) && <span className="text-[11px] text-[var(--status-green-fg)]">✓ Done</span>}
                     </div>
                   </div>
                 </motion.div>
@@ -1126,7 +1232,7 @@ export default function MyTasksPage() {
       )}
 
       {/* Hidden file input */}
-      <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
+      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
 
       {/* Task Detail Drawer */}
       <AppDrawer
@@ -1136,20 +1242,20 @@ export default function MyTasksPage() {
         subtitle={`${selectedTask?.propertyName} · ${selectedTask?.dueDisplay}`}
         width={500}
         footer={
-          <div style={{ width: '100%' }}>
+          <div className="w-full">
             {totalCount > 0 && (
-              <div style={{ marginBottom: 10 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{checkedCount} of {totalCount} complete</span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: progressPct === 100 ? '#10b981' : accent }}>{progressPct}%</span>
+              <div className="mb-2.5">
+                <div className="flex justify-between mb-1">
+                  <span className="text-xs text-[var(--text-muted)]">{checkedCount} of {totalCount} complete</span>
+                  <span className="text-xs font-semibold" style={{ color: progressPct === 100 ? 'var(--status-green-fg)' : accent }}>{progressPct}%</span>
                 </div>
-                <div style={{ height: 4, borderRadius: 2, background: 'var(--border)' }}>
-                  <div style={{ height: '100%', borderRadius: 2, background: progressPct === 100 ? '#10b981' : accent, width: `${progressPct}%`, transition: 'width 0.3s' }} />
+                <div className="h-1 rounded-sm bg-[var(--border)]">
+                  <div className="h-full rounded-sm transition-[width] duration-300" style={{ background: progressPct === 100 ? 'var(--status-green-fg)' : accent, width: `${progressPct}%` }} />
                 </div>
               </div>
             )}
             {selectedTask?.type === 'Maintenance' && (
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>
+              <div className="text-[11px] text-[var(--text-muted)] mb-2">
                 {beforePhotos.length === 0 && '⚠ Upload at least 1 before photo · '}
                 {afterPhotos.length === 0 && checkedCount === totalCount && '⚠ Upload at least 1 after photo'}
               </div>
@@ -1157,13 +1263,8 @@ export default function MyTasksPage() {
             <button
               onClick={handleSubmit}
               disabled={!canSubmit}
-              style={{
-                width: '100%', padding: '10px', borderRadius: 8, border: 'none',
-                background: canSubmit ? accent : 'var(--border)',
-                color: canSubmit ? '#fff' : 'var(--text-muted)',
-                fontSize: 14, fontWeight: 600, cursor: canSubmit ? 'pointer' : 'not-allowed',
-                transition: 'background 0.2s',
-              }}
+              className={`w-full py-2.5 rounded-lg border-none text-sm font-semibold transition-colors duration-200 ${canSubmit ? 'text-white cursor-pointer' : 'text-[var(--text-muted)] cursor-not-allowed'}`}
+              style={{ background: canSubmit ? accent : 'var(--border)' }}
             >
               {isCleaningComplete ? 'Submit for QA Review' : selectedTask?.type === 'Maintenance' ? 'Submit for Approval' : progressPct === 100 ? '✓ Submit Complete Clean' : 'Submit Progress Report'}
             </button>
@@ -1172,59 +1273,59 @@ export default function MyTasksPage() {
       >
         {/* Reservation section */}
         {selectedTask?.reservation && (
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', marginBottom: 14 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-subtle)', marginBottom: 8 }}>Connected Reservation</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>👤 {selectedTask.reservation.guestName}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+          <Card className="p-3.5 mb-3.5">
+            <div className="label-upper text-[var(--text-subtle)] mb-2">Connected Reservation</div>
+            <div className="flex flex-col gap-1">
+              <div className="text-[13px] font-semibold text-[var(--text-primary)]">👤 {selectedTask.reservation.guestName}</div>
+              <div className="text-xs text-[var(--text-muted)]">
                 📅 {new Date(selectedTask.reservation.checkIn).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} → {new Date(selectedTask.reservation.checkOut).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} ({selectedTask.reservation.nights} nights)
               </div>
               {selectedTask.reservation.platform && (
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>🏠 {selectedTask.reservation.platform} · {selectedTask.reservation.status.replace('_', ' ')}</div>
+                <div className="text-xs text-[var(--text-muted)]">🏠 {selectedTask.reservation.platform} · {selectedTask.reservation.status.replace('_', ' ')}</div>
               )}
               {selectedTask.reservation.nightsRemaining !== undefined && (
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>⏳ {selectedTask.reservation.nightsRemaining} nights remaining</div>
+                <div className="text-xs text-[var(--text-muted)]">⏳ {selectedTask.reservation.nightsRemaining} nights remaining</div>
               )}
             </div>
-          </div>
+          </Card>
         )}
 
         {/* PTE section (read-only for field staff) */}
         {selectedTask?.pteRequired && selectedTask.pteStatus && (
-          <div style={{
-            background: 'var(--bg-card)', borderRadius: 10, padding: '12px 14px', marginBottom: 14,
-            border: `1px solid ${selectedTask.pteStatus === 'pending' ? '#d9770640' : selectedTask.pteStatus === 'granted' || selectedTask.pteStatus === 'auto_granted' ? '#16a34a40' : selectedTask.pteStatus === 'denied' ? '#dc262640' : 'var(--border)'}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-subtle)' }}>Permission to Enter</div>
-              <span style={{ fontSize: 11, fontWeight: 600, color: selectedTask.pteStatus === 'pending' ? '#d97706' : selectedTask.pteStatus === 'granted' || selectedTask.pteStatus === 'auto_granted' ? '#16a34a' : '#dc2626' }}>
+          <Card
+            className="p-3.5 mb-3.5"
+            style={{ borderColor: selectedTask.pteStatus === 'pending' ? 'var(--status-amber-fg)' : selectedTask.pteStatus === 'granted' || selectedTask.pteStatus === 'auto_granted' ? 'var(--status-green-fg)' : selectedTask.pteStatus === 'denied' ? 'var(--status-red-fg)' : 'var(--border)' }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="label-upper text-[var(--text-subtle)]">Permission to Enter</div>
+              <span className="text-[11px] font-semibold" style={{ color: selectedTask.pteStatus === 'pending' ? 'var(--status-amber-fg)' : selectedTask.pteStatus === 'granted' || selectedTask.pteStatus === 'auto_granted' ? 'var(--status-green-fg)' : 'var(--status-red-fg)' }}>
                 {selectedTask.pteStatus === 'pending' ? '⏳ Pending' : selectedTask.pteStatus === 'granted' ? '✓ Granted' : selectedTask.pteStatus === 'auto_granted' ? '✓ Auto-Granted' : '✗ Denied'}
               </span>
             </div>
-            {selectedTask.pte?.guestName && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 3 }}>Guest: {selectedTask.pte.guestName}</div>}
-            {selectedTask.pte?.guestCheckout && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 3 }}>Checkout: {new Date(selectedTask.pte.guestCheckout).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>}
-            {selectedTask.pteStatus === 'auto_granted' && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 3 }}>Property is vacant — no active reservation</div>}
-            {selectedTask.pte?.validFrom && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 3 }}>Access window: {new Date(selectedTask.pte.validFrom).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}{selectedTask.pte.validUntil ? ` — ${new Date(selectedTask.pte.validUntil).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}` : ''}</div>}
-            {selectedTask.pte?.enterAfter && !selectedTask.pte.validFrom && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 3 }}>Enter after: {selectedTask.pte.enterAfter}</div>}
-            {selectedTask.pte?.grantedBy && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 3 }}>Granted by: {selectedTask.pte.grantedBy === 'system' ? 'System (auto)' : selectedTask.pte.grantedBy}</div>}
+            {selectedTask.pte?.guestName && <div className="text-xs text-[var(--text-muted)] mb-1">Guest: {selectedTask.pte.guestName}</div>}
+            {selectedTask.pte?.guestCheckout && <div className="text-xs text-[var(--text-muted)] mb-1">Checkout: {new Date(selectedTask.pte.guestCheckout).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>}
+            {selectedTask.pteStatus === 'auto_granted' && <div className="text-xs text-[var(--text-muted)] mb-1">Property is vacant — no active reservation</div>}
+            {selectedTask.pte?.validFrom && <div className="text-xs text-[var(--text-muted)] mb-1">Access window: {new Date(selectedTask.pte.validFrom).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}{selectedTask.pte.validUntil ? ` — ${new Date(selectedTask.pte.validUntil).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}` : ''}</div>}
+            {selectedTask.pte?.enterAfter && !selectedTask.pte.validFrom && <div className="text-xs text-[var(--text-muted)] mb-1">Enter after: {selectedTask.pte.enterAfter}</div>}
+            {selectedTask.pte?.grantedBy && <div className="text-xs text-[var(--text-muted)] mb-1">Granted by: {selectedTask.pte.grantedBy === 'system' ? 'System (auto)' : selectedTask.pte.grantedBy}</div>}
             {/* Access code */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Access code:</span>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-xs text-[var(--text-muted)]">Access code:</span>
               {isAccessCodeVisible(selectedTask.pteStatus as 'not_required' | 'pending' | 'auto_granted' | 'granted' | 'denied' | 'expired') && selectedTask.pte?.accessCode ? (
                 showAccessCode
-                  ? <span style={{ fontSize: 13, fontWeight: 700, fontFamily: 'monospace', color: 'var(--text-primary)', letterSpacing: 2 }}>{selectedTask.pte.accessCode}</span>
-                  : <button onClick={() => setShowAccessCode(true)} style={{ fontSize: 12, color: accent, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}><Eye size={13} /> Show Code</button>
+                  ? <span className="text-[13px] font-semibold font-mono text-[var(--text-primary)] tracking-wider">{selectedTask.pte.accessCode}</span>
+                  : <button onClick={() => setShowAccessCode(true)} className="text-xs text-[var(--accent)] bg-transparent border-none cursor-pointer flex items-center gap-1"><Eye size={13} /> Show Code</button>
               ) : (
-                <span style={{ fontSize: 12, color: 'var(--text-subtle)', display: 'flex', alignItems: 'center', gap: 4 }}><Lock size={12} /> Locked until PTE granted</span>
+                <span className="text-xs text-[var(--text-subtle)] flex items-center gap-1"><Lock size={12} /> Locked until PTE granted</span>
               )}
             </div>
             {selectedTask.pteStatus === 'pending' && (
-              <div style={{ marginTop: 8, fontSize: 12, color: '#d97706', background: '#d9770610', borderRadius: 6, padding: '6px 10px' }}>
+              <div className="mt-2 text-xs text-[var(--status-amber-fg)] bg-[var(--status-amber-bg)] rounded-md px-2.5 py-1.5">
                 ⚠ Waiting for Guest Services to confirm access
               </div>
             )}
-            {selectedTask.pte?.notes && <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)', fontStyle: 'italic' }}>"{selectedTask.pte.notes}"</div>}
-          </div>
+            {selectedTask.pte?.notes && <div className="mt-2 text-xs text-[var(--text-muted)] italic">&ldquo;{selectedTask.pte.notes}&rdquo;</div>}
+          </Card>
         )}
 
         {selectedTask?.type === 'Cleaning' && (
@@ -1233,50 +1334,35 @@ export default function MyTasksPage() {
             {drawerCleaningJob && drawerJobStatus === 'pending' && (
               <button
                 onClick={handleStartFromDrawer}
-                style={{
-                  width: '100%', padding: '12px', borderRadius: 8, border: 'none',
-                  background: accent, color: '#fff',
-                  fontSize: 14, fontWeight: 600, cursor: 'pointer', marginBottom: 14,
-                }}
+                className="w-full py-3 rounded-lg border-none text-white text-sm font-semibold cursor-pointer mb-3.5"
+                style={{ background: accent }}
               >
                 ▶ Start Task
               </button>
             )}
 
             {drawerJobStatus === 'in-progress' && cleaningProgress && (
-              <div style={{ marginBottom: 14 }}>
+              <div className="mb-3.5">
                 <CleaningProgressBar
                   progress={cleaningProgress}
                   checkInTime={drawerCleaningJob?.checkinTime ?? null}
                 />
-                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <div className="flex gap-2 mt-2">
                   <button
                     onClick={() => drawerCleaningJob && setRestartingJob(drawerCleaningJob)}
-                    style={{
-                      flex: 1, padding: '8px 0', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                      background: 'rgba(99,102,241,0.08)', color: '#6366f1',
-                      border: '1px solid rgba(99,102,241,0.2)',
-                    }}
+                    className="flex-1 py-2 rounded-[7px] text-xs font-semibold cursor-pointer bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent-border)]"
                   >
                     ⟳ Restart
                   </button>
                   <button
                     onClick={handleStopFromDrawer}
-                    style={{
-                      flex: 1, padding: '8px 0', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                      background: 'rgba(107,114,128,0.08)', color: '#6b7280',
-                      border: '1px solid rgba(107,114,128,0.2)',
-                    }}
+                    className="flex-1 py-2 rounded-[7px] text-xs font-semibold cursor-pointer bg-[var(--status-muted-bg)] text-[var(--text-muted)] border border-[var(--border)]"
                   >
                     ■ Stop Task
                   </button>
                   <button
                     onClick={() => drawerCleaningJob && setReportingJob(drawerCleaningJob)}
-                    style={{
-                      flex: 1, padding: '8px 0', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                      background: 'rgba(239,68,68,0.08)', color: '#ef4444',
-                      border: '1px solid rgba(239,68,68,0.2)',
-                    }}
+                    className="flex-1 py-2 rounded-[7px] text-xs font-semibold cursor-pointer bg-[var(--status-red-bg)] text-[var(--status-red-fg)] border border-[var(--status-red-fg)]"
                   >
                     ⚠ Report
                   </button>
@@ -1297,25 +1383,26 @@ export default function MyTasksPage() {
               return (
                 <motion.div layout
                   transition={{ layout: { duration: 0.25, ease: [0.25, 0.1, 0.25, 1] } }}
-                  style={{ marginBottom: 16, background: `${accent}08`, border: `1px solid ${accent}20`, borderRadius: 10, overflow: 'hidden', cursor: 'pointer' }}
+                  className="mb-4 rounded-xl overflow-hidden cursor-pointer"
+                  style={{ background: `${accent}08`, border: `1px solid ${accent}20` }}
                   onClick={() => setPropCardOpen(o => !o)}
                 >
-                  <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px' }}>
-                    {prop.imageUrl && <img src={prop.imageUrl} alt="" style={{ width:48, height:36, borderRadius:5, objectFit:'cover', flexShrink:0 }} />}
-                    <div style={{ flex:1, minWidth:0 }}>
-                      <div style={{ fontSize:13, fontWeight:600, color:'var(--text-primary)' }}>{prop.name}</div>
-                      <div style={{ fontSize:11, color:'var(--text-muted)' }}>
-                        {prop.beds} bed · {prop.baths} bath
+                  <div className="flex items-center gap-2.5 px-3 py-2.5">
+                    {prop.imageUrl && <img src={prop.imageUrl} alt="" className="w-12 h-9 rounded-[5px] object-cover shrink-0" />}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[13px] font-semibold text-[var(--text-primary)]">{prop.name}</div>
+                      <div className="text-[11px] text-[var(--text-muted)]">
+                        {prop.beds} {prop.beds === 1 ? 'bed' : 'beds'} · {prop.baths} {prop.baths === 1 ? 'bath' : 'baths'}
                         {prop.amenities && prop.amenities.length > 0 && ` · ${prop.amenities.length} special areas`}
                       </div>
                       {!propCardOpen && hints.length > 0 && (
-                        <div style={{ fontSize:10, color:'var(--text-subtle)', marginTop:2 }}>{hints.join(' · ')}</div>
+                        <div className="text-[10px] text-[var(--text-subtle)] mt-0.5">{hints.join(' · ')}</div>
                       )}
                     </div>
-                    <span style={{ fontSize:11, color:'var(--text-muted)', flexShrink:0 }}>{propCardOpen ? '▾' : '▸'}</span>
+                    <span className="text-[11px] text-[var(--text-muted)] shrink-0">{propCardOpen ? '▾' : '▸'}</span>
                   </div>
                   {propCardOpen && lib && (
-                    <div style={{ borderTop:`1px solid ${accent}20`, padding:'12px 14px' }} onClick={e => e.stopPropagation()}>
+                    <div className="px-3.5 py-3 border-t" style={{ borderColor: `${accent}20` }} onClick={e => e.stopPropagation()}>
                       {([
                         lib.wifiName     ? { icon:'📶', label:'WiFi',      value: lib.wifiName,         key:'wifi-ssid',  copy: true,  masked: false } : null,
                         lib.wifiPassword ? { icon:'',   label:'Password',  value: lib.wifiPassword,     key:'wifi-pw',   copy: true,  masked: true  } : null,
@@ -1323,10 +1410,10 @@ export default function MyTasksPage() {
                         lib.storageLocation ? { icon:'📦', label:'Storage', value: lib.storageLocation, key:'storage', copy: false, masked: false } : null,
                         lib.cleaningNotes   ? { icon:'📝', label:'Notes',   value: lib.cleaningNotes,   key:'notes',   copy: false, masked: false } : null,
                       ] as const).filter(Boolean).map((row: any) => (
-                        <div key={row.key} style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 0', borderBottom:'1px solid var(--border-subtle)' }}>
-                          <span style={{ fontSize:14, width:20, flexShrink:0 }}>{row.icon}</span>
-                          <span style={{ fontSize:11, color:'var(--text-muted)', width:64, flexShrink:0 }}>{row.label}</span>
-                          <span style={{ flex:1, fontSize:12, color:'var(--text-primary)', fontFamily: row.key==='door-code' ? 'monospace' : undefined }}>
+                        <div key={row.key} className="flex items-center gap-2 py-[7px] border-b border-[var(--border-subtle)]">
+                          <span className="text-sm w-5 shrink-0">{row.icon}</span>
+                          <span className="text-[11px] text-[var(--text-muted)] w-16 shrink-0">{row.label}</span>
+                          <span className={`flex-1 text-xs text-[var(--text-primary)] ${row.key === 'door-code' ? 'font-mono' : ''}`}>
                             {row.masked ? '••••••••' : row.value}
                           </span>
                           {row.copy && (
@@ -1334,7 +1421,8 @@ export default function MyTasksPage() {
                               animate={copiedField === row.key ? { scale: [1, 1.15, 1] } : { scale: 1 }}
                               transition={{ duration: 0.2 }}
                               onClick={(e) => { e.stopPropagation(); copyToClipboard(row.value, row.key) }}
-                              style={{ fontSize:10, padding:'3px 8px', borderRadius:6, border:'1px solid var(--border)', background:'var(--bg-elevated)', color: copiedField === row.key ? '#10b981' : 'var(--text-muted)', cursor:'pointer', flexShrink:0, minWidth:44, minHeight:28 }}>
+                              className="text-[10px] px-2 py-[3px] rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] cursor-pointer shrink-0 min-w-[44px] min-h-[28px]"
+                              style={{ color: copiedField === row.key ? 'var(--status-green-fg)' : 'var(--text-muted)' }}>
                               {copiedField === row.key ? '✓' : 'Copy'}
                             </motion.button>
                           )}
@@ -1342,7 +1430,7 @@ export default function MyTasksPage() {
                       ))}
                       <button
                         onClick={(e) => { e.stopPropagation(); setPropLibOpen(true) }}
-                        style={{ marginTop:10, fontSize:12, color: accent, background:'none', border:'none', cursor:'pointer', padding:0 }}>
+                        className="mt-2.5 text-xs text-[var(--accent)] bg-transparent border-none cursor-pointer p-0">
                         View all property info →
                       </button>
                     </div>
@@ -1353,34 +1441,34 @@ export default function MyTasksPage() {
 
             {/* Upsell delivery items — only for delivery tasks */}
             {selectedTask.isDeliveryTask && (
-              <div style={{ marginBottom: 16, padding: '12px 14px', background: '#d9770610', border: '1px solid #d9770630', borderRadius: 10 }}>
+              <div className="mb-4 p-3.5 bg-[var(--status-amber-bg)] border border-[var(--status-amber-fg)] rounded-xl">
                 {selectedTask.upsellId && (() => {
                   const approval = UPSELL_APPROVAL_REQUESTS.find(a => a.id === selectedTask.upsellId)
                   const reservation = approval ? RESERVATIONS.find(r => r.guestVerificationId === approval.guestVerificationId) : null
                   return approval ? (
-                    <div style={{ marginBottom: 12 }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#d97706', marginBottom: 4 }}>📦 Upsell Delivery</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    <div className="mb-3">
+                      <div className="label-upper text-[var(--status-amber-fg)] mb-1">📦 Upsell Delivery</div>
+                      <div className="text-xs text-[var(--text-muted)]">
                         {approval.guestName} · Check-in {approval.checkInDate}
                         {reservation ? ` · ${reservation.guestsCount} guest${reservation.guestsCount !== 1 ? 's' : ''}` : ''}
                       </div>
                       {selectedTask.linkedCleaningTaskId && (
-                        <div style={{ fontSize: 11, color: '#10b981', marginTop: 3 }}>✓ Linked with same-day cleaning</div>
+                        <div className="text-[11px] text-[var(--status-green-fg)] mt-1">✓ Linked with same-day cleaning</div>
                       )}
                     </div>
                   ) : null
                 })()}
-                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: 8 }}>Items to Deliver</div>
+                <div className="label-upper text-[var(--text-muted)] mb-2">Items to Deliver</div>
                 {(selectedTask.upsellItems ?? []).map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                    <span style={{ fontSize: 14 }}>📦</span>
-                    <span style={{ flex: 1, fontSize: 13, color: 'var(--text-primary)' }}>{item.name}</span>
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{item.qty} {item.unit}</span>
+                  <div key={i} className="flex items-center gap-2 py-1.5 border-b border-[var(--border-subtle)]">
+                    <span className="text-sm">📦</span>
+                    <span className="flex-1 text-[13px] text-[var(--text-primary)]">{item.name}</span>
+                    <span className="text-xs text-[var(--text-muted)]">{item.qty} {item.unit}</span>
                   </div>
                 ))}
                 {selectedTask.setupInstructions && (
-                  <div style={{ marginTop: 12, padding: '10px 12px', background: 'var(--bg-elevated)', borderRadius: 8, fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Setup: </span>
+                  <div className="mt-3 p-2.5 bg-[var(--bg-elevated)] rounded-lg text-xs text-[var(--text-muted)] leading-normal">
+                    <span className="font-semibold text-[var(--text-primary)]">Setup: </span>
                     {selectedTask.setupInstructions}
                   </div>
                 )}
@@ -1392,70 +1480,51 @@ export default function MyTasksPage() {
               const groupChecked = group.items.filter(i => checklistChecked[i.id]).length
               const isCollapsed = collapsedCategories.has(group.name)
               return (
-                <div key={group.name} style={{ marginBottom: 20 }}>
+                <div key={group.name} className="mb-5">
                   {/* Category header */}
                   <button
                     onClick={() => toggleCategory(group.name)}
-                    style={{
-                      width: '100%', display: 'flex', justifyContent: 'space-between',
-                      alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer',
-                      padding: '6px 0', marginBottom: isCollapsed ? 0 : 6,
-                    }}
+                    className={`w-full flex justify-between items-center bg-transparent border-none cursor-pointer py-1.5 ${isCollapsed ? 'mb-0' : 'mb-1.5'}`}
                   >
-                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
-                      letterSpacing: '0.08em', color: accent }}>
+                    <span className="label-upper text-[var(--accent)]">
                       {group.name} {groupChecked}/{group.items.length}
                     </span>
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    <span className="text-xs text-[var(--text-muted)]">
                       {isCollapsed ? '▶' : '▼'}
                     </span>
                   </button>
 
                   {/* Items — only when expanded */}
                   {!isCollapsed && group.items.map(item => (
-                    <div key={item.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 4px', borderBottom: '1px solid var(--border-subtle)' }}>
+                    <div key={item.id} className="flex items-start gap-2.5 px-1 py-2 border-b border-[var(--border-subtle)]">
                       {/* Checkbox */}
                       <button
                         onClick={() => toggleCheck(item.id)}
-                        style={{
-                          width: 20, height: 20, borderRadius: 5, flexShrink: 0, marginTop: 1,
-                          border: `2px solid ${checklistChecked[item.id] ? '#10b981' : 'var(--border)'}`,
-                          background: checklistChecked[item.id] ? '#10b981' : 'transparent',
-                          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}
+                        className={`w-5 h-5 rounded-[5px] shrink-0 mt-px cursor-pointer flex items-center justify-center ${checklistChecked[item.id] ? 'bg-[var(--status-green-fg)] border-2 border-[var(--status-green-fg)]' : 'bg-transparent border-2 border-[var(--border)]'}`}
                       >
                         {checklistChecked[item.id] && <Check size={11} color="#fff" />}
                       </button>
 
                       {/* Label */}
-                      <span style={{
-                        flex: 1, fontSize: 13, lineHeight: 1.4,
-                        color: checklistChecked[item.id] ? 'var(--text-subtle)' : 'var(--text-primary)',
-                        textDecoration: checklistChecked[item.id] ? 'line-through' : 'none',
-                      }}>
+                      <span className={`flex-1 text-[13px] leading-snug ${checklistChecked[item.id] ? 'text-[var(--text-subtle)] line-through' : 'text-[var(--text-primary)]'}`}>
                         {item.label}
-                        {item.photoRequired && <span style={{ fontSize: 10, color: '#f97316', marginLeft: 4 }}>● photo req.</span>}
+                        {item.photoRequired && <span className="text-[10px] text-[var(--status-amber-fg)] ml-1">● photo req.</span>}
                       </span>
 
                       {/* Photo upload */}
                       {checklistPhotos[item.id] ? (
-                        <div style={{ position: 'relative', flexShrink: 0 }}>
-                          <img src={checklistPhotos[item.id]} style={{ width: 44, height: 44, borderRadius: 6, objectFit: 'cover', border: '1px solid var(--border)', display: 'block' }} alt="proof" />
+                        <div className="relative shrink-0">
+                          <img src={checklistPhotos[item.id]} className="w-11 h-11 rounded-md object-cover border border-[var(--border)] block" alt="proof" />
                           <button
                             onClick={() => setChecklistPhotos(p => { const n = { ...p }; delete n[item.id]; return n })}
-                            style={{ position: 'absolute', top: -5, right: -5, width: 16, height: 16, borderRadius: '50%', background: '#ef4444', border: '2px solid var(--bg-surface)', color: '#fff', fontSize: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
+                            className="absolute -top-[5px] -right-[5px] w-4 h-4 rounded-full bg-[var(--status-red-fg)] border-2 border-[var(--bg-surface)] text-white text-[8px] cursor-pointer flex items-center justify-center leading-none"
                           >×</button>
                         </div>
                       ) : (
                         <button
                           onClick={() => triggerUpload(`item:${item.id}`)}
                           title="Upload photo proof"
-                          style={{
-                            width: 36, height: 36, borderRadius: 7, flexShrink: 0,
-                            border: `1px dashed ${item.photoRequired ? '#f97316' : 'var(--border)'}`,
-                            background: 'transparent', color: item.photoRequired ? '#f97316' : 'var(--text-subtle)',
-                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          }}
+                          className={`w-9 h-9 rounded-[7px] shrink-0 bg-transparent cursor-pointer flex items-center justify-center ${item.photoRequired ? 'border border-dashed border-[var(--status-amber-fg)] text-[var(--status-amber-fg)]' : 'border border-dashed border-[var(--border)] text-[var(--text-subtle)]'}`}
                         >
                           <Camera size={14} />
                         </button>
@@ -1471,33 +1540,30 @@ export default function MyTasksPage() {
               const isDelivery = selectedTask.isDeliveryTask ?? false
               const sectionLabel = isDelivery ? 'Items to Deliver' : 'Supplies Used'
               const stockStatusColor = (s: string) =>
-                s === 'ok' ? '#10b981' : s === 'low' ? '#d97706' : s === 'critical' ? '#f97316' : '#ef4444'
+                s === 'ok' ? 'var(--status-green-fg)' : s === 'low' ? 'var(--status-amber-fg)' : s === 'critical' ? 'var(--status-amber-fg)' : 'var(--status-red-fg)'
               const totalQty = supplyItems.reduce((sum, i) => sum + i.qty, 0)
               return (
-                <div style={{ marginTop: 8, marginBottom: 16, border: '1px solid var(--border)', borderRadius: 10, overflow: 'visible' }}>
+                <div className="mt-2 mb-4 border border-[var(--border)] rounded-xl overflow-visible">
                   {/* Collapsible header */}
                   <button
                     onClick={() => setSuppliesOpen(o => !o)}
-                    style={{
-                      width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-                      padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer',
-                    }}
+                    className="w-full flex items-center gap-2 px-3.5 py-2.5 bg-transparent border-none cursor-pointer"
                   >
-                    <ChevronDown size={13} style={{ color: 'var(--text-muted)', transform: suppliesOpen ? 'none' : 'rotate(-90deg)', transition: 'transform 0.2s', flexShrink: 0 }} />
-                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>
+                    <ChevronDown size={13} className="text-[var(--text-muted)] shrink-0 transition-transform duration-200" style={{ transform: suppliesOpen ? 'none' : 'rotate(-90deg)' }} />
+                    <span className="label-upper text-[var(--text-muted)]">
                       {sectionLabel}
                     </span>
                     {!suppliesOpen && supplyItems.length > 0 && (
-                      <span style={{ fontSize: 11, color: 'var(--text-subtle)', marginLeft: 4 }}>
+                      <span className="text-[11px] text-[var(--text-subtle)] ml-1">
                         {supplyItems.length} item{supplyItems.length !== 1 ? 's' : ''} · {totalQty} {totalQty === 1 ? 'unit' : 'units'}
                       </span>
                     )}
                     {!suppliesOpen && supplyItems.length === 0 && (
-                      <span style={{ fontSize: 11, color: 'var(--text-subtle)', marginLeft: 4 }}>none logged yet</span>
+                      <span className="text-[11px] text-[var(--text-subtle)] ml-1">none logged yet</span>
                     )}
                     <button
                       onClick={e => { e.stopPropagation(); setShowAddSheet(true); setSheetSearch(''); setSheetQtys({}); setSheetY('partial'); setSuppliesOpen(true) }}
-                      style={{ marginLeft: 'auto', fontSize: 11, color: accent, background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, padding: '4px 10px' }}
+                      className="ml-auto text-[11px] text-[var(--accent)] bg-transparent border-none cursor-pointer shrink-0 px-2.5 py-1"
                     >
                       + Add item
                     </button>
@@ -1505,31 +1571,31 @@ export default function MyTasksPage() {
 
                   {/* Expanded content */}
                   {suppliesOpen && (
-                    <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '8px 14px 12px' }}>
+                    <div className="border-t border-[var(--border-subtle)] px-3.5 py-2 pb-3">
                       {supplyItems.length === 0 && (
-                        <div style={{ fontSize: 12, color: 'var(--text-subtle)', fontStyle: 'italic', padding: '8px 0' }}>
-                          No items logged — tap "+ Add item" to select from warehouse
+                        <div className="text-xs text-[var(--text-subtle)] italic py-2">
+                          No items logged — tap &ldquo;+ Add item&rdquo; to select from warehouse
                         </div>
                       )}
                       {supplyItems.map(item => {
                         const stockItem = STOCK_ITEMS.find(s => s.id === item.id)
                         const statusColor = stockStatusColor(stockItem?.status ?? 'ok')
                         return (
-                          <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>{item.name}</span>
+                          <div key={item.id} className="flex items-center justify-between py-[7px] border-b border-[var(--border-subtle)]">
+                            <div className="flex-1 min-w-0">
+                              <span className="text-[13px] text-[var(--text-primary)]">{item.name}</span>
                               {stockItem && (
-                                <span style={{ fontSize: 10, color: statusColor, marginLeft: 6 }}>
+                                <span className="text-[10px] ml-1.5" style={{ color: statusColor }}>
                                   ({stockItem.inStock} in stock · {stockItem.status})
                                 </span>
                               )}
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                              <button onClick={() => setSupplyItems(p => p.map(i => i.id === item.id ? {...i, qty: Math.max(0, i.qty - 1)} : i))} style={stepperBtn}>−</button>
-                              <span style={{ fontSize: 13, minWidth: 22, textAlign: 'center', fontWeight: 600 }}>{item.qty}</span>
-                              <button onClick={() => setSupplyItems(p => p.map(i => i.id === item.id ? {...i, qty: i.qty + 1} : i))} style={stepperBtn}>+</button>
-                              <span style={{ fontSize: 11, color: 'var(--text-muted)', minWidth: 30 }}>{item.unit}</span>
-                              <button onClick={() => setSupplyItems(p => p.filter(i => i.id !== item.id))} style={{ fontSize: 14, color: 'var(--text-subtle)', background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>×</button>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <button onClick={() => setSupplyItems(p => p.map(i => i.id === item.id ? {...i, qty: Math.max(0, i.qty - 1)} : i))} className={stepperBtnCls}>−</button>
+                              <span className="text-[13px] min-w-[22px] text-center font-semibold">{item.qty}</span>
+                              <button onClick={() => setSupplyItems(p => p.map(i => i.id === item.id ? {...i, qty: i.qty + 1} : i))} className={stepperBtnCls}>+</button>
+                              <span className="text-[11px] text-[var(--text-muted)] min-w-[30px]">{item.unit}</span>
+                              <button onClick={() => setSupplyItems(p => p.filter(i => i.id !== item.id))} className="text-sm text-[var(--text-subtle)] bg-transparent border-none cursor-pointer leading-none">×</button>
                             </div>
                           </div>
                         )
@@ -1539,16 +1605,16 @@ export default function MyTasksPage() {
                         const availableItems = STOCK_ITEMS.filter(s => s.forGuest !== false && !supplyItems.find(i => i.id === s.id))
                         if (availableItems.length === 0) return null
                         return (
-                          <div style={{ marginTop: 10, borderTop: '1px dashed var(--border-subtle)', paddingTop: 8 }}>
-                            <div style={{ fontSize: 10, color: 'var(--text-subtle)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>Available</div>
+                          <div className="mt-2.5 border-t border-dashed border-[var(--border-subtle)] pt-2">
+                            <div className="label-upper text-[var(--text-subtle)] mb-1.5">Available</div>
                             {availableItems.map(s => (
-                              <motion.div layout key={s.id} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding: '6px 0', opacity: 0.6 }}>
-                                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                                  {s.name} <span style={{ color:'var(--text-subtle)' }}>({s.unit})</span>
+                              <motion.div layout key={s.id} className="flex items-center justify-between py-1.5 opacity-60">
+                                <span className="text-xs text-[var(--text-muted)]">
+                                  {s.name} <span className="text-[var(--text-subtle)]">({s.unit})</span>
                                 </span>
                                 <button
                                   onClick={() => setSupplyItems(p => [...p, { id: s.id, name: s.name, unit: s.unit, qty: 1 }])}
-                                  style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-muted)', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>
+                                  className="w-7 h-7 rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-muted)] text-base cursor-pointer flex items-center justify-center leading-none">
                                   +
                                 </button>
                               </motion.div>
@@ -1564,48 +1630,50 @@ export default function MyTasksPage() {
 
             {/* QA Step — appears when all checklist items are checked */}
             {progressPct === 100 && (
-              <div style={{ marginTop: 8, padding: 16, background: `${accent}08`, border: `1px solid ${accent}30`, borderRadius: 10 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: accent, marginBottom: 14 }}>QA Review Required</div>
+              <div className="mt-2 p-4 rounded-xl" style={{ background: `${accent}08`, border: `1px solid ${accent}30` }}>
+                <div className="label-upper text-[var(--accent)] mb-3.5">QA Review Required</div>
 
                 {/* Star rating */}
-                <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>Quality Rating</div>
-                  <div style={{ display: 'flex', gap: 4 }}>
+                <div className="mb-3.5">
+                  <div className="text-xs text-[var(--text-muted)] mb-1.5">Quality Rating</div>
+                  <div className="flex gap-1">
                     {[1, 2, 3, 4, 5].map(star => (
                       <button
                         key={star}
                         onClick={() => setQaRating(star)}
-                        style={{ fontSize: 28, lineHeight: 1, background: 'none', border: 'none', cursor: 'pointer', padding: '2px 3px', color: star <= qaRating ? '#f59e0b' : 'var(--border)', transition: 'color 0.1s' }}
+                        className="text-[28px] leading-none bg-transparent border-none cursor-pointer px-[3px] py-0.5 transition-colors duration-100"
+                        style={{ color: star <= qaRating ? 'var(--status-amber-fg)' : 'var(--border)' }}
                       >
                         ★
                       </button>
                     ))}
-                    {qaRating > 0 && <span style={{ fontSize: 12, color: 'var(--text-muted)', alignSelf: 'center', marginLeft: 4 }}>{qaRating}/5</span>}
+                    {qaRating > 0 && <span className="text-xs text-[var(--text-muted)] self-center ml-1">{qaRating}/5</span>}
                   </div>
                 </div>
 
                 {/* Photo upload */}
-                <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>
-                    Photos <span style={{ color: '#ef4444', fontSize: 11 }}>(at least 1 required)</span>
+                <div className="mb-3.5">
+                  <div className="text-xs text-[var(--text-muted)] mb-1.5">
+                    Photos <span className="text-[var(--status-red-fg)] text-[11px]">(at least 1 required)</span>
                   </div>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <div className="flex gap-2 flex-wrap">
                     {afterPhotos.map((url, i) => (
-                      <div key={i} style={{ position: 'relative' }}>
-                        <img src={url} style={{ width: 72, height: 54, borderRadius: 8, objectFit: 'cover', border: `2px solid ${accent}`, display: 'block' }} alt="qa" />
+                      <div key={i} className="relative">
+                        <img src={url} className="w-[72px] h-[54px] rounded-lg object-cover block" style={{ border: `2px solid ${accent}` }} alt="qa" />
                         <button
                           onClick={() => setAfterPhotos(p => p.filter((_, j) => j !== i))}
-                          style={{ position: 'absolute', top: -5, right: -5, width: 16, height: 16, borderRadius: '50%', background: '#ef4444', border: '2px solid var(--bg-surface)', color: '#fff', fontSize: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          className="absolute -top-[5px] -right-[5px] w-4 h-4 rounded-full bg-[var(--status-red-fg)] border-2 border-[var(--bg-surface)] text-white text-[8px] cursor-pointer flex items-center justify-center"
                         >×</button>
                       </div>
                     ))}
                     {afterPhotos.length < 5 && (
                       <button
                         onClick={() => triggerUpload('after')}
-                        style={{ width: 72, height: 54, borderRadius: 8, border: `2px dashed ${accent}`, background: `${accent}08`, color: accent, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}
+                        className="w-[72px] h-[54px] rounded-lg cursor-pointer flex flex-col items-center justify-center gap-[3px]"
+                        style={{ border: `2px dashed ${accent}`, background: `${accent}08`, color: accent }}
                       >
                         <Camera size={16} />
-                        <span style={{ fontSize: 9, fontWeight: 600 }}>Add</span>
+                        <span className="text-[9px] font-semibold">Add</span>
                       </button>
                     )}
                   </div>
@@ -1613,12 +1681,12 @@ export default function MyTasksPage() {
 
                 {/* Notes */}
                 <div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>Notes (optional)</div>
+                  <div className="text-xs text-[var(--text-muted)] mb-1.5">Notes (optional)</div>
                   <textarea
                     value={qaNotes}
                     onChange={e => setQaNotes(e.target.value)}
                     placeholder="Any notes for the operator..."
-                    style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontSize: 13, outline: 'none', resize: 'vertical', minHeight: 60, boxSizing: 'border-box' }}
+                    className="w-full px-2.5 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-[13px] outline-none resize-y min-h-[60px] box-border"
                   />
                 </div>
               </div>
@@ -1629,55 +1697,46 @@ export default function MyTasksPage() {
         {selectedTask?.type === 'Maintenance' && (
           <div>
             {/* Before Photos */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#ef4444', marginBottom: 10 }}>
-                Before Photos {beforePhotos.length === 0 && <span style={{ fontWeight: 400, color: 'var(--text-muted)', textTransform: 'none', letterSpacing: 0 }}>(required)</span>}
+            <div className="mb-5">
+              <div className="text-xs font-semibold uppercase tracking-wide text-[var(--status-red-fg)] mb-2.5">
+                Before Photos {beforePhotos.length === 0 && <span className="font-normal text-[var(--text-muted)] normal-case tracking-normal">(required)</span>}
               </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div className="flex gap-2 flex-wrap">
                 {beforePhotos.map((url, i) => (
-                  <div key={i} style={{ position: 'relative' }}>
-                    <img src={url} style={{ width: 80, height: 60, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--border)', display: 'block' }} alt="before" />
+                  <div key={i} className="relative">
+                    <img src={url} className="w-20 h-[60px] rounded-lg object-cover border border-[var(--border)] block" alt="before" />
                     <button
                       onClick={() => setBeforePhotos(p => p.filter((_, j) => j !== i))}
-                      style={{ position: 'absolute', top: -5, right: -5, width: 16, height: 16, borderRadius: '50%', background: '#ef4444', border: '2px solid var(--bg-surface)', color: '#fff', fontSize: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      className="absolute -top-[5px] -right-[5px] w-4 h-4 rounded-full bg-[var(--status-red-fg)] border-2 border-[var(--bg-surface)] text-white text-[8px] cursor-pointer flex items-center justify-center"
                     >×</button>
                   </div>
                 ))}
                 {beforePhotos.length < 5 && (
                   <button
                     onClick={() => triggerUpload('before')}
-                    style={{ width: 80, height: 60, borderRadius: 8, border: `2px dashed #ef4444`, background: 'rgba(239,68,68,0.05)', color: '#ef4444', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}
+                    className="w-20 h-[60px] rounded-lg border-2 border-dashed border-[var(--status-red-fg)] bg-[var(--status-red-bg)] text-[var(--status-red-fg)] cursor-pointer flex flex-col items-center justify-center gap-[3px]"
                   >
                     <Camera size={16} />
-                    <span style={{ fontSize: 9, fontWeight: 600 }}>Add</span>
+                    <span className="text-[9px] font-semibold">Add</span>
                   </button>
                 )}
               </div>
             </div>
 
             {/* Work Items checklist */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: accent, marginBottom: 10 }}>
-                Work Items <span style={{ fontWeight: 400, color: 'var(--text-muted)', textTransform: 'none', letterSpacing: 0 }}>{checkedCount}/{totalCount}</span>
+            <div className="mb-5">
+              <div className="text-xs font-semibold uppercase tracking-wide text-[var(--accent)] mb-2.5">
+                Work Items <span className="font-normal text-[var(--text-muted)] normal-case tracking-normal">{checkedCount}/{totalCount}</span>
               </div>
               {activeChecklist.map(item => (
-                <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 4px', borderBottom: '1px solid var(--border-subtle)' }}>
+                <div key={item.id} className="flex items-center gap-2.5 px-1 py-[9px] border-b border-[var(--border-subtle)]">
                   <button
                     onClick={() => toggleCheck(item.id)}
-                    style={{
-                      width: 20, height: 20, borderRadius: 5, flexShrink: 0,
-                      border: `2px solid ${checklistChecked[item.id] ? '#10b981' : 'var(--border)'}`,
-                      background: checklistChecked[item.id] ? '#10b981' : 'transparent',
-                      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}
+                    className={`w-5 h-5 rounded-[5px] shrink-0 cursor-pointer flex items-center justify-center ${checklistChecked[item.id] ? 'bg-[var(--status-green-fg)] border-2 border-[var(--status-green-fg)]' : 'bg-transparent border-2 border-[var(--border)]'}`}
                   >
                     {checklistChecked[item.id] && <Check size={11} color="#fff" />}
                   </button>
-                  <span style={{
-                    flex: 1, fontSize: 13,
-                    color: checklistChecked[item.id] ? 'var(--text-subtle)' : 'var(--text-primary)',
-                    textDecoration: checklistChecked[item.id] ? 'line-through' : 'none',
-                  }}>
+                  <span className={`flex-1 text-[13px] ${checklistChecked[item.id] ? 'text-[var(--text-subtle)] line-through' : 'text-[var(--text-primary)]'}`}>
                     {item.label}
                   </span>
                 </div>
@@ -1686,16 +1745,16 @@ export default function MyTasksPage() {
 
             {/* After Photos */}
             <div>
-              <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#10b981', marginBottom: 10 }}>
-                After Photos {afterPhotos.length === 0 && <span style={{ fontWeight: 400, color: 'var(--text-muted)', textTransform: 'none', letterSpacing: 0 }}>(required for approval)</span>}
+              <div className="text-xs font-semibold uppercase tracking-wide text-[var(--status-green-fg)] mb-2.5">
+                After Photos {afterPhotos.length === 0 && <span className="font-normal text-[var(--text-muted)] normal-case tracking-normal">(required for approval)</span>}
               </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div className="flex gap-2 flex-wrap">
                 {afterPhotos.map((url, i) => (
-                  <div key={i} style={{ position: 'relative' }}>
-                    <img src={url} style={{ width: 80, height: 60, borderRadius: 8, objectFit: 'cover', border: '2px solid #10b981', display: 'block' }} alt="after" />
+                  <div key={i} className="relative">
+                    <img src={url} className="w-20 h-[60px] rounded-lg object-cover border-2 border-[var(--status-green-fg)] block" alt="after" />
                     <button
                       onClick={() => setAfterPhotos(p => p.filter((_, j) => j !== i))}
-                      style={{ position: 'absolute', top: -5, right: -5, width: 16, height: 16, borderRadius: '50%', background: '#ef4444', border: '2px solid var(--bg-surface)', color: '#fff', fontSize: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      className="absolute -top-[5px] -right-[5px] w-4 h-4 rounded-full bg-[var(--status-red-fg)] border-2 border-[var(--bg-surface)] text-white text-[8px] cursor-pointer flex items-center justify-center"
                     >×</button>
                   </div>
                 ))}
@@ -1703,32 +1762,33 @@ export default function MyTasksPage() {
                   <button
                     onClick={() => triggerUpload('after')}
                     disabled={checkedCount < totalCount}
-                    style={{ width: 80, height: 60, borderRadius: 8, border: `2px dashed ${checkedCount === totalCount ? '#10b981' : 'var(--border)'}`, background: checkedCount === totalCount ? 'rgba(16,185,129,0.05)' : 'transparent', color: checkedCount === totalCount ? '#10b981' : 'var(--text-subtle)', cursor: checkedCount === totalCount ? 'pointer' : 'not-allowed', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}
+                    className={`w-20 h-[60px] rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-[3px] ${checkedCount === totalCount ? 'border-[var(--status-green-fg)] bg-[var(--status-green-bg)] text-[var(--status-green-fg)] cursor-pointer' : 'border-[var(--border)] bg-transparent text-[var(--text-subtle)] cursor-not-allowed'}`}
                   >
                     <Camera size={16} />
-                    <span style={{ fontSize: 9, fontWeight: 600 }}>{checkedCount < totalCount ? 'Complete work first' : 'Add'}</span>
+                    <span className="text-[9px] font-semibold">{checkedCount < totalCount ? 'Complete work first' : 'Add'}</span>
                   </button>
                 )}
               </div>
               {afterPhotos.length === 0 && checkedCount < totalCount && (
-                <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>Complete all work items before uploading after photos.</p>
+                <p className="text-[11px] text-[var(--text-muted)] mt-1.5">Complete all work items before uploading after photos.</p>
               )}
             </div>
           </div>
         )}
 
         {selectedTask && selectedTask.type !== 'Cleaning' && selectedTask.type !== 'Maintenance' && (
-          <div style={{ padding: '20px 0' }}>
-            <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 16 }}>
+          <div className="py-5">
+            <div className="text-sm text-[var(--text-muted)] mb-4">
               {selectedTask.description ?? 'No additional details for this task.'}
             </div>
-            <div style={{ background: 'var(--bg-elevated)', borderRadius: 8, padding: 12, marginBottom: 16 }}>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Property</div>
-              <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500 }}>{selectedTask.propertyName}</div>
+            <div className="bg-[var(--bg-elevated)] rounded-lg p-3 mb-4">
+              <div className="text-xs text-[var(--text-muted)] mb-1">Property</div>
+              <div className="text-[13px] text-[var(--text-primary)] font-medium">{selectedTask.propertyName}</div>
             </div>
             <button
               onClick={() => { setCompletedIds(p => new Set([...p, selectedTask.id])); setSelectedTask(null); showToast('Task marked complete') }}
-              style={{ width: '100%', padding: '10px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+              className="w-full py-2.5 rounded-lg border-none text-white text-sm font-semibold cursor-pointer"
+              style={{ background: accent }}
             >
               Mark Complete
             </button>
@@ -1750,7 +1810,7 @@ export default function MyTasksPage() {
           return (
             <div
               key="add-sheet-backdrop"
-              style={{ position:'fixed', inset:0, zIndex:500, background:'rgba(0,0,0,0.5)' }}
+              className="fixed inset-0 z-[500] bg-black/50"
               onClick={() => setShowAddSheet(false)}
             >
               <motion.div
@@ -1768,40 +1828,35 @@ export default function MyTasksPage() {
                 animate={{ y: 0 }}
                 exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                style={{
-                  position:'absolute', bottom:0, left:0, right:0,
-                  height: sheetY === 'full' ? '100dvh' : '62dvh',
-                  background:'var(--bg-surface)', borderRadius:'16px 16px 0 0',
-                  borderTop:'1px solid var(--border)', display:'flex', flexDirection:'column',
-                  transition: 'height 0.25s ease',
-                }}
+                className="absolute bottom-0 left-0 right-0 bg-[var(--bg-surface)] rounded-t-2xl border-t border-[var(--border)] flex flex-col transition-[height] duration-[250ms] ease-out"
+                style={{ height: sheetY === 'full' ? '100dvh' : '62dvh' }}
               >
-                <div style={{ display:'flex', justifyContent:'center', padding:'10px 0 6px' }}>
-                  <div style={{ width:36, height:4, borderRadius:2, background:'var(--border)' }} />
+                <div className="flex justify-center pt-2.5 pb-1.5">
+                  <div className="w-9 h-1 rounded-sm bg-[var(--border)]" />
                 </div>
-                <div style={{ padding:'0 16px 12px' }}>
+                <div className="px-4 pb-3">
                   <input
                     placeholder="🔍 Search items..."
                     value={sheetSearch}
                     onChange={e => setSheetSearch(e.target.value)}
-                    style={{ width:'100%', padding:'9px 12px', borderRadius:10, border:'1px solid var(--border)', background:'var(--bg-elevated)', color:'var(--text-primary)', fontSize:14, outline:'none', boxSizing:'border-box' as const }}
+                    className="w-full px-3 py-[9px] rounded-[10px] border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-sm outline-none box-border"
                   />
                 </div>
-                <div style={{ flex:1, overflowY:'auto', padding:'0 16px' }}>
+                <div className="flex-1 overflow-y-auto px-4">
                   {filteredAll ? (
                     filteredAll.map(s => <SheetItemRow key={s.id} item={s} sheetQtys={sheetQtys} setSheetQtys={setSheetQtys} accent={accent} />)
                   ) : (
                     <>
-                      <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', color:'var(--text-subtle)', marginBottom:8 }}>Frequently Added</div>
+                      <div className="label-upper text-[var(--text-subtle)] mb-2">Frequently Added</div>
                       {frequentItems.map(s => <SheetItemRow key={s.id} item={s} sheetQtys={sheetQtys} setSheetQtys={setSheetQtys} accent={accent} />)}
                       {allCats.map(cat => {
                         const open = sheetCatOpen[cat] ?? false
                         const items = guestItems.filter(s => s.category === cat)
                         return (
-                          <div key={cat} style={{ marginTop: 16 }}>
+                          <div key={cat} className="mt-4">
                             <button
                               onClick={() => setSheetCatOpen(p => ({...p, [cat]: !p[cat]}))}
-                              style={{ width:'100%', display:'flex', justifyContent:'space-between', alignItems:'center', background:'none', border:'none', cursor:'pointer', padding:'6px 0', fontSize:10, fontWeight:700, textTransform:'uppercase' as const, letterSpacing:'0.08em', color:'var(--text-subtle)' }}>
+                              className="w-full flex justify-between items-center bg-transparent border-none cursor-pointer py-1.5 label-upper text-[var(--text-subtle)]">
                               {cat}
                               <span>{open ? '▼' : '▶'}</span>
                             </button>
@@ -1812,7 +1867,7 @@ export default function MyTasksPage() {
                     </>
                   )}
                 </div>
-                <div style={{ padding:'12px 16px 24px' }}>
+                <div className="px-4 py-3 pb-6">
                   <button
                     onClick={() => {
                       const itemsToAdd = Object.entries(sheetQtys).filter(([, qty]) => qty > 0)
@@ -1828,7 +1883,8 @@ export default function MyTasksPage() {
                       setShowAddSheet(false)
                       setSheetQtys({})
                     }}
-                    style={{ width:'100%', height:52, borderRadius:12, background: accent, color:'#fff', fontSize:15, fontWeight:700, border:'none', cursor:'pointer' }}>
+                    className="w-full h-[52px] rounded-xl text-[15px] font-semibold border-none cursor-pointer text-white"
+                    style={{ background: accent }}>
                     {addedCount > 0 ? `Done (${addedCount} item${addedCount !== 1 ? 's' : ''} added)` : 'Done'}
                   </button>
                 </div>
@@ -1858,17 +1914,17 @@ export default function MyTasksPage() {
               key="prop-lib-sheet"
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               transition={{ type:'spring', damping: 25, stiffness: 280 }}
-              style={{ position:'fixed', inset:0, zIndex:600, background:'var(--bg-surface)', display:'flex', flexDirection:'column' }}
+              className="fixed inset-0 z-[600] bg-[var(--bg-surface)] flex flex-col"
             >
-              <div style={{ display:'flex', alignItems:'center', padding:'16px 18px', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
+              <div className="flex items-center px-[18px] py-4 border-b border-[var(--border)] shrink-0">
                 <button onClick={() => setPropLibOpen(false)}
-                  style={{ background:'none', border:'none', color: accent, fontSize:13, fontWeight:500, cursor:'pointer', padding:0, whiteSpace:'nowrap' as const }}>
+                  className="bg-transparent border-none text-[var(--accent)] text-[13px] font-medium cursor-pointer p-0 whitespace-nowrap">
                   ← Back to task
                 </button>
-                <span style={{ flex:1, fontSize:14, fontWeight:700, color:'var(--text-primary)', textAlign:'center' }}>Property Info</span>
-                <span style={{ width:90 }} />
+                <span className="flex-1 text-sm font-semibold text-[var(--text-primary)] text-center">Property Info</span>
+                <span className="w-[90px]" />
               </div>
-              <div style={{ flex:1, overflowY:'auto', padding:'16px 18px' }}>
+              <div className="flex-1 overflow-y-auto px-[18px] py-4">
                 {sections.map(section => (
                   <LibAccordionSection key={section.title} title={section.title} content={section.content} accent={accent} />
                 ))}
@@ -1991,10 +2047,10 @@ export default function MyTasksPage() {
         }
 
         // PTE panel border color
-        const pteBorderColor = mt.pteStatus === 'pending' ? 'rgba(239,159,39,0.35)'
-          : mt.pteStatus === 'granted' || mt.pteStatus === 'auto_granted' ? 'rgba(29,158,117,0.35)'
-          : mt.pteStatus === 'denied' ? 'rgba(226,75,74,0.35)'
-          : 'rgba(255,255,255,0.10)'
+        const pteBorderColor = mt.pteStatus === 'pending' ? 'var(--status-amber-fg)'
+          : mt.pteStatus === 'granted' || mt.pteStatus === 'auto_granted' ? 'var(--status-green-fg)'
+          : mt.pteStatus === 'denied' ? 'var(--status-red-fg)'
+          : 'var(--border)'
 
         return (
           <AppDrawer
@@ -2005,22 +2061,22 @@ export default function MyTasksPage() {
             width={520}
           >
             {/* ── A: Pipeline bar ── */}
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
+            <div className="flex items-center mb-5">
               {MAINT_STEPS.map((step, i) => {
                 const rel = i < stepIdx ? 'done' : i === stepIdx ? 'active' : 'inactive'
-                const style: React.CSSProperties = rel === 'done'
-                  ? { background: 'rgba(29,158,117,0.10)', color: '#15d492', border: '1px solid rgba(29,158,117,0.22)' }
+                const stepCls = rel === 'done'
+                  ? 'bg-[var(--status-green-bg)] text-[var(--status-green-fg)] border border-[var(--status-green-fg)]'
                   : rel === 'active'
-                    ? { background: 'rgba(55,138,221,0.10)', color: '#378ADD', border: '1px solid rgba(55,138,221,0.22)' }
-                    : { background: '#161b26', color: '#5a5f6b', border: '1px solid rgba(255,255,255,0.07)' }
+                    ? 'bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent-border)]'
+                    : 'bg-[var(--bg-elevated)] text-[var(--text-subtle)] border border-[var(--border-subtle)]'
                 return (
-                  <div key={step.key} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                    <div style={{ ...style, flex: 1, padding: '5px 8px', borderRadius: 5, fontSize: 10, fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap' }}>
+                  <div key={step.key} className="flex items-center flex-1">
+                    <div className={`${stepCls} flex-1 px-2 py-[5px] rounded-[5px] text-[10px] font-semibold text-center whitespace-nowrap`}>
                       {step.label}
                     </div>
                     {i < MAINT_STEPS.length - 1 && (
-                      <div style={{ width: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#5a5f6b" strokeWidth="2"><path d="M4 8h8M9 5l3 3-3 3"/></svg>
+                      <div className="w-4 flex items-center justify-center shrink-0">
+                        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="var(--text-subtle)" strokeWidth="2"><path d="M4 8h8M9 5l3 3-3 3"/></svg>
                       </div>
                     )}
                   </div>
@@ -2030,10 +2086,10 @@ export default function MyTasksPage() {
 
             {/* ── B: PTE panel ── */}
             {mt.pteRequired && mt.pteStatus && mt.pteStatus !== 'not_required' && (
-              <div style={{ background: '#111722', border: `1px solid ${pteBorderColor}`, borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#5a5f6b' }}>Permission to Enter</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: mt.pteStatus === 'pending' ? '#ef9f27' : mt.pteStatus === 'granted' || mt.pteStatus === 'auto_granted' ? '#15d492' : '#e24b4a' }}>
+              <Card className="p-3.5 mb-4" style={{ borderColor: pteBorderColor }}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="label-upper text-[var(--text-subtle)]">Permission to Enter</span>
+                  <span className="text-[11px] font-semibold" style={{ color: mt.pteStatus === 'pending' ? 'var(--status-amber-fg)' : mt.pteStatus === 'granted' || mt.pteStatus === 'auto_granted' ? 'var(--status-green-fg)' : 'var(--status-red-fg)' }}>
                     {mt.pteStatus === 'pending' ? '⏳ Awaiting guest approval'
                       : mt.pteStatus === 'granted' ? '✅ Granted'
                       : mt.pteStatus === 'auto_granted' ? '✅ Vacant — enter any time'
@@ -2041,26 +2097,26 @@ export default function MyTasksPage() {
                   </span>
                 </div>
 
-                {mt.pte?.guestName && <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 3 }}>Guest: {mt.pte.guestName}</div>}
+                {mt.pte?.guestName && <div className="text-xs text-[var(--text-muted)] mb-1">Guest: {mt.pte.guestName}</div>}
                 {mt.pte?.validFrom && mt.pte?.validUntil && (
-                  <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 3 }}>
+                  <div className="text-xs text-[var(--text-muted)] mb-1">
                     Access window: {new Date(mt.pte.validFrom).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} — {new Date(mt.pte.validUntil).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 )}
-                {mt.pte?.grantedBy && <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 3 }}>Granted by: {mt.pte.grantedBy}</div>}
-                {mt.pte?.notes && <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 8, fontStyle: 'italic' }}>"{mt.pte.notes}"</div>}
-                {mt.pteStatus === 'auto_granted' && <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 8 }}>Property is vacant — no active reservation.</div>}
+                {mt.pte?.grantedBy && <div className="text-xs text-[var(--text-muted)] mb-1">Granted by: {mt.pte.grantedBy}</div>}
+                {mt.pte?.notes && <div className="text-xs text-[var(--text-muted)] mb-2 italic">&ldquo;{mt.pte.notes}&rdquo;</div>}
+                {mt.pteStatus === 'auto_granted' && <div className="text-xs text-[var(--text-muted)] mb-2">Property is vacant — no active reservation.</div>}
 
                 {/* Access code */}
                 {(mt.pteStatus === 'granted' || mt.pteStatus === 'auto_granted') && mt.pte?.accessCode && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                    <span style={{ fontSize: 12, color: '#9ca3af' }}>Access code:</span>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs text-[var(--text-muted)]">Access code:</span>
                     {maintCodeVisible[taskId] ? (
-                      <span style={{ fontSize: 14, fontWeight: 700, fontFamily: 'monospace', color: '#e8e6e1', letterSpacing: 3, background: 'rgba(29,158,117,0.10)', padding: '2px 10px', borderRadius: 5 }}>{mt.pte.accessCode}</span>
+                      <span className="text-sm font-semibold font-mono text-[var(--text-primary)] tracking-widest bg-[var(--status-green-bg)] px-2.5 py-0.5 rounded-[5px]">{mt.pte.accessCode}</span>
                     ) : (
                       <button
                         onClick={() => setMaintCodeVisible(prev => ({ ...prev, [taskId]: true }))}
-                        style={{ fontSize: 12, color: '#378ADD', background: 'rgba(55,138,221,0.10)', border: '1px solid rgba(55,138,221,0.22)', borderRadius: 6, padding: '3px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                        className="text-xs text-[var(--accent)] bg-[var(--accent-bg)] border border-[var(--accent-border)] rounded-md px-2.5 py-[3px] cursor-pointer flex items-center gap-1"
                       >
                         <Eye size={12} /> Reveal Code
                       </button>
@@ -2070,109 +2126,84 @@ export default function MyTasksPage() {
 
                 {/* Notify Guest Services button (pending only) */}
                 {mt.pteStatus === 'pending' && (
-                  <div style={{ marginTop: 8 }}>
+                  <div className="mt-2">
                     {pteNotified.has(taskId) ? (
-                      <span style={{ fontSize: 12, color: '#15d492' }}>✓ Guest Services notified</span>
+                      <span className="text-xs text-[var(--status-green-fg)]">✓ Guest Services notified</span>
                     ) : (
                       <button
                         onClick={handleNotifyPTE}
-                        style={{ fontSize: 12, fontWeight: 500, color: '#378ADD', background: 'rgba(55,138,221,0.10)', border: '1px solid rgba(55,138,221,0.22)', borderRadius: 6, padding: '5px 12px', cursor: 'pointer' }}
+                        className="text-xs font-medium text-[var(--accent)] bg-[var(--accent-bg)] border border-[var(--accent-border)] rounded-md px-3 py-[5px] cursor-pointer"
                       >
                         Notify Guest Services
                       </button>
                     )}
                   </div>
                 )}
-              </div>
+              </Card>
             )}
 
             {/* ── C: Step content ── */}
 
             {/* Assigned step */}
             {progress === 'assigned' && (
-              <div style={{ background: '#111722', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px', marginBottom: 16 }}>
-                <label style={{ display: 'block', fontSize: 12, color: '#9ca3af', marginBottom: 8 }}>
+              <Card className="p-3.5 mb-4 border-[var(--border-subtle)]">
+                <label className="block text-xs text-[var(--text-muted)] mb-2">
                   Your estimated arrival time
                 </label>
                 <input
                   type="time"
                   value={eta}
                   onChange={e => setMaintEta(prev => ({ ...prev, [taskId]: e.target.value }))}
-                  style={{
-                    width: '100%', padding: '8px 10px', borderRadius: 8, fontSize: 14, fontFamily: "'JetBrains Mono', monospace",
-                    background: '#0f1219', border: '1px solid rgba(255,255,255,0.10)', color: '#e8e6e1',
-                    marginBottom: 12, boxSizing: 'border-box', outline: 'none',
-                  }}
+                  className="w-full px-2.5 py-2 rounded-lg text-sm font-mono bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-primary)] mb-3 box-border outline-none"
                 />
                 <button
                   onClick={handleSetEnRoute}
                   disabled={!eta}
-                  style={{
-                    width: '100%', padding: '10px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-                    cursor: eta ? 'pointer' : 'not-allowed',
-                    background: eta ? 'rgba(55,138,221,0.15)' : '#161b26',
-                    color: eta ? '#378ADD' : '#5a5f6b',
-                    border: eta ? '1px solid rgba(55,138,221,0.30)' : '1px solid rgba(255,255,255,0.07)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  }}
+                  className={`w-full py-2.5 rounded-lg text-[13px] font-semibold flex items-center justify-center gap-2 ${eta ? 'cursor-pointer bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent-border)]' : 'cursor-not-allowed bg-[var(--bg-elevated)] text-[var(--text-subtle)] border border-[var(--border-subtle)]'}`}
                 >
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
                   Set En Route
                 </button>
-              </div>
+              </Card>
             )}
 
             {/* En route step */}
             {progress === 'en_route' && (
-              <div style={{ background: '#111722', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px', marginBottom: 16 }}>
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 14,
-                  padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-                  background: 'rgba(55,138,221,0.10)', color: '#378ADD', border: '1px solid rgba(55,138,221,0.22)',
-                  fontFamily: "'JetBrains Mono', monospace",
-                }}>
+              <Card className="p-3.5 mb-4 border-[var(--border-subtle)]">
+                <div className="inline-flex items-center gap-1.5 mb-3.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent-border)] font-mono">
                   <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
                   ETA {eta}
                 </div>
                 <button
                   onClick={() => setMaintProgress(prev => ({ ...prev, [taskId]: 'on_site' }))}
-                  style={{
-                    width: '100%', padding: '10px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-                    cursor: 'pointer', border: 'none', background: '#1D9E75', color: '#fff',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  }}
+                  className="w-full py-2.5 rounded-lg text-[13px] font-semibold cursor-pointer border-none text-white flex items-center justify-center gap-2"
+                  style={{ background: accent }}
                 >
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2C5.8 2 4 3.8 4 6c0 3 4 8 4 8s4-5 4-8c0-2.2-1.8-4-4-4z"/><circle cx="8" cy="6" r="1.5"/></svg>
                   I&apos;ve Arrived — Start Task
                 </button>
-              </div>
+              </Card>
             )}
 
             {/* On site step */}
             {progress === 'on_site' && (
-              <div style={{ marginBottom: 16 }}>
+              <div className="mb-4">
                 {/* Photo slots */}
-                <div style={{ background: '#111722', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px', marginBottom: 12 }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#5a5f6b', marginBottom: 10 }}>Documentation</div>
-                  <div style={{ display: 'flex', gap: 10 }}>
+                <Card className="p-3.5 mb-3 border-[var(--border-subtle)]">
+                  <div className="label-upper text-[var(--text-subtle)] mb-2.5">Documentation</div>
+                  <div className="flex gap-2.5">
                     {[
                       { label: 'Before', done: beforeDone, onAdd: () => setMaintBeforeDone(prev => ({ ...prev, [taskId]: true })) },
                       { label: 'After',  done: afterDone,  onAdd: () => setMaintAfterDone(prev => ({ ...prev, [taskId]: true })) },
                     ].map(slot => (
                       <div key={slot.label}>
-                        <div style={{ fontSize: 9, color: '#5a5f6b', marginBottom: 5, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{slot.label}</div>
+                        <div className="text-[9px] text-[var(--text-subtle)] mb-[5px] font-medium tracking-wide uppercase">{slot.label}</div>
                         <button
                           onClick={slot.done ? undefined : slot.onAdd}
-                          style={{
-                            width: 64, height: 48, borderRadius: 7,
-                            border: slot.done ? '1.5px solid rgba(29,158,117,0.22)' : '1.5px dashed rgba(255,255,255,0.12)',
-                            background: slot.done ? 'rgba(29,158,117,0.10)' : '#161b26',
-                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                            gap: 2, cursor: slot.done ? 'default' : 'pointer', fontSize: 9, color: '#5a5f6b',
-                          }}
+                          className={`w-16 h-12 rounded-[7px] flex flex-col items-center justify-center gap-0.5 text-[9px] text-[var(--text-subtle)] ${slot.done ? 'border-[1.5px] border-solid border-[var(--status-green-fg)] bg-[var(--status-green-bg)] cursor-default' : 'border-[1.5px] border-dashed border-[var(--border)] bg-[var(--bg-elevated)] cursor-pointer'}`}
                         >
                           {slot.done ? (
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#15d492" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8l4 4 6-7"/></svg>
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--status-green-fg)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8l4 4 6-7"/></svg>
                           ) : (
                             <>
                               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="12" height="10" rx="1.5"/><circle cx="8" cy="8" r="2.5"/></svg>
@@ -2183,31 +2214,30 @@ export default function MyTasksPage() {
                       </div>
                     ))}
                   </div>
-                </div>
+                </Card>
 
                 {/* Resolution */}
-                <div style={{ background: '#111722', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px' }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#5a5f6b', marginBottom: 10 }}>
+                <Card className="p-3.5 border-[var(--border-subtle)]">
+                  <div className="label-upper text-[var(--text-subtle)] mb-2.5">
                     How was this resolved?
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: resolution === 'needs_vendor' || resolution === 'needs_parts' ? 12 : 0 }}>
+                  <div className={`grid grid-cols-2 gap-2 ${resolution === 'needs_vendor' || resolution === 'needs_parts' ? 'mb-3' : 'mb-0'}`}>
                     {[
-                      { key: 'fixed',        label: '✓ Fixed',         bg: 'rgba(29,158,117,0.10)',  color: '#15d492', border: 'rgba(29,158,117,0.22)' },
-                      { key: 'minor',        label: 'Minor fix',       bg: 'rgba(29,158,117,0.07)',  color: '#9ca3af', border: 'rgba(255,255,255,0.12)' },
-                      { key: 'needs_vendor', label: 'Needs Vendor',    bg: 'rgba(55,138,221,0.10)',  color: '#378ADD', border: 'rgba(55,138,221,0.22)' },
-                      { key: 'needs_parts',  label: 'Needs Parts',     bg: 'rgba(239,159,39,0.10)',  color: '#ef9f27', border: 'rgba(239,159,39,0.22)' },
+                      { key: 'fixed',        label: '✓ Fixed',         bg: 'var(--status-green-bg)',  color: 'var(--status-green-fg)', border: 'var(--status-green-fg)' },
+                      { key: 'minor',        label: 'Minor fix',       bg: 'var(--status-green-bg)',  color: 'var(--text-muted)',      border: 'var(--border)' },
+                      { key: 'needs_vendor', label: 'Needs Vendor',    bg: 'var(--accent-bg)',        color: accent,                   border: 'var(--accent-border)' },
+                      { key: 'needs_parts',  label: 'Needs Parts',     bg: 'var(--status-amber-bg)',  color: 'var(--status-amber-fg)', border: 'var(--status-amber-fg)' },
                     ].map(btn => {
                       const isSelected = resolution === btn.key
                       return (
                         <button
                           key={btn.key}
                           onClick={() => handleResolve(btn.key)}
+                          className="py-[9px] px-2 rounded-lg text-xs font-medium cursor-pointer text-center"
                           style={{
-                            padding: '9px 8px', borderRadius: 8, fontSize: 12, fontWeight: 500,
-                            cursor: 'pointer', textAlign: 'center',
-                            background: isSelected ? btn.bg : '#161b26',
-                            color: isSelected ? btn.color : '#9ca3af',
-                            border: isSelected ? `1px solid ${btn.border}` : '1px solid rgba(255,255,255,0.07)',
+                            background: isSelected ? btn.bg : 'var(--bg-elevated)',
+                            color: isSelected ? btn.color : 'var(--text-muted)',
+                            border: isSelected ? `1px solid ${btn.border}` : '1px solid var(--border-subtle)',
                           }}
                         >
                           {btn.label}
@@ -2218,13 +2248,13 @@ export default function MyTasksPage() {
 
                   {/* Needs Vendor expanded form */}
                   {resolution === 'needs_vendor' && (
-                    <div style={{ marginTop: 4 }}>
-                      <div style={{ marginBottom: 8 }}>
-                        <label style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#5a5f6b', display: 'block', marginBottom: 4 }}>Category <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="mt-1">
+                      <div className="mb-2">
+                        <label className="label-upper text-[var(--text-subtle)] block mb-1">Category <span className="text-[var(--status-red-fg)]">*</span></label>
                         <select
                           value={vendorCategory[taskId] ?? ''}
                           onChange={e => setVendorCategory(prev => ({ ...prev, [taskId]: e.target.value }))}
-                          style={{ width: '100%', padding: '7px 10px', borderRadius: 7, background: '#0f1219', border: '1px solid rgba(255,255,255,0.10)', color: '#e8e6e1', fontSize: 12, outline: 'none' }}
+                          className="w-full px-2.5 py-[7px] rounded-[7px] bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-primary)] text-xs outline-none"
                         >
                           <option value="">Select category...</option>
                           {['HVAC', 'Plumbing', 'Electrical', 'Carpentry', 'Appliance', 'General Repairs', 'Other'].map(c => (
@@ -2232,45 +2262,40 @@ export default function MyTasksPage() {
                           ))}
                         </select>
                       </div>
-                      <div style={{ marginBottom: 8 }}>
-                        <label style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#5a5f6b', display: 'block', marginBottom: 4 }}>Vendor name (optional)</label>
+                      <div className="mb-2">
+                        <label className="label-upper text-[var(--text-subtle)] block mb-1">Vendor name (optional)</label>
                         <input
                           value={vendorName[taskId] ?? ''}
                           onChange={e => setVendorName(prev => ({ ...prev, [taskId]: e.target.value }))}
                           placeholder="e.g. Oslo VVS AS"
-                          style={{ width: '100%', padding: '7px 10px', borderRadius: 7, background: '#0f1219', border: '1px solid rgba(255,255,255,0.10)', color: '#e8e6e1', fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
+                          className="w-full px-2.5 py-[7px] rounded-[7px] bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-primary)] text-xs outline-none box-border"
                         />
                       </div>
-                      <div style={{ marginBottom: 8 }}>
-                        <label style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#5a5f6b', display: 'block', marginBottom: 4 }}>Estimate NOK (optional)</label>
+                      <div className="mb-2">
+                        <label className="label-upper text-[var(--text-subtle)] block mb-1">Estimate NOK (optional)</label>
                         <input
                           type="number"
                           value={vendorEstimate[taskId] ?? ''}
                           onChange={e => setVendorEstimate(prev => ({ ...prev, [taskId]: e.target.value }))}
                           placeholder="0"
-                          style={{ width: '100%', padding: '7px 10px', borderRadius: 7, background: '#0f1219', border: '1px solid rgba(255,255,255,0.10)', color: '#e8e6e1', fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
+                          className="w-full px-2.5 py-[7px] rounded-[7px] bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-primary)] text-xs outline-none box-border"
                         />
                       </div>
-                      <div style={{ marginBottom: 12 }}>
-                        <label style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#5a5f6b', display: 'block', marginBottom: 4 }}>Notes (optional)</label>
+                      <div className="mb-3">
+                        <label className="label-upper text-[var(--text-subtle)] block mb-1">Notes (optional)</label>
                         <textarea
                           value={vendorNotes[taskId] ?? ''}
                           onChange={e => setVendorNotes(prev => ({ ...prev, [taskId]: e.target.value }))}
                           placeholder="Describe the issue..."
                           rows={3}
-                          style={{ width: '100%', padding: '7px 10px', borderRadius: 7, background: '#0f1219', border: '1px solid rgba(255,255,255,0.10)', color: '#e8e6e1', fontSize: 12, outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
+                          className="w-full px-2.5 py-[7px] rounded-[7px] bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-primary)] text-xs outline-none resize-y box-border"
                         />
                       </div>
                       <button
                         onClick={handleSubmitVendor}
                         disabled={!vendorCategory[taskId]}
-                        style={{
-                          width: '100%', padding: '10px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-                          cursor: vendorCategory[taskId] ? 'pointer' : 'not-allowed',
-                          background: vendorCategory[taskId] ? '#1D9E75' : '#161b26',
-                          color: vendorCategory[taskId] ? '#fff' : '#5a5f6b',
-                          border: 'none',
-                        }}
+                        className={`w-full py-2.5 rounded-lg text-[13px] font-semibold border-none ${vendorCategory[taskId] ? 'cursor-pointer text-white' : 'cursor-not-allowed text-[var(--text-subtle)] bg-[var(--bg-elevated)]'}`}
+                        style={{ background: vendorCategory[taskId] ? accent : undefined }}
                       >
                         Submit Work Order
                       </button>
@@ -2279,83 +2304,78 @@ export default function MyTasksPage() {
 
                   {/* Needs Parts expanded form */}
                   {resolution === 'needs_parts' && (
-                    <div style={{ marginTop: 4 }}>
-                      <div style={{ marginBottom: 12 }}>
-                        <label style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#5a5f6b', display: 'block', marginBottom: 4 }}>Parts needed <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="mt-1">
+                      <div className="mb-3">
+                        <label className="label-upper text-[var(--text-subtle)] block mb-1">Parts needed <span className="text-[var(--status-red-fg)]">*</span></label>
                         <textarea
                           value={partsNotes[taskId] ?? ''}
                           onChange={e => setPartsNotes(prev => ({ ...prev, [taskId]: e.target.value }))}
                           placeholder="List the parts required..."
                           rows={3}
-                          style={{ width: '100%', padding: '7px 10px', borderRadius: 7, background: '#0f1219', border: '1px solid rgba(255,255,255,0.10)', color: '#e8e6e1', fontSize: 12, outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
+                          className="w-full px-2.5 py-[7px] rounded-[7px] bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-primary)] text-xs outline-none resize-y box-border"
                         />
                       </div>
                       <button
                         onClick={handleSubmitParts}
                         disabled={!partsNotes[taskId]?.trim()}
-                        style={{
-                          width: '100%', padding: '10px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-                          cursor: partsNotes[taskId]?.trim() ? 'pointer' : 'not-allowed',
-                          background: partsNotes[taskId]?.trim() ? '#1D9E75' : '#161b26',
-                          color: partsNotes[taskId]?.trim() ? '#fff' : '#5a5f6b',
-                          border: 'none',
-                        }}
+                        className={`w-full py-2.5 rounded-lg text-[13px] font-semibold border-none ${partsNotes[taskId]?.trim() ? 'cursor-pointer text-white' : 'cursor-not-allowed text-[var(--text-subtle)] bg-[var(--bg-elevated)]'}`}
+                        style={{ background: partsNotes[taskId]?.trim() ? accent : undefined }}
                       >
                         Submit
                       </button>
                     </div>
                   )}
-                </div>
+                </Card>
               </div>
             )}
 
             {/* Done step */}
             {progress === 'done' && (
-              <div style={{ background: 'rgba(29,158,117,0.08)', border: '1px solid rgba(29,158,117,0.22)', borderRadius: 10, padding: '16px 14px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#15d492" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8l4 4 6-7"/></svg>
+              <div className="bg-[var(--status-green-bg)] border border-[var(--status-green-fg)] rounded-xl p-4 mb-4 flex items-center gap-2.5">
+                <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="var(--status-green-fg)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8l4 4 6-7"/></svg>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#15d492' }}>Completed</div>
-                  {resolution && <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>Resolution: {resolution.replace('_', ' ')}</div>}
+                  <div className="text-sm font-semibold text-[var(--status-green-fg)]">Completed</div>
+                  {resolution && <div className="text-xs text-[var(--text-muted)] mt-0.5">Resolution: {resolution.replace('_', ' ')}</div>}
                 </div>
               </div>
             )}
 
             {/* ── D: Comment section ── */}
-            <div style={{ marginTop: 8 }}>
-              <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '0 0 14px' }} />
-              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#5a5f6b', marginBottom: 10 }}>Comments</div>
+            <div className="mt-2">
+              <div className="h-px bg-[var(--border-subtle)] mb-3.5" />
+              <div className="label-upper text-[var(--text-subtle)] mb-2.5">Comments</div>
               {comments.length === 0 ? (
-                <div style={{ fontSize: 12, color: '#5a5f6b', fontStyle: 'italic', marginBottom: 12 }}>No comments yet.</div>
+                <div className="text-xs text-[var(--text-subtle)] italic mb-3">No comments yet.</div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12 }}>
+                <div className="flex flex-col gap-2.5 mb-3">
                   {comments.map((c, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 10 }}>
-                      <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(55,138,221,0.15)', border: '1px solid rgba(55,138,221,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#378ADD', flexShrink: 0 }}>
+                    <div key={i} className="flex gap-2.5">
+                      <div className="w-[30px] h-[30px] rounded-full bg-[var(--accent-bg)] border border-[var(--accent-border)] flex items-center justify-center text-[11px] font-semibold text-[var(--accent)] shrink-0">
                         {c.author.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                       </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                          <span style={{ fontSize: 12, fontWeight: 600, color: '#e8e6e1' }}>{c.author}</span>
-                          <span style={{ fontSize: 11, color: '#5a5f6b' }}>{c.time}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-xs font-semibold text-[var(--text-primary)]">{c.author}</span>
+                          <span className="text-[11px] text-[var(--text-subtle)]">{c.time}</span>
                         </div>
-                        <div style={{ fontSize: 13, color: '#9ca3af', lineHeight: 1.5 }}>{c.text}</div>
+                        <div className="text-[13px] text-[var(--text-muted)] leading-normal">{c.text}</div>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div className="flex gap-2">
                 <input
                   value={commentDraft}
                   onChange={e => setCommentDraft(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); postComment() } }}
                   placeholder="Add a comment..."
-                  style={{ flex: 1, padding: '8px 10px', borderRadius: 8, background: '#0f1219', border: '1px solid rgba(255,255,255,0.10)', color: '#e8e6e1', fontSize: 13, outline: 'none' }}
+                  className="flex-1 px-2.5 py-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-primary)] text-[13px] outline-none"
                 />
                 <button
                   onClick={postComment}
                   disabled={!commentDraft.trim()}
-                  style={{ padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: commentDraft.trim() ? 'pointer' : 'not-allowed', background: commentDraft.trim() ? 'rgba(55,138,221,0.15)' : '#161b26', color: commentDraft.trim() ? '#378ADD' : '#5a5f6b', border: commentDraft.trim() ? '1px solid rgba(55,138,221,0.30)' : '1px solid rgba(255,255,255,0.07)' }}
+                  className={`px-3.5 py-2 rounded-lg text-xs font-semibold ${commentDraft.trim() ? 'cursor-pointer bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent-border)]' : 'cursor-not-allowed bg-[var(--bg-elevated)] text-[var(--text-subtle)] border border-[var(--border-subtle)]'}`}
                 >
                   Post
                 </button>
@@ -2430,32 +2450,32 @@ export default function MyTasksPage() {
       {/* Feature 5: Add Cleaning Task Modal */}
       {showAddCleaning && (
         <div
-          style={{ position: 'fixed', inset: 0, background: '#00000060', zIndex: 200, display: 'flex', alignItems: 'flex-end' }}
+          className="fixed inset-0 bg-black/[0.38] z-[200] flex items-end"
           onClick={() => setShowAddCleaning(false)}
         >
           <div
             onClick={e => e.stopPropagation()}
-            style={{ background: 'var(--bg-card)', borderRadius: '16px 16px 0 0', padding: '20px 20px 32px', width: '100%', maxWidth: 480, margin: '0 auto' }}
+            className="bg-[var(--bg-card)] rounded-t-2xl px-5 pt-5 pb-8 w-full max-w-[480px] mx-auto"
           >
-            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>Add Cleaning Task</div>
-            <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Property</label>
+            <div className="text-[15px] font-semibold mb-4">Add Cleaning Task</div>
+            <label className="text-xs text-[var(--text-muted)] block mb-1">Property</label>
             <select value={addProp} onChange={e => setAddProp(e.target.value)}
-              style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)', marginBottom: 12, background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: 13 }}>
+              className="w-full px-2.5 py-2 rounded-lg border border-[var(--border)] mb-3 bg-[var(--bg-card)] text-[var(--text-primary)] text-[13px]">
               <option value=''>Select property…</option>
               {PROPERTIES.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
             </select>
-            <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Clean Type</label>
+            <label className="text-xs text-[var(--text-muted)] block mb-1">Clean Type</label>
             <select value={addType} onChange={e => setAddType(e.target.value as CleaningJob['type'])}
-              style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)', marginBottom: 12, background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: 13 }}>
+              className="w-full px-2.5 py-2 rounded-lg border border-[var(--border)] mb-3 bg-[var(--bg-card)] text-[var(--text-primary)] text-[13px]">
               {(['Turnover', 'Deep Clean', 'Same-day', 'Inspection'] as const).map(t => <option key={t} value={t}>{t}</option>)}
             </select>
-            <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Time Window</label>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <label className="text-xs text-[var(--text-muted)] block mb-1">Time Window</label>
+            <div className="flex gap-2 mb-4">
               <input type='time' value={addTimeStart} onChange={e => setAddTimeStart(e.target.value)}
-                style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: 13 }} />
-              <span style={{ alignSelf: 'center', color: 'var(--text-subtle)' }}>–</span>
+                className="flex-1 px-2.5 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-primary)] text-[13px]" />
+              <span className="self-center text-[var(--text-subtle)]">–</span>
               <input type='time' value={addTimeEnd} onChange={e => setAddTimeEnd(e.target.value)}
-                style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: 13 }} />
+                className="flex-1 px-2.5 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-primary)] text-[13px]" />
             </div>
             <button
               disabled={!addProp || !addTimeStart || !addTimeEnd}
@@ -2470,7 +2490,8 @@ export default function MyTasksPage() {
                 setAddProp(''); setAddTimeStart(''); setAddTimeEnd(''); setAddType('Turnover')
                 showToast('Cleaning task added')
               }}
-              style={{ width: '100%', padding: '11px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: (!addProp || !addTimeStart || !addTimeEnd) ? 0.4 : 1 }}
+              className="w-full py-[11px] rounded-lg border-none text-white text-sm font-semibold cursor-pointer"
+              style={{ background: accent, opacity: (!addProp || !addTimeStart || !addTimeEnd) ? 0.4 : 1 }}
             >
               Add Task
             </button>
@@ -2479,7 +2500,7 @@ export default function MyTasksPage() {
       )}
 
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#10b981', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+        <div className="fixed bottom-6 right-6 bg-[var(--status-green-fg)] text-white px-[18px] py-2.5 rounded-xl text-sm font-medium z-[999] shadow-[0_4px_16px_rgba(0,0,0,0.2)]">
           {toast}
         </div>
       )}

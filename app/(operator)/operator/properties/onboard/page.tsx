@@ -471,7 +471,7 @@ export default function OnboardPage() {
             {[
               { label: 'Property Type', value: PROPERTY_TYPES.find(p => p.id === form.propertyType)?.label ?? '—' },
               { label: 'Name', value: form.name || '—' },
-              { label: 'Size', value: `${form.bedrooms} bed · ${form.bathrooms} bath · ${form.capacity} guests` },
+              { label: 'Size', value: `${form.bedrooms} ${form.bedrooms === 1 ? 'bed' : 'beds'} · ${form.bathrooms} ${form.bathrooms === 1 ? 'bath' : 'baths'} · ${form.capacity} ${form.capacity === 1 ? 'guest' : 'guests'}` },
               { label: 'Location', value: form.city ? `${form.address || '—'}, ${form.city}` : '—' },
               { label: 'Owner', value: form.ownerMode === 'existing' ? (OWNERS.find(o => o.id === form.selectedOwner)?.name ?? '—') : (form.newOwnerName || '—') },
               { label: 'Access', value: ACCESS_TYPES.find(a => a.id === form.accessType)?.label ?? '—' },
@@ -523,7 +523,7 @@ export default function OnboardPage() {
                   🗂 Auto-Generated Task Template
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  {form.bedrooms} bed · {form.bathrooms} bath · {form.amenities.length} amenities → {templateItems.length} checklist items
+                  {form.bedrooms} {form.bedrooms === 1 ? 'bed' : 'beds'} · {form.bathrooms} {form.bathrooms === 1 ? 'bath' : 'baths'} · {form.amenities.length} {form.amenities.length === 1 ? 'amenity' : 'amenities'} → {templateItems.length} checklist items
                 </div>
               </div>
               <ChevronDown size={16} style={{ color: accent, transform: showTemplate ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }} />

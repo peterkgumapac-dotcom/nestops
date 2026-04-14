@@ -3,6 +3,9 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FileText, Calendar } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
+import StatusBadge from '@/components/shared/StatusBadge'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { useRole } from '@/context/RoleContext'
 import type { UserProfile } from '@/context/RoleContext'
 import {
@@ -84,17 +87,18 @@ export default function StaffSopsPage() {
       <PageHeader title="My SOPs" subtitle="Standard operating procedures assigned to you" />
 
       {/* Tab bar */}
-      <div style={{ display: 'flex', gap: 0, marginBottom: 20, borderBottom: '1px solid var(--border)' }}>
+      <div className="flex border-b border-[var(--border)] mb-5">
         {tabs.map(t => (
           <button
             key={t.key}
             onClick={() => setActiveTab(t.key)}
+            className={`px-4 py-2.5 text-sm transition-colors border-b-2 -mb-px cursor-pointer ${
+              activeTab === t.key
+                ? 'font-semibold text-[var(--text-primary)]'
+                : 'font-normal text-[var(--text-muted)] border-transparent'
+            }`}
             style={{
-              padding: '8px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14,
-              fontWeight: activeTab === t.key ? 600 : 400,
-              color: activeTab === t.key ? 'var(--text-primary)' : 'var(--text-muted)',
-              borderBottom: activeTab === t.key ? `2px solid ${accent}` : '2px solid transparent',
-              marginBottom: -1,
+              borderBottomColor: activeTab === t.key ? accent : 'transparent',
             }}
           >
             {t.label}
@@ -103,46 +107,38 @@ export default function StaffSopsPage() {
       </div>
 
       {/* SOP Cards */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div className="flex flex-col gap-3">
         {visible.length === 0 && (
-          <p style={{ fontSize: 13, color: 'var(--text-subtle)', textAlign: 'center', padding: '40px 0' }}>
+          <p className="text-xs text-[var(--text-subtle)] text-center py-10">
             No SOPs in this category.
           </p>
         )}
         {visible.map(sop => (
-          <div
-            key={sop.id}
-            style={{
-              background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10,
-              padding: 16, display: 'flex', alignItems: 'center', gap: 16,
-            }}
-          >
-            <div style={{ width: 40, height: 40, borderRadius: 8, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <FileText size={18} style={{ color: accent }} />
+          <Card key={sop.id} className="card p-4 flex items-center gap-4">
+            <div
+              className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+              style={{ background: `${accent}18` }}
+            >
+              <FileText size={18} className="text-[var(--accent)]" />
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)', marginBottom: 4 }}>{sop.title}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 20, background: `${accent}18`, color: accent }}>
-                  {sop.category}
-                </span>
-                <span style={{ fontSize: 12, color: 'var(--text-subtle)', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-[var(--text-primary)] mb-1">{sop.title}</div>
+              <div className="flex items-center gap-2.5">
+                <StatusBadge status={sop.category === 'Operations' ? 'in_progress' : sop.category === 'Housekeeping' ? 'active' : 'scheduled'} />
+                <span className="text-xs text-[var(--text-subtle)] flex items-center gap-1">
                   <Calendar size={11} /> {sop.date}
                 </span>
               </div>
             </div>
-            <button
+            <Button
               onClick={() => setSelectedSop(sop)}
-              style={{
-                padding: '8px 14px', borderRadius: 8, border: 'none',
-                background: sop.acknowledged ? 'var(--bg-elevated)' : accent,
-                color: sop.acknowledged ? 'var(--text-muted)' : '#fff',
-                fontSize: 13, fontWeight: 500, cursor: 'pointer', flexShrink: 0,
-              }}
+              className={sop.acknowledged ? 'rounded-full px-4' : 'rounded-full px-5'}
+              variant={sop.acknowledged ? 'outline' : 'default'}
+              size="sm"
             >
               {sop.acknowledged ? 'View' : 'View & Acknowledge'}
-            </button>
-          </div>
+            </Button>
+          </Card>
         ))}
       </div>
 
@@ -152,20 +148,19 @@ export default function StaffSopsPage() {
           <DialogHeader>
             <DialogTitle>{selectedSop?.title}</DialogTitle>
           </DialogHeader>
-          <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.7 }}>
+          <p className="text-sm text-[var(--text-muted)] leading-relaxed">
             {selectedSop?.body}
           </p>
           <DialogFooter>
-            <DialogClose render={<button style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer' }} />}>
-              Close
-            </DialogClose>
+            <DialogClose render={<Button variant="outline" size="sm">Close</Button>} />
             {selectedSop && !selectedSop.acknowledged && (
-              <button
+              <Button
                 onClick={() => setSelectedSop(null)}
-                style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+                className="rounded-full px-5"
+                size="sm"
               >
                 Mark as Acknowledged
-              </button>
+              </Button>
             )}
           </DialogFooter>
         </DialogContent>

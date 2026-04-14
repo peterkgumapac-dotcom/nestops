@@ -4,6 +4,11 @@ import { useRole } from '@/context/RoleContext'
 import { LEAVE_BALANCES, LEAVE_REQUESTS, type LeaveType, type LeaveRequest } from '@/lib/data/leave'
 import { STAFF_CONTRACTS } from '@/lib/data/contracts'
 import { getStaffWeeklyHours } from '@/lib/data/staffScheduling'
+import { Card } from '@/components/ui/card'
+import StatusBadge from '@/components/shared/StatusBadge'
+import PageHeader from '@/components/shared/PageHeader'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 // Map user IDs → staff IDs (same as dashboard)
 const USER_TO_STAFF: Record<string, string> = {
@@ -13,46 +18,10 @@ const USER_TO_STAFF: Record<string, string> = {
   'u7': 's2', // Anna → Anna Kowalski (inspector)
 }
 
-const C = {
-  bg:     '#0a0f1a',
-  card:   '#111827',
-  border: '#1f2937',
-  text:   '#f9fafb',
-  muted:  '#6b7280',
-  green:  '#16a34a',
-  amber:  '#d97706',
-  red:    '#dc2626',
-  blue:   '#3b82f6',
-}
-
-function SectionLabel({ label }: { label: string }) {
-  return (
-    <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
-      {label}
-    </div>
-  )
-}
-
-function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '14px 16px', marginBottom: 12, ...style }}>
-      {children}
-    </div>
-  )
-}
-
-function StatusBadge({ status }: { status: 'pending' | 'approved' | 'denied' }) {
-  const map = {
-    pending:  { bg: `${C.amber}20`, color: C.amber,  label: 'Pending' },
-    approved: { bg: `${C.green}20`, color: C.green,  label: 'Approved' },
-    denied:   { bg: `${C.red}20`,   color: C.red,    label: 'Denied' },
-  }
-  const s = map[status]
-  return (
-    <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: s.bg, color: s.color }}>
-      {s.label}
-    </span>
-  )
+const LEAVE_STATUS_MAP: Record<string, 'pending' | 'active' | 'cancelled'> = {
+  pending: 'pending',
+  approved: 'active',
+  denied: 'cancelled',
 }
 
 const LEAVE_TYPE_LABEL: Record<LeaveType, string> = {
@@ -70,7 +39,7 @@ const EMPLOYMENT_TYPE_LABEL: Record<string, string> = {
 }
 
 export default function MyAccountPage() {
-  const { user, accent } = useRole()
+  const { user } = useRole()
   const [staffId, setStaffId] = useState<string | null>(null)
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'denied'>('all')
   const [showLeaveForm, setShowLeaveForm] = useState(false)
@@ -96,7 +65,7 @@ export default function MyAccountPage() {
 
   if (!staffId) {
     return (
-      <div style={{ color: C.muted, padding: 32, textAlign: 'center', fontSize: 14 }}>
+      <div className="text-[var(--text-muted)] p-8 text-center text-sm">
         No staff profile found for this account.
       </div>
     )
@@ -135,62 +104,55 @@ export default function MyAccountPage() {
     showToast('Leave request submitted successfully')
   }
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '8px 10px', borderRadius: 7,
-    border: `1px solid ${C.border}`, background: '#0d1420',
-    color: C.text, fontSize: 13, boxSizing: 'border-box',
-  }
-
   return (
-    <div style={{ maxWidth: 700, margin: '0 auto', paddingBottom: 40 }}>
+    <div className="max-w-[700px] mx-auto pb-10">
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: C.green, color: '#fff', padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 600, zIndex: 999, boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[var(--status-green-fg)] text-white px-5 py-2.5 rounded-xl text-[13px] font-semibold z-[999] shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
           ✓ {toast}
         </div>
       )}
 
       {/* ── A. Header ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-        <div style={{ width: 56, height: 56, borderRadius: '50%', background: `${accent}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700, color: accent, flexShrink: 0 }}>
-          {contract?.staffName?.split(' ').map(p => p[0]).join('') ?? '?'}
-        </div>
-        <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: C.text }}>{contract?.staffName ?? user?.name}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-            <span style={{ fontSize: 12, color: C.muted }}>{user?.subRole ?? 'Staff'}</span>
+      <PageHeader
+        title={contract?.staffName ?? user?.name ?? 'My Account'}
+        subtitle={
+          <span className="flex items-center gap-2">
+            <span>{user?.subRole ?? 'Staff'}</span>
             {contract && (
-              <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 8px', borderRadius: 20, background: `${accent}20`, color: accent }}>
+              <span
+                className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]"
+              >
                 {EMPLOYMENT_TYPE_LABEL[contract.employmentType]}
               </span>
             )}
-          </div>
-        </div>
-      </div>
+          </span>
+        }
+      />
 
       {/* ── B. Pay Summary ── */}
-      <SectionLabel label="Pay Summary" />
-      <Card>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+      <div className="label-upper mb-2.5">Pay Summary</div>
+      <Card className="p-4 mb-3">
+        <div className="grid grid-cols-3 gap-3">
           {[
             { label: 'Hourly Rate',        value: contract ? `NOK ${contract.hourlyRate}` : '—' },
             { label: 'Hours This Week',    value: `${weeklyHours}h` },
             { label: 'Est. Pay This Week', value: `NOK ${estPay.toLocaleString('no-NO')}` },
           ].map(({ label, value }) => (
-            <div key={label} style={{ padding: '12px 14px', background: '#0d1420', borderRadius: 8, border: `1px solid ${C.border}` }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.07em', color: C.muted, textTransform: 'uppercase', marginBottom: 6 }}>{label}</div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: C.text }}>{value}</div>
+            <div key={label} className="p-3 bg-[var(--bg-elevated)] rounded-lg border border-[var(--border)]">
+              <div className="label-upper mb-1.5">{label}</div>
+              <div className="text-lg font-semibold text-[var(--text-primary)]">{value}</div>
             </div>
           ))}
         </div>
-        <div style={{ fontSize: 11, color: C.muted, marginTop: 10 }}>Estimated pay based on scheduled hours. Final payroll may differ.</div>
+        <div className="text-[11px] text-[var(--text-muted)] mt-2.5">Estimated pay based on scheduled hours. Final payroll may differ.</div>
       </Card>
 
       {/* ── C. Leave Balances ── */}
       {balance && (
         <>
-          <SectionLabel label="Leave Balances" />
-          <Card>
+          <div className="label-upper mb-2.5">Leave Balances</div>
+          <Card className="p-4 mb-3">
             {[
               { label: 'Vacation', used: balance.vacationDaysUsed, total: balance.vacationDaysTotal },
               { label: 'Sick Days', used: balance.sickDaysUsed, total: balance.sickDaysTotal },
@@ -198,13 +160,18 @@ export default function MyAccountPage() {
               const pct = Math.round((used / total) * 100)
               const remaining = total - used
               return (
-                <div key={label} style={{ marginBottom: 16 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{label}</span>
-                    <span style={{ fontSize: 12, color: C.muted }}>{used} used · <span style={{ color: C.green, fontWeight: 600 }}>{remaining} remaining</span> / {total}</span>
+                <div key={label} className="mb-4 last:mb-0">
+                  <div className="flex justify-between mb-1.5">
+                    <span className="text-[13px] font-semibold text-[var(--text-primary)]">{label}</span>
+                    <span className="text-xs text-[var(--text-muted)]">
+                      {used} used · <span className="text-[var(--status-green-fg)] font-semibold">{remaining} remaining</span> / {total}
+                    </span>
                   </div>
-                  <div style={{ height: 8, borderRadius: 4, background: `${C.border}`, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${pct}%`, borderRadius: 4, background: pct > 80 ? C.amber : accent, transition: 'width 0.3s' }} />
+                  <div className="h-2 rounded-full bg-[var(--bg-elevated)] overflow-hidden">
+                    <div
+                      className={cn("h-full rounded-full transition-[width] duration-300", pct > 80 ? 'bg-[var(--status-amber-fg)]' : 'bg-[var(--accent)]')}
+                      style={{ width: `${pct}%` }}
+                    />
                   </div>
                 </div>
               )
@@ -214,77 +181,117 @@ export default function MyAccountPage() {
       )}
 
       {/* ── D. My Leave Requests ── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <SectionLabel label="My Leave Requests" />
-        <div style={{ display: 'flex', gap: 4, marginBottom: 10 }}>
+      <div className="flex items-center justify-between mb-2.5">
+        <div className="label-upper">My Leave Requests</div>
+        <div className="flex gap-1">
           {(['all', 'pending', 'approved', 'denied'] as const).map(s => (
             <button
               key={s}
               onClick={() => setFilterStatus(s)}
-              style={{ padding: '4px 10px', borderRadius: 6, border: `1px solid ${filterStatus === s ? accent : C.border}`, background: filterStatus === s ? `${accent}20` : 'transparent', color: filterStatus === s ? accent : C.muted, fontSize: 11, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' }}
+              className={cn(
+                'px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize transition-colors',
+                filterStatus === s
+                  ? 'bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent-border)]'
+                  : 'bg-transparent text-[var(--text-muted)] border border-[var(--border)] hover:border-[var(--accent-border)]'
+              )}
             >
               {s}
             </button>
           ))}
         </div>
       </div>
-      <Card style={{ padding: 0, overflow: 'hidden' }}>
+      <Card className="p-0 overflow-hidden mb-3">
         {filtered.length === 0 ? (
-          <div style={{ padding: '20px 16px', textAlign: 'center', color: C.muted, fontSize: 13 }}>No leave requests</div>
+          <div className="py-5 px-4 text-center text-[var(--text-muted)] text-[13px]">No leave requests</div>
         ) : (
           filtered.map((req, i) => (
-            <div key={req.id} style={{ display: 'grid', gridTemplateColumns: '90px 1fr 50px 80px', gap: 12, padding: '12px 16px', borderBottom: i < filtered.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center' }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: C.muted, textTransform: 'capitalize' }}>{LEAVE_TYPE_LABEL[req.type]}</span>
+            <div
+              key={req.id}
+              className={cn(
+                'grid grid-cols-[90px_1fr_50px_80px] gap-3 py-3 px-4 items-center',
+                i < filtered.length - 1 && 'border-b border-[var(--border)]'
+              )}
+            >
+              <span className="text-xs font-semibold text-[var(--text-muted)] capitalize">{LEAVE_TYPE_LABEL[req.type]}</span>
               <div>
-                <div style={{ fontSize: 12, color: C.text }}>{req.from} → {req.to}</div>
-                {req.reason && <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>{req.reason}</div>}
-                {req.reviewNote && <div style={{ fontSize: 11, color: C.red, marginTop: 1 }}>{req.reviewNote}</div>}
+                <div className="text-xs text-[var(--text-primary)]">{req.from} → {req.to}</div>
+                {req.reason && <div className="text-[11px] text-[var(--text-muted)] mt-px">{req.reason}</div>}
+                {req.reviewNote && <div className="text-[11px] text-[var(--status-red-fg)] mt-px">{req.reviewNote}</div>}
               </div>
-              <span style={{ fontSize: 12, color: C.muted, textAlign: 'center' }}>{req.days}d</span>
-              <StatusBadge status={req.status} />
+              <span className="text-xs text-[var(--text-muted)] text-center">{req.days}d</span>
+              <StatusBadge status={LEAVE_STATUS_MAP[req.status] ?? 'pending'} />
             </div>
           ))
         )}
       </Card>
 
       {/* ── E. Apply for Leave ── */}
-      <button
+      <Button
+        variant="outline"
         onClick={() => setShowLeaveForm(v => !v)}
-        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 8, border: `1px solid ${accent}`, background: showLeaveForm ? `${accent}20` : 'transparent', color: accent, fontSize: 13, fontWeight: 600, cursor: 'pointer', marginBottom: 12, width: '100%', justifyContent: 'center' }}
+        className={cn(
+          'w-full rounded-full mb-3 text-[13px] font-semibold text-[var(--accent)] border-[var(--accent)]',
+          showLeaveForm && 'bg-[var(--accent-bg)]'
+        )}
       >
         {showLeaveForm ? '✕ Cancel' : '+ Apply for Leave'}
-      </button>
+      </Button>
 
       {showLeaveForm && (
-        <Card>
-          <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 14 }}>New Leave Request</div>
-          <form onSubmit={handleSubmitLeave} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <Card className="p-4 mb-3">
+          <div className="text-[13px] font-semibold text-[var(--text-primary)] mb-3.5">New Leave Request</div>
+          <form onSubmit={handleSubmitLeave} className="flex flex-col gap-3">
             <div>
-              <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: 5 }}>Type</label>
-              <select value={leaveType} onChange={e => setLeaveType(e.target.value as LeaveType)} style={inputStyle}>
+              <label className="label-upper block mb-1.5">Type</label>
+              <select
+                value={leaveType}
+                onChange={e => setLeaveType(e.target.value as LeaveType)}
+                className="w-full px-2.5 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-[13px]"
+              >
                 <option value="vacation">Vacation</option>
                 <option value="sick">Sick</option>
                 <option value="personal">Personal</option>
                 <option value="unpaid">Unpaid</option>
               </select>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div className="grid grid-cols-2 gap-2.5">
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: 5 }}>From</label>
-                <input type="date" value={leaveFrom} onChange={e => setLeaveFrom(e.target.value)} required style={inputStyle} />
+                <label className="label-upper block mb-1.5">From</label>
+                <input
+                  type="date"
+                  value={leaveFrom}
+                  onChange={e => setLeaveFrom(e.target.value)}
+                  required
+                  className="w-full px-2.5 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-[13px]"
+                />
               </div>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: 5 }}>To</label>
-                <input type="date" value={leaveTo} onChange={e => setLeaveTo(e.target.value)} required style={inputStyle} />
+                <label className="label-upper block mb-1.5">To</label>
+                <input
+                  type="date"
+                  value={leaveTo}
+                  onChange={e => setLeaveTo(e.target.value)}
+                  required
+                  className="w-full px-2.5 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-[13px]"
+                />
               </div>
             </div>
             <div>
-              <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: 5 }}>Reason (optional)</label>
-              <textarea value={leaveReason} onChange={e => setLeaveReason(e.target.value)} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Brief reason..." />
+              <label className="label-upper block mb-1.5">Reason (optional)</label>
+              <textarea
+                value={leaveReason}
+                onChange={e => setLeaveReason(e.target.value)}
+                rows={2}
+                placeholder="Brief reason..."
+                className="w-full px-2.5 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-[13px] resize-y"
+              />
             </div>
-            <button type="submit" style={{ padding: '10px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            <Button
+              type="submit"
+              className="rounded-full w-full text-[13px] font-semibold bg-[var(--accent)]"
+            >
               Submit Request
-            </button>
+            </Button>
           </form>
         </Card>
       )}
@@ -292,25 +299,30 @@ export default function MyAccountPage() {
       {/* ── F. My Contract ── */}
       {contract && (
         <>
-          <SectionLabel label="My Contract" />
-          <Card>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 14 }}>
+          <div className="label-upper mb-2.5">My Contract</div>
+          <Card className="p-4">
+            <div className="grid grid-cols-2 gap-2.5 mb-3.5">
               {[
                 { label: 'Employment Type',  value: EMPLOYMENT_TYPE_LABEL[contract.employmentType] },
                 { label: 'Start Date',       value: contract.startDate },
                 { label: 'Weekly Hours',     value: `${contract.weeklyHours}h / week` },
                 { label: 'Notice Period',    value: `${contract.noticePeriodDays} days` },
               ].map(({ label, value }) => (
-                <div key={label} style={{ padding: '10px 12px', background: '#0d1420', borderRadius: 7, border: `1px solid ${C.border}` }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>{label}</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{value}</div>
+                <div key={label} className="p-2.5 bg-[var(--bg-elevated)] rounded-lg border border-[var(--border)]">
+                  <div className="label-upper mb-1">{label}</div>
+                  <div className="text-[13px] font-semibold text-[var(--text-primary)]">{value}</div>
                 </div>
               ))}
             </div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>Benefits</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            <div className="label-upper mb-2">Benefits</div>
+            <div className="flex flex-wrap gap-1.5">
               {contract.benefits.map(b => (
-                <span key={b} style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20, background: `${accent}18`, color: accent, fontWeight: 500 }}>{b}</span>
+                <span
+                  key={b}
+                  className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-[var(--accent-bg)] text-[var(--accent)]"
+                >
+                  {b}
+                </span>
               ))}
             </div>
           </Card>

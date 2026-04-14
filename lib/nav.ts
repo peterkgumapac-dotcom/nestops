@@ -39,7 +39,7 @@ export const OPERATOR_NAV: NavSection[] = [
     label: 'Platform',
     collapsible: true,
     items: [
-      { label: 'Guest Portal',     href: '/operator/guest-experience', icon: Smartphone },
+      { label: 'Guest Portal',     href: '/operator/guest-portal', icon: Smartphone },
       { label: 'Upsells',          href: '/operator/upsells',          icon: ShoppingBag },
       { label: 'Compliance',       href: '/operator/compliance',       icon: ShieldCheck },
       { label: 'Automations',      href: '/operator/automations',      icon: Zap },

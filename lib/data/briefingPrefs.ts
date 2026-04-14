@@ -39,7 +39,7 @@ export const DEFAULT_PREFS: Record<string, Partial<BriefingToggles>> = {
     propertiestoday: true,
     taskcount: true,
     taskpreview: true,
-    thisweek: false,
+    thisweek: true,
     accesstype: true,
     turnaroundwarning: true,
     othertasks: true,

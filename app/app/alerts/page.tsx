@@ -5,21 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Bell } from 'lucide-react'
 import PageHeader from '@/components/shared/PageHeader'
 import AppDrawer from '@/components/shared/AppDrawer'
+import StatusBadge from '@/components/shared/StatusBadge'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { FIELD_ALERTS, type FieldAlert, type FieldAlertType } from '@/lib/data/fieldAlerts'
 import { STAFF_MEMBERS } from '@/lib/data/staff'
 import type { UserProfile } from '@/context/RoleContext'
-
-const SEVERITY_COLORS: Record<string, string> = {
-  urgent: '#ef4444',
-  warning: '#d97706',
-  info: '#3b82f6',
-}
-
-const SEVERITY_BG: Record<string, string> = {
-  urgent: '#ef444410',
-  warning: '#d9770610',
-  info: '#3b82f610',
-}
 
 const TYPE_LABELS: Record<FieldAlertType, string> = {
   new_task: 'New Task',
@@ -149,61 +141,79 @@ export default function AlertsPage() {
   const today = filtered.filter(a => a.severity !== 'urgent' && !a.read)
   const earlier = filtered.filter(a => a.read)
 
-  const accent = '#7c3aed'
+  const isSupervisor = currentUser?.subRole?.includes('Supervisor')
 
-  const pillStyle = (active: boolean): React.CSSProperties => ({
-    padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: active ? 600 : 500, cursor: 'pointer',
-    border: '1px solid var(--border)',
-    background: active ? '#ffffff' : 'transparent',
-    color: active ? 'var(--text-primary)' : 'var(--text-muted)',
-  })
+  const maintenanceStaff = STAFF_MEMBERS.filter(
+    s => s.role.toLowerCase().includes('maintenance') || s.role.toLowerCase().includes('tech')
+  )
+
+  const SEVERITY_CARD_CLASSES: Record<string, { bg: string; border: string; badge: string; dot: string; link: string }> = {
+    urgent: {
+      bg: 'bg-[var(--status-red-bg)]',
+      border: 'border-l-[var(--status-red-fg)]',
+      badge: 'bg-[var(--status-red-bg)] text-[var(--status-red-fg)]',
+      dot: 'bg-[var(--status-red-fg)]',
+      link: 'text-[var(--status-red-fg)]',
+    },
+    warning: {
+      bg: 'bg-[var(--status-amber-bg)]',
+      border: 'border-l-[var(--status-amber-fg)]',
+      badge: 'bg-[var(--status-amber-bg)] text-[var(--status-amber-fg)]',
+      dot: 'bg-[var(--status-amber-fg)]',
+      link: 'text-[var(--status-amber-fg)]',
+    },
+    info: {
+      bg: 'bg-[var(--status-blue-bg)]',
+      border: 'border-l-[var(--status-blue-fg)]',
+      badge: 'bg-[var(--status-blue-bg)] text-[var(--status-blue-fg)]',
+      dot: 'bg-[var(--status-blue-fg)]',
+      link: 'text-[var(--status-blue-fg)]',
+    },
+  }
 
   const renderAlertCard = (alert: FieldAlert) => {
-    const borderColor = SEVERITY_COLORS[alert.severity]
+    const sc = SEVERITY_CARD_CLASSES[alert.severity] ?? SEVERITY_CARD_CLASSES.info
     return (
       <motion.div
         key={alert.id}
         layout
         onClick={() => markRead(alert.id, alert.actionRoute)}
-        style={{
-          background: alert.read ? 'var(--bg-card)' : SEVERITY_BG[alert.severity],
-          border: `1px solid ${alert.read ? 'var(--border)' : borderColor + '40'}`,
-          borderLeft: `4px solid ${borderColor}`,
-          borderRadius: 10,
-          padding: '12px 14px',
-          marginBottom: 8,
-          cursor: 'pointer',
-          opacity: alert.read ? 0.65 : 1,
-          transition: 'opacity 0.2s',
-        }}
+        className={cn(
+          'rounded-xl p-4 mb-2 cursor-pointer transition-opacity duration-200 border border-l-4',
+          alert.read ? 'opacity-65 bg-[var(--bg-card)] border-[var(--border)]' : cn(sc.bg, 'border-[var(--border-subtle)]'),
+          sc.border
+        )}
       >
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-          <span style={{ fontSize: 18, lineHeight: 1, marginTop: 1 }}>{TYPE_ICONS[alert.type]}</span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-              <span style={{
-                fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4,
-                background: borderColor + '18', color: borderColor, textTransform: 'uppercase', letterSpacing: '0.04em',
-              }}>
+        <div className="flex items-start gap-2.5">
+          <span className="text-lg leading-none mt-px">{TYPE_ICONS[alert.type]}</span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <span
+                className={cn("text-[10px] font-semibold px-1.5 py-px rounded-[var(--radius-sm)] uppercase tracking-wide", sc.badge)}
+              >
                 {TYPE_LABELS[alert.type]}
               </span>
               {!alert.read && (
-                <span style={{ width: 7, height: 7, borderRadius: '50%', background: borderColor, display: 'inline-block' }} />
+                <span
+                  className={cn("w-[7px] h-[7px] rounded-full inline-block", sc.dot)}
+                />
               )}
             </div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 3 }}>
+            <div className="text-[13px] font-semibold text-[var(--text-primary)] mb-0.5">
               {alert.title}
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 6 }}>
+            <div className="text-xs text-[var(--text-muted)] leading-relaxed mb-1.5">
               {alert.body}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{alert.propertyName}</span>
-              <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>·</span>
-              <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{timeAgo(alert.createdAt)}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-[var(--text-subtle)]">{alert.propertyName}</span>
+              <span className="text-[11px] text-[var(--text-subtle)]">&middot;</span>
+              <span className="text-[11px] text-[var(--text-subtle)]">{timeAgo(alert.createdAt)}</span>
               {alert.actionRoute && (
-                <span style={{ fontSize: 11, fontWeight: 600, color: SEVERITY_COLORS[alert.severity], marginLeft: 4 }}>
-                  → Review request
+                <span
+                  className={cn("text-[11px] font-semibold ml-1", sc.link)}
+                >
+                  &rarr; Review request
                 </span>
               )}
             </div>
@@ -211,18 +221,17 @@ export default function AlertsPage() {
             {/* Work order CTA — supervisors only */}
             {isSupervisor && (alert.type === 'maintenance_issue' || alert.type === 'apartment_dirty') && (
               convertedAlerts[alert.id]
-                ? <div style={{ marginTop: 8, fontSize: 11, fontWeight: 600, color: '#16a34a',
-                                display: 'flex', alignItems: 'center', gap: 4 }}>
-                    ✓ Work Order Created · {convertedAlerts[alert.id]}
+                ? <div className="mt-2 text-[11px] font-semibold text-[var(--status-green-fg)] flex items-center gap-1">
+                    ✓ Work Order Created &middot; {convertedAlerts[alert.id]}
                   </div>
-                : <button
+                : <Button
+                    variant="outline"
+                    size="sm"
                     onClick={e => { e.stopPropagation(); handleOpenConvert(alert) }}
-                    style={{ marginTop: 10, padding: '6px 14px', borderRadius: 7, border: '1px solid #3b82f6',
-                             background: 'rgba(59,130,246,0.1)', color: '#3b82f6', fontSize: 12,
-                             fontWeight: 600, cursor: 'pointer' }}
+                    className="mt-2.5 rounded-lg border-[var(--status-blue-fg)] bg-[var(--status-blue-bg)] text-[var(--status-blue-fg)] text-xs font-semibold"
                   >
-                    Create Work Order →
-                  </button>
+                    Create Work Order &rarr;
+                  </Button>
             )}
           </div>
         </div>
@@ -230,46 +239,44 @@ export default function AlertsPage() {
     )
   }
 
-  const isSupervisor = currentUser?.subRole?.includes('Supervisor')
-
-  const maintenanceStaff = STAFF_MEMBERS.filter(
-    s => s.role.toLowerCase().includes('maintenance') || s.role.toLowerCase().includes('tech')
-  )
-
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <PageHeader
         title={isSupervisor ? 'Team Alerts' : 'My Alerts'}
         subtitle={isSupervisor ? 'All field team alerts — tap to mark as read' : 'Your field alerts — tap to mark as read'}
         action={unreadCount > 0 ? (
-          <span style={{
-            fontSize: 12, fontWeight: 700, padding: '2px 10px', borderRadius: 12,
-            background: '#ef4444', color: '#fff',
-          }}>
-            {unreadCount} unread
-          </span>
+          <StatusBadge status="urgent" className="text-xs" />
         ) : undefined}
       />
 
       {/* Filter pills */}
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 20 }}>
+      <div className="flex gap-1.5 flex-wrap mb-5">
         {FILTER_PILLS.map(p => (
-          <button key={p.key} onClick={() => setFilter(p.key)} style={pillStyle(filter === p.key)}>
+          <button
+            key={p.key}
+            onClick={() => setFilter(p.key)}
+            className={cn(
+              'rounded-full px-3 py-1 text-xs font-medium cursor-pointer border border-[var(--border)] transition-colors',
+              filter === p.key
+                ? 'bg-white text-[var(--text-primary)]'
+                : 'bg-transparent text-[var(--text-muted)]'
+            )}
+          >
             {p.label}
           </button>
         ))}
       </div>
 
       {filtered.length === 0 ? (
-        <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-subtle)', fontSize: 13 }}>
-          <Bell size={28} style={{ marginBottom: 12, opacity: 0.3, display: 'block', margin: '0 auto 12px' }} />
+        <div className="py-12 text-center text-[var(--text-subtle)] text-[13px]">
+          <Bell size={28} className="mb-3 opacity-30 mx-auto block" />
           No alerts to show.
         </div>
       ) : (
         <>
           {urgent.length > 0 && (
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#ef4444', marginBottom: 10 }}>
+            <div className="mb-6">
+              <div className="label-upper text-[var(--status-red-fg)] mb-2.5">
                 Urgent
               </div>
               {urgent.map(renderAlertCard)}
@@ -277,8 +284,8 @@ export default function AlertsPage() {
           )}
 
           {today.length > 0 && (
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: 10 }}>
+            <div className="mb-6">
+              <div className="label-upper text-[var(--text-muted)] mb-2.5">
                 Today
               </div>
               {today.map(renderAlertCard)}
@@ -286,8 +293,8 @@ export default function AlertsPage() {
           )}
 
           {earlier.length > 0 && (
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-subtle)', marginBottom: 10 }}>
+            <div className="mb-6">
+              <div className="label-upper text-[var(--text-subtle)] mb-2.5">
                 Earlier
               </div>
               {earlier.map(renderAlertCard)}
@@ -305,132 +312,156 @@ export default function AlertsPage() {
           ? (convertAlert?.propertyName ?? '') + ' · ' + (convertAlert?.title ?? '')
           : undefined}
         footer={convertStep === 'form'
-          ? <div style={{ display: 'flex', gap: 8, width: '100%' }}>
-              <button onClick={() => setConvertAlert(null)}
-                style={{ flex: 1, padding: 9, borderRadius: 8, border: '1px solid var(--border)',
-                         background: 'transparent', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>
+          ? <div className="flex gap-2 w-full">
+              <Button
+                variant="outline"
+                onClick={() => setConvertAlert(null)}
+                className="flex-1"
+              >
                 Cancel
-              </button>
-              <button onClick={handleCreateWorkOrder}
-                style={{ flex: 2, padding: 9, borderRadius: 8, border: 'none', background: '#3b82f6',
-                         color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+              </Button>
+              <Button
+                onClick={handleCreateWorkOrder}
+                className="flex-[2] rounded-lg bg-[var(--status-blue-fg)] text-white font-semibold hover:opacity-90"
+              >
                 Create Work Order
-              </button>
+              </Button>
             </div>
-          : <div style={{ display: 'flex', gap: 8, width: '100%' }}>
-              <button onClick={() => { setConvertAlert(null); setConvertStep('form') }}
-                style={{ flex: 1, padding: 9, borderRadius: 8, border: '1px solid var(--border)',
-                         background: 'transparent', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>
+          : <div className="flex gap-2 w-full">
+              <Button
+                variant="outline"
+                onClick={() => { setConvertAlert(null); setConvertStep('form') }}
+                className="flex-1"
+              >
                 Done
-              </button>
-              <button onClick={() => { setConvertAlert(null); setConvertStep('form'); router.push('/app/my-tasks') }}
-                style={{ flex: 2, padding: 9, borderRadius: 8, border: 'none', background: '#16a34a',
-                         color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-                View in Tasks →
-              </button>
+              </Button>
+              <Button
+                onClick={() => { setConvertAlert(null); setConvertStep('form'); router.push('/app/my-tasks') }}
+                className="flex-[2] rounded-lg bg-[var(--status-green-fg)] text-white font-semibold hover:opacity-90"
+              >
+                View in Tasks &rarr;
+              </Button>
             </div>
         }
       >
         <AnimatePresence mode="wait">
           {convertStep === 'form' && convertAlert ? (
             <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              transition={{ duration: 0.2 }} className="flex flex-col gap-3.5">
 
               {/* Pre-filled read-only info */}
-              <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(59,130,246,0.06)',
-                            border: '1px solid rgba(59,130,246,0.2)' }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>
+              <Card className="p-4 bg-[var(--status-blue-bg)] border-[var(--status-blue-fg)]/20">
+                <div className="text-xs font-semibold text-[var(--text-primary)] mb-0.5">
                   {convertAlert.title}
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{convertAlert.propertyName}</div>
-              </div>
+                <div className="text-[11px] text-[var(--text-muted)]">{convertAlert.propertyName}</div>
+              </Card>
 
               {/* Assign to */}
               <div>
-                <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>
+                <label className="text-xs font-medium text-[var(--text-muted)] mb-1.5 block">
                   Assign to
                 </label>
-                <select value={woAssignee} onChange={e => setWoAssignee(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)',
-                           background: '#1f2937', color: 'var(--text-primary)', fontSize: 14, outline: 'none' }}>
+                <select
+                  value={woAssignee}
+                  onChange={e => setWoAssignee(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-sm outline-none"
+                >
                   {maintenanceStaff.map(s => (
-                    <option key={s.id} value={s.id}>{s.name} · {s.role}</option>
+                    <option key={s.id} value={s.id}>{s.name} &middot; {s.role}</option>
                   ))}
                 </select>
               </div>
 
               {/* Date + Time row */}
-              <div style={{ display: 'flex', gap: 8 }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="text-xs font-medium text-[var(--text-muted)] mb-1.5 block">
                     Scheduled Date
                   </label>
-                  <input type="date" value={woDate} onChange={e => setWoDate(e.target.value)}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)',
-                             background: '#1f2937', color: 'var(--text-primary)', fontSize: 14, outline: 'none' }} />
+                  <input
+                    type="date"
+                    value={woDate}
+                    onChange={e => setWoDate(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-sm outline-none"
+                  />
                 </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>
+                <div className="flex-1">
+                  <label className="text-xs font-medium text-[var(--text-muted)] mb-1.5 block">
                     Due Time
                   </label>
-                  <input type="time" value={woTime} onChange={e => setWoTime(e.target.value)}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)',
-                             background: '#1f2937', color: 'var(--text-primary)', fontSize: 14, outline: 'none' }} />
+                  <input
+                    type="time"
+                    value={woTime}
+                    onChange={e => setWoTime(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-sm outline-none"
+                  />
                 </div>
               </div>
 
               {/* Notes */}
               <div>
-                <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>
+                <label className="text-xs font-medium text-[var(--text-muted)] mb-1.5 block">
                   Notes
                 </label>
-                <textarea value={woNotes} onChange={e => setWoNotes(e.target.value)}
-                  style={{ width: '100%', minHeight: 80, padding: '10px 12px', borderRadius: 8,
-                           border: '1px solid var(--border)', background: '#1f2937',
-                           color: 'var(--text-primary)', fontSize: 13, resize: 'vertical', outline: 'none' }} />
+                <textarea
+                  value={woNotes}
+                  onChange={e => setWoNotes(e.target.value)}
+                  className="w-full min-h-[80px] px-3 py-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-[13px] resize-y outline-none"
+                />
               </div>
             </motion.div>
           ) : (
             <motion.div key="success" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, paddingTop: 24 }}>
+              className="flex flex-col items-center gap-4 pt-6">
 
               {/* Checkmark */}
-              <motion.div initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+              <motion.div
+                initial={{ scale: 0.4, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.05, type: 'spring', stiffness: 300, damping: 20 }}
-                style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(22,163,74,0.15)',
-                         border: '2px solid #16a34a', display: 'flex', alignItems: 'center',
-                         justifyContent: 'center', fontSize: 24 }}>
+                className="w-14 h-14 rounded-full bg-[var(--status-green-bg)] border-2 border-[var(--status-green-fg)] flex items-center justify-center text-2xl"
+              >
                 ✓
               </motion.div>
 
               {/* WO reference */}
-              <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-                style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: '#16a34a',
-                         padding: '3px 10px', borderRadius: 20, border: '1px solid rgba(22,163,74,0.3)',
-                         background: 'rgba(22,163,74,0.08)' }}>
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="text-[11px] font-semibold tracking-widest text-[var(--status-green-fg)] px-2.5 py-0.5 rounded-full border border-[var(--status-green-fg)]/30 bg-[var(--status-green-bg)]"
+              >
                 {convertedAlerts[convertAlert?.id ?? ''] ?? 'WO-XXXX'}
               </motion.div>
 
               {/* Detail chips */}
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-                style={{ width: '100%', borderRadius: 10, border: '1px solid var(--border)',
-                         background: 'var(--bg-card)', overflow: 'hidden' }}>
-                {([
-                  ['Property', convertAlert?.propertyName],
-                  ['Assigned to', STAFF_MEMBERS.find(s => s.id === woAssignee)?.name],
-                  ['Scheduled', `${woDate} at ${woTime}`],
-                ] as [string, string | undefined][]).map(([label, value]) => (
-                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                            padding: '10px 14px', borderBottom: '1px solid var(--border)' }}>
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</span>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{value}</span>
-                  </div>
-                ))}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <Card className="w-full overflow-hidden">
+                  {([
+                    ['Property', convertAlert?.propertyName],
+                    ['Assigned to', STAFF_MEMBERS.find(s => s.id === woAssignee)?.name],
+                    ['Scheduled', `${woDate} at ${woTime}`],
+                  ] as [string, string | undefined][]).map(([label, value]) => (
+                    <div key={label} className="flex justify-between items-center px-3.5 py-2.5 border-b border-[var(--border)]">
+                      <span className="text-xs text-[var(--text-muted)]">{label}</span>
+                      <span className="text-xs font-semibold text-[var(--text-primary)]">{value}</span>
+                    </div>
+                  ))}
+                </Card>
               </motion.div>
 
-              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-                style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.6 }}>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-xs text-[var(--text-muted)] text-center leading-relaxed"
+              >
                 {STAFF_MEMBERS.find(s => s.id === woAssignee)?.name} has been assigned.
                 They&apos;ll see it on their briefing card.
               </motion.p>

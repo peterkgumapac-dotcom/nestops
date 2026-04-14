@@ -61,6 +61,8 @@ const PORTAL_CONFIGS: PortalConfig[] = [
   { id: 'pc1', propertyId: 'p1', propertyName: 'Sunset Villa', gatesEnabled: DEFAULT_GATES, doorCodeReveal: 'verified_only', brandColor: '#7c3aed', shareUrl: 'afterstay.io/stay/sunset-villa', guestsVerified: 24 },
   { id: 'pc2', propertyId: 'p2', propertyName: 'Harbor Studio', gatesEnabled: DEFAULT_GATES.map(g => ({ ...g, enabled: g.id !== 'selfie' })), doorCodeReveal: 'verified_only', brandColor: '#0284c7', shareUrl: 'afterstay.io/stay/harbor-studio', guestsVerified: 18 },
   { id: 'pc3', propertyId: 'p3', propertyName: 'Downtown Loft', gatesEnabled: DEFAULT_GATES.map(g => ({ ...g, enabled: g.id !== 'selfie' && g.id !== 'deposit' })), doorCodeReveal: 'time_gated', brandColor: '#059669', shareUrl: 'afterstay.io/stay/downtown-loft', guestsVerified: 12 },
+  { id: 'pc4', propertyId: 'p3', propertyName: 'Ocean View Apt', gatesEnabled: DEFAULT_GATES.map(g => ({ ...g, enabled: g.id !== 'selfie' })), doorCodeReveal: 'verified_only', brandColor: '#d97706', shareUrl: 'afterstay.io/stay/ocean-view-apt', guestsVerified: 8 },
+  { id: 'pc5', propertyId: 'p5', propertyName: 'Mountain Cabin', gatesEnabled: DEFAULT_GATES.map(g => ({ ...g, enabled: g.id === 'agreement' || g.id === 'rules' })), doorCodeReveal: 'immediate', brandColor: '#6b7280', shareUrl: 'afterstay.io/stay/mountain-cabin', guestsVerified: 0 },
 ]
 
 const BOOKING_SOURCE_LABELS: Record<BookingSource, string> = {
@@ -68,9 +70,9 @@ const BOOKING_SOURCE_LABELS: Record<BookingSource, string> = {
 }
 
 const GUEST_ISSUES = [
-  { id: 'gi1', guestName: 'Erik Andersen', property: 'Sunset Villa', issue: 'Heating not working in bedroom', pteWindow: 'Tomorrow 10:00–12:00', status: 'draft_task', createdAt: '2026-03-20T09:30:00' },
-  { id: 'gi2', guestName: 'Sofia Johansson', property: 'Harbor Studio', issue: 'WiFi keeps dropping in bedroom', pteWindow: null, status: 'open', createdAt: '2026-03-20T08:15:00' },
-  { id: 'gi3', guestName: 'Lars Nielsen', property: 'Downtown Loft', issue: 'Dishwasher not draining', pteWindow: 'Today 15:00–17:00', status: 'assigned', createdAt: '2026-03-19T18:45:00' },
+  { id: 'gi1', guestName: 'Erik Andersen', property: 'Sunset Villa', issue: 'Heating not working in bedroom', pteWindow: 'Tomorrow 10:00–12:00', status: 'draft_task', createdAt: '2026-04-13T09:30:00' },
+  { id: 'gi2', guestName: 'Sofia Johansson', property: 'Harbor Studio', issue: 'WiFi keeps dropping in bedroom', pteWindow: null, status: 'open', createdAt: '2026-04-13T08:15:00' },
+  { id: 'gi3', guestName: 'Lars Nielsen', property: 'Downtown Loft', issue: 'Dishwasher not draining', pteWindow: 'Today 15:00–17:00', status: 'assigned', createdAt: '2026-04-12T18:45:00' },
 ]
 
 const ISSUE_STATUS: Record<string, { label: string; fg: string; bg: string }> = {

@@ -5,6 +5,8 @@ import { Wrench, ShoppingCart, HelpCircle, Plus, Building2, Check } from 'lucide
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
 import AppDrawer from '@/components/shared/AppDrawer'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { REQUESTS, type Request } from '@/lib/data/requests'
 import { PROPERTIES } from '@/lib/data/properties'
 import { useRole } from '@/context/RoleContext'
@@ -28,8 +30,15 @@ const TYPE_DESCS = {
   inquiry: 'Ask operations a question or request information',
 }
 
+const PRIORITY_COLORS: Record<string, { bg: string; fg: string }> = {
+  urgent: { bg: 'var(--status-red-bg)', fg: 'var(--status-red-fg)' },
+  high: { bg: 'var(--status-red-bg)', fg: 'var(--status-red-fg)' },
+  medium: { bg: 'var(--status-blue-bg)', fg: 'var(--status-blue-fg)' },
+  low: { bg: 'var(--status-muted-bg)', fg: 'var(--status-muted-fg)' },
+}
+
 export default function WorkOrdersPage() {
-  const { accent } = useRole()
+  useRole()
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
   const [requests, setRequests] = useState<Request[]>(REQUESTS)
   const [newDrawer, setNewDrawer] = useState(false)
@@ -48,9 +57,6 @@ export default function WorkOrdersPage() {
     const stored = localStorage.getItem('afterstay_user')
     if (stored) { try { setCurrentUser(JSON.parse(stored)) } catch {} }
   }, [])
-
-  const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)' as const, fontSize: 14, outline: 'none' }
-  const labelStyle: React.CSSProperties = { fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }
 
   const handleSubmit = () => {
     if (!selectedType) return
@@ -102,77 +108,94 @@ export default function WorkOrdersPage() {
   // Show relevant requests (all for demo, would normally filter by staff's properties)
   const visibleRequests = requests.filter(r => r.status !== 'resolved').slice(0, 10)
 
-  const priorityColors: Record<string, string> = { urgent: '#ef4444', high: '#f97316', medium: '#3b82f6', low: '#6b7280' }
-
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <PageHeader
         title="Work Orders"
         subtitle="Submit and track work orders, vendor approvals, and requests"
         action={
-          <button onClick={() => setNewDrawer(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
+          <Button
+            className="rounded-full px-5 gap-1.5"
+            onClick={() => setNewDrawer(true)}
+          >
             <Plus size={14} /> New Request
-          </button>
+          </Button>
         }
       />
 
       {/* Quick action cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20 }}>
+      <div className="grid grid-cols-3 gap-3 mb-5">
         {(['maintenance', 'purchase', 'inquiry'] as const).map(type => {
           const Icon = TYPE_ICONS[type]
           return (
-            <button
+            <Card
               key={type}
+              className="flex flex-col items-start gap-1.5 p-4 cursor-pointer hover:translate-y-[-2px] transition-all"
               onClick={() => { setSelectedType(type); setNewDrawer(true) }}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 6, padding: '14px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-card)', cursor: 'pointer', textAlign: 'left' }}
+              role="button"
+              tabIndex={0}
             >
-              <div style={{ width: 32, height: 32, borderRadius: 7, background: `${accent}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon size={16} style={{ color: accent }} />
+              <div
+                className="w-8 h-8 rounded-[7px] flex items-center justify-center bg-[var(--accent-bg)]"
+              >
+                <Icon size={16} className="text-[var(--accent)]" />
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{TYPE_LABELS[type]}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{TYPE_DESCS[type]}</div>
+                <div className="text-[13px] font-semibold text-[var(--text-primary)] mb-0.5">{TYPE_LABELS[type]}</div>
+                <div className="text-[11px] text-[var(--text-muted)]">{TYPE_DESCS[type]}</div>
               </div>
-            </button>
+            </Card>
           )
         })}
       </div>
 
       {/* Open requests list */}
-      <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>Open Requests</h2>
+      <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Open Requests</h2>
       {visibleRequests.length === 0 ? (
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+        <Card className="p-10 text-center text-[var(--text-muted)] text-[13px]">
           No open requests at this time.
-        </div>
+        </Card>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="flex flex-col gap-2">
           {visibleRequests.map(r => {
             const Icon = TYPE_ICONS[r.type]
             const prop = PROPERTIES.find(p => p.id === r.propertyId)
+            const priority = PRIORITY_COLORS[r.priority] ?? PRIORITY_COLORS.low
             return (
-              <div key={r.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 7, background: `${accent}14`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Icon size={14} style={{ color: accent }} />
+              <Card key={r.id} className="flex items-center gap-3 p-4">
+                <div
+                  className="w-8 h-8 rounded-[7px] flex items-center justify-center shrink-0 bg-[var(--accent-bg)]"
+                >
+                  <Icon size={14} className="text-[var(--accent)]" />
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 2 }}>{r.title}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] font-medium text-[var(--text-primary)] mb-0.5">{r.title}</div>
+                  <div className="text-[11px] text-[var(--text-muted)] flex items-center gap-1">
                     <Building2 size={10} />
-                    {prop?.name ?? r.propertyId} · {r.date} · <span style={{ textTransform: 'capitalize' }}>{TYPE_LABELS[r.type]}</span>
+                    {prop?.name ?? r.propertyId} · {r.date} · <span className="capitalize">{TYPE_LABELS[r.type]}</span>
                   </div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: `${priorityColors[r.priority]}18`, color: priorityColors[r.priority], textTransform: 'capitalize' }}>
+                <div className="flex flex-col gap-1 items-end">
+                  <div className="flex gap-1.5 items-center">
+                    <span
+                      className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[var(--radius-sm)] capitalize"
+                      style={{ background: priority.bg, color: priority.fg }}
+                    >
                       {r.priority}
                     </span>
                     <StatusBadge status={r.status} />
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 4, background: r.requiresOwnerApproval ? 'rgba(239,68,68,0.1)' : 'rgba(107,114,128,0.1)', color: r.requiresOwnerApproval ? '#ef4444' : '#6b7280', whiteSpace: 'nowrap' }}>
+                  <span
+                    className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[var(--radius-sm)] whitespace-nowrap"
+                    style={{
+                      background: r.requiresOwnerApproval ? 'var(--status-red-bg)' : 'var(--status-muted-bg)',
+                      color: r.requiresOwnerApproval ? 'var(--status-red-fg)' : 'var(--status-muted-fg)',
+                    }}
+                  >
                     {r.requiresOwnerApproval ? '👤 Owner Approval' : '🔧 Operator'}
                   </span>
                 </div>
-              </div>
+              </Card>
             )
           })}
         </div>
@@ -184,30 +207,43 @@ export default function WorkOrdersPage() {
         onClose={() => { setNewDrawer(false); setSelectedType(null); setInvolveOwner(false) }}
         title="New Request"
         footer={selectedType ? (
-          <div style={{ display: 'flex', gap: 8, width: '100%' }}>
-            <button onClick={() => setSelectedType(null)} style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer' }}>Back</button>
-            <button onClick={handleSubmit} style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Submit</button>
+          <div className="flex gap-2 w-full">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setSelectedType(null)}
+            >
+              Back
+            </Button>
+            <Button
+              className="flex-1 rounded-full"
+              onClick={handleSubmit}
+            >
+              Submit
+            </Button>
           </div>
         ) : undefined}
       >
         {!selectedType ? (
           <div>
-            <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 16 }}>What type of request do you want to submit?</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <p className="text-sm text-[var(--text-muted)] mb-4">What type of request do you want to submit?</p>
+            <div className="flex flex-col gap-2.5">
               {(['maintenance', 'purchase', 'inquiry'] as const).map(type => {
                 const Icon = TYPE_ICONS[type]
                 return (
                   <button
                     key={type}
                     onClick={() => setSelectedType(type)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-elevated)', cursor: 'pointer', textAlign: 'left' }}
+                    className="flex items-center gap-3.5 p-4 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] cursor-pointer text-left hover:bg-[var(--bg-elevated)]/80 transition-colors"
                   >
-                    <div style={{ width: 40, height: 40, borderRadius: 8, background: `${accent}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Icon size={18} style={{ color: accent }} strokeWidth={1.5} />
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-[var(--accent-bg)]"
+                    >
+                      <Icon size={18} className="text-[var(--accent)]" strokeWidth={1.5} />
                     </div>
                     <div>
-                      <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)', marginBottom: 2 }}>{TYPE_LABELS[type]}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{TYPE_DESCS[type]}</div>
+                      <div className="font-semibold text-sm text-[var(--text-primary)] mb-0.5">{TYPE_LABELS[type]}</div>
+                      <div className="text-xs text-[var(--text-muted)]">{TYPE_DESCS[type]}</div>
                     </div>
                   </button>
                 )
@@ -215,36 +251,65 @@ export default function WorkOrdersPage() {
             </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="flex flex-col gap-4">
             <div>
-              <label style={labelStyle}>Property</label>
-              <select style={inputStyle} value={newPropertyId} onChange={e => setNewPropertyId(e.target.value)}>
+              <label className="text-xs font-medium text-[var(--text-muted)] mb-1.5 block">Property</label>
+              <select
+                className="w-full px-3 py-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-sm outline-none"
+                value={newPropertyId}
+                onChange={e => setNewPropertyId(e.target.value)}
+              >
                 {PROPERTIES.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
             <div>
-              <label style={labelStyle}>Title</label>
-              <input style={inputStyle} placeholder={`Brief ${TYPE_LABELS[selectedType].toLowerCase()} description`} value={newTitle} onChange={e => setNewTitle(e.target.value)} />
+              <label className="text-xs font-medium text-[var(--text-muted)] mb-1.5 block">Title</label>
+              <input
+                className="w-full px-3 py-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-sm outline-none"
+                placeholder={`Brief ${TYPE_LABELS[selectedType].toLowerCase()} description`}
+                value={newTitle}
+                onChange={e => setNewTitle(e.target.value)}
+              />
             </div>
             <div>
-              <label style={labelStyle}>Details</label>
-              <textarea style={{ ...inputStyle, minHeight: 90, resize: 'vertical' }} placeholder="Describe the issue or request…" value={newDescription} onChange={e => setNewDescription(e.target.value)} />
+              <label className="text-xs font-medium text-[var(--text-muted)] mb-1.5 block">Details</label>
+              <textarea
+                className="w-full px-3 py-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-sm outline-none min-h-[90px] resize-y"
+                placeholder="Describe the issue or request…"
+                value={newDescription}
+                onChange={e => setNewDescription(e.target.value)}
+              />
             </div>
             {selectedType === 'purchase' && (
               <>
                 <div>
-                  <label style={labelStyle}>Vendor / Supplier</label>
-                  <input style={inputStyle} placeholder="e.g. Elkjøp, Lars Plumbing AS" value={newVendor} onChange={e => setNewVendor(e.target.value)} />
+                  <label className="text-xs font-medium text-[var(--text-muted)] mb-1.5 block">Vendor / Supplier</label>
+                  <input
+                    className="w-full px-3 py-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-sm outline-none"
+                    placeholder="e.g. Elkjøp, Lars Plumbing AS"
+                    value={newVendor}
+                    onChange={e => setNewVendor(e.target.value)}
+                  />
                 </div>
                 <div>
-                  <label style={labelStyle}>Estimated Cost (NOK)</label>
-                  <input type="number" style={inputStyle} placeholder="0" value={newAmount} onChange={e => setNewAmount(e.target.value)} />
+                  <label className="text-xs font-medium text-[var(--text-muted)] mb-1.5 block">Estimated Cost (NOK)</label>
+                  <input
+                    type="number"
+                    className="w-full px-3 py-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-sm outline-none"
+                    placeholder="0"
+                    value={newAmount}
+                    onChange={e => setNewAmount(e.target.value)}
+                  />
                 </div>
               </>
             )}
             <div>
-              <label style={labelStyle}>Priority</label>
-              <select style={inputStyle} value={newPriority} onChange={e => setNewPriority(e.target.value as Request['priority'])}>
+              <label className="text-xs font-medium text-[var(--text-muted)] mb-1.5 block">Priority</label>
+              <select
+                className="w-full px-3 py-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-sm outline-none"
+                value={newPriority}
+                onChange={e => setNewPriority(e.target.value as Request['priority'])}
+              >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
@@ -252,23 +317,27 @@ export default function WorkOrdersPage() {
               </select>
             </div>
             <div>
-              <label style={labelStyle}>Owner Involvement</label>
+              <label className="text-xs font-medium text-[var(--text-muted)] mb-1.5 block">Owner Involvement</label>
               <button
                 onClick={() => setInvolveOwner(v => !v)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 10, width: '100%',
-                  padding: '10px 14px', borderRadius: 8,
-                  border: `1px solid ${involveOwner ? accent + '80' : 'var(--border)'}`,
-                  background: involveOwner ? accent + '12' : 'var(--bg-elevated)',
-                  cursor: 'pointer', textAlign: 'left',
-                }}
+                className={`flex items-center gap-2.5 w-full px-3.5 py-2.5 rounded-lg border cursor-pointer text-left transition-colors ${
+                  involveOwner
+                    ? 'border-[var(--accent-border)] bg-[var(--accent-bg)]'
+                    : 'border-[var(--border)] bg-[var(--bg-elevated)]'
+                }`}
               >
-                <div style={{ width: 18, height: 18, borderRadius: 4, border: `2px solid ${involveOwner ? accent : 'var(--border)'}`, background: involveOwner ? accent : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  {involveOwner && <Check size={11} color="#fff" />}
+                <div
+                  className={`w-[18px] h-[18px] rounded-[4px] border-2 flex items-center justify-center shrink-0 transition-colors ${
+                    involveOwner
+                      ? 'border-[var(--accent)] bg-[var(--accent)]'
+                      : 'border-[var(--border)] bg-transparent'
+                  }`}
+                >
+                  {involveOwner && <Check size={11} className="text-white" />}
                 </div>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>Requires Owner Approval</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Owner will be notified and must approve before work proceeds</div>
+                  <div className="text-[13px] font-medium text-[var(--text-primary)]">Requires Owner Approval</div>
+                  <div className="text-[11px] text-[var(--text-muted)]">Owner will be notified and must approve before work proceeds</div>
                 </div>
               </button>
             </div>
@@ -277,7 +346,7 @@ export default function WorkOrdersPage() {
       </AppDrawer>
 
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#16a34a', color: '#fff', padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+        <div className="fixed bottom-6 right-6 bg-[var(--status-green-fg)] text-white px-4 py-2.5 rounded-xl text-sm font-medium z-[999] shadow-lg">
           {toast}
         </div>
       )}

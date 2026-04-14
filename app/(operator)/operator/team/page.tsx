@@ -24,10 +24,10 @@ import { STAFF_CONTRACTS, type StaffContract } from '@/lib/data/contracts'
 type Tab = 'roster' | 'schedule' | 'workload' | 'timelog' | 'contractors' | 'daily' | 'leave' | 'contracts'
 
 const EMPLOYMENT_TYPE: Record<string, 'Hourly' | 'Salaried' | 'Contractor'> = {
-  s1: 'Hourly', s2: 'Salaried', s3: 'Contractor', s4: 'Hourly',
+  s1: 'Hourly', s2: 'Salaried', s3: 'Contractor', s4: 'Hourly', s5: 'Hourly', s6: 'Hourly',
 }
 const CONTRACT_STATUS: Record<string, 'Active' | 'Expiring Soon' | 'Expired' | 'Missing'> = {
-  s1: 'Active', s2: 'Active', s3: 'Expiring Soon', s4: 'Active',
+  s1: 'Active', s2: 'Active', s3: 'Expiring Soon', s4: 'Active', s5: 'Active', s6: 'Active',
 }
 const CONTRACT_STATUS_COLOR: Record<string, string> = {
   Active: '#16a34a', 'Expiring Soon': 'var(--text-muted)', Expired: '#dc2626', Missing: 'var(--text-muted)',
@@ -36,13 +36,13 @@ const EMPLOYMENT_TYPE_COLOR: Record<string, string> = {
   Hourly: '#2563eb', Salaried: '#7c3aed', Contractor: '#d97706',
 }
 const BREAK_PER_STAFF: Record<string, string> = {
-  s1: '45m', s2: '—', s3: '—', s4: '32m',
+  s1: '45m', s2: '—', s3: '—', s4: '32m', s5: '30m', s6: '—',
 }
 const NET_HOURS_PER_STAFF: Record<string, string> = {
-  s1: '52h 15m', s2: '26h', s3: '23h', s4: '22h 28m',
+  s1: '52h 15m', s2: '26h', s3: '23h', s4: '22h 28m', s5: '38h 30m', s6: '28h',
 }
 const NET_HOURS_MINUTES: Record<string, number> = {
-  s1: 52 * 60 + 15, s2: 26 * 60, s3: 23 * 60, s4: 22 * 60 + 28,
+  s1: 52 * 60 + 15, s2: 26 * 60, s3: 23 * 60, s4: 22 * 60 + 28, s5: 38 * 60 + 30, s6: 28 * 60,
 }
 const TIMELOG_BREAKDOWN: Record<string, Array<{ property: string; hours: string }>> = {
   s1: [
@@ -62,6 +62,14 @@ const TIMELOG_BREAKDOWN: Record<string, Array<{ property: string; hours: string 
   s4: [
     { property: 'Sunset Villa',   hours: '12h 00m' },
     { property: 'Harbor Studio',  hours: '10h 28m' },
+  ],
+  s5: [
+    { property: 'Harbor Studio',  hours: '20h 00m' },
+    { property: 'Ocean View Apt', hours: '18h 30m' },
+  ],
+  s6: [
+    { property: 'Downtown Loft',  hours: '16h 00m' },
+    { property: 'Mountain Cabin', hours: '12h 00m' },
   ],
 }
 
@@ -269,8 +277,8 @@ export default function TeamPage() {
   return (
     <div>
       <PageHeader
-        title="People"
-        subtitle="Staff management, time tracking & payments"
+        title="Team"
+        subtitle="Staff management, scheduling & payments"
         action={
           <button style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 16px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             <Plus size={15} /> Add Shift

@@ -1,6 +1,6 @@
 'use client'
 import { useState, useRef, useEffect, ReactNode } from 'react'
-import { Menu, Bell, ChevronDown } from 'lucide-react'
+import { Menu, Bell, ChevronDown, ChevronRight, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useRole } from '@/context/RoleContext'
@@ -103,7 +103,7 @@ export default function ShellHeader({
           color: 'var(--text-muted)',
         }}
       >
-        <Menu size={18} strokeWidth={1.75} />
+        <ChevronRight size={16} strokeWidth={2} />
       </button>
     ) : (
       <button
@@ -117,7 +117,7 @@ export default function ShellHeader({
           color: 'var(--text-muted)',
         }}
       >
-        <Menu size={18} strokeWidth={1.5} />
+        <ChevronLeft size={16} strokeWidth={2} />
       </button>
     )
   ) : null
