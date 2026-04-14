@@ -622,6 +622,7 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
 .btn-swap {
   display: inline-flex;
   flex-direction: column;
+  position: relative;
   height: 1em;
   overflow: hidden;
   vertical-align: middle;
@@ -636,6 +637,7 @@ input[type=range]{padding:12px 0;height:auto;cursor:pointer}
   top: 100%;
 }
 .cta-primary:hover .btn-swap span,
+.cta-ghost:hover .btn-swap span,
 .feat-cta:hover .btn-swap span {
   transform: translateY(-100%);
 }
@@ -766,7 +768,7 @@ body.drawer-open #globe-canvas{opacity:0.35}
 <a href="#pricing">Pricing</a>
 <a href="/login" style="color:var(--text)">Sign in</a>
 </div>
-<a href="/login" class="nav-cta">Try free</a>
+<a href="javascript:void(0)" class="nav-cta" onclick="openWaitlist()">Join waitlist</a>
 <button class="nav-hamburger" id="navHamburger" aria-label="Open navigation menu" aria-expanded="false">
   <span></span><span></span><span></span>
 </button>
@@ -778,7 +780,7 @@ body.drawer-open #globe-canvas{opacity:0.35}
   <a href="#features" onclick="closeMobileNav()">Features</a>
   <a href="#pricing" onclick="closeMobileNav()">Pricing</a>
   <a href="/login" onclick="closeMobileNav()" style="color:var(--text)">Sign in</a>
-  <a href="/login" class="nav-mobile-cta" onclick="closeMobileNav()">Try free →</a>
+  <a href="javascript:void(0)" class="nav-mobile-cta" onclick="closeMobileNav();openWaitlist()">Join waitlist →</a>
 </div>
 
 <!-- HERO -->
@@ -806,7 +808,7 @@ body.drawer-open #globe-canvas{opacity:0.35}
 </div>
 
 <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-top:32px;flex-wrap:wrap">
-<a href="/login" class="nav-cta" style="padding:12px 32px;font-size:14px">Start free trial</a>
+<a href="javascript:void(0)" class="nav-cta" style="padding:12px 32px;font-size:14px" onclick="openWaitlist()">Join the waitlist</a>
 <a href="#features" style="font-size:13px;color:var(--text2);text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:color .15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">See how it works <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3l5 5-5 5"/></svg></a>
 </div>
 
@@ -933,7 +935,7 @@ body.drawer-open #globe-canvas{opacity:0.35}
 <button class="mb-rbtn" data-mbrole="cleaner" onclick="mbSwitch('cleaner')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg> Cleaners</button>
 </div>
 <div class="mb-cta-row">
-<a href="/login" class="feat-cta" id="mb-cta">Start free trial <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"><path d="M6 3l5 5-5 5"/></svg></a>
+<a href="javascript:void(0)" class="feat-cta" id="mb-cta" onclick="openWaitlist()">Join the waitlist <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"><path d="M6 3l5 5-5 5"/></svg></a>
 </div>
 </div>
 
@@ -1143,7 +1145,7 @@ body.drawer-open #globe-canvas{opacity:0.35}
 <!-- Footer tagline -->
 <p style="text-align:center;margin-top:20px;font-size:13px;font-weight:600;color:var(--text3)">0 phone calls. 0 manual updates. The whole chain runs itself.</p>
 
-<div style="text-align:center;margin-top:20px"><button class="cta-primary" style="display:inline-block;width:auto;padding:14px 40px" onclick="location.href='/login'"><span class="btn-swap"><span>Start free trial</span><span>Start free trial</span></span></button></div>
+<div style="text-align:center;margin-top:20px"><button class="cta-primary" style="display:inline-block;width:auto;padding:14px 40px" onclick="openWaitlist()"><span class="btn-swap"><span>Join the waitlist</span><span>Join the waitlist</span></span></button></div>
 </div>
 </section>
 
@@ -1223,7 +1225,7 @@ body.drawer-open #globe-canvas{opacity:0.35}
 <span><strong style="color:var(--text);font-weight:700;font-family:var(--mono);">0 emergency supply runs</strong> after 30 days</span>
 </div>
 <div style="display:flex;align-items:center;gap:10px;">
-<a href="/login" class="feat-cta">Start free trial <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"><path d="M6 3l5 5-5 5"/></svg></a>
+<a href="javascript:void(0)" class="feat-cta" onclick="openWaitlist()">Join the waitlist <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"><path d="M6 3l5 5-5 5"/></svg></a>
 <button id="iv-replay" onclick="ivRestart()" style="display:none;padding:6px 12px;border-radius:7px;background:transparent;color:var(--text3);font-family:var(--sans);font-size:10px;font-weight:500;border:1px solid var(--border);cursor:pointer;">↺ Watch again</button>
 </div>
 </div>
@@ -1326,7 +1328,7 @@ body.drawer-open #globe-canvas{opacity:0.35}
 <button onclick="smStart()" id="sm-play" style="padding:8px 22px;border-radius:12px;background:var(--accent);color:#fff;font-family:var(--sans);font-size:12px;font-weight:600;border:none;cursor:pointer;transition:opacity .15s">▶ Play both mornings</button>
 <button onclick="smRestart()" id="sm-replay" style="padding:7px 16px;border-radius:12px;background:transparent;color:var(--text3);font-family:var(--sans);font-size:11px;font-weight:500;border:1px solid var(--border);cursor:pointer;display:none;transition:border-color .15s,color .15s">↺ Replay</button>
 </div>
-<div style="text-align:center;margin-top:16px"><a href="/login" class="feat-cta">Start free trial <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"><path d="M6 3l5 5-5 5"/></svg></a></div>
+<div style="text-align:center;margin-top:16px"><a href="javascript:void(0)" class="feat-cta" onclick="openWaitlist()">Join the waitlist <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"><path d="M6 3l5 5-5 5"/></svg></a></div>
 </div>
 </section>
 
@@ -1767,6 +1769,36 @@ plSetTab(0,false);
   .afm-modal-slot > .afm-demo-entry{transform:none !important;margin-bottom:0 !important}
   .afm-modal-close{width:44px;height:44px;top:12px;right:12px}
 }
+
+/* === WAITLIST MODAL === */
+.wl-modal{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center}
+.wl-modal.wl-open{display:flex}
+.wl-modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px)}
+.wl-modal-panel{position:relative;width:90%;max-width:520px;max-height:90vh;overflow-y:auto;background:#14151e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:36px 32px 32px;box-shadow:0 24px 80px rgba(0,0,0,.6)}
+.wl-modal-close{position:absolute;top:14px;right:14px;width:36px;height:36px;border:none;background:rgba(255,255,255,.06);color:#8a8f9c;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.wl-modal-close:hover{background:rgba(255,255,255,.12);color:#eae8e4}
+.wl-modal h3{font-size:22px;font-weight:600;letter-spacing:-.02em;color:#eae8e4;margin:0 0 6px}
+.wl-modal .wl-sub{font-size:13px;color:#8a8f9c;margin:0 0 24px}
+.wl-form{display:flex;flex-direction:column;gap:14px}
+.wl-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.wl-field label{display:block;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:#8a8f9c;margin-bottom:6px}
+.wl-field input,.wl-field select{width:100%;padding:10px 12px;background:#1c1d2a;border:1px solid rgba(255,255,255,.07);border-radius:8px;color:#eae8e4;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s}
+.wl-field input::placeholder{color:#4a4f5c}
+.wl-field input:focus,.wl-field select:focus{border-color:rgba(20,184,166,.5)}
+.wl-field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238a8f9c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.wl-field select option{background:#1c1d2a;color:#eae8e4}
+.wl-submit{width:100%;padding:12px;background:linear-gradient(135deg,#14b8a6,#10b981);color:#fff;font-size:14px;font-weight:600;border:none;border-radius:999px;cursor:pointer;margin-top:4px;transition:opacity .15s}
+.wl-submit:hover{opacity:.9}
+.wl-success{display:none;text-align:center;padding:24px 0}
+.wl-success .wl-check{width:56px;height:56px;border-radius:50%;background:rgba(20,184,166,.12);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.wl-success .wl-check svg{width:28px;height:28px;color:#14b8a6}
+.wl-success h4{font-size:18px;font-weight:600;color:#eae8e4;margin:0 0 8px}
+.wl-success p{font-size:13px;color:#8a8f9c;margin:0}
+@media(max-width:600px){
+  .wl-modal-panel{width:100vw;max-width:100vw;max-height:100vh;height:100vh;border-radius:0;border:0;padding:56px 20px 24px}
+  .wl-row{grid-template-columns:1fr}
+  .wl-modal-close{width:44px;height:44px;top:12px;right:12px}
+}
 </style>
 <div id="afm-modal" class="afm-modal" hidden>
   <div class="afm-modal-backdrop" id="afm-modal-bd"></div>
@@ -1820,6 +1852,99 @@ plSetTab(0,false);
   document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !modal.hidden) closeModal(); });
 })();
 </script>
+
+<!-- WAITLIST MODAL -->
+<div id="wl-modal" class="wl-modal">
+  <div class="wl-modal-backdrop" onclick="closeWaitlist()"></div>
+  <div class="wl-modal-panel">
+    <button class="wl-modal-close" onclick="closeWaitlist()" aria-label="Close">&times;</button>
+    <div id="wl-form-view">
+      <h3>Join the waitlist</h3>
+      <p class="wl-sub">Be first in line when AfterStay launches. We'll reach out with early access.</p>
+      <form id="wl-form" class="wl-form" onsubmit="return submitWaitlist(event)">
+        <div class="wl-row">
+          <div class="wl-field">
+            <label for="wl-name">Your name *</label>
+            <input type="text" id="wl-name" name="name" required placeholder="Peter">
+          </div>
+          <div class="wl-field">
+            <label for="wl-email">Email *</label>
+            <input type="email" id="wl-email" name="email" required placeholder="you@company.com">
+          </div>
+        </div>
+        <div class="wl-row">
+          <div class="wl-field">
+            <label for="wl-company">Company / Host name *</label>
+            <input type="text" id="wl-company" name="company" required placeholder="Sunrise Villas">
+          </div>
+          <div class="wl-field">
+            <label for="wl-properties">Number of properties *</label>
+            <select id="wl-properties" name="properties" required>
+              <option value="" disabled selected>Select</option>
+              <option value="1-5">1–5</option>
+              <option value="6-20">6–20</option>
+              <option value="21-50">21–50</option>
+              <option value="51-100">51–100</option>
+              <option value="100+">100+</option>
+            </select>
+          </div>
+        </div>
+        <div class="wl-field">
+          <label for="wl-location">Location *</label>
+          <input type="text" id="wl-location" name="location" required placeholder="Bali, Indonesia">
+        </div>
+        <div class="wl-field">
+          <label for="wl-stack">Current stack (optional)</label>
+          <input type="text" id="wl-stack" name="stack" placeholder="Guesty, Breezeway, Google Sheets...">
+        </div>
+        <button type="submit" class="wl-submit">Join the waitlist</button>
+      </form>
+    </div>
+    <div id="wl-success" class="wl-success">
+      <div class="wl-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+      <h4>You're on the list!</h4>
+      <p>Check your email client — we've pre-filled a message so we have your details.<br>We'll be in touch with early access soon.</p>
+    </div>
+  </div>
+</div>
+<script>
+function openWaitlist(){
+  var m=document.getElementById('wl-modal');
+  m.classList.add('wl-open');
+  document.body.style.overflow='hidden';
+  document.getElementById('wl-form-view').style.display='';
+  document.getElementById('wl-success').style.display='none';
+}
+function closeWaitlist(){
+  var m=document.getElementById('wl-modal');
+  m.classList.remove('wl-open');
+  document.body.style.overflow='';
+}
+function submitWaitlist(e){
+  e.preventDefault();
+  var name=document.getElementById('wl-name').value;
+  var email=document.getElementById('wl-email').value;
+  var company=document.getElementById('wl-company').value;
+  var properties=document.getElementById('wl-properties').value;
+  var location=document.getElementById('wl-location').value;
+  var stack=document.getElementById('wl-stack').value||'N/A';
+  var subject=encodeURIComponent('Waitlist: '+company+' ('+name+')');
+  var body=encodeURIComponent(
+    'Name: '+name+'\n'+
+    'Email: '+email+'\n'+
+    'Company: '+company+'\n'+
+    'Properties: '+properties+'\n'+
+    'Location: '+location+'\n'+
+    'Current stack: '+stack
+  );
+  window.open('mailto:afterstay@afterstay.org?subject='+subject+'&body='+body,'_self');
+  document.getElementById('wl-form-view').style.display='none';
+  document.getElementById('wl-success').style.display='block';
+  return false;
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){var m=document.getElementById('wl-modal');if(m.classList.contains('wl-open'))closeWaitlist();}});
+</script>
+
 <style>
 .afm-root{display:flex;align-items:center;justify-content:center;font-family:'DM Sans',-apple-system,sans-serif}
 .afm-scene{position:relative;width:1100px;max-width:100%;height:680px}
@@ -2324,8 +2449,8 @@ plSetTab(0,false);
 <div style="text-align:right"><div class="save-amt" id="sv"></div><div class="save-yr" id="sy"></div></div>
 </div>
 <div class="tags" id="tg"></div>
-<button class="cta-primary" id="mainCta" onclick="location.href='/login'"><span class="btn-swap"><span>Start free trial</span><span>Start free trial</span></span></button>
-<button class="cta-ghost" onclick="location.href='/login'">Get detailed savings report</button>
+<button class="cta-primary" id="mainCta" onclick="openWaitlist()"><span class="btn-swap"><span>Join the waitlist</span><span>Join the waitlist</span></span></button>
+<button class="cta-ghost" onclick="openWaitlist()">Get detailed savings report</button>
 </div>
 </div>
 </div>
@@ -2355,7 +2480,7 @@ plSetTab(0,false);
 <li>Team scheduling + shifts</li>
 <li>Auto-task on check-in/out</li>
 </ul>
-<button class="cta-ghost" style="margin-top:20px" onclick="location.href='/login'"><span class="btn-swap"><span>Start free trial</span><span>Start free trial</span></span></button>
+<button class="cta-ghost" style="margin-top:20px" onclick="openWaitlist()"><span class="btn-swap"><span>Join waitlist</span><span>Join waitlist</span></span></button>
 </div>
 <div class="tier pop">
 <div class="tier-badge">Popular</div>
@@ -2373,7 +2498,7 @@ plSetTab(0,false);
 <li>Guest verification + Activity Threads</li>
 <li>Automation center (if/then)</li>
 </ul>
-<button class="cta-primary" style="margin-top:20px" onclick="location.href='/login'"><span class="btn-swap"><span>Start free trial</span><span>Start free trial</span></span></button>
+<button class="cta-primary" style="margin-top:20px" onclick="openWaitlist()"><span class="btn-swap"><span>Join waitlist</span><span>Join waitlist</span></span></button>
 </div>
 <div class="tier">
 <div class="tier-name">Enterprise</div>
@@ -2389,7 +2514,7 @@ plSetTab(0,false);
 <li>Bulk property import</li>
 <li>Account manager</li>
 </ul>
-<button class="cta-ghost" style="margin-top:20px" onclick="location.href='mailto:hello@afterstay.com'"><span class="btn-swap"><span>Contact us</span><span>Contact us</span></span></button>
+<button class="cta-ghost" style="margin-top:20px" onclick="location.href='mailto:afterstay@afterstay.org'"><span class="btn-swap"><span>Contact us</span><span>Contact us</span></span></button>
 </div>
 </div>
 </div>
@@ -2417,8 +2542,8 @@ plSetTab(0,false);
 <section class="final-cta reveal">
 <div class="container">
 <h2>Ready for a quieter morning?<br>One platform that runs everything after the booking.</h2>
-<p>14-day free trial. No credit card required. Cancel anytime.</p>
-<button class="cta-primary" onclick="location.href='/login'"><span class="btn-swap"><span>Start free trial</span><span>Start free trial</span></span></button>
+<p>Be the first to know when we launch. Early access for waitlist members.</p>
+<button class="cta-primary" onclick="openWaitlist()"><span class="btn-swap"><span>Join the waitlist</span><span>Join the waitlist</span></span></button>
 </div>
 </section>
 
@@ -2429,7 +2554,7 @@ plSetTab(0,false);
   <a href="#features">Features</a>
   <a href="#pricing">Pricing</a>
   <a href="/login">Sign in</a>
-  <a href="mailto:hello@afterstay.com">Contact</a>
+  <a href="mailto:afterstay@afterstay.org">Contact</a>
 </div>
 <p>AfterStay &copy; 2026 &middot; Built for STR operators</p>
 </div>
@@ -2533,7 +2658,7 @@ document.getElementById('sv').textContent=savTxt;
 document.getElementById('sy').textContent=saved>0?fmt(saved*12)+'/year':'';
 var selCount=sel.filter(function(t){return!t.hrs}).length;
 document.getElementById('ss').textContent=selCount>0?'Replacing '+selCount+' tool'+(selCount>1?'s':'')+' with 1 platform':'';
-document.getElementById('mainCta').textContent=saved>0?'Start free trial — save '+fmt(saved)+'/mo':'Start free trial';
+document.getElementById('mainCta').textContent=saved>0?'Join waitlist — save '+fmt(saved)+'/mo':'Join the waitlist';
 var tg=document.getElementById('tg');tg.innerHTML='';
 sel.forEach(function(t){if(!t.hrs)tg.innerHTML+='<span class="tag rep">'+t.n+' → '+(repMap[t.id]||'AfterStay')+'</span>'});
 if(hasH)tg.innerHTML+='<span class="tag rep">WhatsApp → Activity Threads</span>';
