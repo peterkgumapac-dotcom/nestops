@@ -89,7 +89,7 @@ export default function MainAppShell({ children }: { children: React.ReactNode }
           <div style={{ position: 'relative' }}>
             <button
               onClick={() => setAlertsOpen(o => !o)}
-              style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 6, borderRadius: 8, display: 'flex', alignItems: 'center' }}
+              style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 8, borderRadius: 8, display: 'flex', alignItems: 'center', minWidth: 36, minHeight: 36 }}
             >
               <Bell size={18} strokeWidth={1.6} />
               {badgeCount > 0 && (

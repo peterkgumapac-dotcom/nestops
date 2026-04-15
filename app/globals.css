@@ -316,6 +316,80 @@ html {
   flex-shrink: 0;
 }
 
+/* ── Pulse severity dot keyframes ───────────────────────────── */
+
+/* GREEN — calm 4s */
+@keyframes pulseRingGreen {
+  0%   { width: 8px; height: 8px; opacity: 0.6; border-color: rgba(16,185,129,0.55); }
+  100% { width: 80px; height: 80px; opacity: 0; border-color: rgba(16,185,129,0); }
+}
+@keyframes pulseCoreGreen {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(0.86); }
+}
+.pulse-core-green { animation: pulseCoreGreen 4s ease infinite; }
+.pulse-ring-green {
+  border: 1.5px solid transparent;
+  animation: pulseRingGreen 4s ease-out infinite;
+}
+
+/* AMBER — moderate 1.8s */
+@keyframes pulseRingAmber {
+  0%   { width: 8px; height: 8px; opacity: 0.65; border-color: rgba(245,158,11,0.6); }
+  100% { width: 72px; height: 72px; opacity: 0; border-color: rgba(245,158,11,0); }
+}
+@keyframes pulseCoreAmber {
+  0%, 100% { transform: scale(1); }
+  45%      { transform: scale(0.88); }
+}
+.pulse-core-amber { animation: pulseCoreAmber 1.8s ease infinite; }
+.pulse-ring-amber {
+  border: 1.5px solid transparent;
+  animation: pulseRingAmber 1.8s ease-out infinite;
+}
+
+/* RED — urgent 0.75s */
+@keyframes pulseRingRed {
+  0%   { width: 8px; height: 8px; opacity: 0.8; border-color: rgba(239,68,68,0.75); }
+  100% { width: 90px; height: 90px; opacity: 0; border-color: rgba(239,68,68,0); }
+}
+@keyframes pulseCoreRed {
+  0%, 100% { transform: scale(1); }
+  30%      { transform: scale(0.78); }
+  65%      { transform: scale(1.18); }
+}
+.pulse-core-red { animation: pulseCoreRed 0.75s ease infinite; }
+.pulse-ring-red {
+  border: 1.5px solid transparent;
+  animation: pulseRingRed 0.75s ease-out infinite;
+}
+
+/* ── Pulse feed flash keyframes ────────────────────────────── */
+@keyframes pulseFeedFlashGreen {
+  0%   { background: rgba(16,185,129,0.22); border-color: rgba(16,185,129,0.6); }
+  100% { background: rgba(16,185,129,0.06); border-color: rgba(16,185,129,0.25); }
+}
+@keyframes pulseFeedFlashAmber {
+  0%   { background: rgba(245,158,11,0.22); border-color: rgba(245,158,11,0.6); }
+  100% { background: rgba(245,158,11,0.05); border-color: rgba(245,158,11,0.25); }
+}
+@keyframes pulseFeedFlashRed {
+  0%   { background: rgba(239,68,68,0.22); border-color: rgba(239,68,68,0.6); }
+  100% { background: rgba(239,68,68,0.05); border-color: rgba(239,68,68,0.25); }
+}
+.pulse-feed-flash-green { animation: pulseFeedFlashGreen 0.8s ease forwards; }
+.pulse-feed-flash-amber { animation: pulseFeedFlashAmber 0.8s ease forwards; }
+.pulse-feed-flash-red   { animation: pulseFeedFlashRed   0.8s ease forwards; }
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .pulse-core-green, .pulse-core-amber, .pulse-core-red,
+  .pulse-ring-green, .pulse-ring-amber, .pulse-ring-red,
+  .pulse-feed-flash-green, .pulse-feed-flash-amber, .pulse-feed-flash-red {
+    animation: none !important;
+  }
+}
+
 /* ── Mobile-first responsive layout ─────────────────────────── */
 .main-content {
   padding: 16px;

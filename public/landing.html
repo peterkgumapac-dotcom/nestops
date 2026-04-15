@@ -1238,100 +1238,1334 @@ body.drawer-open #globe-canvas{opacity:0.35}
 
 </div>
 <div class="afm-demo-entry" data-key="pulse">
-<section class="sm-section feat" id="dashboard-demo">
-<div class="container">
-<div class="sm-header">
-<div class="feat-label" style="text-align:center">Real-time control center</div>
-<div class="feat-title text-gradient" style="text-align:center;max-width:600px;margin:0 auto">Same morning. Same team. Two realities.</div>
-<div class="feat-desc" style="text-align:center;max-width:520px;margin:8px auto 0">Watch both sides run on the same clock. Left is your current morning. Right is AfterStay.</div>
-</div>
+<style>
+/* ─── Pulse Moat Section (scoped: pm- prefix) ─── */
+.pm-pulse-moat{padding:100px 0;position:relative;overflow:hidden}
+.dot-grid{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,0.022) 1px,transparent 1px);background-size:32px 32px;pointer-events:none}
+.container{max-width:1120px;margin:0 auto;padding:0 24px;position:relative;z-index:2}
+.pm-section-divider{height:1px;background:var(--border);max-width:1120px;margin:0 auto}
 
-<div class="sm-split" id="sm-split">
+/* ─── HEADER ─── */
+.pm-moat-header{text-align:center;margin-bottom:72px}
+.feat-label{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--green);margin-bottom:16px;
+  padding:4px 12px;border-radius:20px;
+  background:var(--green-bg);border:1px solid var(--green-border);
+}
+.pm-moat-title{font-size:clamp(28px,3.5vw,42px);font-weight:700;letter-spacing:-.03em;line-height:1.15;color:#fff;margin-bottom:14px}
+.pm-moat-title em{font-style:normal;color:var(--green2)}
+.pm-moat-sub{font-size:15px;color:var(--text2);line-height:1.75;max-width:540px;margin:0 auto}
+.pm-moat-sub strong{color:var(--text)}
 
-<!-- LEFT: CHAOS -->
-<div class="sm-side sm-chaos">
-<div class="sm-side-label sm-label-bad">⚠ Without AfterStay</div>
-<div class="sm-clock sm-clock-bad" id="sm-clock-bad">6:47</div>
-<div class="sm-date">Saturday, March 21 · Peter, 8 properties</div>
-<div class="sm-counter">
-<div class="sm-counter-item sm-ci-bad">
-<div class="sm-ci-num" id="sm-msgs" style="color:#fca5a5">0</div>
-<div class="sm-ci-label">messages</div>
-</div>
-<div class="sm-counter-item sm-ci-bad">
-<div class="sm-ci-num" id="sm-calls" style="color:#fca5a5">0</div>
-<div class="sm-ci-label">calls</div>
-</div>
-<div class="sm-counter-item sm-ci-bad">
-<div class="sm-ci-num" id="sm-waiting" style="color:#fca5a5">0</div>
-<div class="sm-ci-label">people waiting</div>
-</div>
-</div>
-<div class="sm-feed" id="sm-chaos-feed"></div>
-<div class="sm-outcome sm-outcome-bad" id="sm-outcome-bad">
-47 messages · 3 calls · 4 people waiting · first turnover delayed 40 min · guest may not get in on time.
-</div>
-</div>
+/* ─── TABLE ─── */
+.pm-moat-table-wrap{overflow-x:auto;margin-bottom:80px;border-radius:12px;border:1px solid var(--border)}
+.pm-moat-table{width:100%;border-collapse:collapse;background:var(--card)}
+.pm-moat-table th{padding:11px 16px;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);text-align:left;background:var(--bg2);white-space:nowrap;border-bottom:1px solid var(--border)}
+.pm-moat-table th.pm-ours{color:var(--green);background:rgba(29,158,117,0.05);border-left:1px solid var(--green-border);border-right:1px solid var(--green-border)}
+.pm-moat-table td{padding:10px 16px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap;color:var(--text2)}
+.pm-moat-table td:first-child{color:var(--text);font-weight:500}
+.pm-moat-table tr:last-child td{border-bottom:none}
+.pm-moat-table td.pm-ours{border-left:1px solid var(--green-border);border-right:1px solid var(--green-border);background:rgba(29,158,117,0.03)}
+.pm-chk{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--green-bg);border:1px solid var(--green-border)}
+.pm-chk svg{width:11px;height:11px;stroke:var(--green2);stroke-width:2.5;fill:none}
+.pm-crs{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:rgba(90,95,107,.06);border:1px solid rgba(90,95,107,.1)}
+.pm-crs svg{width:10px;height:10px;stroke:var(--text3);stroke-width:2;fill:none}
+.pm-prt{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px}
+.pm-prt-dash{width:8px;height:2px;border-radius:1px;background:var(--text3);opacity:.4}
+.pm-cell-tag{font-size:10px;padding:2px 7px;border-radius:5px;font-weight:500}
+.pm-cell-tag.pm-flat{background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
+.pm-cell-tag.pm-inbox{background:rgba(55,138,221,.08);color:var(--blue);border:1px solid rgba(55,138,221,.18)}
+.pm-cell-tag.pm-issues{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.pm-cell-tag.pm-cleaner{background:rgba(239,159,39,.08);color:var(--amber);border:1px solid rgba(239,159,39,.18)}
+.pm-cell-tag.pm-pulse{background:var(--green-bg);color:var(--green2);border:1px solid var(--green-border)}
 
-<!-- RIGHT: AFTERSTAY -->
-<div class="sm-side sm-nest">
-<div class="sm-side-label sm-label-good">✓ With AfterStay</div>
-<div class="sm-clock sm-clock-good" id="sm-clock-good">6:47</div>
-<div class="sm-date">Saturday, March 21 · Peter, 8 properties</div>
-<div class="sm-counter">
-<div class="sm-counter-item sm-ci-good">
-<div class="sm-ci-num" id="sm-auto" style="color:var(--accent-light)">0</div>
-<div class="sm-ci-label">auto-handled</div>
-</div>
-<div class="sm-counter-item sm-ci-good">
-<div class="sm-ci-num" id="sm-ready" style="color:var(--accent-light)">0</div>
-<div class="sm-ci-label">staff ready</div>
-</div>
-<div class="sm-counter-item sm-ci-good">
-<div class="sm-ci-num" id="sm-silence" style="color:var(--accent-light)">0</div>
-<div class="sm-ci-label">msgs to Peter</div>
-</div>
-</div>
-<div class="sm-feed" id="sm-nest-feed"></div>
-<div class="sm-outcome sm-outcome-good" id="sm-outcome-good">
-0 messages · 0 calls · team moved on their own · all turnovers on time · Peter had coffee.
-</div>
-<!-- Dashboard preview reveal -->
-<div id="sm-dash-reveal" style="margin-top:10px;text-align:center;opacity:0;transition:opacity .5s ease">
-<button onclick="smShowDash()" style="padding:8px 18px;border-radius:12px;background:rgba(20,184,166,.15);border:1px solid rgba(20,184,166,.25);color:var(--accent-light);font-family:var(--sans);font-size:11px;font-weight:600;cursor:pointer;transition:background .15s,color .15s">See what Peter sees → the dashboard</button>
-</div>
-</div>
+/* ═══════════════════════
+   PULSE HERO STAGE
+   ═══════════════════════ */
+.pm-pulse-hero-stage{
+  position:relative;height:380px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:64px;overflow:visible;
+}
+#pm-pulse-canvas{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  pointer-events:none;z-index:0;
+}
+.pm-pulse-core-stack{
+  position:relative;z-index:2;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+}
+.pm-pulse-big-dot{position:relative;width:72px;height:72px;display:flex;align-items:center;justify-content:center}
+.pm-pulse-big-core{width:22px;height:22px;border-radius:50%;position:relative;z-index:2;transition:background .4s,box-shadow .4s}
+.pm-pb-ring{position:absolute;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);border:1.5px solid transparent;pointer-events:none}
 
-</div><!-- /sm-split -->
+/* GREEN — slow calm 4s */
+@keyframes pm-pbRingG{0%{width:22px;height:22px;opacity:.65;border-color:rgba(21,212,146,.55)}100%{width:220px;height:220px;opacity:0;border-color:rgba(21,212,146,0)}}
+@keyframes pm-pbCoreG{0%,100%{transform:scale(1)}50%{transform:scale(.86)}}
+.pm-state-green .pm-pulse-big-core{background:var(--green2);box-shadow:0 0 18px rgba(21,212,146,.55),0 0 5px rgba(21,212,146,.9);animation:pm-pbCoreG 4s ease infinite}
+.pm-state-green .pm-pb-ring:nth-child(1){animation:pm-pbRingG 4s ease-out infinite}
+.pm-state-green .pm-pb-ring:nth-child(2){animation:pm-pbRingG 4s ease-out 1.33s infinite}
+.pm-state-green .pm-pb-ring:nth-child(3){animation:pm-pbRingG 4s ease-out 2.66s infinite}
 
-<!-- DASHBOARD PREVIEW (hidden, expands below split) -->
-<div id="sm-dash-panel" style="max-width:1120px;margin:0 auto;overflow:hidden;max-height:0;opacity:0;transition:max-height .7s cubic-bezier(.25,.46,.45,.94),opacity .5s ease .2s">
-<div style="padding-top:20px">
-<div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-light);text-align:center;margin-bottom:10px">This is Peter's actual dashboard at 9:00am</div>
-<div style="border-radius:18px;border:2px solid var(--border2);background:var(--bg2);overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.03)">
-<!-- Browser chrome -->
-<div style="padding:7px 14px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
-<div style="display:flex;gap:4px"><div style="width:8px;height:8px;border-radius:50%;background:#ef4444"></div><div style="width:8px;height:8px;border-radius:50%;background:#f59e0b"></div><div style="width:8px;height:8px;border-radius:50%;background:#22c55e"></div></div>
-<div style="font-size:10px;color:var(--text3);background:var(--bg2);padding:3px 10px;border-radius:4px;flex:1;text-align:center">afterstay.app/dashboard</div>
-<div style="display:flex;gap:6px;align-items:center"><span style="font-size:10px;color:var(--text3)">🔍</span><span style="font-size:10px;color:var(--text3)">🔔</span></div>
-</div>
-<!-- Real screenshot -->
-<img src="dashboard-screenshot.jpg" alt="AfterStay Dashboard — Operator view" loading="lazy" style="width:100%;display:block;" />
-</div><!-- /browser -->
-</div><!-- /padding -->
-</div><!-- /sm-dash-panel -->
+/* AMBER — medium 1.8s */
+@keyframes pm-pbRingA{0%{width:22px;height:22px;opacity:.7;border-color:rgba(239,159,39,.6)}100%{width:200px;height:200px;opacity:0;border-color:rgba(239,159,39,0)}}
+@keyframes pm-pbCoreA{0%,100%{transform:scale(1)}45%{transform:scale(.88)}}
+.pm-state-amber .pm-pulse-big-core{background:var(--amber);box-shadow:0 0 18px rgba(239,159,39,.5),0 0 5px rgba(239,159,39,.85);animation:pm-pbCoreA 1.8s ease infinite}
+.pm-state-amber .pm-pb-ring:nth-child(1){animation:pm-pbRingA 1.8s ease-out infinite}
+.pm-state-amber .pm-pb-ring:nth-child(2){animation:pm-pbRingA 1.8s ease-out .6s infinite}
+.pm-state-amber .pm-pb-ring:nth-child(3){animation:pm-pbRingA 1.8s ease-out 1.2s infinite}
 
+/* RED — fast urgent 0.75s triple ring */
+@keyframes pm-pbRingR{0%{width:22px;height:22px;opacity:.85;border-color:rgba(226,75,74,.75)}100%{width:240px;height:240px;opacity:0;border-color:rgba(226,75,74,0)}}
+@keyframes pm-pbCoreR{0%,100%{transform:scale(1)}30%{transform:scale(.78)}65%{transform:scale(1.18)}}
+.pm-state-red .pm-pulse-big-core{background:var(--red);box-shadow:0 0 24px rgba(226,75,74,.65),0 0 6px rgba(226,75,74,1);animation:pm-pbCoreR .75s ease infinite}
+.pm-state-red .pm-pb-ring:nth-child(1){animation:pm-pbRingR .75s ease-out infinite}
+.pm-state-red .pm-pb-ring:nth-child(2){animation:pm-pbRingR .75s ease-out .25s infinite}
+.pm-state-red .pm-pb-ring:nth-child(3){animation:pm-pbRingR .75s ease-out .5s infinite}
 
-<div class="sm-caption" id="sm-caption"></div>
-<div class="sm-progbar"><div class="sm-progfill" id="sm-prog"></div></div>
-<div style="text-align:center;margin-top:20px;display:flex;align-items:center;justify-content:center;gap:10px">
-<button onclick="smStart()" id="sm-play" style="padding:8px 22px;border-radius:12px;background:var(--accent);color:#fff;font-family:var(--sans);font-size:12px;font-weight:600;border:none;cursor:pointer;transition:opacity .15s">▶ Play both mornings</button>
-<button onclick="smRestart()" id="sm-replay" style="padding:7px 16px;border-radius:12px;background:transparent;color:var(--text3);font-family:var(--sans);font-size:11px;font-weight:500;border:1px solid var(--border);cursor:pointer;display:none;transition:border-color .15s,color .15s">↺ Replay</button>
-</div>
-<div style="text-align:center;margin-top:16px"><a href="javascript:void(0)" class="feat-cta" onclick="openWaitlist()">Join the waitlist <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"><path d="M6 3l5 5-5 5"/></svg></a></div>
-</div>
+/* hero labels */
+.pm-ph-label{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;transition:color .5s}
+.pm-state-green .pm-ph-label{color:var(--green2)}
+.pm-state-amber .pm-ph-label{color:var(--amber)}
+.pm-state-red   .pm-ph-label{color:var(--red)}
+.pm-ph-sub{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.pm-ph-count{font-size:11px;font-family:var(--mono);margin-top:2px}
+.pm-ph-count .pm-s-blocked{color:var(--red)}
+.pm-ph-count .pm-s-warn{color:var(--amber)}
+.pm-ph-count .pm-s-active{color:var(--green2)}
+.pm-sev-badge{font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:5px}
+.pm-sev-badge.pm-b-green{background:var(--green-bg);color:var(--green2);border:1px solid var(--green-border)}
+.pm-sev-badge.pm-b-amber{background:rgba(239,159,39,.08);color:var(--amber);border:1px solid rgba(239,159,39,.3)}
+.pm-sev-badge.pm-b-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+
+.pm-sev-legend{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;justify-content:center}
+.pm-sev-pill{padding:5px 14px;border-radius:20px;font-size:10px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .2s;border:1px solid var(--border);background:transparent;color:var(--text3)}
+.pm-sev-pill.pm-sel-green{background:var(--green-bg);color:var(--green2);border-color:var(--green-border)}
+.pm-sev-pill.pm-sel-amber{background:rgba(239,159,39,.08);color:var(--amber);border-color:rgba(239,159,39,.3)}
+.pm-sev-pill.pm-sel-red{background:var(--red-bg);color:var(--red);border-color:var(--red-border)}
+
+/* ─── DEMO WRAPPER ─── */
+.pm-demo-wrap{display:grid;grid-template-columns:290px 1fr;gap:0;border-radius:16px;border:1px solid var(--border2);overflow:hidden;background:var(--card);position:relative}
+.pm-demo-wrap::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:400px;height:1px;background:linear-gradient(90deg,transparent,var(--green),transparent);z-index:1}
+
+/* LEFT sidebar */
+.pm-dash-side{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.pm-dash-topbar{padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;background:var(--bg3);flex-shrink:0}
+.pm-dash-dot-btn{width:7px;height:7px;border-radius:50%;background:var(--border2)}
+.pm-dash-url{font-size:9px;color:var(--text3);font-family:var(--mono);margin-left:auto}
+
+/* sidebar dot */
+.pm-sb-wrap{position:relative;width:14px;height:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.pm-sb-core{width:7px;height:7px;border-radius:50%;position:relative;z-index:2}
+.pm-sb-ring{position:absolute;width:7px;height:7px;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%)}
+@keyframes pm-sbCoreG{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.85)}}
+@keyframes pm-sbRingG{0%{transform:translate(-50%,-50%) scale(1);opacity:.55}100%{transform:translate(-50%,-50%) scale(3.5);opacity:0}}
+.pm-sb-green .pm-sb-core{background:var(--green2);animation:pm-sbCoreG 4s ease infinite}
+.pm-sb-green .pm-sb-ring:nth-child(1){background:var(--green2);animation:pm-sbRingG 4s ease infinite}
+.pm-sb-green .pm-sb-ring:nth-child(2){display:none}
+@keyframes pm-sbCoreA{0%,100%{opacity:1;transform:scale(1)}45%{opacity:.65;transform:scale(.87)}}
+@keyframes pm-sbRingA{0%{transform:translate(-50%,-50%) scale(1);opacity:.6}100%{transform:translate(-50%,-50%) scale(3.5);opacity:0}}
+.pm-sb-amber .pm-sb-core{background:var(--amber);animation:pm-sbCoreA 1.8s ease infinite}
+.pm-sb-amber .pm-sb-ring:nth-child(1){background:var(--amber);animation:pm-sbRingA 1.8s ease infinite}
+.pm-sb-amber .pm-sb-ring:nth-child(2){background:var(--amber);animation:pm-sbRingA 1.8s ease .9s infinite}
+@keyframes pm-sbCoreR{0%,100%{opacity:1;transform:scale(1)}35%{opacity:.5;transform:scale(.8)}65%{opacity:1;transform:scale(1.12)}}
+@keyframes pm-sbRingR{0%{transform:translate(-50%,-50%) scale(1);opacity:.7}100%{transform:translate(-50%,-50%) scale(3.8);opacity:0}}
+.pm-sb-red .pm-sb-core{background:var(--red);animation:pm-sbCoreR .75s ease infinite}
+.pm-sb-red .pm-sb-ring:nth-child(1){background:var(--red);animation:pm-sbRingR .75s ease infinite}
+.pm-sb-red .pm-sb-ring:nth-child(2){background:var(--red);animation:pm-sbRingR .75s ease .375s infinite}
+
+.pm-pulse-head{padding:10px 14px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.pm-pulse-head-left{display:flex;align-items:center;gap:7px}
+.pm-pulse-title-text{font-size:11px;font-weight:600;color:var(--text);letter-spacing:.04em;text-transform:uppercase}
+.pm-pulse-status-text{font-size:9px;font-family:var(--mono)}
+
+.pm-pulse-tabs{display:flex;gap:2px;padding:6px 10px;border-bottom:1px solid var(--border);flex-shrink:0}
+.pm-ptab{padding:4px 8px;border-radius:5px;font-size:10px;font-weight:500;color:var(--text3);cursor:pointer;transition:all .15s;border:none;background:transparent;font-family:var(--sans)}
+.pm-ptab.pm-active{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
+
+.pm-pulse-feed{flex:1;padding:6px 8px;display:flex;flex-direction:column;gap:4px;overflow-y:auto;min-height:0;max-height:340px}
+.pm-feed-entry{padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);display:flex;gap:7px;align-items:flex-start;position:relative;overflow:hidden;flex-shrink:0}
+.pm-feed-entry::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;border-radius:1px 0 0 1px}
+.pm-fe-green::before{background:var(--green2)}
+.pm-fe-red::before{background:var(--red)}
+.pm-fe-amber::before{background:var(--amber)}
+.pm-fe-blue::before{background:var(--blue)}
+.pm-fe-new-green{border-color:var(--green-border)!important;background:rgba(29,158,117,0.06)!important}
+.pm-fe-new-red{border-color:var(--red-border)!important;background:rgba(226,75,74,0.05)!important}
+.pm-fe-new-amber{border-color:rgba(239,159,39,.3)!important;background:rgba(239,159,39,.05)!important}
+@keyframes pm-flashG{0%{background:rgba(21,212,146,.22);border-color:rgba(21,212,146,.6)}100%{background:rgba(29,158,117,.06);border-color:var(--green-border)}}
+@keyframes pm-flashR{0%{background:rgba(226,75,74,.22);border-color:rgba(226,75,74,.6)}100%{background:rgba(226,75,74,.05);border-color:var(--red-border)}}
+@keyframes pm-flashA{0%{background:rgba(239,159,39,.22);border-color:rgba(239,159,39,.6)}100%{background:rgba(239,159,39,.05);border-color:rgba(239,159,39,.3)}}
+.pm-flash-g{animation:pm-flashG .8s ease forwards}
+.pm-flash-r{animation:pm-flashR .8s ease forwards}
+.pm-flash-a{animation:pm-flashA .8s ease forwards}
+@keyframes pm-slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.pm-entry-slide{animation:pm-slideDown .35s cubic-bezier(.34,1.56,.64,1) forwards}
+.pm-entry-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;flex-shrink:0;margin-top:1px}
+.pm-entry-.pm-entry-top{display:flex;align-items:center;justify-content:space-between;gap:4px;margin-bottom:1px}
+.pm-entry-name{font-size:10px;font-weight:600;color:var(--text)}
+.pm-entry-time{font-size:8px;color:var(--text3);font-family:var(--mono);flex-shrink:0}
+.pm-entry-desc{font-size:10px;color:var(--text2);line-height:1.4;margin-bottom:2px}
+.pm-entry-prop{font-size:9px;color:var(--text3)}
+.pm-entry-badge{display:inline-block;padding:2px 6px;border-radius:4px;font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-top:3px}
+.pm-eb-green{background:var(--green-bg);color:var(--green2);border:1px solid var(--green-border)}
+.pm-eb-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.pm-eb-amber{background:rgba(239,159,39,.08);color:var(--amber);border:1px solid rgba(239,159,39,.25)}
+.pm-eb-blue{background:rgba(55,138,221,.1);color:var(--blue);border:1px solid rgba(55,138,221,.2)}
+.pm-entry-prog{height:2px;border-radius:1px;background:var(--border);margin-top:4px;overflow:hidden}
+.pm-entry-prog-fill{height:100%;border-radius:1px;background:var(--green2)}
+
+/* RIGHT: Propagation */
+.pm-prop-stage{display:flex;flex-direction:column;padding:20px 24px;background:var(--bg);min-height:0}
+.pm-prop-stage-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.pm-prop-stage-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)}
+.pm-prop-stage-clock{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.pm-source-node{padding:10px 14px;border-radius:10px;border:1px solid var(--border2);background:var(--bg2);display:flex;align-items:center;gap:10px;position:relative}
+.pm-source-node::after{content:'EVENT SOURCE';position:absolute;top:-8px;left:12px;font-size:8px;font-weight:600;letter-spacing:.08em;color:var(--text3);background:var(--bg);padding:0 4px}
+.pm-sn-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;transition:background .35s}
+.pm-sn-.pm-sn-actor{font-size:12px;font-weight:600;color:var(--text)}
+.pm-sn-desc{font-size:11px;color:var(--text2);margin-top:1px}
+.pm-sn-meta{font-size:9px;color:var(--text3);margin-top:2px;font-family:var(--mono)}
+.pm-sn-badge{padding:3px 8px;border-radius:5px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.pm-prop-svg-wrap{position:relative;height:52px;flex-shrink:0;overflow:visible}
+#pm-prop-svg{position:absolute;top:0;left:0;width:100%;height:52px;overflow:visible}
+.pm-role-nodes{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1}
+/* fully visible by default so buttons are always clickable */
+.pm-role-node{
+  padding:10px 12px;border-radius:10px;border:1px solid var(--border);
+  background:var(--bg2);
+  opacity:1;transform:translateY(0);
+  transition:opacity .4s ease,transform .4s cubic-bezier(.34,1.56,.64,1),border-color .3s,background .3s;
+  position:relative;
+}
+/* pre-anim: briefly dimmed before the stagger fires */
+.pm-role-node.pm-pre-anim{opacity:0.15;transform:translateY(5px)}
+.pm-role-node.pm-visible{opacity:1;transform:translateY(0)}
+.pm-role-node.pm-acted{border-color:var(--green-border);background:rgba(29,158,117,0.05)}
+.pm-rn-pip{position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:9px;height:9px;border-radius:50%;border:2px solid var(--bg);transition:background .3s}
+.pm-rn-top{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.pm-rn-icon{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.pm-rn-name{font-size:10px;font-weight:600;color:var(--text)}
+.pm-rn-scope{font-size:9px;color:var(--text3);line-height:1.4;margin-bottom:7px}
+.pm-rn-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:6px 11px;border-radius:7px;font-size:9px;font-weight:600;
+  cursor:pointer;font-family:var(--sans);
+  transition:all .18s cubic-bezier(.34,1.56,.64,1);
+  position:relative;overflow:hidden;
+}
+/* ripple on click */
+.pm-rn-btn::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;
+  background:rgba(255,255,255,0.12);
+  opacity:0;transform:scale(0.6);
+  transition:opacity .25s,transform .25s;
+  pointer-events:none;
+}
+.pm-rn-btn:active::after{opacity:1;transform:scale(1)}
+.pm-rn-btn:not([disabled]):hover{filter:brightness(1.18);transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,0.3)}
+.pm-rn-btn:not([disabled]):active{transform:scale(.96) translateY(0)}
+.pm-rn-btn.pm-c-blue{background:rgba(55,138,221,.14);color:var(--blue);border:1px solid rgba(55,138,221,.28);box-shadow:0 0 0 0 rgba(55,138,221,0)}
+.pm-rn-btn.pm-c-blue:hover{box-shadow:0 0 12px rgba(55,138,221,.2)}
+.pm-rn-btn.pm-c-amber{background:rgba(239,159,39,.12);color:var(--amber);border:1px solid rgba(239,159,39,.28)}
+.pm-rn-btn.pm-c-amber:hover{box-shadow:0 0 12px rgba(239,159,39,.2)}
+.pm-rn-btn.pm-c-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.pm-rn-btn.pm-c-red:hover{box-shadow:0 0 12px rgba(226,75,74,.2)}
+.pm-rn-btn.pm-c-gray{background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
+.pm-rn-btn.pm-c-done{
+  background:var(--green-bg);color:var(--green2);
+  border:1px solid var(--green-border);pointer-events:none;
+  transform:none!important;box-shadow:none!important;
+}
+.pm-rn-btn svg{width:10px;height:10px;stroke:currentColor;stroke-width:2;fill:none}
+
+/* confirmation line — slides in under button after action */
+.pm-rn-confirm{
+  margin-top:6px;font-size:9px;color:var(--green2);font-family:var(--mono);
+  display:flex;align-items:center;gap:4px;
+  opacity:0;transform:translateY(4px);
+  transition:opacity .3s ease,transform .3s ease;
+  overflow:hidden;max-height:0;
+}
+.pm-rn-confirm.pm-show{opacity:1;transform:translateY(0);max-height:24px}
+.pm-rn-confirm svg{width:9px;height:9px;stroke:var(--green2);stroke-width:2.5;fill:none;flex-shrink:0}
+
+/* ── OPERATOR NODE — step-in panel ── */
+.pm-op-node-.pm-op-watching{
+  display:flex;align-items:center;gap:5px;
+  font-size:9px;color:var(--text3);font-family:var(--mono);
+  padding:4px 8px;border-radius:5px;
+  background:var(--bg3);border:1px solid var(--border);
+  margin-bottom:2px;
+}
+.pm-op-watching-dot{width:5px;height:5px;border-radius:50%;background:var(--text3);flex-shrink:0}
+/* step-in trigger button */
+.pm-op-stepin-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 10px;border-radius:6px;font-size:9px;font-weight:600;
+  cursor:pointer;border:1px solid var(--border);
+  background:transparent;color:var(--text3);
+  font-family:var(--sans);transition:all .18s;
+}
+.pm-op-stepin-btn:hover{border-color:rgba(255,255,255,.2);color:var(--text);background:var(--bg3)}
+.pm-op-stepin-btn svg{width:9px;height:9px;stroke:currentColor;stroke-width:2;fill:none}
+/* expanded step-in actions */
+.pm-op-actions{
+  display:flex;flex-direction:column;gap:4px;
+  max-height:0;overflow:hidden;
+  transition:max-height .3s cubic-bezier(.34,1.56,.64,1),opacity .25s ease;
+  opacity:0;
+}
+.pm-op-actions.pm-open{max-height:120px;opacity:1}
+.pm-op-action-btn{
+  display:flex;align-items:center;gap:6px;
+  padding:5px 9px;border-radius:6px;font-size:9px;font-weight:600;
+  cursor:pointer;border:none;font-family:var(--sans);
+  transition:all .18s;text-align:left;width:100%;
+}
+.pm-op-action-btn:hover{filter:brightness(1.15);transform:translateX(2px)}
+.pm-op-action-btn:active{transform:scale(.97)}
+.pm-op-action-btn svg{width:9px;height:9px;stroke:currentColor;stroke-width:2;fill:none;flex-shrink:0}
+.pm-oa-override{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.pm-oa-escalate{background:rgba(239,159,39,.08);color:var(--amber);border:1px solid rgba(239,159,39,.2)}
+.pm-oa-approve{background:var(--green-bg);color:var(--green2);border:1px solid var(--green-border)}
+/* operator acted state */
+.pm-op-acted-line{
+  font-size:9px;color:var(--green2);font-family:var(--mono);
+  display:flex;align-items:center;gap:4px;
+  opacity:0;transition:opacity .3s ease;
+}
+.pm-op-acted-line.pm-show{opacity:1}
+.pm-op-acted-line svg{width:9px;height:9px;stroke:var(--green2);stroke-width:2.5;fill:none}
+.pm-resolution-bar{margin-top:12px;padding:10px 14px;border-radius:8px;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(4px);transition:opacity .5s ease,transform .5s ease;flex-shrink:0}
+.pm-resolution-bar.pm-show{opacity:1;transform:translateY(0)}
+.pm-res-dot{width:7px;height:7px;border-radius:50%;background:var(--green2);flex-shrink:0}
+.pm-res-text{font-size:10px;color:var(--green2);font-family:var(--mono)}
+.pm-res-text strong{color:#fff}
+.pm-demo-controls{display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:12px;flex-shrink:0}
+.pm-ctrl-btn{padding:5px 11px;border-radius:7px;font-size:10px;font-weight:500;font-family:var(--sans);cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text3);transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.pm-ctrl-btn:hover{border-color:var(--green-border);color:var(--green2)}
+.pm-ctrl-btn svg{width:10px;height:10px;stroke:currentColor;stroke-width:2;fill:none}
+
+/* ─── BOTTOM ─── */
+.pm-moat-bottom{
+  margin-top:72px;
+  text-align:center;
+  padding:48px 32px;
+  border-radius:16px;
+  background:linear-gradient(135deg,rgba(29,158,117,0.05) 0%,rgba(29,158,117,0.02) 100%);
+  border:1px solid var(--green-border);
+  position:relative;overflow:hidden;
+}
+.pm-moat-bottom::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:300px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--green),transparent);
+}
+.pm-moat-bottom-eyebrow{
+  font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--green);margin-bottom:16px;
+  font-family:var(--mono);
+}
+.pm-moat-verdict{
+  font-size:clamp(16px,2vw,22px);font-weight:700;
+  color:#fff;letter-spacing:-.02em;line-height:1.4;
+  max-width:560px;margin:0 auto 8px;
+}
+.pm-moat-verdict-sub{
+  font-size:13px;color:var(--text2);line-height:1.7;
+  max-width:440px;margin:0 auto 32px;
+}
+.pm-moat-cta-row{
+  display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
+}
+.pm-cta-primary{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:11px 24px;border-radius:9px;
+  background:var(--green);color:#fff;
+  font-size:13px;font-weight:600;font-family:var(--sans);
+  border:none;cursor:pointer;text-decoration:none;
+  transition:all .18s;letter-spacing:-.01em;
+}
+.pm-cta-primary:hover{background:var(--green2);transform:translateY(-1px);box-shadow:0 8px 28px rgba(29,158,117,.3)}
+.pm-cta-primary svg{width:14px;height:14px;stroke:currentColor;stroke-width:1.8;fill:none}
+.feat-cta{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:10px 18px;border-radius:9px;
+  border:1px solid var(--border2);color:var(--text2);
+  font-size:12px;cursor:pointer;text-decoration:none;
+  transition:all .15s;background:transparent;font-family:var(--sans);
+}
+.feat-cta:hover{border-color:var(--green-border);color:var(--green2)}
+.feat-cta svg{width:14px;height:14px;stroke:currentColor;stroke-width:1.5;fill:none}
+
+@media(max-width:900px){
+  .pm-demo-wrap{grid-template-columns:1fr}
+  .pm-dash-side{border-right:none;border-bottom:1px solid var(--border);max-height:260px}
+  .pm-pulse-hero-stage{height:300px;margin-bottom:40px}
+  .pm-moat-bottom{padding:32px 20px;margin-top:48px}
+}
+@media(max-width:580px){
+  .pm-role-nodes{grid-template-columns:1fr}
+  .pm-moat-cta-row{flex-direction:column;align-items:stretch}
+  .pm-cta-primary,.feat-cta{justify-content:center}
+}
+</style>
+<div class="pm-section-divider"></div>
+
+<section class="pm-pulse-moat" id="pm-pulse-moat">
+  <div class="dot-grid"></div>
+
+  <div class="container">
+
+    <!-- ═══ HEADER — updated title + subtitle only ═══ -->
+    <div class="pm-moat-header">
+      <div class="feat-label">⚡ Pulse — Live Operations Intelligence</div>
+      <h2 class="pm-moat-title">The dot that changes<br>how fast your team moves.</h2>
+      <p class="pm-moat-sub">Studies show that <strong>visual urgency signals — pulsing, radiating, color-coded</strong> — direct attention faster than any text notification. Pulse puts that science inside your dashboard. Red means act now. Green means your operations are breathing.</p>
+    </div>
+
+    <!-- Table -->
+    <div class="pm-moat-table-wrap">
+      <table class="pm-moat-table">
+        <thead>
+          <tr>
+            <th>Capability</th><th>Breezeway</th><th>Guesty</th><th>SuiteOp</th><th>Turno</th>
+            <th class="pm-ours">⚡ AfterStay</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Live ops feed</td>
+            <td><span class="pm-cell-tag pm-flat">Flat task list</span></td>
+            <td><span class="pm-cell-tag pm-inbox">Inbox</span></td>
+            <td><span class="pm-cell-tag pm-issues">Issue dash</span></td>
+            <td><span class="pm-cell-tag pm-cleaner">Job list</span></td>
+            <td class="pm-ours"><span class="pm-cell-tag pm-pulse">Feed + Alerts</span></td>
+          </tr>
+          <tr>
+            <td>Role-aware format</td>
+            <td><div class="pm-crs"><svg viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg></div></td>
+            <td><div class="pm-prt"><div class="pm-prt-dash"></div></div></td>
+            <td><div class="pm-crs"><svg viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg></div></td>
+            <td><div class="pm-crs"><svg viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg></div></td>
+            <td class="pm-ours"><div class="pm-chk"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></td>
+          </tr>
+          <tr>
+            <td>Event propagation</td>
+            <td><div class="pm-crs"><svg viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg></div></td>
+            <td><div class="pm-crs"><svg viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg></div></td>
+            <td><div class="pm-crs"><svg viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg></div></td>
+            <td><div class="pm-crs"><svg viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg></div></td>
+            <td class="pm-ours"><div class="pm-chk"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></td>
+          </tr>
+          <tr>
+            <td>Pre-surfaced quick actions</td>
+            <td><div class="pm-crs"><svg viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg></div></td>
+            <td><div class="pm-crs"><svg viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg></div></td>
+            <td><div class="pm-crs"><svg viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg></div></td>
+            <td><div class="pm-crs"><svg viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg></div></td>
+            <td class="pm-ours"><div class="pm-chk"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></td>
+          </tr>
+          <tr>
+            <td>Replaces group chat</td>
+            <td><div class="pm-crs"><svg viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg></div></td>
+            <td><div class="pm-crs"><svg viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg></div></td>
+            <td><div class="pm-crs"><svg viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg></div></td>
+            <td><div class="pm-crs"><svg viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg></div></td>
+            <td class="pm-ours"><div class="pm-chk"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PULSE HERO -->
+    <div class="pm-pulse-hero-stage" id="pm-pulse-hero-stage">
+      <canvas id="pm-pulse-canvas"></canvas>
+      <div class="pm-pulse-core-stack">
+        <div class="pm-pulse-big-dot pm-state-red" id="pm-pulse-big-dot">
+          <div class="pm-pb-ring"></div>
+          <div class="pm-pb-ring"></div>
+          <div class="pm-pb-ring"></div>
+          <div class="pm-pulse-big-core"></div>
+        </div>
+        <span class="pm-sev-badge pm-b-red" id="pm-ph-badge">3+ blocked — CRITICAL</span>
+        <div class="pm-ph-label" id="pm-ph-label">PULSE · CRITICAL</div>
+        <div class="pm-ph-sub">afterstay.org/dashboard · Sunset Villa</div>
+        <div class="pm-ph-count" id="pm-ph-count"><span class="pm-s-blocked">3 blocked</span>&nbsp;<span class="pm-s-active">1 active</span></div>
+        <div class="pm-sev-legend">
+          <button class="pm-sev-pill" id="pm-pill-green" onclick="PM.loadScene('green')">🟢 All clear</button>
+          <button class="pm-sev-pill" id="pm-pill-amber" onclick="PM.loadScene('amber')">🟡 1–2 issues</button>
+          <button class="pm-sev-pill pm-sel-red" id="pm-pill-red" onclick="PM.loadScene('red')">🔴 3+ blocked</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEMO -->
+    <div class="pm-demo-wrap">
+      <div class="pm-dash-side">
+        <div class="pm-dash-topbar">
+          <div style="display:flex;gap:4px">
+            <div class="pm-dash-dot-btn"></div><div class="pm-dash-dot-btn"></div><div class="pm-dash-dot-btn"></div>
+          </div>
+          <span class="pm-dash-url">afterstay.org/dashboard</span>
+        </div>
+        <div class="pm-pulse-head">
+          <div class="pm-pulse-head-left">
+            <div class="pm-sb-wrap pm-sb-red" id="pm-sb-dot">
+              <div class="pm-sb-ring"></div><div class="pm-sb-ring"></div>
+              <div class="pm-sb-core"></div>
+            </div>
+            <span class="pm-pulse-title-text">Pulse</span>
+          </div>
+          <span class="pm-pulse-status-text" id="pm-sb-status"><span class="pm-s-blocked">3 blocked</span>&nbsp;<span class="pm-s-active">1 active</span></span>
+        </div>
+        <div class="pm-pulse-tabs">
+          <button class="pm-ptab pm-active">All</button>
+          <button class="pm-ptab">In Progress</button>
+          <button class="pm-ptab">Issues</button>
+        </div>
+        <div class="pm-pulse-feed" id="pm-pulse-feed">
+          <div id="pm-injected-entry"></div>
+          <div class="pm-feed-entry pm-fe-blue">
+            <div class="pm-entry-av" style="background:#4e5ba6">BL</div>
+            <div class="pm-entry-body">
+              <div class="pm-entry-top"><span class="pm-entry-name">Bjorn L.</span><span class="pm-entry-time">12:28</span></div>
+              <div class="pm-entry-desc">en route · emergency plumbing</div>
+              <div class="pm-entry-prop">Ocean View Apt</div>
+              <span class="pm-entry-badge pm-eb-blue">En Route</span>
+            </div>
+          </div>
+          <div class="pm-feed-entry pm-fe-green">
+            <div class="pm-entry-av" style="background:#1a8a7a">MS</div>
+            <div class="pm-entry-body">
+              <div class="pm-entry-top"><span class="pm-entry-name">Maria S.</span><span class="pm-entry-time">12:15</span></div>
+              <div class="pm-entry-desc">cleaning · bedroom 2/4</div>
+              <div class="pm-entry-prop">Harbor Studio</div>
+              <div class="pm-entry-prog"><div class="pm-entry-prog-fill" style="width:50%"></div></div>
+              <span class="pm-entry-badge pm-eb-blue">In Progress</span>
+            </div>
+          </div>
+          <div class="pm-feed-entry pm-fe-green">
+            <div class="pm-entry-av" style="background:#1a8a7a">AK</div>
+            <div class="pm-entry-body">
+              <div class="pm-entry-top"><span class="pm-entry-name">Anna K.</span><span class="pm-entry-time">11:52</span></div>
+              <div class="pm-entry-desc">marked task complete · Cleaning</div>
+              <div class="pm-entry-prop">Sunset Villa</div>
+              <span class="pm-entry-badge pm-eb-green">Complete</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pm-prop-stage">
+        <div class="pm-prop-stage-head">
+          <span class="pm-prop-stage-label">Event propagation</span>
+          <span class="pm-prop-stage-clock">08:47 AM · Sunset Villa</span>
+        </div>
+        <div class="pm-source-node">
+          <div class="pm-sn-av" id="pm-sn-av" style="background:#c0392b">MS</div>
+          <div class="pm-sn-body">
+            <div class="pm-sn-actor" id="pm-sn-actor">Maria S.</div>
+            <div class="pm-sn-desc" id="pm-sn-desc">Reported broken towel rail · Bedroom 2</div>
+            <div class="pm-sn-meta" id="pm-sn-meta">Sunset Villa · 08:47 AM</div>
+          </div>
+          <span class="pm-sn-badge pm-eb-red" id="pm-sn-badge">Blocked</span>
+        </div>
+        <div class="pm-prop-svg-wrap">
+          <svg id="pm-prop-svg" viewBox="0 0 560 52" preserveAspectRatio="none" style="width:100%;height:52px;overflow:visible">
+            <line id="pm-svg-stem" x1="280" y1="0"  x2="280" y2="26"  stroke="rgba(29,158,117,0.3)" stroke-width="1.5" stroke-dasharray="26"  stroke-dashoffset="26"/>
+            <line id="pm-svg-bar"  x1="70"  y1="26" x2="490" y2="26"  stroke="rgba(29,158,117,0.3)" stroke-width="1.5" stroke-dasharray="420" stroke-dashoffset="420"/>
+            <line id="pm-svg-d0"   x1="70"  y1="26" x2="70"  y2="52"  stroke="rgba(29,158,117,0.3)" stroke-width="1.5" stroke-dasharray="26"  stroke-dashoffset="26"/>
+            <line id="pm-svg-d1"   x1="210" y1="26" x2="210" y2="52"  stroke="rgba(29,158,117,0.3)" stroke-width="1.5" stroke-dasharray="26"  stroke-dashoffset="26"/>
+            <line id="pm-svg-d2"   x1="350" y1="26" x2="350" y2="52"  stroke="rgba(29,158,117,0.3)" stroke-width="1.5" stroke-dasharray="26"  stroke-dashoffset="26"/>
+            <line id="pm-svg-d3"   x1="490" y1="26" x2="490" y2="52"  stroke="rgba(29,158,117,0.3)" stroke-width="1.5" stroke-dasharray="26"  stroke-dashoffset="26"/>
+            <circle id="pm-tdot0" cx="70"  cy="52" r="3" fill="rgba(29,158,117,0.55)" opacity="0"/>
+            <circle id="pm-tdot1" cx="210" cy="52" r="3" fill="rgba(29,158,117,0.55)" opacity="0"/>
+            <circle id="pm-tdot2" cx="350" cy="52" r="3" fill="rgba(29,158,117,0.55)" opacity="0"/>
+            <circle id="pm-tdot3" cx="490" cy="52" r="3" fill="rgba(29,158,117,0.55)" opacity="0"/>
+          </svg>
+        </div>
+        <div class="pm-role-nodes" id="pm-role-nodes">
+
+          <!-- GS Supervisor -->
+          <div class="pm-role-node" id="pm-rn-0">
+            <div class="pm-rn-pip" id="pm-pip-0" style="background:var(--blue)"></div>
+            <div class="pm-rn-top">
+              <div class="pm-rn-icon" id="pm-ri-0" style="background:rgba(55,138,221,.12);color:var(--blue)">GS</div>
+              <span class="pm-rn-name">GS Supervisor</span>
+            </div>
+            <div class="pm-rn-scope">Guest-facing events, issues, upsells, PTE</div>
+            <button class="pm-rn-btn pm-c-blue" id="pm-rn-btn-0">
+              <svg style="width:10px;height:10px;stroke:currentColor;stroke-width:2;fill:none" viewBox="0 0 12 12"><line x1="6" y1="2" x2="6" y2="10"/><line x1="2" y1="6" x2="10" y2="6"/></svg>
+              Create Work Order
+            </button>
+            <div class="pm-rn-confirm" id="pm-rn-confirm-0">
+              <svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg>
+              <span id="pm-rn-confirm-text-0"></span>
+            </div>
+          </div>
+
+          <!-- Maintenance -->
+          <div class="pm-role-node" id="pm-rn-1">
+            <div class="pm-rn-pip" id="pm-pip-1" style="background:var(--amber)"></div>
+            <div class="pm-rn-top">
+              <div class="pm-rn-icon" id="pm-ri-1" style="background:rgba(239,159,39,.1);color:var(--amber)">MT</div>
+              <span class="pm-rn-name">Maintenance</span>
+            </div>
+            <div class="pm-rn-scope">Assigned jobs, urgent flags, PTE context</div>
+            <button class="pm-rn-btn pm-c-amber" id="pm-rn-btn-1">
+              <svg style="width:10px;height:10px;stroke:currentColor;stroke-width:2;fill:none" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4"/><polyline points="6,4 6,6 7.5,7.5"/></svg>
+              Review Request
+            </button>
+            <div class="pm-rn-confirm" id="pm-rn-confirm-1">
+              <svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg>
+              <span id="pm-rn-confirm-text-1"></span>
+            </div>
+          </div>
+
+          <!-- Cleaning Supervisor -->
+          <div class="pm-role-node" id="pm-rn-2">
+            <div class="pm-rn-pip" id="pm-pip-2" style="background:var(--red)"></div>
+            <div class="pm-rn-top">
+              <div class="pm-rn-icon" id="pm-ri-2" style="background:rgba(226,75,74,.08);color:var(--red)">CS</div>
+              <span class="pm-rn-name">Cleaning Supervisor</span>
+            </div>
+            <div class="pm-rn-scope">Team pace, property readiness, blockers</div>
+            <button class="pm-rn-btn pm-c-red" id="pm-rn-btn-2">
+              <svg style="width:10px;height:10px;stroke:currentColor;stroke-width:2;fill:none" viewBox="0 0 12 12"><path d="M3 2v8M3 2l6 3-6 3"/></svg>
+              Flag Property
+            </button>
+            <div class="pm-rn-confirm" id="pm-rn-confirm-2">
+              <svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg>
+              <span id="pm-rn-confirm-text-2"></span>
+            </div>
+          </div>
+
+          <!-- Operator — step-in panel -->
+          <div class="pm-role-node" id="pm-rn-3">
+            <div class="pm-rn-pip" id="pm-pip-3"></div>
+            <div class="pm-rn-top">
+              <div class="pm-rn-icon" id="pm-ri-3" style="background:rgba(255,255,255,.05);color:var(--text2)">OP</div>
+              <span class="pm-rn-name">Operator</span>
+            </div>
+            <div class="pm-op-node-body" id="pm-op-body">
+              <!-- default: watching -->
+              <div id="pm-op-default">
+                <div class="pm-op-watching">
+                  <div class="pm-op-watching-dot"></div>
+                  Watching · awareness only
+                </div>
+                <button class="pm-op-stepin-btn" id="pm-op-stepin-btn" onclick="PM_OP.toggle()">
+                  <svg viewBox="0 0 12 12"><path d="M2 6h8M7 3l3 3-3 3"/></svg>
+                  Step in
+                </button>
+                <div class="pm-op-actions" id="pm-op-actions">
+                  <button class="pm-op-action-btn pm-oa-override" onclick="PM_OP.act('Override — take direct control', this)">
+                    <svg viewBox="0 0 12 12"><path d="M6 2v4l3 1"/><circle cx="6" cy="6" r="4"/></svg>
+                    Override
+                  </button>
+                  <button class="pm-op-action-btn pm-oa-escalate" onclick="PM_OP.act('Escalated to operator level', this)">
+                    <svg viewBox="0 0 12 12"><polyline points="6,2 10,6 6,10"/><line x1="2" y1="6" x2="10" y2="6"/></svg>
+                    Escalate
+                  </button>
+                  <button class="pm-op-action-btn pm-oa-approve" onclick="PM_OP.act('Spend approved', this)">
+                    <svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg>
+                    Approve Spend
+                  </button>
+                </div>
+              </div>
+              <!-- acted state -->
+              <div class="pm-op-acted-line" id="pm-op-acted">
+                <svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg>
+                <span id="pm-op-acted-text"></span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="pm-resolution-bar" id="pm-resolution-bar">
+          <div class="pm-res-dot"></div>
+          <span class="pm-res-text" id="pm-res-text"></span>
+        </div>
+        <div class="pm-demo-controls">
+          <button class="pm-ctrl-btn" onclick="PM.replay()">
+            <svg viewBox="0 0 12 12"><path d="M10 6a4 4 0 11-1.4-3"/><polyline points="8,1 10.5,3.5 8,6"/></svg>
+            Replay
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pm-moat-bottom">
+      <div class="pm-moat-bottom-eyebrow">⚡ Pulse · Live Operations Intelligence</div>
+      <p class="pm-moat-verdict">Every other tool logs what happened.<br>Pulse tells the right person what to do next.</p>
+      <p class="pm-moat-verdict-sub">Built this way from day one — not bolted on after the fact.</p>
+      <div class="pm-moat-cta-row">
+        <a href="https://afterstay.org" class="pm-cta-primary" target="_blank" rel="noopener">
+          See it live
+          <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5"/></svg>
+        </a>
+        <a href="https://afterstay.org" class="feat-cta" target="_blank" rel="noopener">
+          Start free trial
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3l5 5-5 5"/></svg>
+        </a>
+      </div>
+    </div>
+
+  </div>
 </section>
 
+<div class="pm-section-divider"></div>
+
+<script>
+window.__PC=(function(){
+  var canvas=document.getElementById('pulse-canvas');
+  var ctx=canvas.getContext('2d');
+  var rings=[];var raf=null;var running=false;
+  var CFGS={
+    green:{color:[21,212,146], spawn:1400,maxR:420,speed:0.55,alpha:0.15,lw:1.2},
+    amber:{color:[239,159,39], spawn:650, maxR:380,speed:0.9, alpha:0.22,lw:1.4},
+    red:  {color:[226,75,74],  spawn:220, maxR:460,speed:1.6, alpha:0.32,lw:1.7}
+  };
+  var mode='red';var lastSpawn=0;var W,H,cx,cy;
+  function resize(){
+    var stage=document.getElementById('pulse-hero-stage');
+    if(!stage)return;
+    W=Math.min(window.innerWidth,1200);H=Math.max(stage.getBoundingClientRect().height,320);
+    cx=W/2;cy=H/2;
+    canvas.width=W;canvas.height=H;
+    canvas.style.width=W+'px';canvas.style.height=H+'px';
+  }
+  function spawnRing(ts){rings.push({r:12,born:ts});lastSpawn=ts;}
+  function frame(ts){
+    if(!running)return;
+    raf=requestAnimationFrame(frame);
+    ctx.clearRect(0,0,W,H);
+    var cfg=CFGS[mode];
+    if(ts-lastSpawn>cfg.spawn)spawnRing(ts);
+    var gR=mode==='red'?90:mode==='amber'?70:55;
+    var gA=mode==='red'?0.22:mode==='amber'?0.15:0.12;
+    var g=ctx.createRadialGradient(cx,cy,0,cx,cy,gR);
+    g.addColorStop(0,'rgba('+cfg.color[0]+','+cfg.color[1]+','+cfg.color[2]+','+gA+')');
+    g.addColorStop(1,'rgba('+cfg.color[0]+','+cfg.color[1]+','+cfg.color[2]+',0)');
+    ctx.beginPath();ctx.arc(cx,cy,gR,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+    rings=rings.filter(function(ring){
+      ring.r+=cfg.speed;
+      var p=ring.r/cfg.maxR;
+      var a=cfg.alpha*(1-Math.pow(p,0.7));
+      if(a<0.003)return false;
+      ctx.beginPath();ctx.arc(cx,cy,ring.r,0,Math.PI*2);
+      ctx.strokeStyle='rgba('+cfg.color[0]+','+cfg.color[1]+','+cfg.color[2]+','+a+')';
+      ctx.lineWidth=cfg.lw*(1-p*0.5);ctx.stroke();
+      return true;
+    });
+  }
+  function setMode(m){mode=m;rings=[];lastSpawn=0;spawnRing(0);}
+  function start(){
+    if(running)return;running=true;resize();
+    var cfg=CFGS[mode];
+    for(var i=0;i<3;i++)rings.push({r:(cfg.maxR/4)*i+12,born:0});
+    requestAnimationFrame(frame);
+  }
+  window.addEventListener('resize',function(){resize();});
+  return{setMode:setMode,start:start};
+})();
+
+var P=(function(){
+  var SCENES={
+    green:{
+      cssState:'state-green',sbCss:'sb-green',
+      badgeCls:'b-green',badgeText:'All clear',label:'PULSE · LIVE',
+      phCount:'<span class="pm-s-active">2 active</span>',
+      sbStatus:'<span class="pm-s-active">2 active</span>',
+      feedColor:'#1a8a7a',feedInit:'AK',
+      feedDesc:'marked task complete · Cleaning',feedProp:'Sunset Villa',
+      feedBadgeCls:'eb-green',feedBadgeText:'Complete',
+      feedBorder:'fe-green',feedNew:'fe-new-green',feedFlash:'flash-g',
+      snColor:'#1a8a7a',snInit:'AK',
+      snActor:'Anna K.',snDesc:'Marked task complete · Cleaning done',snMeta:'Sunset Villa · 08:52 AM',
+      snBadgeCls:'eb-green',snBadgeText:'Complete',
+      svgCol:'rgba(29,158,117,0.35)',dotCol:'rgba(29,158,117,0.55)',
+      resText:'<strong>Cleaning verified 08:53</strong> · Property marked ready · <strong>Check-in on track.</strong>',
+      nodes:[
+        {cls:'c-blue', pip:'var(--blue)',  label:'Notify Guest', done:'Guest notified', svg:'<path d="M2 8l2-2 2 2 4-4"/><path d="M10 2H2v8l2-2h6z"/>'},
+        {cls:'c-amber',pip:'var(--amber)', label:'Verify',       done:'Verified ✓',    svg:'<polyline points="2,6 5,9 10,3"/>'},
+        {cls:'c-gray', pip:'var(--green2)',label:'Mark Ready',   done:'Property ready',svg:'<polyline points="2,6 5,9 10,3"/>'},
+        {cls:'c-gray', pip:'var(--text3)', label:'View Only',    done:null,            svg:'<circle cx="6" cy="5" r="2.2"/><path d="M1 10c0-2 2.2-3.5 5-3.5s5 1.5 5 3.5"/>'},
+      ]
+    },
+    amber:{
+      cssState:'state-amber',sbCss:'sb-amber',
+      badgeCls:'b-amber',badgeText:'1–2 issues',label:'PULSE · WATCH',
+      phCount:'<span class="pm-s-warn">2 issues</span>&nbsp;<span class="pm-s-active">1 active</span>',
+      sbStatus:'<span class="pm-s-warn">2 issues</span>',
+      feedColor:'#c57b0a',feedInit:'FN',
+      feedDesc:'logged guest issue · Noise complaint',feedProp:'Harbor Studio',
+      feedBadgeCls:'eb-amber',feedBadgeText:'Issue',
+      feedBorder:'fe-amber',feedNew:'fe-new-amber',feedFlash:'flash-a',
+      snColor:'#c57b0a',snInit:'FN',
+      snActor:'Fatima N.',snDesc:'Guest issue logged · Noise complaint',snMeta:'Harbor Studio · 09:12 AM',
+      snBadgeCls:'eb-amber',snBadgeText:'Issue',
+      svgCol:'rgba(239,159,39,0.4)',dotCol:'rgba(239,159,39,0.55)',
+      resText:'<strong>Issue assigned to Carlos M.</strong> · Guest contacted · <strong>Resolved in 18 min.</strong>',
+      nodes:[
+        {cls:'c-blue', pip:'var(--blue)',  label:'View Issue',   done:'Issue reviewed',  svg:'<circle cx="6" cy="6" r="4"/><line x1="6" y1="4" x2="6" y2="6"/><line x1="6" y1="8" x2="6" y2="8"/>'},
+        {cls:'c-amber',pip:'var(--amber)', label:'Assign Staff', done:'Carlos assigned',  svg:'<circle cx="6" cy="4" r="2"/><path d="M2 10c0-2 1.8-3.5 4-3.5s4 1.5 4 3.5"/>'},
+        {cls:'c-gray', pip:'var(--text3)', label:'Flag Room',    done:'Room flagged',     svg:'<path d="M3 2v8M3 2l6 3-6 3"/>'},
+        {cls:'c-gray', pip:'var(--text3)', label:'View Only',    done:null,               svg:'<circle cx="6" cy="5" r="2.2"/><path d="M1 10c0-2 2.2-3.5 5-3.5s5 1.5 5 3.5"/>'},
+      ]
+    },
+    red:{
+      cssState:'state-red',sbCss:'sb-red',
+      badgeCls:'b-red',badgeText:'3+ blocked — CRITICAL',label:'PULSE · CRITICAL',
+      phCount:'<span class="pm-s-blocked">3 blocked</span>&nbsp;<span class="pm-s-active">1 active</span>',
+      sbStatus:'<span class="pm-s-blocked">3 blocked</span>&nbsp;<span class="pm-s-active">1 active</span>',
+      feedColor:'#c0392b',feedInit:'MS',
+      feedDesc:'broken towel rail · Bedroom 2 — BLOCKED',feedProp:'Sunset Villa',
+      feedBadgeCls:'eb-red',feedBadgeText:'Blocked',
+      feedBorder:'fe-red',feedNew:'fe-new-red',feedFlash:'flash-r',
+      snColor:'#c0392b',snInit:'MS',
+      snActor:'Maria S.',snDesc:'Reported broken towel rail · Bedroom 2',snMeta:'Sunset Villa · 08:47 AM',
+      snBadgeCls:'eb-red',snBadgeText:'Blocked',
+      svgCol:'rgba(226,75,74,0.4)',dotCol:'rgba(226,75,74,0.6)',
+      resText:'<strong>Bjorn accepted 08:49</strong> · ETA auto-logged · <strong>0 phone calls.</strong>',
+      nodes:[
+        {cls:'c-blue', pip:'var(--blue)',  label:'Create Work Order',done:'Work order created',svg:'<line x1="6" y1="2" x2="6" y2="10"/><line x1="2" y1="6" x2="10" y2="6"/>'},
+        {cls:'c-amber',pip:'var(--amber)', label:'Review Request',   done:'ETA set: 09:15',   svg:'<circle cx="6" cy="6" r="4"/><polyline points="6,4 6,6 7.5,7.5"/>'},
+        {cls:'c-red',  pip:'var(--red)',   label:'Flag Property',    done:'Property flagged', svg:'<path d="M3 2v8M3 2l6 3-6 3"/>'},
+        {cls:'c-gray', pip:'var(--text3)', label:'View Only',        done:null,               svg:'<circle cx="6" cy="5" r="2.2"/><path d="M1 10c0-2 2.2-3.5 5-3.5s5 1.5 5 3.5"/>'},
+      ]
+    }
+  };
+
+  var cur='red';var timers=[];var autoPlayed=false;var acted={};
+  function qt(fn,ms){var id=setTimeout(fn,ms);timers.push(id);}
+  function clearAll(){timers.forEach(clearTimeout);timers=[];}
+
+  function setBigDot(sc){var el=document.getElementById('pulse-big-dot');if(el)el.className='pulse-big-dot '+SCENES[sc].cssState;}
+  function setSbDot(sc){var el=document.getElementById('sb-dot');if(el)el.className='sb-wrap '+SCENES[sc].sbCss;}
+  function setHeroText(sc){
+    var s=SCENES[sc];
+    var badge=document.getElementById('ph-badge');if(badge){badge.className='sev-badge '+s.badgeCls;badge.textContent=s.badgeText;}
+    var lbl=document.getElementById('ph-label');if(lbl)lbl.textContent=s.label;
+    var cnt=document.getElementById('ph-count');if(cnt)cnt.innerHTML=s.phCount;
+    var sbs=document.getElementById('sb-status');if(sbs)sbs.innerHTML=s.sbStatus;
+  }
+  function injectFeed(sc){
+    var s=SCENES[sc];var slot=document.getElementById('injected-entry');if(!slot)return;
+    slot.innerHTML='<div class="pm-feed-entry pm-'+s.feedBorder+' pm-'+s.feedNew+' pm-entry-slide pm-'+s.feedFlash+'">'+
+      '<div class="pm-entry-av" style="background:'+s.feedColor+'">'+s.feedInit+'</div>'+
+      '<div class="pm-entry-body">'+
+        '<div class="pm-entry-top"><span class="pm-entry-name">'+s.snActor+'</span><span class="pm-entry-time">08:47</span></div>'+
+        '<div class="pm-entry-desc">'+s.feedDesc+'</div>'+
+        '<div class="pm-entry-prop">'+s.feedProp+'</div>'+
+        '<span class="pm-entry-badge pm-'+s.feedBadgeCls+'">'+s.feedBadgeText+'</span>'+
+      '</div></div>';
+  }
+  function updateSource(sc){
+    var s=SCENES[sc];
+    var av=document.getElementById('sn-av');if(av){av.style.background=s.snColor;av.textContent=s.snInit;}
+    var el;
+    el=document.getElementById('sn-actor');if(el)el.textContent=s.snActor;
+    el=document.getElementById('sn-desc');if(el)el.textContent=s.snDesc;
+    el=document.getElementById('sn-meta');if(el)el.textContent=s.snMeta;
+    var b=document.getElementById('sn-badge');if(b){b.className='sn-badge '+s.snBadgeCls;b.textContent=s.snBadgeText;}
+  }
+  function buildNodes(sc){
+    SCENES[sc].nodes.forEach(function(nd,i){
+      var btn=document.getElementById('rn-btn-'+i);var pip=document.getElementById('pip-'+i);
+      if(!btn||!pip)return;
+      pip.style.background=nd.pip;btn.className='rn-btn '+nd.cls;
+      if(!nd.done){btn.setAttribute('disabled','');btn.style.pointerEvents='none';}
+      else{btn.removeAttribute('disabled');btn.style.pointerEvents='';}
+      btn.innerHTML='<svg style="width:10px;height:10px;stroke:currentColor;stroke-width:2;fill:none" viewBox="0 0 12 12">'+nd.svg+'</svg> '+nd.label;
+      btn.onclick=nd.done?(function(ii,dl){return function(){resolveNode(ii,dl);};}(i,nd.done)):null;
+    });
+  }
+  function resolveNode(i,dl){
+    acted[i]=true;
+    var btn=document.getElementById('rn-btn-'+i);
+    var node=document.getElementById('rn-'+i);
+    var cfm=document.getElementById('rn-confirm-'+i);
+    var cfmTxt=document.getElementById('rn-confirm-text-'+i);
+    if(btn){btn.className='rn-btn c-done';btn.innerHTML='<svg style="width:10px;height:10px;stroke:currentColor;stroke-width:2.5;fill:none" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg> '+dl;}
+    if(node)node.classList.add('acted');
+    if(cfm&&cfmTxt){cfmTxt.textContent=dl+' · logged';setTimeout(function(){cfm.classList.add('show');},120);}
+    if(acted[0]&&acted[1]&&acted[2])setTimeout(function(){var rb=document.getElementById('resolution-bar');if(rb)rb.classList.add('show');},220);
+  }
+  function resetSVG(sc){
+    var col=SCENES[sc].svgCol,dc=SCENES[sc].dotCol;
+    ['svg-stem','svg-bar','svg-d0','svg-d1','svg-d2','svg-d3'].forEach(function(id){
+      var el=document.getElementById(id);if(!el)return;
+      el.setAttribute('stroke',col);el.style.transition='none';
+      el.setAttribute('stroke-dashoffset',el.getAttribute('stroke-dasharray'));
+    });
+    ['tdot0','tdot1','tdot2','tdot3'].forEach(function(id){
+      var el=document.getElementById(id);if(!el)return;
+      el.setAttribute('opacity','0');el.setAttribute('fill',dc);
+    });
+  }
+  function drawLine(id,delay){qt(function(){var el=document.getElementById(id);if(!el)return;el.style.transition='stroke-dashoffset 0.4s ease';el.setAttribute('stroke-dashoffset','0');},delay);}
+  function showDot(id,delay){qt(function(){var el=document.getElementById(id);if(!el)return;el.style.transition='opacity 0.25s';el.setAttribute('opacity','1');},delay);}
+  function resetNodes(){
+    acted={};
+    for(var i=0;i<4;i++){
+      var n=document.getElementById('rn-'+i);
+      if(n){ n.classList.remove('visible','acted','pre-anim'); }
+      var cfm=document.getElementById('rn-confirm-'+i);if(cfm)cfm.classList.remove('show');
+    }
+    /* reset operator panel */
+    var opActions=document.getElementById('op-actions');if(opActions)opActions.classList.remove('open');
+    var opActed=document.getElementById('op-acted');if(opActed)opActed.classList.remove('show');
+    var opDefault=document.getElementById('op-default');if(opDefault)opDefault.style.display='';
+    var opBtn=document.getElementById('op-stepin-btn');
+    if(opBtn){opBtn.innerHTML='<svg viewBox="0 0 12 12" style="width:9px;height:9px;stroke:currentColor;stroke-width:2;fill:none"><path d="M2 6h8M7 3l3 3-3 3"/></svg> Step in';}
+    var rb=document.getElementById('resolution-bar');if(rb)rb.classList.remove('show');
+    if(typeof OP !== 'undefined') OP.reset();
+  }
+  function setPills(sc){
+    var map={green:'pill-green',amber:'pill-amber',red:'pill-red'};
+    var cls={green:'sel-green',amber:'sel-amber',red:'sel-red'};
+    Object.keys(map).forEach(function(k){
+      var el=document.getElementById(map[k]);if(!el)return;
+      el.className='sev-pill'+(k===sc?' '+cls[k]:'');
+    });
+  }
+  function runScene(sc){
+    var s=SCENES[sc];
+    resetNodes();resetSVG(sc);
+    document.getElementById('res-text').innerHTML=s.resText;
+    setBigDot(sc);setSbDot(sc);setHeroText(sc);updateSource(sc);buildNodes(sc);
+    window.__PC.setMode(sc);
+    injectFeed(sc);
+    drawLine('svg-stem',350);drawLine('svg-bar',700);
+    [['svg-d0','tdot0','rn-0'],['svg-d1','tdot1','rn-1'],['svg-d2','tdot2','rn-2'],['svg-d3','tdot3','rn-3']].forEach(function(ids,i){
+      var base=1000+i*170;
+      drawLine(ids[0],base);showDot(ids[1],base+240);
+      qt((function(ni){return function(){
+      var n=document.getElementById(ni);
+      if(n){ n.classList.add('pre-anim'); }
+    };})(ids[2]), base);
+    qt((function(ni){return function(){
+      var n=document.getElementById(ni);
+      if(n){ n.style.opacity=''; n.classList.remove('pre-anim'); n.classList.add('visible'); }
+    };})(ids[2]),base+270);
+    });
+  }
+  function loadScene(sc){clearAll();cur=sc;setPills(sc);runScene(sc);}
+  function replay(){clearAll();runScene(cur);}
+
+  var obs=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting&&!autoPlayed){autoPlayed=true;window.__PC.start();runScene('red');}
+    });
+  },{threshold:0.1});
+  var sec=document.getElementById('pulse-moat');
+  if(sec){
+    obs.observe(sec);
+    /* wire default red-scene click handlers immediately so buttons work before JS scene fires */
+    var defaultNodes = SCENES['red'].nodes;
+    defaultNodes.forEach(function(nd,i){
+      var btn=document.getElementById('rn-btn-'+i);
+      if(btn&&nd.done){
+        btn.onclick=function(){ resolveNode(i,nd.done); };
+      }
+    });
+    /* fire immediately if already visible */
+    setTimeout(function(){
+      if(!autoPlayed){
+        var r=sec.getBoundingClientRect();
+        if(r.top < window.innerHeight && r.bottom > 0){
+          autoPlayed=true;
+          window.__PC.start();
+          runScene('red');
+        }
+      }
+    },200);
+  }
+
+  return{loadScene:loadScene,replay:replay};
+/* ── OPERATOR STEP-IN PANEL ── */
+var OP = (function(){
+  var open = false;
+
+  function toggle(){
+    open = !open;
+    var actions = document.getElementById('op-actions');
+    var btn = document.getElementById('op-stepin-btn');
+    if(actions) actions.classList.toggle('open', open);
+    if(btn){
+      if(open){
+        btn.innerHTML = '<svg viewBox="0 0 12 12" style="width:9px;height:9px;stroke:currentColor;stroke-width:2;fill:none"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg> Cancel';
+      } else {
+        btn.innerHTML = '<svg viewBox="0 0 12 12" style="width:9px;height:9px;stroke:currentColor;stroke-width:2;fill:none"><path d="M2 6h8M7 3l3 3-3 3"/></svg> Step in';
+      }
+    }
+  }
+
+  function act(label, btnEl){
+    /* hide the default panel, show acted line */
+    var opDefault = document.getElementById('op-default');
+    var opActed = document.getElementById('op-acted');
+    var opActedText = document.getElementById('op-acted-text');
+    var opNode = document.getElementById('rn-3');
+    if(opDefault) opDefault.style.display = 'none';
+    if(opActedText) opActedText.textContent = label;
+    if(opActed) setTimeout(function(){ opActed.classList.add('show'); }, 80);
+    if(opNode) opNode.classList.add('acted');
+    open = false;
+  }
+
+  function reset(){
+    open = false;
+    var opDefault = document.getElementById('op-default');
+    var opActed = document.getElementById('op-acted');
+    var opActions = document.getElementById('op-actions');
+    var opBtn = document.getElementById('op-stepin-btn');
+    if(opDefault) opDefault.style.display = '';
+    if(opActed) opActed.classList.remove('show');
+    if(opActions) opActions.classList.remove('open');
+    if(opBtn) opBtn.innerHTML = '<svg viewBox="0 0 12 12" style="width:9px;height:9px;stroke:currentColor;stroke-width:2;fill:none"><path d="M2 6h8M7 3l3 3-3 3"/></svg> Step in';
+  }
+
+  return { toggle:toggle, act:act, reset:reset };
+})();
+</script>
+<script>
+(function() {
+  var pmEntry = document.querySelector('.afm-demo-entry[data-key="pulse"]');
+  if (!pmEntry) return;
+  var pmInitialized = false;
+  function pmInit() {
+    if (pmInitialized) return;
+    pmInitialized = true;
+
+window.__PM_PC=(function(){
+  var canvas=document.getElementById('pm-pulse-canvas');
+  var ctx=canvas.getContext('2d');
+  var rings=[];var raf=null;var running=false;
+  var CFGS={
+    green:{color:[21,212,146], spawn:1400,maxR:420,speed:0.55,alpha:0.15,lw:1.2},
+    amber:{color:[239,159,39], spawn:650, maxR:380,speed:0.9, alpha:0.22,lw:1.4},
+    red:  {color:[226,75,74],  spawn:220, maxR:460,speed:1.6, alpha:0.32,lw:1.7}
+  };
+  var mode='red';var lastSpawn=0;var W,H,cx,cy;
+  function resize(){
+    var stage=document.getElementById('pm-pulse-hero-stage');
+    if(!stage)return;
+    W=Math.min(window.innerWidth,1200);H=Math.max(stage.getBoundingClientRect().height,320);
+    cx=W/2;cy=H/2;
+    canvas.width=W;canvas.height=H;
+    canvas.style.width=W+'px';canvas.style.height=H+'px';
+  }
+  function spawnRing(ts){rings.push({r:12,born:ts});lastSpawn=ts;}
+  function frame(ts){
+    if(!running)return;
+    raf=requestAnimationFrame(frame);
+    ctx.clearRect(0,0,W,H);
+    var cfg=CFGS[mode];
+    if(ts-lastSpawn>cfg.spawn)spawnRing(ts);
+    var gR=mode==='red'?90:mode==='amber'?70:55;
+    var gA=mode==='red'?0.22:mode==='amber'?0.15:0.12;
+    var g=ctx.createRadialGradient(cx,cy,0,cx,cy,gR);
+    g.addColorStop(0,'rgba('+cfg.color[0]+','+cfg.color[1]+','+cfg.color[2]+','+gA+')');
+    g.addColorStop(1,'rgba('+cfg.color[0]+','+cfg.color[1]+','+cfg.color[2]+',0)');
+    ctx.beginPath();ctx.arc(cx,cy,gR,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+    rings=rings.filter(function(ring){
+      ring.r+=cfg.speed;
+      var p=ring.r/cfg.maxR;
+      var a=cfg.alpha*(1-Math.pow(p,0.7));
+      if(a<0.003)return false;
+      ctx.beginPath();ctx.arc(cx,cy,ring.r,0,Math.PI*2);
+      ctx.strokeStyle='rgba('+cfg.color[0]+','+cfg.color[1]+','+cfg.color[2]+','+a+')';
+      ctx.lineWidth=cfg.lw*(1-p*0.5);ctx.stroke();
+      return true;
+    });
+  }
+  function setMode(m){mode=m;rings=[];lastSpawn=0;spawnRing(0);}
+  function start(){
+    if(running)return;running=true;resize();
+    var cfg=CFGS[mode];
+    for(var i=0;i<3;i++)rings.push({r:(cfg.maxR/4)*i+12,born:0});
+    requestAnimationFrame(frame);
+  }
+  window.addEventListener('resize',function(){resize();});
+  return{setMode:setMode,start:start};
+})();
+
+var PM=(function(){
+  var SCENES={
+    green:{
+      cssState:'pm-state-green',sbCss:'pm-sb-green',
+      badgeCls:'pm-b-green',badgeText:'All clear',label:'PULSE · LIVE',
+      phCount:'<span class="pm-s-active">2 active</span>',
+      sbStatus:'<span class="pm-s-active">2 active</span>',
+      feedColor:'#1a8a7a',feedInit:'AK',
+      feedDesc:'marked task complete · Cleaning',feedProp:'Sunset Villa',
+      feedBadgeCls:'pm-eb-green',feedBadgeText:'Complete',
+      feedBorder:'pm-fe-green',feedNew:'pm-fe-new-green',feedFlash:'pm-flash-g',
+      snColor:'#1a8a7a',snInit:'AK',
+      snActor:'Anna K.',snDesc:'Marked task complete · Cleaning done',snMeta:'Sunset Villa · 08:52 AM',
+      snBadgeCls:'pm-eb-green',snBadgeText:'Complete',
+      svgCol:'rgba(29,158,117,0.35)',dotCol:'rgba(29,158,117,0.55)',
+      resText:'<strong>Cleaning verified 08:53</strong> · Property marked ready · <strong>Check-in on track.</strong>',
+      nodes:[
+        {cls:'pm-c-blue', pip:'var(--blue)',  label:'Notify Guest', done:'Guest notified', svg:'<path d="M2 8l2-2 2 2 4-4"/><path d="M10 2H2v8l2-2h6z"/>'},
+        {cls:'pm-c-amber',pip:'var(--amber)', label:'Verify',       done:'Verified ✓',    svg:'<polyline points="2,6 5,9 10,3"/>'},
+        {cls:'pm-c-gray', pip:'var(--green2)',label:'Mark Ready',   done:'Property ready',svg:'<polyline points="2,6 5,9 10,3"/>'},
+        {cls:'pm-c-gray', pip:'var(--text3)', label:'View Only',    done:null,            svg:'<circle cx="6" cy="5" r="2.2"/><path d="M1 10c0-2 2.2-3.5 5-3.5s5 1.5 5 3.5"/>'},
+      ]
+    },
+    amber:{
+      cssState:'pm-state-amber',sbCss:'pm-sb-amber',
+      badgeCls:'pm-b-amber',badgeText:'1–2 issues',label:'PULSE · WATCH',
+      phCount:'<span class="pm-s-warn">2 issues</span>&nbsp;<span class="pm-s-active">1 active</span>',
+      sbStatus:'<span class="pm-s-warn">2 issues</span>',
+      feedColor:'#c57b0a',feedInit:'FN',
+      feedDesc:'logged guest issue · Noise complaint',feedProp:'Harbor Studio',
+      feedBadgeCls:'pm-eb-amber',feedBadgeText:'Issue',
+      feedBorder:'pm-fe-amber',feedNew:'pm-fe-new-amber',feedFlash:'pm-flash-a',
+      snColor:'#c57b0a',snInit:'FN',
+      snActor:'Fatima N.',snDesc:'Guest issue logged · Noise complaint',snMeta:'Harbor Studio · 09:12 AM',
+      snBadgeCls:'pm-eb-amber',snBadgeText:'Issue',
+      svgCol:'rgba(239,159,39,0.4)',dotCol:'rgba(239,159,39,0.55)',
+      resText:'<strong>Issue assigned to Carlos M.</strong> · Guest contacted · <strong>Resolved in 18 min.</strong>',
+      nodes:[
+        {cls:'pm-c-blue', pip:'var(--blue)',  label:'View Issue',   done:'Issue reviewed',  svg:'<circle cx="6" cy="6" r="4"/><line x1="6" y1="4" x2="6" y2="6"/><line x1="6" y1="8" x2="6" y2="8"/>'},
+        {cls:'pm-c-amber',pip:'var(--amber)', label:'Assign Staff', done:'Carlos assigned',  svg:'<circle cx="6" cy="4" r="2"/><path d="M2 10c0-2 1.8-3.5 4-3.5s4 1.5 4 3.5"/>'},
+        {cls:'pm-c-gray', pip:'var(--text3)', label:'Flag Room',    done:'Room flagged',     svg:'<path d="M3 2v8M3 2l6 3-6 3"/>'},
+        {cls:'pm-c-gray', pip:'var(--text3)', label:'View Only',    done:null,               svg:'<circle cx="6" cy="5" r="2.2"/><path d="M1 10c0-2 2.2-3.5 5-3.5s5 1.5 5 3.5"/>'},
+      ]
+    },
+    red:{
+      cssState:'pm-state-red',sbCss:'pm-sb-red',
+      badgeCls:'pm-b-red',badgeText:'3+ blocked — CRITICAL',label:'PULSE · CRITICAL',
+      phCount:'<span class="pm-s-blocked">3 blocked</span>&nbsp;<span class="pm-s-active">1 active</span>',
+      sbStatus:'<span class="pm-s-blocked">3 blocked</span>&nbsp;<span class="pm-s-active">1 active</span>',
+      feedColor:'#c0392b',feedInit:'MS',
+      feedDesc:'broken towel rail · Bedroom 2 — BLOCKED',feedProp:'Sunset Villa',
+      feedBadgeCls:'pm-eb-red',feedBadgeText:'Blocked',
+      feedBorder:'pm-fe-red',feedNew:'pm-fe-new-red',feedFlash:'pm-flash-r',
+      snColor:'#c0392b',snInit:'MS',
+      snActor:'Maria S.',snDesc:'Reported broken towel rail · Bedroom 2',snMeta:'Sunset Villa · 08:47 AM',
+      snBadgeCls:'pm-eb-red',snBadgeText:'Blocked',
+      svgCol:'rgba(226,75,74,0.4)',dotCol:'rgba(226,75,74,0.6)',
+      resText:'<strong>Bjorn accepted 08:49</strong> · ETA auto-logged · <strong>0 phone calls.</strong>',
+      nodes:[
+        {cls:'pm-c-blue', pip:'var(--blue)',  label:'Create Work Order',done:'Work order created',svg:'<line x1="6" y1="2" x2="6" y2="10"/><line x1="2" y1="6" x2="10" y2="6"/>'},
+        {cls:'pm-c-amber',pip:'var(--amber)', label:'Review Request',   done:'ETA set: 09:15',   svg:'<circle cx="6" cy="6" r="4"/><polyline points="6,4 6,6 7.5,7.5"/>'},
+        {cls:'pm-c-red',  pip:'var(--red)',   label:'Flag Property',    done:'Property flagged', svg:'<path d="M3 2v8M3 2l6 3-6 3"/>'},
+        {cls:'pm-c-gray', pip:'var(--text3)', label:'View Only',        done:null,               svg:'<circle cx="6" cy="5" r="2.2"/><path d="M1 10c0-2 2.2-3.5 5-3.5s5 1.5 5 3.5"/>'},
+      ]
+    }
+  };
+
+  var cur='red';var timers=[];var autoPlayed=false;var acted={};
+  function qt(fn,ms){var id=setTimeout(fn,ms);timers.push(id);}
+  function clearAll(){timers.forEach(clearTimeout);timers=[];}
+
+  function setBigDot(sc){var el=document.getElementById('pm-pulse-big-dot');if(el)el.className='pm-pulse-big-dot '+SCENES[sc].cssState;}
+  function setSbDot(sc){var el=document.getElementById('pm-sb-dot');if(el)el.className='pm-sb-wrap '+SCENES[sc].sbCss;}
+  function setHeroText(sc){
+    var s=SCENES[sc];
+    var badge=document.getElementById('pm-ph-badge');if(badge){badge.className='pm-sev-badge '+s.badgeCls;badge.textContent=s.badgeText;}
+    var lbl=document.getElementById('pm-ph-label');if(lbl)lbl.textContent=s.label;
+    var cnt=document.getElementById('pm-ph-count');if(cnt)cnt.innerHTML=s.phCount;
+    var sbs=document.getElementById('pm-sb-status');if(sbs)sbs.innerHTML=s.sbStatus;
+  }
+  function injectFeed(sc){
+    var s=SCENES[sc];var slot=document.getElementById('pm-injected-entry');if(!slot)return;
+    slot.innerHTML='<div class="pm-feed-entry '+s.feedBorder+' '+s.feedNew+' pm-entry-slide '+s.feedFlash+'">'+
+      '<div class="pm-entry-av" style="background:'+s.feedColor+'">'+s.feedInit+'</div>'+
+      '<div class="pm-entry-body">'+
+        '<div class="pm-entry-top"><span class="pm-entry-name">'+s.snActor+'</span><span class="pm-entry-time">08:47</span></div>'+
+        '<div class="pm-entry-desc">'+s.feedDesc+'</div>'+
+        '<div class="pm-entry-prop">'+s.feedProp+'</div>'+
+        '<span class="pm-entry-badge '+s.feedBadgeCls+'">'+s.feedBadgeText+'</span>'+
+      '</div></div>';
+  }
+  function updateSource(sc){
+    var s=SCENES[sc];
+    var av=document.getElementById('pm-sn-av');if(av){av.style.background=s.snColor;av.textContent=s.snInit;}
+    var el;
+    el=document.getElementById('pm-sn-actor');if(el)el.textContent=s.snActor;
+    el=document.getElementById('pm-sn-desc');if(el)el.textContent=s.snDesc;
+    el=document.getElementById('pm-sn-meta');if(el)el.textContent=s.snMeta;
+    var b=document.getElementById('pm-sn-badge');if(b){b.className='pm-sn-badge '+s.snBadgeCls;b.textContent=s.snBadgeText;}
+  }
+  function buildNodes(sc){
+    SCENES[sc].nodes.forEach(function(nd,i){
+      var btn=document.getElementById('pm-rn-btn-'+i);var pip=document.getElementById('pm-pip-'+i);
+      if(!btn||!pip)return;
+      pip.style.background=nd.pip;btn.className='pm-rn-btn '+nd.cls;
+      if(!nd.done){btn.setAttribute('disabled','');btn.style.pointerEvents='none';}
+      else{btn.removeAttribute('disabled');btn.style.pointerEvents='';}
+      btn.innerHTML='<svg style="width:10px;height:10px;stroke:currentColor;stroke-width:2;fill:none" viewBox="0 0 12 12">'+nd.svg+'</svg> '+nd.label;
+      btn.onclick=nd.done?(function(ii,dl){return function(){resolveNode(ii,dl);};}(i,nd.done)):null;
+    });
+  }
+  function resolveNode(i,dl){
+    acted[i]=true;
+    var btn=document.getElementById('pm-rn-btn-'+i);
+    var node=document.getElementById('pm-rn-'+i);
+    var cfm=document.getElementById('pm-rn-confirm-'+i);
+    var cfmTxt=document.getElementById('pm-rn-confirm-text-'+i);
+    if(btn){btn.className='pm-rn-btn pm-c-done';btn.innerHTML='<svg style="width:10px;height:10px;stroke:currentColor;stroke-width:2.5;fill:none" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg> '+dl;}
+    if(node)node.classList.add('pm-acted');
+    if(cfm&&cfmTxt){cfmTxt.textContent=dl+' · logged';setTimeout(function(){cfm.classList.add('pm-show');},120);}
+    if(acted[0]&&acted[1]&&acted[2])setTimeout(function(){var rb=document.getElementById('pm-resolution-bar');if(rb)rb.classList.add('pm-show');},220);
+  }
+  function resetSVG(sc){
+    var col=SCENES[sc].svgCol,dc=SCENES[sc].dotCol;
+    ['pm-svg-stem','pm-svg-bar','pm-svg-d0','pm-svg-d1','pm-svg-d2','pm-svg-d3'].forEach(function(id){
+      var el=document.getElementById(id);if(!el)return;
+      el.setAttribute('stroke',col);el.style.transition='none';
+      el.setAttribute('stroke-dashoffset',el.getAttribute('stroke-dasharray'));
+    });
+    ['pm-tdot0','pm-tdot1','pm-tdot2','pm-tdot3'].forEach(function(id){
+      var el=document.getElementById(id);if(!el)return;
+      el.setAttribute('opacity','0');el.setAttribute('fill',dc);
+    });
+  }
+  function drawLine(id,delay){qt(function(){var el=document.getElementById(id);if(!el)return;el.style.transition='stroke-dashoffset 0.4s ease';el.setAttribute('stroke-dashoffset','0');},delay);}
+  function showDot(id,delay){qt(function(){var el=document.getElementById(id);if(!el)return;el.style.transition='opacity 0.25s';el.setAttribute('opacity','1');},delay);}
+  function resetNodes(){
+    acted={};
+    for(var i=0;i<4;i++){
+      var n=document.getElementById('pm-rn-'+i);
+      if(n){ n.classList.remove('pm-visible','pm-acted','pm-pre-anim'); }
+      var cfm=document.getElementById('pm-rn-confirm-'+i);if(cfm)cfm.classList.remove('pm-show');
+    }
+    /* reset operator panel */
+    var opActions=document.getElementById('pm-op-actions');if(opActions)opActions.classList.remove('pm-open');
+    var opActed=document.getElementById('pm-op-acted');if(opActed)opActed.classList.remove('pm-show');
+    var opDefault=document.getElementById('pm-op-default');if(opDefault)opDefault.style.display='';
+    var opBtn=document.getElementById('pm-op-stepin-btn');
+    if(opBtn){opBtn.innerHTML='<svg viewBox="0 0 12 12" style="width:9px;height:9px;stroke:currentColor;stroke-width:2;fill:none"><path d="M2 6h8M7 3l3 3-3 3"/></svg> Step in';}
+    var rb=document.getElementById('pm-resolution-bar');if(rb)rb.classList.remove('pm-show');
+    if(typeof PM_OP !== 'undefined') PM_OP.reset();
+  }
+  function setPills(sc){
+    var map={green:'pm-pill-green',amber:'pm-pill-amber',red:'pm-pill-red'};
+    var cls={green:'pm-sel-green',amber:'pm-sel-amber',red:'pm-sel-red'};
+    Object.keys(map).forEach(function(k){
+      var el=document.getElementById(map[k]);if(!el)return;
+      el.className='pm-sev-pill'+(k===sc?' '+cls[k]:'');
+    });
+  }
+  function runScene(sc){
+    var s=SCENES[sc];
+    resetNodes();resetSVG(sc);
+    document.getElementById('pm-res-text').innerHTML=s.resText;
+    setBigDot(sc);setSbDot(sc);setHeroText(sc);updateSource(sc);buildNodes(sc);
+    window.__PM_PC.setMode(sc);
+    injectFeed(sc);
+    drawLine('pm-svg-stem',350);drawLine('pm-svg-bar',700);
+    [['pm-svg-d0','pm-tdot0','pm-rn-0'],['pm-svg-d1','pm-tdot1','pm-rn-1'],['pm-svg-d2','pm-tdot2','pm-rn-2'],['pm-svg-d3','pm-tdot3','pm-rn-3']].forEach(function(ids,i){
+      var base=1000+i*170;
+      drawLine(ids[0],base);showDot(ids[1],base+240);
+      qt((function(ni){return function(){
+      var n=document.getElementById(ni);
+      if(n){ n.classList.add('pm-pre-anim'); }
+    };})(ids[2]), base);
+    qt((function(ni){return function(){
+      var n=document.getElementById(ni);
+      if(n){ n.style.opacity=''; n.classList.remove('pm-pre-anim'); n.classList.add('pm-visible'); }
+    };})(ids[2]),base+270);
+    });
+  }
+  function loadScene(sc){clearAll();cur=sc;setPills(sc);runScene(sc);}
+  function replay(){clearAll();runScene(cur);}
+
+  var obs=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting&&!autoPlayed){autoPlayed=true;window.__PM_PC.start();runScene('red');}
+    });
+  },{threshold:0.1});
+  var sec=document.getElementById('pm-pulse-moat');
+  if(sec){
+    obs.observe(sec);
+    /* wire default red-scene click handlers immediately so buttons work before JS scene fires */
+    var defaultNodes = SCENES['red'].nodes;
+    defaultNodes.forEach(function(nd,i){
+      var btn=document.getElementById('pm-rn-btn-'+i);
+      if(btn&&nd.done){
+        btn.onclick=function(){ resolveNode(i,nd.done); };
+      }
+    });
+    /* fire immediately if already visible */
+    setTimeout(function(){
+      if(!autoPlayed){
+        var r=sec.getBoundingClientRect();
+        if(r.top < window.innerHeight && r.bottom > 0){
+          autoPlayed=true;
+          window.__PM_PC.start();
+          runScene('red');
+        }
+      }
+    },200);
+  }
+
+  return{loadScene:loadScene,replay:replay};
+/* ── OPERATOR STEP-IN PANEL ── */
+var PM_OP = (function(){
+  var open = false;
+
+  function toggle(){
+    open = !open;
+    var actions = document.getElementById('pm-op-actions');
+    var btn = document.getElementById('pm-op-stepin-btn');
+    if(actions) actions.classList.toggle('pm-open', open);
+    if(btn){
+      if(open){
+        btn.innerHTML = '<svg viewBox="0 0 12 12" style="width:9px;height:9px;stroke:currentColor;stroke-width:2;fill:none"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg> Cancel';
+      } else {
+        btn.innerHTML = '<svg viewBox="0 0 12 12" style="width:9px;height:9px;stroke:currentColor;stroke-width:2;fill:none"><path d="M2 6h8M7 3l3 3-3 3"/></svg> Step in';
+      }
+    }
+  }
+
+  function act(label, btnEl){
+    /* hide the default panel, show acted line */
+    var opDefault = document.getElementById('pm-op-default');
+    var opActed = document.getElementById('pm-op-acted');
+    var opActedText = document.getElementById('pm-op-acted-text');
+    var opNode = document.getElementById('pm-rn-3');
+    if(opDefault) opDefault.style.display = 'none';
+    if(opActedText) opActedText.textContent = label;
+    if(opActed) setTimeout(function(){ opActed.classList.add('pm-show'); }, 80);
+    if(opNode) opNode.classList.add('pm-acted');
+    open = false;
+  }
+
+  function reset(){
+    open = false;
+    var opDefault = document.getElementById('pm-op-default');
+    var opActed = document.getElementById('pm-op-acted');
+    var opActions = document.getElementById('pm-op-actions');
+    var opBtn = document.getElementById('pm-op-stepin-btn');
+    if(opDefault) opDefault.style.display = '';
+    if(opActed) opActed.classList.remove('pm-show');
+    if(opActions) opActions.classList.remove('pm-open');
+    if(opBtn) opBtn.innerHTML = '<svg viewBox="0 0 12 12" style="width:9px;height:9px;stroke:currentColor;stroke-width:2;fill:none"><path d="M2 6h8M7 3l3 3-3 3"/></svg> Step in';
+  }
+
+  return { toggle:toggle, act:act, reset:reset };
+})();
+
+  }
+  var pmObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { pmInit(); pmObs.disconnect(); }
+    });
+  }, { threshold: 0.05 });
+  pmObs.observe(pmEntry);
+})();
+</script>
 </div>
 <div class="afm-demo-entry" data-key="autonomy">
 <style>

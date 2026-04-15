@@ -23,7 +23,7 @@ import { REQUESTS } from '@/lib/data/requests'
 import { APPROVALS } from '@/lib/data/approvals'
 import { COMPLIANCE_DOCS } from '@/lib/data/compliance'
 import { sortJobsByAccessibility } from '@/lib/utils/pteUtils'
-import { FEED_ITEMS, filterFeed, type FeedTab } from '@/lib/data/activityFeed'
+import PulsePanel from '@/components/dashboard/pulse/PulsePanel'
 
 // ─── Cleaning Templates ───────────────────────────────────────────────────────
 
@@ -182,7 +182,7 @@ function ActionBtn({ label, onClick }: { label: string; onClick?: () => void }) 
   return (
     <button
       onClick={onClick}
-      className="px-2.5 py-1 rounded-xl text-xs font-semibold cursor-pointer bg-[var(--accent-bg)] border border-[var(--accent-border)] text-[var(--accent)]"
+      className="px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer bg-[var(--accent-bg)] border border-[var(--accent-border)] text-[var(--accent)] min-h-[36px] inline-flex items-center"
     >
       {label}
     </button>
@@ -231,7 +231,7 @@ export default function AppDashboard() {
   const [newCleaningNotes, setNewCleaningNotes] = useState('')
   const [addedCleanings, setAddedCleanings] = useState<{id:string, templateName:string, property:string, date:string}[]>([])
   const [personaSwitcherOpen, setPersonaSwitcherOpen] = useState(false)
-  const [feedTab2, setFeedTab2] = useState<FeedTab>('all')
+
   const [approvalStatuses, setApprovalStatuses] = useState<Record<string, 'pending' | 'card' | 'invoice' | 'followup'>>(
     Object.fromEntries(APPROVALS.map(a => [a.id, 'pending']))
   )
@@ -1424,72 +1424,7 @@ export default function AppDashboard() {
           {/* Right column */}
           <div className="sticky top-0 max-h-[calc(100vh-80px)] overflow-y-auto">
             {/* Pulse */}
-            <div className="label-upper mb-2.5">PULSE</div>
-            <Card className="p-0 overflow-hidden mb-3">
-              {/* Header */}
-              <div className="flex items-center gap-2 px-3.5 py-3 border-b border-[var(--border)]">
-                <span className="text-sm font-semibold text-[var(--text-primary)]">Activity</span>
-                <span className="flex items-center gap-1 text-xs font-semibold px-1.5 py-0.5 rounded-[10px] bg-[var(--status-green-bg)] text-[var(--status-green-fg)] border border-[rgba(16,185,129,0.19)]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--status-green-fg)] inline-block" />
-                  Live
-                </span>
-              </div>
-              {/* Tab bar */}
-              <div className="flex gap-0.5 px-2.5 py-2 border-b border-[var(--border)]">
-                {(['all', 'in_progress', 'issues'] as FeedTab[]).map(tab => (
-                  <button key={tab} onClick={() => setFeedTab2(tab)} className={`flex-1 py-1 text-xs rounded-[5px] border-none cursor-pointer ${
-                    feedTab2 === tab
-                      ? 'font-semibold bg-white text-[var(--text-primary)]'
-                      : 'font-normal bg-transparent text-[var(--text-muted)]'
-                  }`}>
-                    {tab === 'all' ? 'All' : tab === 'in_progress' ? 'In progress' : 'Issues'}
-                  </button>
-                ))}
-              </div>
-              {/* Feed items */}
-              <div>
-                {filterFeed(FEED_ITEMS, feedTab2).slice(0, 6).map((item, i, arr) => {
-                  const isRich = item.type === 'in_progress' || item.type === 'blocked' || item.type === 'en_route'
-                  return (
-                    <div key={item.id} className={`flex items-start gap-2.5 px-3.5 py-2.5 ${i < arr.length - 1 ? 'border-b border-[var(--border)]' : ''}`}>
-                      {i === 0
-                        ? <div className="live-dot shrink-0 mt-1.5" />
-                        : <div className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{ background: item.color }} />
-                      }
-                      <div className="flex-1 min-w-0">
-                        {isRich ? (
-                          <>
-                            <div className="text-xs leading-snug">
-                              <span className="font-semibold text-[var(--text-primary)]">{item.actor}</span>
-                              <span className="text-[var(--text-muted)]"> — {item.action} {item.property}</span>
-                              {item.detail && <span className="text-[var(--text-muted)]"> · {item.detail}</span>}
-                            </div>
-                            {item.statusLabel && (
-                              <div className="text-xs font-semibold mt-0.5" style={{ color: item.color }}>{item.statusLabel}</div>
-                            )}
-                            {item.type === 'in_progress' && item.progress !== undefined && (
-                              <div className="mt-1.5 h-1.5 rounded-full bg-[var(--bg-elevated)] overflow-hidden">
-                                <div className="h-full rounded-full" style={{ width: `${item.progress}%`, background: item.color }} />
-                              </div>
-                            )}
-                            <div className="text-xs text-[var(--text-muted)] mt-1">{item.time}</div>
-                          </>
-                        ) : (
-                          <>
-                            <div className="text-xs leading-snug">
-                              <span className="font-semibold text-[var(--text-primary)]">{item.actor}</span>
-                              <span className="text-[var(--text-muted)]"> {item.action}</span>
-                              {item.detail && <span className="text-[var(--text-muted)]"> — {item.detail} · {item.property}</span>}
-                            </div>
-                            <div className="text-xs text-[var(--text-muted)] mt-0.5">{item.time}</div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </Card>
+            <PulsePanel />
 
             {/* Check-ins */}
             <div className="label-upper mb-2.5">Today&apos;s Check-ins</div>
