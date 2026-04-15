@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Filter, Camera, X, Check, ShoppingBag, Calendar, MapPin, Zap, Lock, Eye, ChevronDown, Clock, AlertTriangle, Key, Wrench } from 'lucide-react'
+import { Filter, Camera, X, Check, ShoppingBag, Calendar, MapPin, Zap, Lock, Eye, EyeOff, ChevronDown, Clock, AlertTriangle, Key, Wrench, Play, Package, Timer } from 'lucide-react'
 import { PROPERTY_WEATHER } from '@/lib/data/weather'
 import PageHeader from '@/components/shared/PageHeader'
 import StatusBadge from '@/components/shared/StatusBadge'
@@ -833,7 +833,7 @@ export default function MyTasksPage() {
                       style={{ borderLeft: '4px solid var(--status-amber-fg)' }}
                     >
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-semibold px-[7px] py-0.5 rounded-[10px] bg-[var(--status-amber-bg)] text-[var(--status-amber-fg)] border border-[var(--status-amber-fg)]">📦 Delivery</span>
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-[7px] py-0.5 rounded-[10px] bg-[var(--status-amber-bg)] text-[var(--status-amber-fg)] border border-[var(--status-amber-fg)]"><Package size={10} /> Delivery</span>
                         <span className="text-[13px] font-semibold text-[var(--text-primary)]">{job.property}</span>
                       </div>
                       <div className="text-xs text-[var(--text-muted)] mb-2">
@@ -849,11 +849,11 @@ export default function MyTasksPage() {
                           }}
                           className="w-full rounded-lg font-semibold bg-[var(--status-amber-fg)] hover:bg-[var(--status-amber-fg)]/80 text-white"
                         >
-                          ▶ Start Delivery
+                          <Play size={13} className="mr-1" fill="currentColor" /> Start Delivery
                         </Button>
                       ) : (
                         <span className="text-[11px] font-semibold px-2 py-0.5 rounded-[10px]" style={{ background: CLEANING_STATUS_BG[effectiveStatus], color: statusColor, border: `1px solid ${statusColor}` }}>
-                          {effectiveStatus === 'in-progress' ? 'In progress' : '✓ Done'}
+                          {effectiveStatus === 'in-progress' ? 'In progress' : <><Check size={10} className="inline mr-0.5" /> Done</>}
                         </span>
                       )}
                     </Card>
@@ -871,7 +871,7 @@ export default function MyTasksPage() {
                       <img
                         src={prop.imageUrl}
                         alt={job.property}
-                        className="w-full h-28 object-cover block"
+                        className="w-full h-32 object-cover block"
                       />
                     )}
 
@@ -919,7 +919,11 @@ export default function MyTasksPage() {
                             onClick={e => { e.stopPropagation(); setShowCodes(prev => ({ ...prev, [job.id]: !prev[job.id] })) }}
                             className="bg-[var(--bg-elevated)] rounded-lg px-2.5 py-1 text-[var(--status-info)] text-xs font-semibold cursor-pointer border-none"
                           >
-                            {showCodes[job.id] ? `Code: ${accessCode.code}` : 'Show Code 👁'}
+                            {showCodes[job.id] ? (
+                              <><span className="tabular-nums font-semibold">{accessCode.code}</span> <EyeOff size={13} /></>
+                            ) : (
+                              <>Show Code <Eye size={13} /></>
+                            )}
                           </button>
                         </div>
                       )}
@@ -960,7 +964,7 @@ export default function MyTasksPage() {
                       {/* Timer when in progress */}
                       {effectiveStatus === 'in-progress' && startedAt && (
                         <div className="text-[11px] text-[var(--status-green-fg)] mb-2">
-                          ⏱ {elapsedMins >= 60 ? `${Math.floor(elapsedMins / 60)}h ${elapsedMins % 60}m` : `${elapsedMins}m`} elapsed · Est. done {estDone}
+                          <Timer size={12} className="inline mr-0.5 -mt-px" /> {elapsedMins >= 60 ? `${Math.floor(elapsedMins / 60)}h ${elapsedMins % 60}m` : `${elapsedMins}m`} elapsed · Est. done {estDone}
                         </div>
                       )}
 
@@ -979,7 +983,7 @@ export default function MyTasksPage() {
                               : 'bg-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)]/80 text-white'
                           }`}
                         >
-                          ▶ {isFirst ? 'Start This Clean' : 'Start Clean'}
+                          <Play size={13} className="mr-1" fill="currentColor" /> {isFirst ? 'Start This Clean' : 'Start Clean'}
                         </Button>
                       ) : effectiveStatus === 'in-progress' ? (
                         <div className="flex gap-2 mt-1">
@@ -999,12 +1003,12 @@ export default function MyTasksPage() {
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-[10px]" style={{ background: CLEANING_STATUS_BG[effectiveStatus], color: statusColor, border: `1px solid ${statusColor}` }}>
-                            ✓ Done
+                          <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold px-2 py-0.5 rounded-[10px]" style={{ background: CLEANING_STATUS_BG[effectiveStatus], color: statusColor, border: `1px solid ${statusColor}` }}>
+                            <Check size={10} /> Done
                           </span>
                           {delegationPending.has(job.id) && (
-                            <span className="text-[10px] font-semibold px-1.5 py-px rounded-[10px] bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent-border)]">
-                              ⏳ Pending reassignment
+                            <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-px rounded-[10px] bg-[var(--accent-bg)] text-[var(--accent)] border border-[var(--accent-border)]">
+                              <Clock size={10} /> Pending reassignment
                             </span>
                           )}
                         </div>
@@ -1191,7 +1195,7 @@ export default function MyTasksPage() {
                           {task.title}
                         </span>
                         {task.isDeliveryTask && (
-                          <span className="text-[10px] font-semibold px-1.5 py-px rounded-[10px] bg-[var(--status-amber-bg)] text-[var(--status-amber-fg)] border border-[var(--status-amber-fg)]">📦 Delivery</span>
+                          <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-px rounded-[10px] bg-[var(--status-amber-bg)] text-[var(--status-amber-fg)] border border-[var(--status-amber-fg)]"><Package size={10} /> Delivery</span>
                         )}
                       </div>
                       <div className="flex items-center gap-2 flex-wrap">
@@ -1220,7 +1224,7 @@ export default function MyTasksPage() {
                           </span>
                         )
                       })()}
-                      {completedIds.has(task.id) && <span className="text-[11px] text-[var(--status-green-fg)]">✓ Done</span>}
+                      {completedIds.has(task.id) && <span className="inline-flex items-center gap-0.5 text-[11px] text-[var(--status-green-fg)]"><Check size={10} /> Done</span>}
                     </div>
                   </div>
                 </motion.div>

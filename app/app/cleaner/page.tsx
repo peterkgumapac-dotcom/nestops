@@ -291,7 +291,7 @@ export default function CleanerTodayPage() {
                   <div className="p-4 space-y-3">
                     {/* Turnaround warning */}
                     {isTightTurnaround && (
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--status-amber-bg)] border border-[rgba(239,159,39,0.2)]">
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--status-amber-bg)] border border-[var(--status-amber-bg)]">
                         <AlertTriangle size={14} className="text-[var(--status-amber-fg)] flex-shrink-0" />
                         <span className="text-xs text-[var(--status-amber-fg)] font-medium">
                           Tight turnaround — {Math.floor(turnaroundMinutes! / 60)}h {turnaroundMinutes! % 60}m between checkout & check-in
