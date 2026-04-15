@@ -29,7 +29,7 @@ import { RestartTaskModal } from '@/components/tasks/cleaning/modals/RestartTask
 import { CleaningProgressBar } from '@/components/tasks/cleaning/CleaningProgressBar'
 import { useCleaningProgress } from '@/hooks/tasks/useCleaningProgress'
 
-const USER_TO_STAFF: Record<string, string> = { 'u3': 's1', 'u4': 's3', 'u5': 's4', 'u7': 's2' }
+const USER_TO_STAFF: Record<string, string> = { 'u3': 's5', 'u4': 's3', 'u5': 's4', 'u7': 's2' }
 
 // ─── Today's Cleanings ────────────────────────────────────────────────────────
 
@@ -879,7 +879,7 @@ export default function MyTasksPage() {
                       {/* Title + badge */}
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-[15px] font-semibold text-[var(--text-primary)]">{job.property}</span>
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded ${
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                           isFirst
                             ? 'bg-[var(--status-blue-bg)] text-[var(--status-blue-fg)]'
                             : 'bg-[var(--status-amber-bg)] text-[var(--status-amber-fg)]'
@@ -913,13 +913,13 @@ export default function MyTasksPage() {
 
                       {/* Access info */}
                       {accessCode && (
-                        <div className="text-xs text-[var(--text-muted)] mb-2">
-                          Access: {accessCode.label}
+                        <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] mb-2">
+                          <span>Access: {accessCode.label}</span>
                           <button
                             onClick={e => { e.stopPropagation(); setShowCodes(prev => ({ ...prev, [job.id]: !prev[job.id] })) }}
-                            className="ml-2 bg-transparent border-none text-[var(--status-info)] text-xs font-semibold cursor-pointer p-0"
+                            className="bg-[var(--bg-elevated)] rounded-lg px-2.5 py-1 text-[var(--status-info)] text-xs font-semibold cursor-pointer border-none"
                           >
-                            Show Code 👁
+                            {showCodes[job.id] ? `Code: ${accessCode.code}` : 'Show Code 👁'}
                           </button>
                         </div>
                       )}
@@ -927,7 +927,7 @@ export default function MyTasksPage() {
                       {/* Progress bar */}
                       {checklist.length > 0 && (
                         <>
-                          <div className="h-1 w-full rounded-full bg-[var(--bg-elevated)] mb-2">
+                          <div className="h-1.5 w-full rounded-full bg-[var(--bg-elevated)] mb-2">
                             <div
                               className="h-full rounded-full bg-[var(--status-success)] transition-[width] duration-300"
                               style={{ width: effectiveStatus === 'done' ? '100%' : effectiveStatus === 'in-progress' ? '35%' : '0%' }}
@@ -973,9 +973,9 @@ export default function MyTasksPage() {
                             setJobStatuses(prev => ({ ...prev, [job.id]: 'in-progress' }))
                             setJobStartedAt(prev => ({ ...prev, [job.id]: ts }))
                           }}
-                          className={`mt-1 w-full rounded-lg font-semibold ${
+                          className={`mt-1 w-full rounded-full font-semibold ${
                             isFirst
-                              ? 'bg-[#7c3aed] hover:bg-[#7c3aed]/80 text-white'
+                              ? 'bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-white'
                               : 'bg-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)]/80 text-white'
                           }`}
                         >
@@ -985,7 +985,7 @@ export default function MyTasksPage() {
                         <div className="flex gap-2 mt-1">
                           <Button
                             onClick={() => matchingTask && setSelectedTask(matchingTask)}
-                            className="flex-1 rounded-lg font-semibold bg-[#7c3aed] hover:bg-[#7c3aed]/80 text-white"
+                            className="flex-1 rounded-full font-semibold bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-white"
                           >
                             Resume Checklist
                           </Button>
@@ -1249,8 +1249,8 @@ export default function MyTasksPage() {
                   <span className="text-xs text-[var(--text-muted)]">{checkedCount} of {totalCount} complete</span>
                   <span className="text-xs font-semibold" style={{ color: progressPct === 100 ? 'var(--status-green-fg)' : accent }}>{progressPct}%</span>
                 </div>
-                <div className="h-1 rounded-sm bg-[var(--border)]">
-                  <div className="h-full rounded-sm transition-[width] duration-300" style={{ background: progressPct === 100 ? 'var(--status-green-fg)' : accent, width: `${progressPct}%` }} />
+                <div className="h-1.5 rounded-full bg-[var(--border)]">
+                  <div className="h-full rounded-full transition-[width] duration-300" style={{ background: progressPct === 100 ? 'var(--status-green-fg)' : accent, width: `${progressPct}%` }} />
                 </div>
               </div>
             )}

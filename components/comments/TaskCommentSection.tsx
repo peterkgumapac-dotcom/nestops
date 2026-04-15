@@ -5,7 +5,7 @@ const GREEN = '#1D9E75', GREEN2 = '#15d492', GBG = 'rgba(29,158,117,0.10)', GBOR
 const BLUE = '#378ADD', BBG = 'rgba(55,138,221,0.10)'
 const RED = '#e24b4a'
 const AMBER = '#ef9f27'
-const PURPLE = '#7c3aed'
+const PURPLE = 'var(--accent)'
 
 interface Reaction { emoji: string; count: number; mine?: boolean }
 interface Attachment { type: 'image' | 'doc'; name?: string; size?: string }

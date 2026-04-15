@@ -18,7 +18,7 @@ const AMBER = 'var(--status-amber-fg)', ABG = 'var(--status-amber-bg)', ABORDER 
 const BLUE = 'var(--status-blue-fg)', BBG = 'var(--status-blue-bg)', BBORDER = 'rgba(55,138,221,0.22)'
 
 const USER_TO_STAFF: Record<string, string> = {
-  u3: 's1', u4: 's3', u5: 's4', u7: 's2',
+  u3: 's5', u4: 's3', u5: 's4', u7: 's2',
 }
 
 const MAINTENANCE_STAFF = new Set(['s3'])

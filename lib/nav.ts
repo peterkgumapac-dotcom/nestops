@@ -7,7 +7,7 @@ import {
   Settings, History,
   Home, Inbox, PlusCircle, FileText, CheckSquare,
   Wrench, Users, CreditCard, UserCircle,
-  KeyRound, Smartphone,
+  KeyRound, Smartphone, CalendarDays, Calendar,
   LucideIcon,
 } from 'lucide-react'
 
@@ -86,10 +86,11 @@ export const STAFF_CLEANING_NAV: NavSection[] = [
   {
     label: '',
     items: [
-      { label: 'Alerts',       href: '/app/alerts',      icon: Bell },
-      { label: 'Home',         href: '/app/dashboard',   icon: Home },
-      { label: 'My Cleanings', href: '/app/my-tasks',    icon: CheckSquare },
-      { label: 'Work Orders',  href: '/app/work-orders', icon: Ticket },
+      { label: 'Today',        href: '/app/cleaner',          icon: CalendarDays },
+      { label: 'Alerts',       href: '/app/alerts',           icon: Bell },
+      { label: 'My Cleanings', href: '/app/my-tasks',         icon: CheckSquare },
+      { label: 'Schedule',     href: '/app/cleaner/schedule', icon: Calendar },
+      { label: 'Work Orders',  href: '/app/work-orders',      icon: Ticket },
     ],
   },
   {

@@ -128,6 +128,20 @@ export const SHIFTS: Shift[] = [
   // Saturday 2026-03-28
   { id: 'sh-36', staffId: 's1', propertyId: 'p5', date: '2026-03-28', day: 'Sat', startTime: '10:00', endTime: '14:00', type: 'cleaning',     status: 'scheduled',  notes: 'Weekend deep clean',               jobIds: ['j5'] },
   { id: 'sh-37', staffId: 's2', propertyId: 'p1', date: '2026-03-28', day: 'Sat', startTime: '09:00', endTime: '11:00', type: 'inspection',   status: 'scheduled',  notes: 'Saturday arrival check',           jobIds: [] },
+
+  // ── Maria Solberg (s5) shifts ──────────────────────────────────────────────
+  // Monday 2026-03-23
+  { id: 'sh-50', staffId: 's5', propertyId: 'p2', date: '2026-03-23', day: 'Mon', startTime: '09:00', endTime: '12:00', type: 'cleaning',     status: 'completed',  notes: 'Standard turnover',                jobIds: [] },
+  // Tuesday 2026-03-24
+  { id: 'sh-51', staffId: 's5', propertyId: 'p3', date: '2026-03-24', day: 'Tue', startTime: '10:00', endTime: '13:00', type: 'cleaning',     status: 'confirmed',  notes: 'Deep clean — guest arrives 15:00', jobIds: ['j4'] },
+  { id: 'sh-52', staffId: 's5', propertyId: 'p2', date: '2026-03-24', day: 'Tue', startTime: '14:00', endTime: '16:00', type: 'cleaning',     status: 'confirmed',  notes: 'Quick refresh',                    jobIds: [] },
+  // Wednesday 2026-03-25
+  { id: 'sh-53', staffId: 's5', propertyId: 'p2', date: '2026-03-25', day: 'Wed', startTime: '09:00', endTime: '12:00', type: 'cleaning',     status: 'scheduled',  notes: 'Checkout turnover',                jobIds: [] },
+  // Thursday 2026-03-26
+  { id: 'sh-54', staffId: 's5', propertyId: 'p3', date: '2026-03-26', day: 'Thu', startTime: '10:00', endTime: '14:00', type: 'cleaning',     status: 'scheduled',  notes: 'Mid-stay refresh',                 jobIds: [] },
+  // Friday 2026-03-27
+  { id: 'sh-55', staffId: 's5', propertyId: 'p2', date: '2026-03-27', day: 'Fri', startTime: '08:00', endTime: '11:00', type: 'cleaning',     status: 'scheduled',  notes: 'Weekend prep',                     jobIds: [] },
+  { id: 'sh-56', staffId: 's5', propertyId: 'p3', date: '2026-03-27', day: 'Fri', startTime: '12:00', endTime: '15:00', type: 'cleaning',     status: 'scheduled',  notes: 'Weekend prep turnover',            jobIds: [] },
 ]
 
 export const AVAILABILITY: StaffAvailability[] = [
@@ -162,6 +176,14 @@ export const AVAILABILITY: StaffAvailability[] = [
   { staffId: 's4', day: 'Fri', available: true,  preferredStart: '09:00', preferredEnd: '17:00' },
   { staffId: 's4', day: 'Sat', available: false, notes: 'Unavailable weekends' },
   { staffId: 's4', day: 'Sun', available: false, notes: 'Unavailable weekends' },
+
+  { staffId: 's5', day: 'Mon', available: true,  preferredStart: '09:00', preferredEnd: '16:00' },
+  { staffId: 's5', day: 'Tue', available: true,  preferredStart: '09:00', preferredEnd: '16:00' },
+  { staffId: 's5', day: 'Wed', available: true,  preferredStart: '09:00', preferredEnd: '16:00' },
+  { staffId: 's5', day: 'Thu', available: true,  preferredStart: '09:00', preferredEnd: '16:00' },
+  { staffId: 's5', day: 'Fri', available: true,  preferredStart: '08:00', preferredEnd: '15:00' },
+  { staffId: 's5', day: 'Sat', available: false, notes: 'Unavailable weekends' },
+  { staffId: 's5', day: 'Sun', available: false, notes: 'Unavailable weekends' },
 ]
 
 // ─── Computed helpers ────────────────────────────────────────────────────────
@@ -224,7 +246,7 @@ export function getWorkloadSummary(): StaffWorkload[] {
 export const DAYS: DayOfWeek[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 export const SHIFT_TYPE_COLOR: Record<ShiftType, string> = {
-  cleaning:    '#7c3aed',
+  cleaning:    '#a78bfa',
   maintenance: '#f97316',
   inspection:  '#06b6d4',
   intake:      '#10b981',
@@ -233,7 +255,7 @@ export const SHIFT_TYPE_COLOR: Record<ShiftType, string> = {
 
 export const SHIFT_STATUS_COLOR: Record<ShiftStatus, string> = {
   scheduled:   '#6366f1',
-  confirmed:   '#7c3aed',
+  confirmed:   '#a78bfa',
   in_progress: '#d97706',
   completed:   '#10b981',
   cancelled:   '#ef4444',

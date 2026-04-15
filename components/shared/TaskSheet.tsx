@@ -890,7 +890,7 @@ export default function TaskSheet({ task, open, onClose, onMarkComplete }: TaskS
           {(() => {
             const roleAvatarBg: Record<string, string> = {
               guest_services: '#ec4899', maintenance: '#0ea5e9',
-              cleaning: '#d97706', operator: '#7c3aed', default: '#6b7280',
+              cleaning: '#d97706', operator: 'var(--status-purple-fg)', default: '#6b7280',
             }
             const seedActivity = task?.activity ?? []
             const allActivity = [...seedActivity, ...localActivity]

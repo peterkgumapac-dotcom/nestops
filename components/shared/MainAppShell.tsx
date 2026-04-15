@@ -7,9 +7,11 @@ import { AnimatePresence, motion } from 'framer-motion'
 import MainAppSidebar from './MainAppSidebar'
 import CommandPalette from '@/components/command-palette'
 import ShellHeader from './ShellHeader'
+import CleanerBottomTabs from './CleanerBottomTabs'
 import { useRole } from '@/context/RoleContext'
 import type { Role, UserProfile } from '@/context/RoleContext'
 import { useAlerts } from '@/context/AlertsContext'
+import { useIsMobile, useIsCleaner } from '@/hooks/useIsMobile'
 
 import type { AccessTier } from '@/context/RoleContext'
 
@@ -44,6 +46,9 @@ export default function MainAppShell({ children }: { children: React.ReactNode }
   const { meshClass, accent, user, setUser } = useRole()
   const { getAlertsForRole, dismissAlert, dismissAll } = useAlerts()
   const router = useRouter()
+  const isMobile = useIsMobile()
+  const isCleaner = useIsCleaner()
+  const showBottomTabs = isCleaner && isMobile
 
   const handleSwitchPersona = (p: typeof DEMO_SWITCHER_PERSONAS[number]) => {
     setDemoOpen(false)
@@ -62,6 +67,7 @@ export default function MainAppShell({ children }: { children: React.ReactNode }
     let dest = '/app/my-tasks'
     if (p.role === 'operator') dest = '/briefing'
     else if (p.role === 'owner') dest = '/owner'
+    else if (p.jobRole === 'cleaner') dest = '/app/cleaner'
     else if (p.jobRole === 'supervisor') dest = '/app/dashboard'
     router.push(dest)
   }
@@ -73,12 +79,12 @@ export default function MainAppShell({ children }: { children: React.ReactNode }
   const badgeColor = urgentCount > 0 ? '#ef4444' : warningCount > 0 ? '#d97706' : accent
 
   return (
-    <div className={meshClass} style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--bg-page)' }}>
-      <MainAppSidebar isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+    <div className={`${meshClass}${showBottomTabs ? ' has-bottom-tabs' : ''}`} style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--bg-page)' }}>
+      {!showBottomTabs && <MainAppSidebar isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <ShellHeader
           variant="full"
-          onMobileOpen={() => setMobileOpen(true)}
+          onMobileOpen={showBottomTabs ? () => {} : () => setMobileOpen(true)}
           rightSlot={
           <div style={{ position: 'relative' }}>
             <button
@@ -134,9 +140,10 @@ export default function MainAppShell({ children }: { children: React.ReactNode }
           }
         />
 
-        <main className="main-content" style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 1 }}>
+        <main className="main-content" style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 1, paddingBottom: showBottomTabs ? 80 : undefined }}>
           {children}
         </main>
+        {isCleaner && <CleanerBottomTabs />}
       </div>
       <CommandPalette />
 

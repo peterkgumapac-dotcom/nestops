@@ -111,10 +111,9 @@ const CSS = `
   }
   .nav-left { display: flex; align-items: center; gap: 10px; }
   .nav-logo {
-    width: 32px; height: 32px; background: var(--accent); border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 600; font-size: 14px; color: #fff; flex-shrink: 0;
+    width: 32px; height: 32px; flex-shrink: 0;
   }
+  .nav-logo img { width: 100%; height: 100%; }
   .nav-name { font-size: 16px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
   .nav-tag {
     font-size: 10px; padding: 2px 8px; border-radius: 6px;
@@ -404,7 +403,7 @@ export default function LoginPage() {
       <nav className="lp-nav">
         <div className="nav-inner">
           <div className="nav-left">
-            <div className="nav-logo">A</div>
+            <div className="nav-logo"><img src="/logo-icon.svg" alt="AfterStay" /></div>
             <span className="nav-name">AfterStay</span>
             <span className="nav-tag">v1.0</span>
           </div>
@@ -435,7 +434,7 @@ export default function LoginPage() {
         >
           {/* Wordmark */}
           <div className="card-wordmark">
-            <div className="nav-logo">A</div>
+            <div className="nav-logo"><img src="/logo-icon.svg" alt="AfterStay" /></div>
             <span className="nav-name">AfterStay</span>
             <span className="nav-tag">v1.0</span>
           </div>

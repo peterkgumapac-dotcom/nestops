@@ -3,7 +3,7 @@ import { useState } from 'react'
 
 const GREEN2 = '#15d492'
 const RED = '#e24b4a'
-const PURPLE = '#7c3aed'
+const PURPLE = 'var(--accent)'
 
 const TEAM_THREADS = [
   { id: 'bjorn', name: 'Bjorn L.', initials: 'BL', color: RED, online: false, time: '1:52 PM', ctx: ['Sunset Villa', 'Maintenance'], preview: "i cant make it. can we do tomorrow?", unread: true },

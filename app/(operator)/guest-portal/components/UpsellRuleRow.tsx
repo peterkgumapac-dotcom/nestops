@@ -6,7 +6,7 @@ import { PROPERTY_GROUPS } from '@/lib/data/upsells'
 import ToggleSwitch from '@/components/ui/toggle-switch'
 
 const CATEGORY_COLORS: Record<UpsellCategory, string> = {
-  arrival:    '#7c3aed',
+  arrival:    'var(--status-purple-fg)',
   departure:  '#2563eb',
   experience: '#059669',
   transport:  '#d97706',

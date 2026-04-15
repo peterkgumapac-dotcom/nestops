@@ -11,7 +11,7 @@ import ShellHeader from './ShellHeader'
 const ACCENT = '#2563eb'
 
 const ROLE_PILLS = [
-  { label: 'Operator', role: 'operator' as const, color: '#7c3aed', href: '/operator' },
+  { label: 'Operator', role: 'operator' as const, color: '#14b8a6', href: '/operator' },
   { label: 'Staff', role: 'staff' as const, color: '#d97706', href: '/staff' },
 ]
 
@@ -50,7 +50,7 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
     }}>
       {/* Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '20px 8px', minHeight: 64, flexShrink: 0 }}>
-        <img src="/logo-icon.svg" width={32} height={32} alt="AfterStay" style={{ borderRadius: 8, flexShrink: 0 }} />
+        <img src="/logo-icon.svg" width={32} height={32} alt="AfterStay" style={{ flexShrink: 0 }} />
         <div>
           <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>AfterStay</div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Owner Portal</div>

@@ -25,7 +25,7 @@ export const FEED_ITEMS: FeedItem[] = [
   { id: 'f5', type: 'guest_issue', actor: 'Fatima N.',   action: 'logged guest issue',     property: 'Harbor Studio',  detail: 'Noise complaint',         time: '14 min ago',       color: '#ef4444' },
   { id: 'f6', type: 'field_report',actor: 'Ivan P.',     action: 'submitted field report', property: 'Ocean View Apt', detail: 'Broken window latch',     time: '31 min ago',       color: '#d97706' },
   { id: 'f7', type: 'approved',    actor: 'Operator',    action: 'approved refund',        property: 'Downtown Loft',  detail: '750 NOK',                 time: '1h ago',           color: '#6366f1' },
-  { id: 'f8', type: 'clocked_in',  actor: 'Anna K.',     action: 'clocked in',             property: 'Staff portal',   time: '2h ago',                   color: '#7c3aed' },
+  { id: 'f8', type: 'clocked_in',  actor: 'Anna K.',     action: 'clocked in',             property: 'Staff portal',   time: '2h ago',                   color: '#a78bfa' },
 ]
 
 export type FeedTab = 'all' | 'in_progress' | 'completed' | 'issues'

@@ -34,7 +34,7 @@ import IntentCard from './_components/IntentCard'
 // ─── Team clock status (6 members) ───────────────────────────────────────────
 const TEAM_CLOCK_STATUS = [
   { id: 's5', name: 'Maria',   initials: 'MS', avatarBg: 'var(--accent)',       role: 'Cleaning',       property: 'Ocean View Apt', status: 'active',  task: 'Turnover clean',          clockTime: '09:05' },
-  { id: 's4', name: 'Fatima',  initials: 'FN', avatarBg: '#7c3aed',            role: 'Guest Services', property: 'Remote',         status: 'busy',    task: 'Handling guest request',  clockTime: '08:55' },
+  { id: 's4', name: 'Fatima',  initials: 'FN', avatarBg: 'var(--status-purple-fg)',            role: 'Guest Services', property: 'Remote',         status: 'busy',    task: 'Handling guest request',  clockTime: '08:55' },
   { id: 's3', name: 'Bjorn',   initials: 'BL', avatarBg: 'var(--status-info)', role: 'Maintenance',    property: 'Harbor Studio',  status: 'active',  task: 'Fixing AC unit',          clockTime: '09:15' },
   { id: 's1', name: 'Johan',   initials: 'JL', avatarBg: 'var(--status-warning)', role: 'Cleaning',    property: 'Sunset Villa',   status: 'blocked', task: 'Waiting for supplies',    clockTime: null },
   { id: 's2', name: 'Anna',    initials: 'AK', avatarBg: 'var(--text-subtle)',  role: 'Inspector',      property: 'Downtown Loft',  status: 'idle',    task: 'Starts at 14:00',         clockTime: null },

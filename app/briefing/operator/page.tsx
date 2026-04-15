@@ -64,7 +64,7 @@ export default function OperatorBriefingPage() {
   if (!mounted || !currentUser) return null
 
   const firstName = currentUser.name.split(' ')[0]
-  const badgeColor = '#7c3aed'
+  const badgeColor = 'var(--accent)'
 
   // Overnight report
   const todayReport = today
@@ -138,7 +138,7 @@ export default function OperatorBriefingPage() {
         borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 8, background: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: 13 }}>N</div>
+          <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: 13 }}>N</div>
           <span style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>AfterStay</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -206,7 +206,7 @@ export default function OperatorBriefingPage() {
 
             {/* OVERNIGHT ISSUES */}
             {prefs?.toggles.overnightissues && overnightIssues.length > 0 && (
-              <div style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.25)', borderRadius: 16, padding: '20px', marginBottom: 16 }}>
+              <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 16, padding: '20px', marginBottom: 16 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', marginBottom: 12 }}>
                   🌙 {overnightIssues.length} issue{overnightIssues.length !== 1 ? 's' : ''} reported overnight
                 </div>
@@ -363,12 +363,12 @@ export default function OperatorBriefingPage() {
             </div>
 
             {/* PENDING APPROVALS */}
-            <div style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 16, padding: '20px', marginBottom: 16 }}>
+            <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 16, padding: '20px', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: pendingApprovals.length > 0 ? 12 : 0 }}>
                 <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
                   Pending Approvals
                 </div>
-                <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: pendingApprovals.length > 0 ? '#7c3aed20' : '#10b98120', color: pendingApprovals.length > 0 ? '#a78bfa' : '#34d399' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: pendingApprovals.length > 0 ? 'var(--accent-bg)' : '#10b98120', color: pendingApprovals.length > 0 ? 'var(--accent)' : '#34d399' }}>
                   {pendingApprovals.length} pending
                 </span>
               </div>

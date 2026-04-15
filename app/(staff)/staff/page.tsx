@@ -24,7 +24,7 @@ const AMBER_BG = 'var(--status-amber-bg)'
 const RED = 'var(--status-red-fg)'
 
 const USER_TO_STAFF: Record<string, string> = {
-  u3: 's1', u4: 's3', u5: 's4', u7: 's2',
+  u3: 's5', u4: 's3', u5: 's4', u7: 's2',
 }
 
 function getElapsed(clockInTime: string): string {
@@ -336,7 +336,7 @@ export default function StaffHome() {
                             <span className="text-[11px] text-[var(--text-subtle)]">{donePropJobs}/{propertyJobs.length} tasks</span>
                             <span className="text-[11px] text-[var(--text-subtle)]">{propProgress}%</span>
                           </div>
-                          <div className="h-1 bg-[var(--bg-elevated)] rounded-full overflow-hidden">
+                          <div className="h-1.5 bg-[var(--bg-elevated)] rounded-full overflow-hidden">
                             <div
                               className="h-full rounded-full transition-[width] duration-300"
                               style={{ width: `${propProgress}%`, background: propProgress === 100 ? GREEN : 'var(--status-amber-fg)' }}

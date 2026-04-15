@@ -13,7 +13,7 @@ const DEFAULT_CHECKIN  = '2026-03-22'
 const DEFAULT_CHECKOUT = '2026-03-26'
 
 const CATEGORY_COLORS: Record<UpsellCategory, string> = {
-  arrival:    '#7c3aed',
+  arrival:    '#a78bfa',
   departure:  '#2563eb',
   experience: '#059669',
   transport:  '#d97706',

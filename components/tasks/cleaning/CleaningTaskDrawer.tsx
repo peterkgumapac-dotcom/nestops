@@ -453,7 +453,7 @@ export function CleaningTaskDrawer({ shift, job, currentUserId, currentUserName,
                     {entry.type === 'message' ? (
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                          <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#fff' }}>
+                          <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#fff' }}>
                             {entry.authorAvatar ?? entry.authorName?.slice(0, 2)}
                           </div>
                           <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.7)' }}>{entry.authorName}</span>

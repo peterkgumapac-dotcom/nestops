@@ -41,7 +41,7 @@ function CharProgress({ current, max }: { current: number; max: number }) {
   const ratio = current / max
   const barColor = ratio < 0.7 ? 'var(--status-green-fg)' : ratio < 0.9 ? 'var(--status-amber-fg)' : 'var(--status-red-fg)'
   return (
-    <div className="h-1 w-full overflow-hidden rounded-full bg-[var(--bg-elevated)]">
+    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--bg-elevated)]">
       <div
         className="h-full rounded-full transition-all duration-200"
         style={{ width: `${Math.min(ratio * 100, 100)}%`, backgroundColor: barColor }}

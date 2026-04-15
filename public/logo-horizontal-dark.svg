@@ -1,9 +1,22 @@
-<svg width="400" height="120" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M 52 16 L 86 72 L 18 72 Z" stroke="#14b8a6" stroke-width="1.8" fill="none" stroke-linejoin="round"/>
-  <path d="M 32 72 L 32 50 L 72 50 L 72 72" stroke="#14b8a6" stroke-width="1.8" fill="none"/>
-  <line x1="18" y1="72" x2="86" y2="72" stroke="#14b8a6" stroke-width="1.8"/>
-  <circle cx="52" cy="34" r="3.5" fill="#14b8a6"/>
-  <text x="104" y="58" font-family="Inter, system-ui, sans-serif" font-weight="700" font-size="36" letter-spacing="-1" fill="#f5ede6">After</text>
-  <text x="240" y="58" font-family="Inter, system-ui, sans-serif" font-weight="700" font-size="36" letter-spacing="-1" fill="#14b8a6">Stay</text>
-  <text x="105" y="80" font-family="Inter, system-ui, monospace" font-size="10" letter-spacing="3" fill="#14b8a6" opacity="0.7">PROPERTY OPERATIONS</text>
+<svg width="800" height="200" viewBox="0 0 800 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="800" height="200" fill="#0a0e17"/>
+
+  <!-- Circle container -->
+  <circle cx="100" cy="100" r="80" fill="#0e1e1e" stroke="#1a8a7a" stroke-width="2.5"/>
+
+  <!-- A letterform - wide -->
+  <path d="M 40 160 L 100 30 L 160 160" stroke="#1a8a7a" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Pulse crossbar -->
+  <path d="M 58 104 L 78 104 L 88 82 L 98 120 L 110 86 L 118 104 L 142 104" stroke="#40c4aa" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Wordmark: After -->
+  <text x="210" y="105" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-weight="700" font-size="56" letter-spacing="-2" fill="#e4e8e8">After</text>
+
+  <!-- Wordmark: Stay -->
+  <text x="430" y="105" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-weight="700" font-size="56" letter-spacing="-2" fill="#1a8a7a">Stay</text>
+
+  <!-- Tagline -->
+  <text x="212" y="135" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-weight="500" font-size="16" letter-spacing="5" fill="#1a8a7a" opacity="0.5">OPERATIONS PLATFORM</text>
 </svg>

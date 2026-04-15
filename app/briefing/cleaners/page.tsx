@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import {
   Clock, Key, AlertTriangle, ChevronRight, Settings,
-  CheckCircle2, Timer, Sparkles, Package, Eye,
+  CheckCircle2, Timer, Sparkles, Package, Eye, EyeOff,
+  Check, MapPin,
 } from 'lucide-react'
 import type { UserProfile } from '@/context/RoleContext'
 import { SHIFTS } from '@/lib/data/staffScheduling'
@@ -16,7 +17,9 @@ import { JOBS, STAFF_MEMBERS } from '@/lib/data/staff'
 import { getCleaningChecklist, type ChecklistItem } from '@/lib/data/checklists'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import ToggleSwitch from '@/components/ui/toggle-switch'
 import CountdownTimer from '@/components/shared/CountdownTimer'
+import WeatherIcon from '@/components/shared/WeatherIcon'
 import { CleaningTaskDrawer } from '@/components/tasks/cleaning/CleaningTaskDrawer'
 import {
   getPrefs, savePrefs, resetPrefs,
@@ -27,7 +30,13 @@ import type { BriefingPrefs, BriefingToggles } from '@/lib/data/briefingPrefs'
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const USER_TO_STAFF: Record<string, string> = {
-  'u3': 's1', 'u4': 's3', 'u5': 's4', 'u7': 's2',
+  'u3': 's5', 'u4': 's3', 'u5': 's4', 'u7': 's2',
+}
+
+/** Data-driven supply reminders per property */
+const PROPERTY_SUPPLIES: Record<string, string> = {
+  'p2': 'Linen set',
+  'p3': 'Toiletry kit',
 }
 
 function getGreeting(): string {
@@ -66,6 +75,7 @@ export default function CleanerBriefingPage() {
   const [showCodes, setShowCodes] = useState<Record<string, boolean>>({})
   const [taskChecks, setTaskChecks] = useState<Record<string, boolean>>({})
   const [drawerShift, setDrawerShift] = useState<Shift | null>(null)
+  const [usingDemoDate, setUsingDemoDate] = useState(false)
 
   useEffect(() => {
     setToday(new Date().toISOString().split('T')[0])
@@ -97,9 +107,21 @@ export default function CleanerBriefingPage() {
 
   useEffect(() => {
     if (!today || !currentUser) return
-    const staffId = USER_TO_STAFF[currentUser.id]
-    if (staffId) {
-      setMyShiftsToday(SHIFTS.filter(s => s.staffId === staffId && s.date === today))
+    const sid = USER_TO_STAFF[currentUser.id]
+    if (!sid) return
+    const todayShifts = SHIFTS.filter(s => s.staffId === sid && s.date === today)
+    if (todayShifts.length > 0) {
+      setMyShiftsToday(todayShifts)
+      setUsingDemoDate(false)
+      return
+    }
+    // Demo fallback: nearest scheduled date
+    const allStaffShifts = SHIFTS.filter(s => s.staffId === sid).sort((a, b) => a.date.localeCompare(b.date))
+    const upcoming = allStaffShifts.filter(s => s.date >= today)
+    const demoDate = upcoming.length > 0 ? upcoming[0].date : allStaffShifts[allStaffShifts.length - 1]?.date
+    if (demoDate) {
+      setMyShiftsToday(SHIFTS.filter(s => s.staffId === sid && s.date === demoDate).sort((a, b) => a.startTime.localeCompare(b.startTime)))
+      setUsingDemoDate(true)
     }
   }, [today, currentUser])
 
@@ -128,7 +150,7 @@ export default function CleanerBriefingPage() {
       clockInTimestamp: Date.now(),
       status: 'in_progress',
     }))
-    router.push('/app/dashboard')
+    router.push('/app/cleaner')
   }
 
   const toggleCode = (shiftId: string) => {
@@ -151,9 +173,9 @@ export default function CleanerBriefingPage() {
   return (
     <div className="min-h-screen bg-[var(--bg-page)] text-[var(--text-primary)]">
       {/* ── Sticky header ─────────────────────────────────────────── */}
-      <header className="fixed top-0 left-0 right-0 z-10 flex items-center justify-between px-5 h-13 bg-[var(--bg-page)]/90 backdrop-blur-xl border-b border-[var(--border-subtle)]">
+      <header className="fixed top-0 left-0 right-0 z-10 flex items-center justify-between px-5 h-14 bg-[var(--bg-page)]/90 backdrop-blur-xl border-b border-[var(--border-subtle)]">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[#7c3aed] flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center">
             <Sparkles size={14} className="text-white" />
           </div>
           <span className="font-semibold text-sm text-[var(--text-primary)]">AfterStay</span>
@@ -164,7 +186,7 @@ export default function CleanerBriefingPage() {
       </header>
 
       {/* ── Main content ──────────────────────────────────────────── */}
-      <main className="pt-16 pb-36 px-5 max-w-lg mx-auto">
+      <main className="pt-16 pb-36 px-5 max-w-lg md:max-w-2xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -176,14 +198,17 @@ export default function CleanerBriefingPage() {
               {getGreeting()}, {firstName}
             </h1>
             <div className="flex items-center gap-3">
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[rgba(124,58,237,0.12)] text-[#a78bfa]">
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[var(--status-purple-bg)] text-[var(--status-purple-fg)]">
                 Cleaning Team
               </span>
               <span className="text-xs text-[var(--text-subtle)]">{dayName}, {dateLabel}</span>
+              {usingDemoDate && (
+                <span className="text-[10px] text-[var(--text-subtle)] italic">(Demo data)</span>
+              )}
             </div>
           </div>
 
-          {/* ── This Week (moved up — more prominent) ─────────────── */}
+          {/* ── This Week ─────────────────────────────────────────── */}
           {prefs?.toggles.thisweek && (
             <div className="mb-5">
               <div className="flex gap-2">
@@ -196,16 +221,16 @@ export default function CleanerBriefingPage() {
                 ].map(d => (
                   <div
                     key={d.day}
-                    className={`flex-1 text-center py-2 rounded-xl ${
+                    className={`flex-1 text-center py-2 min-h-[44px] rounded-xl ${
                       d.state === 'today'
-                        ? 'bg-[rgba(124,58,237,0.12)] border border-[rgba(124,58,237,0.3)]'
+                        ? 'bg-[var(--accent-bg)] border border-[var(--accent-border)]'
                         : 'bg-[var(--bg-card)] border border-[var(--border-subtle)]'
                     }`}
                   >
                     <div className="text-[10px] text-[var(--text-subtle)] mb-1">{d.day}</div>
                     <div className="text-xs">
                       {d.state === 'done' && <CheckCircle2 size={14} className="mx-auto text-[var(--status-green-fg)]" />}
-                      {d.state === 'today' && <div className="w-2 h-2 rounded-full bg-[#7c3aed] mx-auto" />}
+                      {d.state === 'today' && <div className="w-2 h-2 rounded-full bg-[var(--accent)] mx-auto" />}
                       {d.state === 'upcoming' && <div className="w-2 h-2 rounded-full bg-[var(--bg-elevated)] mx-auto" />}
                     </div>
                   </div>
@@ -234,7 +259,7 @@ export default function CleanerBriefingPage() {
               {sortedShifts.length === 0 ? (
                 <div className="text-xs text-[var(--text-muted)] mb-3">No cleanings scheduled today</div>
               ) : (
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-4">
                   {sortedShifts.map((shift, idx) => {
                     const prop = PROPERTIES.find(p => p.id === shift.propertyId)
                     const weather = PROPERTY_WEATHER.find(w => w.propertyId === shift.propertyId)
@@ -246,6 +271,7 @@ export default function CleanerBriefingPage() {
                     const completedCount = getCompletedCount(shift.id, previewTasks.length)
                     const accessCode = prop?.accessCodes?.[0]
                     const canSeeCode = true // Briefing = pre-shift, codes visible
+                    const supplyItem = PROPERTY_SUPPLIES[shift.propertyId]
 
                     return (
                       <motion.div
@@ -255,70 +281,113 @@ export default function CleanerBriefingPage() {
                         transition={{ delay: idx * 0.08 }}
                       >
                         <Card className="overflow-hidden p-0">
-                          {/* Property image */}
+                          {/* Property image with gradient overlay */}
                           {prop?.imageUrl && (
-                            <img
-                              src={prop.imageUrl}
-                              alt={prop.name}
-                              className="w-full h-28 object-cover block"
-                            />
-                          )}
-
-                          <div className="p-4">
-                            {/* Title + badge */}
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-[15px] font-semibold text-[var(--text-primary)]">
-                                {prop?.name ?? shift.propertyId}
-                              </span>
-                              <span className={`text-xs font-semibold px-2 py-0.5 rounded ${
-                                isFirst
-                                  ? 'bg-[var(--status-blue-bg)] text-[var(--status-blue-fg)]'
-                                  : 'bg-[var(--status-amber-bg)] text-[var(--status-amber-fg)]'
-                              }`}>
-                                {isFirst ? 'NEXT UP' : 'LATER'}
-                              </span>
-                            </div>
-
-                            {/* Time + type */}
-                            <div className="text-xs text-[var(--text-muted)] mb-1">
-                              <Clock size={12} className="inline mr-1 -mt-px" />
-                              {shift.startTime} – {shift.endTime} · {cleanType}
-                              {prefs?.toggles.taskcount && (
-                                <span> · {checklist.length} tasks</span>
+                            <div className="relative h-28 md:h-36 overflow-hidden">
+                              <img
+                                src={prop.imageUrl}
+                                alt={prop.name}
+                                className="w-full h-full object-cover block"
+                                loading={idx === 0 ? 'eager' : 'lazy'}
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                              <div className="absolute bottom-3 left-4 right-4">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <h3 className="text-sm font-medium text-white">{prop.name}</h3>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                      <span className="flex items-center gap-1 text-xs text-white/80">
+                                        <Clock size={11} /> {shift.startTime}–{shift.endTime}
+                                      </span>
+                                      <span className="text-xs text-white/60">·</span>
+                                      <span className="text-xs text-white/80">{cleanType}</span>
+                                    </div>
+                                  </div>
+                                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                                    isFirst
+                                      ? 'bg-[var(--status-blue-bg)] text-[var(--status-blue-fg)]'
+                                      : 'bg-[var(--status-amber-bg)] text-[var(--status-amber-fg)]'
+                                  }`}>
+                                    {isFirst ? 'NEXT UP' : 'LATER'}
+                                  </span>
+                                </div>
+                              </div>
+                              {/* Weather pill on image */}
+                              {prefs?.toggles.weather && weather && (
+                                <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-sm">
+                                  <WeatherIcon condition={weather.condition} size={13} />
+                                  <span className="text-xs text-white font-medium tabular-nums">{weather.temperature}°</span>
+                                </div>
                               )}
                             </div>
+                          )}
 
-                            {/* Per-property weather */}
-                            {prefs?.toggles.weather && weather && (
-                              <div className="text-xs text-[var(--text-muted)] mb-1.5">
-                                {weather.icon} {weather.temperature}°C · {weather.location}
-                                {weather.note ? ` · ${weather.note}` : ''}
+                          {/* Fallback header when no image */}
+                          {!prop?.imageUrl && (
+                            <div className="p-4 pb-0">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-sm font-medium text-[var(--text-primary)]">
+                                  {prop?.name ?? shift.propertyId}
+                                </span>
+                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                                  isFirst
+                                    ? 'bg-[var(--status-blue-bg)] text-[var(--status-blue-fg)]'
+                                    : 'bg-[var(--status-amber-bg)] text-[var(--status-amber-fg)]'
+                                }`}>
+                                  {isFirst ? 'NEXT UP' : 'LATER'}
+                                </span>
+                              </div>
+                              <div className="text-xs text-[var(--text-muted)] mb-1">
+                                <Clock size={12} className="inline mr-1 -mt-px" />
+                                {shift.startTime} – {shift.endTime} · {cleanType}
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="p-4 space-y-3">
+                            {/* Task count (when image header provides time/type) */}
+                            {prop?.imageUrl && prefs?.toggles.taskcount && (
+                              <div className="text-xs text-[var(--text-muted)]">
+                                {checklist.length} tasks
                               </div>
                             )}
 
-                            {/* Turnaround warning */}
+                            {/* Turnaround warning — pill pattern */}
                             {prefs?.toggles.turnaroundwarning && turnaround?.isTight && (
-                              <div className="text-xs text-[var(--status-warning)] mb-2">
-                                <AlertTriangle size={12} className="inline mr-1 -mt-px" />
-                                Tight: next check-in {turnaround.checkinTime} ({Math.round(turnaround.gapMins / 60)}h gap)
+                              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--status-amber-bg)] border border-[rgba(239,159,39,0.2)]">
+                                <AlertTriangle size={14} className="text-[var(--status-amber-fg)] flex-shrink-0" />
+                                <span className="text-xs text-[var(--status-amber-fg)] font-medium">
+                                  Tight: next check-in {turnaround.checkinTime} ({Math.round(turnaround.gapMins / 60)}h gap)
+                                </span>
                               </div>
                             )}
 
-                            {/* Access info */}
+                            {/* Access info — elevated pill pattern */}
                             {prefs?.toggles.accesstype && accessCode && (
-                              <div className="text-xs text-[var(--text-muted)] mb-2">
-                                Access: {accessCode.label}
-                                {canSeeCode ? (
+                              <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--bg-elevated)]">
+                                <div className="flex items-center gap-2">
+                                  <Key size={13} className="text-[var(--text-muted)]" />
+                                  <span className="text-xs text-[var(--text-muted)]">
+                                    {accessCode.label}
+                                  </span>
+                                </div>
+                                {canSeeCode && (
                                   <button
                                     onClick={(e) => { e.stopPropagation(); toggleCode(shift.id) }}
-                                    className="ml-2 bg-transparent border-none text-[var(--status-info)] text-xs font-semibold cursor-pointer p-0"
+                                    className="flex items-center gap-1.5 text-xs font-medium text-[var(--accent)] bg-transparent border-none cursor-pointer min-h-[36px] px-2"
                                   >
-                                    {showCodes[shift.id] ? `Code: ${accessCode.code}` : 'Show Code 👁'}
+                                    {showCodes[shift.id] ? (
+                                      <>
+                                        <span className="tabular-nums font-semibold">{accessCode.code}</span>
+                                        <EyeOff size={13} />
+                                      </>
+                                    ) : (
+                                      <>
+                                        <span>Show Code</span>
+                                        <Eye size={13} />
+                                      </>
+                                    )}
                                   </button>
-                                ) : (
-                                  <span className="ml-2 text-xs text-[var(--text-muted)] opacity-60">
-                                    Code available at {shift.startTime}
-                                  </span>
                                 )}
                               </div>
                             )}
@@ -326,13 +395,13 @@ export default function CleanerBriefingPage() {
                             {/* Progress bar */}
                             {prefs?.toggles.taskpreview && (
                               <>
-                                <div className="h-1 w-full rounded-full bg-[var(--bg-elevated)] mb-2">
+                                <div className="h-1.5 w-full rounded-full bg-[var(--bg-elevated)]">
                                   <div
                                     className="h-full rounded-full bg-[var(--status-success)] transition-[width] duration-300"
                                     style={{ width: `${checklist.length > 0 ? (completedCount / checklist.length) * 100 : 0}%` }}
                                   />
                                 </div>
-                                <div className="text-xs text-[var(--text-muted)] mb-2.5">
+                                <div className="text-xs text-[var(--text-muted)]">
                                   {completedCount} of {checklist.length} tasks complete
                                 </div>
 
@@ -341,16 +410,16 @@ export default function CleanerBriefingPage() {
                                   <div
                                     key={ti}
                                     onClick={() => toggleTask(`${shift.id}-${ti}`)}
-                                    className={`flex items-start gap-2 py-1.5 cursor-pointer ${
+                                    className={`flex items-center gap-2.5 min-h-[36px] cursor-pointer ${
                                       ti < previewTasks.length - 1 ? 'border-b border-[var(--border)]' : ''
                                     }`}
                                   >
-                                    <div className={`w-4 h-4 rounded-full shrink-0 mt-0.5 flex items-center justify-center border-2 ${
+                                    <div className={`w-4 h-4 rounded-full shrink-0 flex items-center justify-center border-2 ${
                                       taskChecks[`${shift.id}-${ti}`]
                                         ? 'border-[var(--status-success)] bg-[var(--status-success)]'
                                         : 'border-[var(--bg-elevated)] bg-transparent'
                                     }`}>
-                                      {taskChecks[`${shift.id}-${ti}`] && <span className="text-[8px] text-white">✓</span>}
+                                      {taskChecks[`${shift.id}-${ti}`] && <Check size={10} className="text-white" />}
                                     </div>
                                     <span className={`text-sm ${
                                       taskChecks[`${shift.id}-${ti}`]
@@ -363,37 +432,31 @@ export default function CleanerBriefingPage() {
                                 ))}
 
                                 {checklist.length > 5 && (
-                                  <div className="text-xs text-[var(--text-subtle)] mt-1">
+                                  <div className="text-xs text-[var(--text-subtle)]">
                                     + {checklist.length - 5} more tasks
                                   </div>
                                 )}
                               </>
                             )}
 
-                            {/* Supply reminders for this property */}
-                            {prefs?.toggles.supplyreminders && shift.propertyId === 'p2' && (
-                              <div className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 rounded-lg bg-[rgba(124,58,237,0.08)] text-xs text-[#a78bfa]">
+                            {/* Supply reminders — data-driven */}
+                            {prefs?.toggles.supplyreminders && supplyItem && (
+                              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[var(--status-purple-bg)] text-xs text-[var(--status-purple-fg)]">
                                 <Package size={12} />
-                                Bring: Linen set
-                              </div>
-                            )}
-                            {prefs?.toggles.supplyreminders && shift.propertyId === 'p3' && (
-                              <div className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 rounded-lg bg-[rgba(124,58,237,0.08)] text-xs text-[#a78bfa]">
-                                <Package size={12} />
-                                Bring: Toiletry kit
+                                Bring: {supplyItem}
                               </div>
                             )}
 
-                            {/* CTA — matching operator pattern */}
+                            {/* CTA — rounded-full per design system */}
                             <Button
                               onClick={() => setDrawerShift(shift)}
-                              className={`mt-3 w-full rounded-lg font-semibold ${
+                              className={`w-full rounded-full font-semibold ${
                                 isFirst
-                                  ? 'bg-[#7c3aed] hover:bg-[#7c3aed]/80 text-white'
+                                  ? 'bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-white'
                                   : 'bg-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)]/80 text-white'
                               }`}
                             >
-                              ▶ {isFirst ? 'Start This Clean' : 'View Schedule'}
+                              {isFirst ? 'Start This Clean' : 'View Schedule'}
                             </Button>
                           </div>
                         </Card>
@@ -416,7 +479,7 @@ export default function CleanerBriefingPage() {
                 ].map((task, i) => (
                   <div
                     key={i}
-                    className={`flex items-center gap-3 py-2.5 ${i === 0 ? 'border-b border-[var(--border)]' : ''}`}
+                    className={`flex items-center gap-3 min-h-[36px] py-2.5 ${i === 0 ? 'border-b border-[var(--border)]' : ''}`}
                   >
                     <div className="w-4 h-4 rounded-full border-2 border-[var(--bg-elevated)] shrink-0" />
                     <span className="text-sm text-[var(--text-primary)]">{task}</span>
@@ -428,12 +491,12 @@ export default function CleanerBriefingPage() {
 
           {/* ── Jobs queue ─────────────────────────────────────────── */}
           {myJobs.length > 0 && (
-            <Link href="/app/dashboard" className="no-underline block mb-5">
+            <Link href="/app/cleaner" className="no-underline block mb-5">
               <Card className="p-3.5 flex items-center justify-between">
                 <span className="text-xs text-[var(--text-muted)]">
                   {myJobs.length} task{myJobs.length !== 1 ? 's' : ''} in your full queue
                 </span>
-                <span className="text-xs font-semibold text-[#a78bfa]">View all →</span>
+                <span className="text-xs font-semibold text-[var(--accent)]">View all →</span>
               </Card>
             </Link>
           )}
@@ -441,16 +504,19 @@ export default function CleanerBriefingPage() {
       </main>
 
       {/* ── Fixed bottom CTA ──────────────────────────────────────── */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 px-5 pb-6 pt-4 bg-gradient-to-t from-[var(--bg-page)] via-[var(--bg-page)] to-transparent">
-        <div className="max-w-lg mx-auto flex flex-col gap-2.5">
+      <div
+        className="fixed bottom-0 left-0 right-0 z-20 px-5 pt-4 bg-gradient-to-t from-[var(--bg-page)] via-[var(--bg-page)] to-transparent"
+        style={{ paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 0px))' }}
+      >
+        <div className="max-w-lg md:max-w-2xl mx-auto flex flex-col gap-2.5">
           <Button
             onClick={handleClockInAndGo}
-            className="w-full rounded-full min-h-[52px] text-base font-semibold shadow-lg bg-[#7c3aed] hover:bg-[#7c3aed]/80 text-white"
-            style={{ boxShadow: '0 4px 24px rgba(124,58,237,0.35)' }}
+            className="w-full rounded-full min-h-[52px] text-base font-semibold shadow-lg bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-white"
+            style={{ boxShadow: '0 4px 24px rgba(var(--accent-rgb, 245,158,11),0.35)' }}
           >
-            ▶ Clock In &amp; Start Shift
+            Clock In &amp; Start Shift
           </Button>
-          <Link href="/app/dashboard" className="block">
+          <Link href="/app/cleaner" className="block">
             <Button variant="outline" className="w-full rounded-full min-h-[44px] text-sm">
               Skip to Dashboard
             </Button>
@@ -508,18 +574,14 @@ export default function CleanerBriefingPage() {
                         <div className="text-sm text-[var(--text-primary)] font-medium">{meta.label}</div>
                         <div className="text-xs text-[var(--text-subtle)] mt-0.5">{meta.description}</div>
                       </div>
-                      <div
-                        onClick={() => {
-                          const updated: BriefingPrefs = { ...prefs, toggles: { ...prefs.toggles, [toggleKey]: !isOn } }
-                          setPrefs(updated)
-                          savePrefs(updated)
-                        }}
-                        className="w-11 h-6 rounded-full relative cursor-pointer transition-colors shrink-0 ml-4"
-                        style={{ background: isOn ? '#7c3aed' : 'var(--bg-elevated)' }}
-                      >
-                        <div
-                          className="absolute top-0.5 w-5 h-5 rounded-full bg-white transition-[left] duration-200"
-                          style={{ left: isOn ? 22 : 2 }}
+                      <div className="shrink-0 ml-4">
+                        <ToggleSwitch
+                          checked={isOn}
+                          onChange={() => {
+                            const updated: BriefingPrefs = { ...prefs, toggles: { ...prefs.toggles, [toggleKey]: !isOn } }
+                            setPrefs(updated)
+                            savePrefs(updated)
+                          }}
                         />
                       </div>
                     </div>

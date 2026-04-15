@@ -32,7 +32,7 @@ const STATUS_COLORS: Record<VerificationStatus, string> = {
   in_progress:  '#d97706',
   verified:     '#059669',
   failed:       '#dc2626',
-  overridden:   '#7c3aed',
+  overridden:   '#a78bfa',
 }
 
 const STEP_STATUS_ICON: Record<StepStatus, React.ReactNode> = {
@@ -506,7 +506,7 @@ export default function AppVerificationPage() {
                 {(selectedGuest.status === 'failed' || selectedGuest.status === 'in_progress') && (
                   <button
                     onClick={() => { showToast(`Verification overridden for ${selectedGuest.guestName}`); setSheetOpen(false) }}
-                    style={{ flex: 1, padding: '9px 14px', borderRadius: 8, border: '1px solid #7c3aed', background: '#7c3aed14', color: '#7c3aed', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+                    style={{ flex: 1, padding: '9px 14px', borderRadius: 8, border: '1px solid var(--accent-border)', background: 'var(--accent-bg)', color: 'var(--accent)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
                   >
                     Override
                   </button>

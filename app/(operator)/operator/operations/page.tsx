@@ -423,7 +423,7 @@ function OperationsContent() {
   const handleSaveSchedule = () => {
     const newJob: CleaningJob = {
       propId: schedulePropId, day: scheduleDayIdx,
-      label: scheduleTemplate, color: scheduleTemplate.includes('Deep') ? '#7c3aed' : scheduleTemplate === 'Inspection' || scheduleTemplate === 'Pre-Inspection' ? '#d97706' : '#059669',
+      label: scheduleTemplate, color: scheduleTemplate.includes('Deep') ? 'var(--status-purple-fg)' : scheduleTemplate === 'Inspection' || scheduleTemplate === 'Pre-Inspection' ? '#d97706' : '#059669',
       cleaner: scheduleStaff, timeWindow: `${scheduleTime}–${scheduleTime}`, checklistTemplate: scheduleTemplate, status: 'scheduled',
     }
     setCleaningJobs(prev => [...prev.filter(j => !(j.propId === schedulePropId && j.day === scheduleDayIdx)), newJob])

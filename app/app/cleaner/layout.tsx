@@ -1,11 +1,9 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import MainAppShell from '@/components/shared/MainAppShell'
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default function CleanerLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const [checked, setChecked] = useState(false)
 
   useEffect(() => {
     const savedUser = localStorage.getItem('afterstay_user')
@@ -17,13 +15,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       const u = JSON.parse(savedUser)
       if (u.role === 'owner') {
         router.replace('/owner')
-        return
       }
     } catch { /* ignore */ }
-    setChecked(true)
   }, [router])
 
-  if (!checked) return null
-
-  return <MainAppShell>{children}</MainAppShell>
+  return <>{children}</>
 }

@@ -19,7 +19,7 @@ import {
 import type { BriefingPrefs, BriefingToggles } from '@/lib/data/briefingPrefs'
 
 const USER_TO_STAFF: Record<string, string> = {
-  'u3': 's1', // Maria → Johan Larsson (cleaning)
+  'u3': 's5', // Maria → Maria Solberg (cleaner)
   'u4': 's3', // Bjorn Larsen (maintenance)
   'u5': 's4', // Fatima → Fatima Ndiaye (guest services)
   'u7': 's2', // Anna → Anna Kowalski (inspector)
@@ -33,7 +33,7 @@ function getGreeting(): string {
 }
 
 function getRoleBadgeColor(role: string, subRole?: string): string {
-  if (role === 'operator') return '#7c3aed'
+  if (role === 'operator') return 'var(--accent)'
   if (role === 'owner') return '#2563eb'
   if (subRole?.includes('Cleaning')) return '#d97706'
   if (subRole?.includes('Maintenance')) return '#0ea5e9'
@@ -150,7 +150,7 @@ export default function BriefingPage() {
           style={{ maxWidth: 440, width: '100%', textAlign: 'center' }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 40 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: 20 }}>N</div>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: 20 }}>N</div>
             <span style={{ fontWeight: 800, color: '#fff', fontSize: 26, letterSpacing: '-0.02em' }}>AfterStay</span>
           </div>
 
@@ -177,7 +177,7 @@ export default function BriefingPage() {
               display: 'inline-block',
               padding: '16px 36px',
               borderRadius: 14,
-              background: '#7c3aed',
+              background: 'var(--accent)',
               color: '#fff',
               fontSize: 16,
               fontWeight: 700,
@@ -279,7 +279,7 @@ export default function BriefingPage() {
         borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 8, background: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: 13 }}>N</div>
+          <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: 13 }}>N</div>
           <span style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>AfterStay</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -473,7 +473,7 @@ export default function BriefingPage() {
                       { day: 'Thu', state: 'today' },
                       { day: 'Fri', state: 'upcoming' },
                     ].map(d => (
-                      <div key={d.day} style={{ flex: 1, textAlign: 'center', padding: '8px 4px', borderRadius: 8, background: d.state === 'today' ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.04)', border: d.state === 'today' ? '1px solid rgba(124,58,237,0.4)' : '1px solid transparent' }}>
+                      <div key={d.day} style={{ flex: 1, textAlign: 'center', padding: '8px 4px', borderRadius: 8, background: d.state === 'today' ? 'var(--accent-bg)' : 'rgba(255,255,255,0.04)', border: d.state === 'today' ? '1px solid var(--accent-border)' : '1px solid transparent' }}>
                         <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>{d.day}</div>
                         <div style={{ fontSize: 13 }}>{d.state === 'done' ? '✓' : d.state === 'today' ? '●' : '○'}</div>
                       </div>
@@ -633,7 +633,7 @@ export default function BriefingPage() {
 
               {/* OVERNIGHT ISSUES — toggle: overnightissues */}
               {prefs?.toggles.overnightissues && todayReport && todayReport.issues.length > 0 && (
-                <div style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.25)', borderRadius: 16, padding: '16px', marginBottom: 12 }}>
+                <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 16, padding: '16px', marginBottom: 12 }}>
                   <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>
                     Overnight Issues
                   </div>

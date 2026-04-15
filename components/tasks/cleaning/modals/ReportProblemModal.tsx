@@ -192,8 +192,8 @@ export function ReportProblemModal({ open, onClose, propertyName, cleanerName: _
             {/* Delegate toggle */}
             <div style={{
               marginBottom: 20, padding: '14px 16px', borderRadius: 12,
-              background: delegate ? 'rgba(124,58,237,0.08)' : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${delegate ? 'rgba(124,58,237,0.3)' : 'rgba(255,255,255,0.08)'}`,
+              background: delegate ? 'var(--accent-bg)' : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${delegate ? 'var(--accent-border)' : 'rgba(255,255,255,0.08)'}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: 14, color: '#fff', fontWeight: delegate ? 600 : 400 }}>🔄 Delegate this task</span>
@@ -201,7 +201,7 @@ export function ReportProblemModal({ open, onClose, propertyName, cleanerName: _
                   onClick={() => setDelegate(d => !d)}
                   style={{
                     width: 40, height: 22, borderRadius: 11, border: 'none', cursor: 'pointer',
-                    background: delegate ? '#7c3aed' : 'rgba(255,255,255,0.15)',
+                    background: delegate ? 'var(--accent)' : 'rgba(255,255,255,0.15)',
                     position: 'relative', transition: 'background 0.2s', flexShrink: 0,
                   }}
                 >
@@ -223,7 +223,7 @@ export function ReportProblemModal({ open, onClose, propertyName, cleanerName: _
                     style={{
                       width: '100%', padding: '10px', borderRadius: 8,
                       background: 'rgba(255,255,255,0.05)',
-                      border: '1px solid rgba(124,58,237,0.3)',
+                      border: '1px solid var(--accent-border)',
                       color: '#fff', fontSize: 13, resize: 'none',
                       fontFamily: 'inherit', boxSizing: 'border-box',
                     }}
@@ -238,7 +238,7 @@ export function ReportProblemModal({ open, onClose, propertyName, cleanerName: _
               disabled={!category}
               style={{
                 width: '100%', padding: '14px', borderRadius: 12,
-                background: category ? (delegate ? '#7c3aed' : '#ef4444') : 'rgba(255,255,255,0.08)',
+                background: category ? (delegate ? 'var(--accent)' : '#ef4444') : 'rgba(255,255,255,0.08)',
                 color: category ? '#fff' : 'rgba(255,255,255,0.3)',
                 border: 'none', fontSize: 15, fontWeight: 700,
                 cursor: category ? 'pointer' : 'default',

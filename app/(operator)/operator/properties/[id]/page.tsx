@@ -355,7 +355,7 @@ export default function PropertyDetailPage() {
           {/* Connection badge */}
           <div style={{ marginBottom: 24 }}>
             {accessCodes.some(c => c.source === 'suiteop') ? (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 20, background: '#7c3aed18', border: '1px solid #7c3aed40', color: '#7c3aed', fontSize: 12, fontWeight: 600 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 20, background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', color: 'var(--accent)', fontSize: 12, fontWeight: 600 }}>
                 <KeyRound size={12} /> Connected via SuiteOp
               </span>
             ) : (
@@ -378,7 +378,7 @@ export default function PropertyDetailPage() {
                       <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>{code.label}</div>
                       <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
                         Expires {code.expiresAt} · Last used {code.lastUsed}
-                        <span style={{ marginLeft: 8, fontSize: 11, padding: '1px 6px', borderRadius: 3, background: code.source === 'suiteop' ? '#7c3aed18' : 'var(--bg-elevated)', color: code.source === 'suiteop' ? '#7c3aed' : 'var(--text-subtle)', border: '1px solid', borderColor: code.source === 'suiteop' ? '#7c3aed30' : 'var(--border)' }}>
+                        <span style={{ marginLeft: 8, fontSize: 11, padding: '1px 6px', borderRadius: 3, background: code.source === 'suiteop' ? 'var(--accent-bg)' : 'var(--bg-elevated)', color: code.source === 'suiteop' ? 'var(--accent)' : 'var(--text-subtle)', border: '1px solid', borderColor: code.source === 'suiteop' ? 'var(--accent-border)' : 'var(--border)' }}>
                           {code.source === 'suiteop' ? 'SuiteOp' : 'Manual'}
                         </span>
                       </div>

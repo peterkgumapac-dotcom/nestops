@@ -33,7 +33,7 @@ export interface UpsellRule {
 }
 
 export const PROPERTY_GROUPS = [
-  { id: 'g1', name: 'Oslo Portfolio',     color: '#7c3aed', propertyIds: ['p1', 'p4'] },
+  { id: 'g1', name: 'Oslo Portfolio',     color: '#a78bfa', propertyIds: ['p1', 'p4'] },
   { id: 'g2', name: 'Coastal Properties', color: '#059669', propertyIds: ['p2', 'p3'] },
   { id: 'g3', name: 'Mountain & Nature',  color: '#d97706', propertyIds: ['p5'] },
 ]

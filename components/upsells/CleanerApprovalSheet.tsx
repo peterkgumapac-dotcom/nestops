@@ -116,7 +116,7 @@ export default function CleanerApprovalSheet({
                 {isEscalated ? 'Supervisor Approval Required' : 'Upsell Approval Request'}
               </span>
               {isEscalated && (
-                <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 10, background: '#7c3aed14', color: '#7c3aed', border: '1px solid #7c3aed30' }}>
+                <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 10, background: 'var(--accent-bg)', color: 'var(--accent)', border: '1px solid var(--accent-border)' }}>
                   ⬆ Escalated
                 </span>
               )}
@@ -184,7 +184,7 @@ export default function CleanerApprovalSheet({
                   Your Schedule Today
                 </div>
                 {isEscalated && (
-                  <div style={{ fontSize: 11, color: '#7c3aed', marginBottom: 8, padding: '6px 10px', background: '#7c3aed0c', border: '1px solid #7c3aed20', borderRadius: 6 }}>
+                  <div style={{ fontSize: 11, color: 'var(--accent)', marginBottom: 8, padding: '6px 10px', background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 6 }}>
                     No cleaner is assigned to this property. You are receiving this as field supervisor.
                     Approving will confirm the upsell and capture the auth hold.
                   </div>
@@ -193,7 +193,7 @@ export default function CleanerApprovalSheet({
                   <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
                     {myDaySchedule.map((slot, i) => {
                       const tight = hasTightGap(slot.checkoutTime, slotStart(slot.timeWindow))
-                      const typeColors: Record<string, string> = { Turnover: '#7c3aed', 'Deep Clean': '#3b82f6', 'Same-day': '#f97316', Inspection: '#06b6d4' }
+                      const typeColors: Record<string, string> = { Turnover: 'var(--status-purple-fg)', 'Deep Clean': '#3b82f6', 'Same-day': '#f97316', Inspection: '#06b6d4' }
                       const tc = typeColors[slot.type] ?? '#6b7280'
                       return (
                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: i < myDaySchedule.length - 1 ? '1px solid var(--border)' : 'none' }}>

@@ -394,6 +394,7 @@ html {
   .shell-main-owner { padding: 12px !important; }
   .hide-sm { display: none !important; }
   .fab-safe { bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important; right: 16px !important; }
+  .has-bottom-tabs .fab-safe { bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important; }
   .fab-menu-item { padding: 12px 16px !important; min-height: 44px; }
 
   /* Mobile: collapse 2-col "1fr Npx" or "Npx 1fr" into a column stack */

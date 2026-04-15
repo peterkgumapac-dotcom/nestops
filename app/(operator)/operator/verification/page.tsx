@@ -26,7 +26,7 @@ const STATUS_COLORS: Record<VerificationStatus, string> = {
   in_progress:  '#d97706',
   verified:     '#059669',
   failed:       '#dc2626',
-  overridden:   '#7c3aed',
+  overridden:   'var(--status-purple-fg)',
 }
 
 const STEP_STATUS_ICON: Record<StepStatus, React.ReactNode> = {

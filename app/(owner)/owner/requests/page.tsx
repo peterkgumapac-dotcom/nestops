@@ -21,7 +21,7 @@ const CATEGORY_OPTIONS: {
   color: string
 }[] = [
   { type: 'maintenance',  label: 'Maintenance',          icon: Wrench,        desc: 'Report a repair or maintenance issue',      color: '#ef4444' },
-  { type: 'purchase',     label: 'Purchase Approvals',   icon: ShoppingCart,  desc: 'Request approval for a purchase or expense', color: '#7c3aed' },
+  { type: 'purchase',     label: 'Purchase Approvals',   icon: ShoppingCart,  desc: 'Request approval for a purchase or expense', color: '#a78bfa' },
   { type: 'inquiry',      label: 'Inquiry',              icon: HelpCircle,    desc: 'Ask a question or request information',      color: '#2563eb' },
   { type: 'work_order',   label: 'Work Order Approvals', icon: ClipboardList, desc: 'Approve work orders from your operator',      color: '#d97706' },
 ]

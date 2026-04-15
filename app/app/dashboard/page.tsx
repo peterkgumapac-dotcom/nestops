@@ -38,7 +38,7 @@ const CLEANING_TEMPLATES = [
 // ─── Seed data ────────────────────────────────────────────────────────────────
 
 const USER_TO_STAFF: Record<string, string> = {
-  'u3': 's1', // Maria → Johan Larsson (cleaning)
+  'u3': 's5', // Maria → Maria Solberg (cleaner)
   'u4': 's3', // Bjorn Larsen (maintenance)
   'u5': 's4', // Fatima → Fatima Ndiaye (guest services)
   'u7': 's2', // Anna → Anna Kowalski (inspector)
@@ -523,7 +523,7 @@ export default function AppDashboard() {
               <Button
                 size="sm"
                 onClick={handleClockIn}
-                className="rounded-lg font-semibold bg-[var(--status-danger)] text-white hover:bg-[var(--status-danger)]/80"
+                className="rounded-full font-semibold bg-[var(--status-danger)] text-white hover:bg-[var(--status-danger)]/80"
               >▶ Clock In Now</Button>
             </div>
           ) : (
@@ -542,7 +542,7 @@ export default function AppDashboard() {
               <Button
                 size="sm"
                 onClick={handleClockIn}
-                className="rounded-lg font-semibold bg-[var(--status-warning)] text-white hover:bg-[var(--status-warning)]/80"
+                className="rounded-full font-semibold bg-[var(--status-warning)] text-white hover:bg-[var(--status-warning)]/80"
               >▶ Clock In</Button>
             </div>
           )}
@@ -579,7 +579,7 @@ export default function AppDashboard() {
                     {/* Header */}
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[15px] font-semibold text-[var(--text-primary)]">{shift.propertyName}</span>
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded ${
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                         isFirst
                           ? 'bg-[var(--status-blue-bg)] text-[var(--status-blue-fg)]'
                           : 'bg-[var(--status-amber-bg)] text-[var(--status-amber-fg)]'
@@ -612,24 +612,24 @@ export default function AppDashboard() {
                     })()}
 
                     {/* Access */}
-                    <div className="text-xs text-[var(--text-muted)] mb-2">
-                      Access: {shift.accessType}
+                    <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] mb-2">
+                      <span>Access: {shift.accessType}</span>
                       {canSeeCode ? (
                         <button
                           onClick={() => toggleCode(shift.id)}
-                          className="ml-2 bg-transparent border-none text-[var(--status-info)] text-xs font-semibold cursor-pointer p-0"
+                          className="bg-[var(--bg-elevated)] rounded-lg px-2.5 py-1 text-[var(--status-info)] text-xs font-semibold cursor-pointer border-none"
                         >
                           {showCodes[shift.id] ? `Code: ${shift.code}` : 'Show Code 👁'}
                         </button>
                       ) : (
-                        <span className="ml-2 text-xs text-[var(--text-muted)] opacity-60">
+                        <span className="text-xs text-[var(--text-muted)] opacity-60">
                           🔒 Code available at {shift.startTime}
                         </span>
                       )}
                     </div>
 
                     {/* Progress bar */}
-                    <div className="h-1 w-full rounded-full bg-[var(--bg-elevated)] mb-2">
+                    <div className="h-1.5 w-full rounded-full bg-[var(--bg-elevated)] mb-2">
                       <div
                         className="h-full rounded-full bg-[var(--status-success)] transition-[width] duration-300"
                         style={{ width: `${shift.tasks.length > 0 ? (completedCount / shift.tasks.length) * 100 : 0}%` }}
@@ -666,13 +666,13 @@ export default function AppDashboard() {
 
                     {/* CTA */}
                     <Button
-                      className={`mt-3 w-full rounded-lg font-semibold ${
+                      className={`mt-3 w-full rounded-full font-semibold ${
                         isFirst
-                          ? 'bg-[#7c3aed] hover:bg-[#7c3aed]/80 text-white'
+                          ? 'bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-white'
                           : 'bg-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)]/80 text-white'
                       }`}
                     >
-                      ▶ {isFirst ? 'Start This Clean' : 'View Schedule'}
+                      {isFirst ? '▶ Start This Clean' : 'View Schedule'}
                     </Button>
                   </div>
                 </Card>
@@ -751,7 +751,7 @@ export default function AppDashboard() {
               ].map(d => (
                 <div key={d.day} className={`flex-1 text-center py-2 px-1 rounded-lg cursor-pointer border ${
                   d.state === 'today'
-                    ? 'bg-[rgba(124,58,237,0.15)] border-[rgba(124,58,237,0.35)]'
+                    ? 'bg-[var(--accent-bg)] border-[var(--accent-border)]'
                     : 'bg-[rgba(255,255,255,0.03)] border-[var(--border)]'
                 }`}>
                   <div className="text-[10px] text-[var(--text-muted)] mb-1">{d.day}</div>
@@ -1468,8 +1468,8 @@ export default function AppDashboard() {
                               <div className="text-xs font-semibold mt-0.5" style={{ color: item.color }}>{item.statusLabel}</div>
                             )}
                             {item.type === 'in_progress' && item.progress !== undefined && (
-                              <div className="mt-1.5 h-1 rounded-sm bg-[var(--bg-elevated)] overflow-hidden">
-                                <div className="h-full rounded-sm" style={{ width: `${item.progress}%`, background: item.color }} />
+                              <div className="mt-1.5 h-1.5 rounded-full bg-[var(--bg-elevated)] overflow-hidden">
+                                <div className="h-full rounded-full" style={{ width: `${item.progress}%`, background: item.color }} />
                               </div>
                             )}
                             <div className="text-xs text-[var(--text-muted)] mt-1">{item.time}</div>

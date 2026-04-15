@@ -25,7 +25,7 @@ interface MainAppSidebarProps {
 }
 
 const PORTAL_OPTIONS = [
-  { role: 'operator' as const, accessTier: 'full' as AccessTier,             label: 'Operator Portal',  color: '#7c3aed', href: '/app/dashboard' },
+  { role: 'operator' as const, accessTier: 'full' as AccessTier,             label: 'Operator Portal',  color: '#14b8a6', href: '/app/dashboard' },
   { role: 'operator' as const, accessTier: 'guest-services' as AccessTier,   label: 'Guest Services',   color: '#ec4899', href: '/app/dashboard' },
   { role: 'owner'    as const, accessTier: 'full' as AccessTier,             label: 'Owner Portal',     color: '#059669', href: '/owner' },
   { role: 'staff'    as const, accessTier: 'full' as AccessTier,             label: 'Staff Portal',     color: '#d97706', href: '/staff' },
@@ -104,7 +104,7 @@ export default function MainAppSidebar({ isOpen, onClose }: MainAppSidebarProps)
       {/* Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '20px 16px', minHeight: 64, flexShrink: 0 }}>
         <Link href="/app/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', flex: 1, minWidth: 0 }}>
-          <img src="/logo-icon.svg" width={32} height={32} alt="AfterStay" style={{ borderRadius: 8, flexShrink: 0, cursor: 'pointer' }} />
+          <img src="/logo-icon.svg" width={32} height={32} alt="AfterStay" style={{ flexShrink: 0, cursor: 'pointer' }} />
           <div style={{ opacity: collapsed ? 0 : 1, transition: 'opacity 0.2s ease', pointerEvents: collapsed ? 'none' : 'auto', whiteSpace: 'nowrap', overflow: 'hidden' }}>
             <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>AfterStay</div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'capitalize' }}>{displayRole}</div>

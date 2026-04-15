@@ -25,7 +25,7 @@ const SOURCE_COLORS: Record<RequestSource, string> = {
   guest:  '#3b82f6',
   staff:  '#6b7280',
   owner:  '#059669',
-  system: '#7c3aed',
+  system: 'var(--status-purple-fg)',
 }
 
 const SOURCE_LABELS: Record<RequestSource, string> = {

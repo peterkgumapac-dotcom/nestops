@@ -70,7 +70,7 @@ export default function ClockStatus() {
   if (isSupervisor) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 12 }}>
-        <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#7c3aed' }} />
+        <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)' }} />
         <Link href="/app/dashboard" style={{ fontSize: 12, color: 'var(--text-muted)', textDecoration: 'none' }}>Team Overview</Link>
       </div>
     )

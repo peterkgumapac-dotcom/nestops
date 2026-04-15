@@ -436,7 +436,7 @@ const CHANGELOG: ChangeEntry[] = [
 ]
 
 const TAG_COLORS: Record<string, string> = {
-  '⚡ Feature': '#7c3aed',
+  '⚡ Feature': 'var(--status-purple-fg)',
   '🎨 UI': '#0891b2',
   '🐛 Fix': '#dc2626',
   '♿ A11y': '#059669',

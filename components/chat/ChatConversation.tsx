@@ -35,7 +35,7 @@ const THREADS: Record<string, Thread> = {
     ],
   },
   fatima: {
-    id: 'fatima', name: 'Fatima N.', initials: 'FN', color: '#7c3aed',
+    id: 'fatima', name: 'Fatima N.', initials: 'FN', color: 'var(--status-purple-fg)',
     ctx: 'Guest services · Harbor Studio',
     messages: [
       { id: 'm1', text: 'Linen delivery confirmed — ETA 09:45', time: '10:08 AM', isMe: false },

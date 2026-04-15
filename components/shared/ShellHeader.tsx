@@ -8,7 +8,7 @@ import type { AccessTier } from '@/context/RoleContext'
 import ClockStatus from './ClockStatus'
 
 const PORTAL_OPTIONS = [
-  { role: 'operator' as const, accessTier: 'full' as AccessTier,           label: 'Operator Portal', color: '#7c3aed', href: '/operator',      preview: false },
+  { role: 'operator' as const, accessTier: 'full' as AccessTier,           label: 'Operator Portal', color: '#14b8a6', href: '/operator',      preview: false },
   { role: 'operator' as const, accessTier: 'guest-services' as AccessTier, label: 'Guest Services',  color: '#ec4899', href: '/app/dashboard', preview: false },
   { role: 'owner'    as const, accessTier: 'full' as AccessTier,           label: 'Owner Portal',    color: '#059669', href: '/owner',         preview: false },
   { role: 'staff'    as const, accessTier: 'full' as AccessTier,           label: 'Staff Portal',    color: '#d97706', href: '/staff',         preview: false },
@@ -139,7 +139,7 @@ export default function ShellHeader({
       >
         <div style={{
           width: 30, height: 30, borderRadius: '50%',
-          background: 'linear-gradient(135deg, #7c3aed, #ec4899)',
+          background: 'linear-gradient(135deg, #14b8a6, #ec4899)',
           color: '#fff', fontSize: 11, fontWeight: 700,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
@@ -235,7 +235,7 @@ export default function ShellHeader({
       <>
         {hamburger}
         {desktopToggle}
-        <span className="md:hidden" style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>AfterStay</span>
+        <span className="md:hidden" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src="/logo-icon.svg" width={24} height={24} alt="AfterStay" /><span style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>AfterStay</span></span>
         <div style={{ flex: 1 }} />
         {rightSlot}
         {userChip}
@@ -255,7 +255,7 @@ export default function ShellHeader({
     >
       {hamburger}
       {desktopToggle}
-      <span className="md:hidden" style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>AfterStay</span>
+      <span className="md:hidden" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src="/logo-icon.svg" width={24} height={24} alt="AfterStay" /><span style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>AfterStay</span></span>
       <div style={{ flex: 1 }} />
       {rightSlot}
       {userChip}

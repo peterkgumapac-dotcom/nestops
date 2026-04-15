@@ -33,7 +33,7 @@ const CONTRACT_STATUS_COLOR: Record<string, string> = {
   Active: '#16a34a', 'Expiring Soon': 'var(--text-muted)', Expired: '#dc2626', Missing: 'var(--text-muted)',
 }
 const EMPLOYMENT_TYPE_COLOR: Record<string, string> = {
-  Hourly: '#2563eb', Salaried: '#7c3aed', Contractor: '#d97706',
+  Hourly: '#2563eb', Salaried: 'var(--status-purple-fg)', Contractor: '#d97706',
 }
 const BREAK_PER_STAFF: Record<string, string> = {
   s1: '45m', s2: '—', s3: '—', s4: '32m', s5: '30m', s6: '—',
@@ -883,7 +883,7 @@ export default function TeamPage() {
               {STAFF_MEMBERS.map(member => {
                 const myJobs = JOBS.filter(j => member.jobIds.includes(j.id))
                 const typeColor: Record<string, string> = {
-                  cleaning: '#7c3aed', maintenance: '#d97706', inspection: '#06b6d4',
+                  cleaning: 'var(--status-purple-fg)', maintenance: '#d97706', inspection: '#06b6d4',
                   guest_services: '#ec4899', intake: '#059669',
                 }
                 return (

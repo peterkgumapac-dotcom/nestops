@@ -94,11 +94,11 @@ export default function AlertsPage() {
         const escalated = UPSELL_APPROVAL_REQUESTS.filter(r => r.escalatedToSupervisor && r.status === 'pending_supervisor')
         if (escalated.length === 0) return null
         return (
-          <div style={{ marginBottom: 24, background: 'var(--bg-card)', border: '1px solid #7c3aed30', borderLeft: '4px solid #7c3aed', borderRadius: 10, padding: 16 }}>
+          <div style={{ marginBottom: 24, background: 'var(--bg-card)', border: '1px solid var(--accent-border)', borderLeft: '4px solid var(--accent)', borderRadius: 10, padding: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
               <Users size={14} style={{ color: 'var(--status-accent)' }} />
               <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--status-accent)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Field Team — Supervisor Action Required</span>
-              <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 10, background: '#7c3aed20', color: 'var(--status-accent)', fontWeight: 600 }}>{escalated.length}</span>
+              <span style={{ fontSize: 11, padding: '1px 7px', borderRadius: 10, background: 'var(--accent-bg)', color: 'var(--status-accent)', fontWeight: 600 }}>{escalated.length}</span>
               <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-muted)' }}>Cleaning &amp; Maintenance</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -118,7 +118,7 @@ export default function AlertsPage() {
                     <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 10, background: '#f59e0b18', color: 'var(--status-warning)', border: '1px solid #f59e0b30', fontWeight: 600 }}>
                       {req.calendarSignal === 'tentative' ? '🟡 Tentative' : req.calendarSignal === 'blocked' ? '🔴 Blocked' : '🟢 Available'}
                     </span>
-                    <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 10, background: '#7c3aed14', color: 'var(--status-accent)', border: '1px solid #7c3aed30', fontWeight: 600 }}>⬆ Escalated</span>
+                    <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 10, background: 'var(--accent-bg)', color: 'var(--status-accent)', border: '1px solid var(--accent-border)', fontWeight: 600 }}>⬆ Escalated</span>
                   </div>
                 </div>
               ))}

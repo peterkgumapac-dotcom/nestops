@@ -15,7 +15,7 @@ const AVATAR_COLORS: Record<string, string> = {
   ms: '#d97706',
   fn: '#ec4899',
   bl: '#0ea5e9',
-  ip: '#7c3aed',
+  ip: 'var(--status-purple-fg)',
 }
 
 export default function StaffOnDuty({ staff, accent: _accent }: Props) {

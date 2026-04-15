@@ -78,7 +78,7 @@ export default function TodaysTimeline({ cleaningShifts, arrivals, maintenanceTa
     pills.push({
       id: `arr-${a.propertyId}`,
       left: pct(a.time),
-      color: '#7c3aed',
+      color: 'var(--status-purple-fg)',
       label: `🚪 ${a.propertyName}`,
       past,
     })
