@@ -38,12 +38,13 @@ export function CleaningTaskCard({
   const cleanType = shift.notes?.toLowerCase().includes('deep') ? 'DEEP CLEAN' : 'TURNOVER CLEAN'
   const linkedJobs = JOBS.filter(j => shift.jobIds.includes(j.id))
   const jobWithCheckin = linkedJobs.find(j => j.checkinTime && j.checkoutTime)
-  let tightTurnaround = false
-  if (jobWithCheckin?.checkinTime && jobWithCheckin?.checkoutTime) {
-    const [coh, com] = jobWithCheckin.checkoutTime.split(':').map(Number)
-    const [cih, cim] = jobWithCheckin.checkinTime.split(':').map(Number)
-    tightTurnaround = (cih * 60 + cim) - (coh * 60 + com) < 240
-  }
+  const tightTurnaround = jobWithCheckin?.checkinTime && jobWithCheckin?.checkoutTime
+    ? (() => {
+        const [coh, com] = jobWithCheckin.checkoutTime.split(':').map(Number)
+        const [cih, cim] = jobWithCheckin.checkinTime.split(':').map(Number)
+        return (cih * 60 + cim) - (coh * 60 + com) < 240
+      })()
+    : false
   const accessCode = prop?.accessCodes?.[0]?.code ?? 'Check SuiteOp'
 
   return (
@@ -104,7 +105,7 @@ export function CleaningTaskCard({
             style={{
               color: 'var(--status-blue-fg)',
               background: 'var(--status-blue-bg)',
-              border: '1px solid rgba(96,165,250,0.3)',
+              border: '1px solid var(--status-blue-bg)',
             }}
           >
             <Eye className="h-3.5 w-3.5" strokeWidth={1.5} />

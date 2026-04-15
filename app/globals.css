@@ -194,6 +194,12 @@ body {
   50% { opacity: 0.5; }
 }
 
+/* Progress bar overdue pulse */
+@keyframes pulse-bar {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 @keyframes ticker { from { transform: translateX(0) } to { transform: translateX(-50%) } }
 
 /* Status badge pulse */

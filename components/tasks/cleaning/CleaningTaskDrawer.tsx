@@ -304,8 +304,7 @@ export function CleaningTaskDrawer({ shift, job, currentUserId, currentUserName,
           {status === 'not_started' && (
             <button
               onClick={handleStart}
-              className="mb-5 flex w-full items-center justify-center gap-2 rounded-xl border-none py-4 text-base font-semibold text-white transition-colors"
-              style={{ background: 'var(--accent-staff)', cursor: 'pointer' }}
+              className="mb-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-none bg-[var(--accent-staff)] py-4 text-base font-semibold text-white transition-colors"
             >
               <Play className="h-4 w-4" strokeWidth={2} fill="currentColor" />
               Start Task
@@ -321,8 +320,7 @@ export function CleaningTaskDrawer({ shift, job, currentUserId, currentUserName,
               {doneItems === totalItems && (
                 <button
                   onClick={() => { setStatus('done'); addActivity('Task marked complete') }}
-                  className="flex items-center gap-1 rounded-lg border-none px-4 py-1.5 text-[13px] font-semibold text-white transition-colors"
-                  style={{ background: 'var(--status-green-fg)', cursor: 'pointer' }}
+                  className="flex cursor-pointer items-center gap-1 rounded-lg border-none bg-[var(--status-green-fg)] px-4 py-1.5 text-[13px] font-semibold text-white transition-colors"
                 >
                   <Check className="h-3.5 w-3.5" strokeWidth={2} />
                   Mark Done
@@ -345,13 +343,12 @@ export function CleaningTaskDrawer({ shift, job, currentUserId, currentUserName,
                     {/* Section header */}
                     <button
                       onClick={() => toggleCategory(cat)}
-                      className="flex w-full items-center justify-between px-3.5 py-2.5 text-[var(--text-primary)]"
+                      className="flex w-full cursor-pointer items-center justify-between px-3.5 py-2.5 text-[var(--text-primary)]"
                       style={{
                         borderRadius: isCollapsed ? 'var(--radius-lg)' : 'var(--radius-lg) var(--radius-lg) 0 0',
                         background: allDone ? 'var(--status-green-bg)' : 'var(--bg-card)',
-                        border: `1px solid ${allDone ? 'rgba(16,185,129,0.2)' : 'var(--border)'}`,
+                        border: `1px solid ${allDone ? 'var(--status-green-bg)' : 'var(--border)'}`,
                         borderBottom: !isCollapsed ? 'none' : undefined,
-                        cursor: 'pointer',
                       }}
                     >
                       <div className="flex items-center gap-2">
@@ -367,7 +364,7 @@ export function CleaningTaskDrawer({ shift, job, currentUserId, currentUserName,
                         <span
                           className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
                           style={{
-                            background: allDone ? 'rgba(16,185,129,0.2)' : 'var(--bg-elevated)',
+                            background: allDone ? 'var(--status-green-bg)' : 'var(--bg-elevated)',
                             color: allDone ? 'var(--status-green-fg)' : 'var(--text-muted)',
                           }}
                         >
@@ -406,12 +403,10 @@ export function CleaningTaskDrawer({ shift, job, currentUserId, currentUserName,
                           >
                             <button
                               onClick={() => handleCheckItem(item.id, !item.completed)}
-                              className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md"
+                              className="mt-0.5 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-white"
                               style={{
                                 background: item.completed ? 'var(--status-green-fg)' : 'transparent',
                                 border: `2px solid ${item.completed ? 'var(--status-green-fg)' : 'var(--border)'}`,
-                                cursor: 'pointer',
-                                color: '#fff',
                               }}
                             >
                               {item.completed && <Check className="h-3 w-3" strokeWidth={2.5} />}
@@ -485,12 +480,9 @@ export function CleaningTaskDrawer({ shift, job, currentUserId, currentUserName,
           {status === 'in_progress' && (
             <button
               onClick={() => setReportProblemOpen(true)}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border py-3.5 text-sm font-semibold transition-colors"
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--status-red-bg)] py-3.5 text-sm font-semibold text-[var(--status-red-fg)] transition-colors"
               style={{
                 background: 'var(--status-red-bg)',
-                color: 'var(--status-red-fg)',
-                borderColor: 'rgba(239,68,68,0.25)',
-                cursor: 'pointer',
               }}
             >
               <AlertTriangle className="h-4 w-4" strokeWidth={1.5} />

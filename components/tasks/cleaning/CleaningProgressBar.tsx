@@ -53,7 +53,7 @@ export function CleaningProgressBar({ progress, checkInTime }: Props) {
           ) : state === 'approaching' ? (
             `${100 - percent}% remaining · ${Math.round(bufferMinutes)}m buffer`
           ) : (
-            `${percent}% complete`
+            `${Math.round(percent)}% complete`
           )}
         </span>
 
@@ -64,12 +64,6 @@ export function CleaningProgressBar({ progress, checkInTime }: Props) {
         </span>
       </div>
 
-      <style>{`
-        @keyframes pulse-bar {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-      `}</style>
     </div>
   )
 }
