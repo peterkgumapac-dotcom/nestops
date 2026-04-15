@@ -1,24 +1,24 @@
 'use client'
 
 import { type CleaningProgress } from '@/hooks/tasks/useCleaningProgress'
+import { Check, AlertTriangle } from 'lucide-react'
 
 interface Props {
   progress: CleaningProgress
   checkInTime?: string | null
 }
 
+const STATE_COLORS: Record<string, string> = {
+  done: 'var(--status-green-fg)',
+  overdue: 'var(--status-red-fg)',
+  approaching: 'var(--status-amber-fg)',
+  ontrack: 'var(--status-green-fg)',
+}
+
 export function CleaningProgressBar({ progress, checkInTime }: Props) {
   const { percent, state, bufferMinutes, estimatedEndTime } = progress
 
-  const barColor =
-    state === 'done'
-      ? '#10b981'
-      : state === 'overdue'
-      ? '#ef4444'
-      : state === 'approaching'
-      ? '#f59e0b'
-      : '#10b981'
-
+  const barColor = STATE_COLORS[state] ?? STATE_COLORS.ontrack
   const barWidth = Math.min(percent, 100)
 
   const formatTime = (d: Date) =>
@@ -27,38 +27,29 @@ export function CleaningProgressBar({ progress, checkInTime }: Props) {
   const overdueMinutes = percent > 100 ? Math.round(((percent - 100) / 100) * (progress.elapsedMinutes)) : 0
 
   return (
-    <div style={{ marginBottom: 16 }}>
+    <div className="mb-4">
       {/* Bar track */}
-      <div style={{
-        height: 8, borderRadius: 99,
-        background: 'rgba(255,255,255,0.08)',
-        overflow: 'hidden',
-        position: 'relative',
-      }}>
+      <div className="relative h-2 overflow-hidden rounded-full bg-[var(--bg-elevated)]">
         <div
+          className="h-full rounded-full transition-[width] duration-1000"
           style={{
-            height: '100%',
             width: `${barWidth}%`,
-            borderRadius: 99,
             background: barColor,
-            transition: 'width 1s linear, background 0.5s',
             animation: state === 'overdue' ? 'pulse-bar 1.5s ease-in-out infinite' : undefined,
           }}
         />
       </div>
 
       {/* Labels row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
-        <span style={{
-          fontSize: 11,
-          fontWeight: 600,
-          color: barColor,
-          display: 'flex', alignItems: 'center', gap: 4,
-        }}>
+      <div className="mt-1.5 flex items-center justify-between">
+        <span
+          className="flex items-center gap-1 text-[11px] font-semibold"
+          style={{ color: barColor }}
+        >
           {state === 'done' ? (
-            '✓ Done'
+            <><Check className="h-3 w-3" strokeWidth={2} /> Done</>
           ) : state === 'overdue' ? (
-            `⚠ ${overdueMinutes}m overdue`
+            <><AlertTriangle className="h-3 w-3" strokeWidth={2} /> {overdueMinutes}m overdue</>
           ) : state === 'approaching' ? (
             `${100 - percent}% remaining · ${Math.round(bufferMinutes)}m buffer`
           ) : (
@@ -66,7 +57,7 @@ export function CleaningProgressBar({ progress, checkInTime }: Props) {
           )}
         </span>
 
-        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
+        <span className="text-[11px] text-[var(--text-subtle)]">
           {state !== 'done' && (
             <>Est. done {formatTime(estimatedEndTime)}{checkInTime ? ` · Check-in ${checkInTime}` : ''}</>
           )}

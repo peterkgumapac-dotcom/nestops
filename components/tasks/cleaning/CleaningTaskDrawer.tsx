@@ -16,6 +16,7 @@ import { ReportProblemModal, type ReportSubmission } from './modals/ReportProble
 import { LogMaintenanceIssueModal } from './modals/LogMaintenanceIssueModal'
 import type { MaintenanceFlag } from '@/lib/data/maintenanceFlags'
 import type { ChecklistItem } from '@/lib/data/checklists'
+import { ArrowLeft, Play, Check, ChevronDown, AlertTriangle } from 'lucide-react'
 
 interface Props {
   shift: Shift
@@ -154,7 +155,6 @@ export function CleaningTaskDrawer({ shift, job, currentUserId, currentUserName,
     const categoryLabel = PROBLEM_CATEGORIES[category] ?? category
     const content = `${currentUserName} reported: ${categoryLabel} — ${propertyName}.${note ? ` Note: ${note}` : ''}`
 
-    // Fire alerts to GS + operator (using u5 as GS user id and u1 as operator)
     const targets = ['u5', 'u1']
     for (const targetId of targets) {
       try {
@@ -176,7 +176,6 @@ export function CleaningTaskDrawer({ shift, job, currentUserId, currentUserName,
   const handleLogMaintenance = async (issueType: string, description: string, urgency: 'today' | 'later') => {
     const content = `Maintenance issue flagged at ${propertyName} by ${currentUserName}. ${issueType}: ${description}`
 
-    // Insert into local maintenance flags via localStorage for demo
     const newFlag: MaintenanceFlag = {
       id: `mf-${Date.now()}`,
       propertyId: shift.propertyId,
@@ -194,7 +193,6 @@ export function CleaningTaskDrawer({ shift, job, currentUserId, currentUserName,
       localStorage.setItem('afterstay_maintenance_flags', JSON.stringify([newFlag, ...existing]))
     } catch { /* ignore */ }
 
-    // Alert GS users
     const targets = ['u5', 'u1']
     for (const targetId of targets) {
       try {
@@ -227,7 +225,7 @@ export function CleaningTaskDrawer({ shift, job, currentUserId, currentUserName,
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200 }}
+        className="fixed inset-0 z-[200] bg-black/70"
       />
 
       {/* Drawer */}
@@ -236,42 +234,34 @@ export function CleaningTaskDrawer({ shift, job, currentUserId, currentUserName,
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-        style={{
-          position: 'fixed', top: 0, right: 0, bottom: 0,
-          width: '100%', maxWidth: 520,
-          background: '#0d1117',
-          zIndex: 201, overflowY: 'auto',
-          display: 'flex', flexDirection: 'column',
-        }}
+        className="fixed inset-y-0 right-0 z-[201] flex w-full max-w-[520px] flex-col overflow-y-auto bg-[var(--bg-page)]"
       >
         {/* Drawer header */}
-        <div style={{
-          position: 'sticky', top: 0, zIndex: 10,
-          background: 'rgba(13,17,23,0.95)', backdropFilter: 'blur(8px)',
-          borderBottom: '1px solid rgba(255,255,255,0.07)',
-          padding: '14px 20px',
-          display: 'flex', alignItems: 'center', gap: 12,
-        }}>
+        <div
+          className="sticky top-0 z-10 flex items-center gap-3 border-b border-[var(--border)] px-5 py-3.5 backdrop-blur-sm"
+          style={{ background: 'color-mix(in srgb, var(--bg-page) 95%, transparent)' }}
+        >
           <button
             onClick={onClose}
-            style={{
-              width: 36, height: 36, borderRadius: 8, flexShrink: 0,
-              background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)',
-              color: 'rgba(255,255,255,0.7)', fontSize: 18, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-elevated)]"
           >
-            ←
+            <ArrowLeft className="h-[18px] w-[18px]" strokeWidth={1.5} />
           </button>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-base font-semibold text-[var(--text-primary)]">
               {propertyName}
             </div>
-            <div style={{ display: 'flex', gap: 6, marginTop: 3 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'rgba(217,119,6,0.2)', color: '#fbbf24', textTransform: 'uppercase' }}>
+            <div className="mt-0.5 flex items-center gap-1.5">
+              <span
+                className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase"
+                style={{
+                  background: 'var(--status-amber-bg)',
+                  color: 'var(--status-amber-fg)',
+                }}
+              >
                 {cleanTypeBadge}
               </span>
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
+              <span className="text-[11px] text-[var(--text-subtle)]">
                 {shift.startTime} – {shift.endTime}
               </span>
             </div>
@@ -285,22 +275,18 @@ export function CleaningTaskDrawer({ shift, job, currentUserId, currentUserName,
         </div>
 
         {/* Content */}
-        <div style={{ padding: '20px', flex: 1 }}>
+        <div className="flex-1 p-5">
 
           {/* Reservation info */}
           {job?.reservation && (
-            <div style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 12, padding: '12px 16px', marginBottom: 16,
-            }}>
-              <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 6 }}>
+            <div className="mb-4 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4">
+              <div className="label-upper mb-1.5">
                 Connected Reservation
               </div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 2 }}>
+              <div className="text-sm font-semibold text-[var(--text-primary)]">
                 {job.reservation.guestName}
               </div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>
+              <div className="mt-0.5 text-xs text-[var(--text-subtle)]">
                 {job.reservation.checkIn} → {job.reservation.checkOut}
                 {job.reservation.platform ? ` · ${job.reservation.platform}` : ''}
                 {job.checkoutTime ? ` · Checkout ${job.checkoutTime}` : ''}
@@ -318,33 +304,28 @@ export function CleaningTaskDrawer({ shift, job, currentUserId, currentUserName,
           {status === 'not_started' && (
             <button
               onClick={handleStart}
-              style={{
-                width: '100%', padding: '16px', borderRadius: 14,
-                background: '#d97706', color: '#fff', border: 'none',
-                fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 20,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              }}
+              className="mb-5 flex w-full items-center justify-center gap-2 rounded-xl border-none py-4 text-base font-semibold text-white transition-colors"
+              style={{ background: 'var(--accent-staff)', cursor: 'pointer' }}
             >
-              ▶ Start Task
+              <Play className="h-4 w-4" strokeWidth={2} fill="currentColor" />
+              Start Task
             </button>
           )}
 
           {/* Progress summary if in progress */}
           {status === 'in_progress' && totalItems > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
+            <div className="mb-4 flex items-center justify-between">
+              <span className="text-[13px] text-[var(--text-muted)]">
                 Checklist: {doneItems}/{totalItems} done
               </span>
               {doneItems === totalItems && (
                 <button
                   onClick={() => { setStatus('done'); addActivity('Task marked complete') }}
-                  style={{
-                    padding: '6px 16px', borderRadius: 8,
-                    background: '#10b981', color: '#fff', border: 'none',
-                    fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                  }}
+                  className="flex items-center gap-1 rounded-lg border-none px-4 py-1.5 text-[13px] font-semibold text-white transition-colors"
+                  style={{ background: 'var(--status-green-fg)', cursor: 'pointer' }}
                 >
-                  Mark Done ✓
+                  <Check className="h-3.5 w-3.5" strokeWidth={2} />
+                  Mark Done
                 </button>
               )}
             </div>
@@ -352,7 +333,7 @@ export function CleaningTaskDrawer({ shift, job, currentUserId, currentUserName,
 
           {/* Collapsible checklist */}
           {checklist.length > 0 && (
-            <div style={{ marginBottom: 20 }}>
+            <div className="mb-5">
               {categories.map(cat => {
                 const catItems = checklist.filter(i => i.category === cat)
                 const catDone = catItems.filter(i => i.completed).length
@@ -360,71 +341,88 @@ export function CleaningTaskDrawer({ shift, job, currentUserId, currentUserName,
                 const isCollapsed = collapsed[cat] ?? false
 
                 return (
-                  <div key={cat} style={{ marginBottom: 8 }}>
+                  <div key={cat} className="mb-2">
                     {/* Section header */}
                     <button
                       onClick={() => toggleCategory(cat)}
+                      className="flex w-full items-center justify-between px-3.5 py-2.5 text-[var(--text-primary)]"
                       style={{
-                        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '10px 14px', borderRadius: isCollapsed ? 10 : '10px 10px 0 0',
-                        background: allDone ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.06)',
-                        border: `1px solid ${allDone ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.1)'}`,
+                        borderRadius: isCollapsed ? 'var(--radius-lg)' : 'var(--radius-lg) var(--radius-lg) 0 0',
+                        background: allDone ? 'var(--status-green-bg)' : 'var(--bg-card)',
+                        border: `1px solid ${allDone ? 'rgba(16,185,129,0.2)' : 'var(--border)'}`,
                         borderBottom: !isCollapsed ? 'none' : undefined,
-                        cursor: 'pointer', color: '#fff',
+                        cursor: 'pointer',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {allDone && <span style={{ color: '#10b981', fontSize: 13 }}>✓</span>}
-                        <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: allDone ? '#34d399' : 'rgba(255,255,255,0.7)' }}>
+                      <div className="flex items-center gap-2">
+                        {allDone && <Check className="h-3.5 w-3.5" strokeWidth={2} style={{ color: 'var(--status-green-fg)' }} />}
+                        <span
+                          className="text-xs font-semibold uppercase tracking-wider"
+                          style={{ color: allDone ? 'var(--status-green-fg)' : 'var(--text-muted)' }}
+                        >
                           {cat}
                         </span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: allDone ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.1)', color: allDone ? '#34d399' : 'rgba(255,255,255,0.5)' }}>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                          style={{
+                            background: allDone ? 'rgba(16,185,129,0.2)' : 'var(--bg-elevated)',
+                            color: allDone ? 'var(--status-green-fg)' : 'var(--text-muted)',
+                          }}
+                        >
                           {catDone}/{catItems.length}
                         </span>
-                        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0)', display: 'inline-block', transition: 'transform 0.2s' }}>
-                          ▾
-                        </span>
+                        <ChevronDown
+                          className="h-3.5 w-3.5 transition-transform duration-200"
+                          strokeWidth={1.5}
+                          style={{
+                            color: 'var(--text-subtle)',
+                            transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0)',
+                          }}
+                        />
                       </div>
                     </button>
 
                     {/* Checklist items */}
                     {!isCollapsed && (
-                      <div style={{
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        borderTop: 'none',
-                        borderRadius: '0 0 10px 10px',
-                        overflow: 'hidden',
-                      }}>
+                      <div
+                        className="overflow-hidden"
+                        style={{
+                          background: 'var(--bg-surface)',
+                          border: '1px solid var(--border)',
+                          borderTop: 'none',
+                          borderRadius: '0 0 var(--radius-lg) var(--radius-lg)',
+                        }}
+                      >
                         {catItems.map((item, idx) => (
                           <div
                             key={item.id}
+                            className="flex items-start gap-3 px-3.5 py-2.5"
                             style={{
-                              display: 'flex', alignItems: 'flex-start', gap: 12,
-                              padding: '10px 14px',
-                              borderBottom: idx < catItems.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-                              background: item.completed ? 'rgba(16,185,129,0.04)' : 'transparent',
+                              borderBottom: idx < catItems.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                              background: item.completed ? 'var(--status-green-bg)' : 'transparent',
                             }}
                           >
                             <button
                               onClick={() => handleCheckItem(item.id, !item.completed)}
+                              className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md"
                               style={{
-                                width: 20, height: 20, borderRadius: 6, flexShrink: 0, marginTop: 1,
-                                background: item.completed ? '#10b981' : 'transparent',
-                                border: `2px solid ${item.completed ? '#10b981' : 'rgba(255,255,255,0.25)'}`,
-                                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                color: '#fff', fontSize: 11,
+                                background: item.completed ? 'var(--status-green-fg)' : 'transparent',
+                                border: `2px solid ${item.completed ? 'var(--status-green-fg)' : 'var(--border)'}`,
+                                cursor: 'pointer',
+                                color: '#fff',
                               }}
                             >
-                              {item.completed && '✓'}
+                              {item.completed && <Check className="h-3 w-3" strokeWidth={2.5} />}
                             </button>
-                            <span style={{
-                              fontSize: 13, color: item.completed ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.8)',
-                              textDecoration: item.completed ? 'line-through' : 'none',
-                              lineHeight: 1.4,
-                            }}>
+                            <span
+                              className="text-[13px] leading-relaxed"
+                              style={{
+                                color: item.completed ? 'var(--text-subtle)' : 'var(--text-primary)',
+                                textDecoration: item.completed ? 'line-through' : 'none',
+                              }}
+                            >
                               {item.label}
                             </span>
                           </div>
@@ -439,36 +437,35 @@ export function CleaningTaskDrawer({ shift, job, currentUserId, currentUserName,
 
           {/* Activity log */}
           {activity.length > 0 && (
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 10 }}>
+            <div className="mb-5">
+              <div className="label-upper mb-2.5">
                 Activity
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div className="flex flex-col gap-1.5">
                 {activity.map(entry => (
-                  <div key={entry.id} style={{
-                    padding: '8px 12px', borderRadius: 8,
-                    background: 'rgba(255,255,255,0.03)',
-                    border: '1px solid rgba(255,255,255,0.06)',
-                  }}>
+                  <div
+                    key={entry.id}
+                    className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] px-3 py-2"
+                  >
                     {entry.type === 'message' ? (
                       <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                          <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#fff' }}>
+                        <div className="mb-0.5 flex items-center gap-1.5">
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--accent)] text-[9px] font-semibold text-white">
                             {entry.authorAvatar ?? entry.authorName?.slice(0, 2)}
                           </div>
-                          <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.7)' }}>{entry.authorName}</span>
-                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginLeft: 'auto' }}>
+                          <span className="text-xs font-semibold text-[var(--text-muted)]">{entry.authorName}</span>
+                          <span className="ml-auto text-[11px] text-[var(--text-subtle)]">
                             {new Date(entry.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
                           </span>
                         </div>
-                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', paddingLeft: 26 }}>{entry.message}</div>
+                        <div className="pl-[26px] text-[13px] text-[var(--text-muted)]">{entry.message}</div>
                       </div>
                     ) : (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-[var(--text-muted)]">
                           {entry.event}{entry.detail ? ` — ${entry.detail}` : ''}
                         </span>
-                        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>
+                        <span className="text-[11px] text-[var(--text-subtle)]">
                           {new Date(entry.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
                         </span>
                       </div>
@@ -481,27 +478,29 @@ export function CleaningTaskDrawer({ shift, job, currentUserId, currentUserName,
         </div>
 
         {/* Footer */}
-        <div style={{
-          padding: '16px 20px', paddingBottom: 32,
-          borderTop: '1px solid rgba(255,255,255,0.07)',
-          background: 'rgba(13,17,23,0.95)',
-        }}>
+        <div
+          className="border-t border-[var(--border)] px-5 pb-8 pt-4 backdrop-blur-sm"
+          style={{ background: 'color-mix(in srgb, var(--bg-page) 95%, transparent)' }}
+        >
           {status === 'in_progress' && (
             <button
               onClick={() => setReportProblemOpen(true)}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border py-3.5 text-sm font-semibold transition-colors"
               style={{
-                width: '100%', padding: '14px', borderRadius: 12,
-                background: 'rgba(239,68,68,0.1)', color: '#f87171',
-                border: '1px solid rgba(239,68,68,0.25)',
-                fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                background: 'var(--status-red-bg)',
+                color: 'var(--status-red-fg)',
+                borderColor: 'rgba(239,68,68,0.25)',
+                cursor: 'pointer',
               }}
             >
-              ⚠ Report a Problem
+              <AlertTriangle className="h-4 w-4" strokeWidth={1.5} />
+              Report a Problem
             </button>
           )}
           {status === 'done' && (
-            <div style={{ textAlign: 'center', padding: '8px 0', fontSize: 14, color: '#34d399', fontWeight: 600 }}>
-              ✓ Task Complete
+            <div className="flex items-center justify-center gap-1.5 py-2 text-sm font-semibold" style={{ color: 'var(--status-green-fg)' }}>
+              <Check className="h-4 w-4" strokeWidth={2} />
+              Task Complete
             </div>
           )}
         </div>

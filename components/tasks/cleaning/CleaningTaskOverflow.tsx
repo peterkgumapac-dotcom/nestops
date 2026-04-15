@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { RotateCcw, Package, AlertTriangle, Wrench, ClipboardList, MoreHorizontal } from 'lucide-react'
 
 interface Props {
   onRestart: () => void
@@ -29,57 +30,47 @@ export function CleaningTaskOverflow({ onRestart, onAddConsumables, onReportProb
   }
 
   const menuItems = [
-    { label: 'Restart Task', icon: '↺', action: onRestart, danger: true },
-    { label: 'Add Consumables', icon: '📦', action: onAddConsumables },
-    { label: 'Report a Problem', icon: '⚠️', action: onReportProblem },
-    { label: 'Log Maintenance Issue', icon: '🔧', action: onLogMaintenance },
+    { label: 'Restart Task', icon: RotateCcw, action: onRestart, danger: true },
+    { label: 'Add Consumables', icon: Package, action: onAddConsumables },
+    { label: 'Report a Problem', icon: AlertTriangle, action: onReportProblem },
+    { label: 'Log Maintenance Issue', icon: Wrench, action: onLogMaintenance },
     null, // separator
-    { label: 'View Task History', icon: '📋', action: () => {} },
+    { label: 'View Task History', icon: ClipboardList, action: () => {} },
   ]
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(v => !v)}
+        className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border)] transition-colors"
         style={{
-          width: 36, height: 36, borderRadius: 8,
-          background: open ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.07)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          color: 'rgba(255,255,255,0.7)', fontSize: 18,
-          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          lineHeight: 1,
+          background: open ? 'var(--bg-elevated)' : 'var(--bg-card)',
+          color: 'var(--text-muted)',
         }}
         aria-label="Task options"
       >
-        ···
+        <MoreHorizontal className="h-[18px] w-[18px]" strokeWidth={1.5} />
       </button>
 
       {open && (
-        <div style={{
-          position: 'absolute', right: 0, top: 42, zIndex: 200,
-          background: '#1f2937', borderRadius: 12,
-          border: '1px solid rgba(255,255,255,0.1)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-          minWidth: 220, overflow: 'hidden',
-        }}>
+        <div
+          className="absolute right-0 top-[42px] z-[200] min-w-[220px] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]"
+          style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}
+        >
           {menuItems.map((item, i) =>
             item === null ? (
-              <div key={`sep-${i}`} style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '2px 0' }} />
+              <div key={`sep-${i}`} className="mx-0 my-0.5 h-px bg-[var(--border)]" />
             ) : (
               <button
                 key={item.label}
                 onClick={() => handleItem(item.action)}
+                className="flex w-full items-center gap-2.5 border-none bg-transparent px-4 py-[11px] text-left text-sm transition-colors hover:bg-[var(--bg-card)]"
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  width: '100%', padding: '11px 16px',
-                  background: 'none', border: 'none',
-                  color: item.danger ? '#f87171' : 'rgba(255,255,255,0.8)',
-                  fontSize: 14, cursor: 'pointer', textAlign: 'left',
+                  color: item.danger ? 'var(--status-red-fg)' : 'var(--text-primary)',
+                  cursor: 'pointer',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'none')}
               >
-                <span style={{ fontSize: 15 }}>{item.icon}</span>
+                <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} style={{ color: item.danger ? 'var(--status-red-fg)' : 'var(--text-muted)' }} />
                 {item.label}
               </button>
             )

@@ -1,7 +1,10 @@
 'use client'
+
 import { JOBS } from '@/lib/data/staff'
 import { PROPERTIES } from '@/lib/data/properties'
 import type { Shift } from '@/lib/data/staffScheduling'
+import { Card } from '@/components/ui/card'
+import { Eye, KeyRound, AlertTriangle } from 'lucide-react'
 
 interface CleaningTaskCardProps {
   shift: Shift
@@ -44,51 +47,84 @@ export function CleaningTaskCard({
   const accessCode = prop?.accessCodes?.[0]?.code ?? 'Check SuiteOp'
 
   return (
-    <div
+    <Card
+      className="mb-3 overflow-hidden p-4 transition-colors hover:border-[var(--accent-border)]"
       onClick={onOpen}
-      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '16px', marginBottom: 12, overflow: 'hidden', cursor: onOpen ? 'pointer' : 'default' }}
+      style={{ cursor: onOpen ? 'pointer' : 'default' }}
     >
       {prop?.imageUrl && (
-        <img src={prop.imageUrl} alt={prop.name ?? shift.propertyId} style={{ width: '100%', height: 96, borderRadius: 8, objectFit: 'cover', marginBottom: 12 }} />
+        <img
+          src={prop.imageUrl}
+          alt={prop.name ?? shift.propertyId}
+          className="mb-3 h-32 w-full rounded-lg object-cover"
+        />
       )}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-        <span style={{ fontSize: 22, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>{cleanType}</span>
-        <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20, background: isFirst ? '#3b82f620' : '#d9770620', color: isFirst ? '#60a5fa' : '#fbbf24', flexShrink: 0, marginLeft: 8 }}>
-          {isFirst ? 'NEXT UP 🔵' : 'LATER ⏰'}
+
+      <div className="mb-1.5 flex items-center justify-between">
+        <span className="text-lg font-semibold tracking-tight text-[var(--text-primary)]">
+          {cleanType}
+        </span>
+        <span
+          className="ml-2 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+          style={{
+            background: isFirst ? 'var(--status-blue-bg)' : 'var(--status-amber-bg)',
+            color: isFirst ? 'var(--status-blue-fg)' : 'var(--status-amber-fg)',
+          }}
+        >
+          {isFirst ? 'NEXT UP' : 'LATER'}
         </span>
       </div>
-      <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', marginBottom: 4 }}>
+
+      <div className="mb-1 text-sm text-[var(--text-muted)]">
         {prop?.name ?? shift.propertyId} · {shift.startTime} – {shift.endTime}
       </div>
+
       {showTaskCount && (
-        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 4 }}>
+        <div className="mb-1 text-[13px] text-[var(--text-subtle)]">
           {durationStr} window · {taskCount} task{taskCount !== 1 ? 's' : ''}
         </div>
       )}
+
       {jobWithCheckin?.checkinTime && (
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>
+        <div className="mb-1 text-xs text-[var(--text-subtle)]">
           Check-in: {jobWithCheckin.checkinTime}
         </div>
       )}
+
       {showAccessCode && (
         codeVisible ? (
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', background: 'rgba(255,255,255,0.08)', padding: '6px 12px', borderRadius: 8, display: 'inline-block', marginBottom: 4 }}>
-            🔑 {accessCode}
+          <div className="mb-1 inline-flex items-center gap-1.5 rounded-lg bg-[var(--bg-elevated)] px-3 py-1.5 text-[13px] font-semibold text-[var(--text-primary)]">
+            <KeyRound className="h-3.5 w-3.5 text-[var(--text-muted)]" strokeWidth={1.5} />
+            {accessCode}
           </div>
         ) : (
           <button
             onClick={e => { e.stopPropagation(); onToggleCode() }}
-            style={{ fontSize: 12, fontWeight: 600, color: '#60a5fa', background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.3)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', marginBottom: 4 }}
+            className="mb-1 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors"
+            style={{
+              color: 'var(--status-blue-fg)',
+              background: 'var(--status-blue-bg)',
+              border: '1px solid rgba(96,165,250,0.3)',
+            }}
           >
-            Show Code 👁
+            <Eye className="h-3.5 w-3.5" strokeWidth={1.5} />
+            Show Code
           </button>
         )
       )}
+
       {showTurnaround && tightTurnaround && jobWithCheckin && (
-        <div style={{ marginTop: 8, padding: '6px 10px', background: '#fbbf2415', borderRadius: 8, fontSize: 12, color: '#fbbf24' }}>
-          ⚠️ Tight turnaround — {prop?.name ?? shift.propertyId}, next check-in {jobWithCheckin.checkinTime}
+        <div
+          className="mt-2 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs"
+          style={{
+            background: 'var(--status-amber-bg)',
+            color: 'var(--status-amber-fg)',
+          }}
+        >
+          <AlertTriangle className="h-3.5 w-3.5 shrink-0" strokeWidth={1.5} />
+          Tight turnaround — {prop?.name ?? shift.propertyId}, next check-in {jobWithCheckin.checkinTime}
         </div>
       )}
-    </div>
+    </Card>
   )
 }
