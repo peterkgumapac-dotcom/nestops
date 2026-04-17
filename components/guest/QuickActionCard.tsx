@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { Copy, Check } from 'lucide-react'
-import { G } from '@/lib/guest/theme'
+import { useGuestTheme } from '@/lib/guest/theme-context'
 
 interface Props {
   label: string
@@ -15,7 +15,9 @@ interface Props {
  * Warm cream tap-to-copy card for WiFi network, door code, etc.
  * `compact` variant is used inside horizontal rails.
  */
-export default function QuickActionCard({ label, value, accent = G.accent, mono = false, compact = false }: Props) {
+export default function QuickActionCard({ label, value, accent, mono = false, compact = false }: Props) {
+  const { theme: G } = useGuestTheme()
+  const resolvedAccent = accent ?? G.accent
   const [copied, setCopied] = useState(false)
 
   async function handleCopy() {
@@ -54,7 +56,7 @@ export default function QuickActionCard({ label, value, accent = G.accent, mono 
         fontWeight: 800,
         fontFamily: mono ? 'monospace' : 'inherit',
         letterSpacing: mono ? '0.1em' : 0,
-        color: accent,
+        color: resolvedAccent,
         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         maxWidth: '100%',
       }}>{value}</div>

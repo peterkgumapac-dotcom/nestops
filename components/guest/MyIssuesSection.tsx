@@ -2,14 +2,7 @@
 import { useEffect, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { issueStore, type GuestIssue } from '@/lib/guest/issueStore'
-import { G } from '@/lib/guest/theme'
-
-const STATUS_COLORS: Record<GuestIssue['status'], string> = {
-  open:         G.amber,
-  investigating:G.blue,
-  in_progress:  G.blue,
-  resolved:     G.green,
-}
+import { useGuestTheme } from '@/lib/guest/theme-context'
 
 const STATUS_LABELS: Record<GuestIssue['status'], string> = {
   open:         'Open',
@@ -29,7 +22,15 @@ interface Props {
 }
 
 export default function MyIssuesSection({ propertyId }: Props) {
+  const { theme: G } = useGuestTheme()
   const reduced = useReducedMotion()
+
+  const STATUS_COLORS: Record<GuestIssue['status'], string> = {
+    open:         G.amber,
+    investigating:G.blue,
+    in_progress:  G.blue,
+    resolved:     G.green,
+  }
   const [issues, setIssues] = useState<GuestIssue[]>([])
 
   useEffect(() => {
@@ -64,7 +65,7 @@ export default function MyIssuesSection({ propertyId }: Props) {
             transition={{ delay: i * 0.06, duration: 0.3 }}
             style={{
               background: G.surface, border: `1px solid ${G.border}`,
-              borderRadius: 14, boxShadow: '0 2px 8px rgba(0,0,0,.06)',
+              borderRadius: 14, boxShadow: G.shadowSm,
               padding: '14px 16px',
             }}
           >

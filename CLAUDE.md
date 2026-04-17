@@ -303,10 +303,9 @@ Library: **Lucide React only** — no other icon libraries.
 
 The guest portal uses a **separate palette** — does NOT follow the rules above.
 
-- **Light palette:** `G` object in `lib/guest/theme.ts` — cream/white surfaces
-- **Dark palette:** `G_DARK` in `lib/guest/theme.ts` — cool gray + lime accent
+- **Light palette:** `G` object in `lib/guest/theme.ts` — cream/white surfaces, Nunito font
+- **Dark palette:** `G_DARK` in `lib/guest/theme.ts` — aligned with AfterStay's design language (deep navy `#080b12`, teal-green accent `#1d9e75`, Inter font)
 - Light-mode-first design
-- Font: Nunito (not Inter)
 - All rules in this document apply to **operator, staff, and owner portals only**
 
 ---

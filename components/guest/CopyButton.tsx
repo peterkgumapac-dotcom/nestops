@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { Copy, Check } from 'lucide-react'
-import { G } from '@/lib/guest/theme'
+import { useGuestTheme } from '@/lib/guest/theme-context'
 
 interface Props {
   value: string
@@ -10,6 +10,7 @@ interface Props {
 }
 
 export default function CopyButton({ value, label }: Props) {
+  const { theme: G } = useGuestTheme()
   const [copied, setCopied] = useState(false)
   const reduced = useReducedMotion()
 

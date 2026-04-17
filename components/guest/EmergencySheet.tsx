@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Phone } from 'lucide-react'
 import BottomSheet from './BottomSheet'
 import { issueStore } from '@/lib/guest/issueStore'
-import { G } from '@/lib/guest/theme'
+import { useGuestTheme } from '@/lib/guest/theme-context'
 
 const OPTIONS = [
   { emoji: '🔑', label: 'Door not working', key: 'door' },
@@ -24,6 +24,7 @@ interface Props {
 }
 
 export default function EmergencySheet({ open, onClose, operatorPhone, propertyId, propertyName, guestName }: Props) {
+  const { theme: G } = useGuestTheme()
   const [selected, setSelected] = useState<string | null>(null)
 
   function handleOption(key: string, label: string) {

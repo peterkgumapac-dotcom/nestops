@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { ThumbsUp, ThumbsDown, Star, X } from 'lucide-react'
 import type { GuestVerification } from '@/lib/data/verification'
 import { feedbackStore } from '@/lib/guest/feedbackStore'
-import { G } from '@/lib/guest/theme'
+import { useGuestTheme } from '@/lib/guest/theme-context'
 
 interface Props {
   guidebookId: string
@@ -12,6 +12,7 @@ interface Props {
 }
 
 export default function GuestFeedbackCard({ guidebookId, verification }: Props) {
+  const { theme: G } = useGuestTheme()
   const reduced = useReducedMotion()
   const [state, setState] = useState(feedbackStore.get(guidebookId))
   const [rating, setRating] = useState(0)
@@ -177,8 +178,8 @@ export default function GuestFeedbackCard({ guidebookId, verification }: Props) 
               >
                 <Star
                   size={32}
-                  fill={s <= (hovered || rating) ? '#f59e0b' : 'none'}
-                  color={s <= (hovered || rating) ? '#f59e0b' : G.border}
+                  fill={s <= (hovered || rating) ? G.amber : 'none'}
+                  color={s <= (hovered || rating) ? G.amber : G.border}
                 />
               </motion.button>
             ))}

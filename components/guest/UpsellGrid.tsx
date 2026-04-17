@@ -4,7 +4,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Check, Sparkles } from 'lucide-react'
 import type { UpsellRule } from '@/lib/data/upsells'
 import BottomSheet from './BottomSheet'
-import { G } from '@/lib/guest/theme'
+import { useGuestTheme } from '@/lib/guest/theme-context'
 
 const UPSELL_META: Record<string, { emoji: string; gradient: [string, string] }> = {
   arrival:    { emoji: '🛬', gradient: ['#6366F1', '#818CF8'] },
@@ -20,6 +20,8 @@ interface Props {
 }
 
 export default function UpsellGrid({ upsells, accentColor }: Props) {
+  const { theme: G, resolved } = useGuestTheme()
+  const isDark = resolved === 'dark'
   const reduced = useReducedMotion()
   const [activeUpsell, setActiveUpsell] = useState<UpsellRule | null>(null)
   const [added, setAdded] = useState<Set<string>>(new Set())
@@ -70,12 +72,12 @@ export default function UpsellGrid({ upsells, accentColor }: Props) {
               whileTap={reduced ? {} : { scale: 0.97 }}
               onClick={() => setActiveUpsell(u)}
               style={{
-                background: isAdded ? 'rgba(22,163,74,0.06)' : 'rgba(255,255,255,0.82)',
+                background: isAdded ? `${G.green}0f` : (isDark ? `${G.surface}e8` : 'rgba(255,255,255,0.82)'),
                 backdropFilter: 'blur(20px)',
                 WebkitBackdropFilter: 'blur(20px)',
-                border: isAdded ? `1px solid ${G.green}40` : '1px solid rgba(255,255,255,0.92)',
+                border: isAdded ? `1px solid ${G.green}40` : `1px solid ${G.border}`,
                 borderRadius: 20,
-                boxShadow: '0 4px 20px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)',
+                boxShadow: G.shadowMd,
                 cursor: 'pointer',
                 overflow: 'hidden',
               }}

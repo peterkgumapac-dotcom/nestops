@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { MapPin, Navigation } from 'lucide-react'
 import type { LocalRec } from '@/lib/data/guidebooks'
-import { G } from '@/lib/guest/theme'
+import { useGuestTheme } from '@/lib/guest/theme-context'
 
 const CATEGORY_META: Record<string, { emoji: string; label: string; color: string }> = {
   food:      { emoji: '🍽️', label: 'Food',       color: '#F97316' },
@@ -24,6 +24,8 @@ interface Props {
 }
 
 export default function LocalAreaSection({ localRecs, accentColor }: Props) {
+  const { theme: G, resolved } = useGuestTheme()
+  const isDark = resolved === 'dark'
   const reduced = useReducedMotion()
   const categories = Array.from(new Set(localRecs.map(r => r.category)))
   const [active, setActive] = useState<string>('all')
@@ -68,7 +70,7 @@ export default function LocalAreaSection({ localRecs, accentColor }: Props) {
               key={pill.id}
               onClick={() => setActive(pill.id)}
               animate={{
-                background: isActive ? pill.color : 'rgba(255,255,255,0.8)',
+                background: isActive ? pill.color : (isDark ? G.surface : 'rgba(255,255,255,0.8)'),
                 color: isActive ? '#fff' : G.textBody,
                 boxShadow: isActive
                   ? `0 3px 12px ${pill.color}40`
@@ -108,12 +110,12 @@ export default function LocalAreaSection({ localRecs, accentColor }: Props) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.045, duration: 0.32 }}
                 style={{
-                  background: 'rgba(255,255,255,0.82)',
+                  background: isDark ? `${G.surface}e8` : 'rgba(255,255,255,0.82)',
                   backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255,255,255,0.92)',
+                  border: `1px solid ${G.border}`,
                   borderRadius: 18,
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)',
+                  boxShadow: G.shadowMd,
                   padding: '14px 16px',
                   display: 'flex', alignItems: 'flex-start', gap: 12,
                   overflow: 'hidden',

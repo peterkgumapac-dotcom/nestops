@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion'
-import { G } from '@/lib/guest/theme'
+import { useGuestTheme } from '@/lib/guest/theme-context'
 
 interface NavItem {
   id: string
@@ -25,6 +25,8 @@ interface Props {
 }
 
 export default function StickyNav({ accentColor, hasIssues, onSOS }: Props) {
+  const { theme: G, resolved } = useGuestTheme()
+  const isDark = resolved === 'dark'
   const [scrolled, setScrolled]  = useState(false)
   const [active, setActive]      = useState('essentials')
   const { scrollY } = useScroll()
@@ -64,10 +66,10 @@ export default function StickyNav({ accentColor, hasIssues, onSOS }: Props) {
   return (
     <motion.div
       animate={{
-        background: scrolled ? 'rgba(250,249,246,0.88)' : 'transparent',
+        background: scrolled ? (isDark ? 'rgba(8,11,18,0.88)' : 'rgba(250,249,246,0.88)') : 'transparent',
         backdropFilter: scrolled ? 'blur(20px)' : 'blur(0px)',
-        borderBottom: scrolled ? `1px solid rgba(0,0,0,0.06)` : '1px solid transparent',
-        boxShadow: scrolled ? '0 1px 20px rgba(0,0,0,0.05)' : 'none',
+        borderBottom: scrolled ? `1px solid ${G.border}` : '1px solid transparent',
+        boxShadow: scrolled ? G.shadowSm : 'none',
       }}
       transition={{ duration: 0.25 }}
       style={{
@@ -90,7 +92,7 @@ export default function StickyNav({ accentColor, hasIssues, onSOS }: Props) {
               animate={{
                 background: isDanger
                   ? (isActive ? G.red : G.red + '10')
-                  : (isActive ? accentColor : 'rgba(255,255,255,0.75)'),
+                  : (isActive ? accentColor : (isDark ? G.surface : 'rgba(255,255,255,0.75)')),
                 color: isDanger
                   ? (isActive ? '#fff' : G.red)
                   : (isActive ? '#fff' : G.textBody),

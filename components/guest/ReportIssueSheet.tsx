@@ -6,7 +6,7 @@ import type { Guidebook } from '@/lib/data/guidebooks'
 import type { GuestVerification } from '@/lib/data/verification'
 import BottomSheet from './BottomSheet'
 import { issueStore, type GuestIssue } from '@/lib/guest/issueStore'
-import { G } from '@/lib/guest/theme'
+import { useGuestTheme } from '@/lib/guest/theme-context'
 
 const CATEGORIES = [
   { key: 'plumbing',   emoji: '🔧', label: 'Plumbing' },
@@ -27,6 +27,7 @@ interface Props {
 }
 
 export default function ReportIssueSheet({ open, onClose, guidebook, verification }: Props) {
+  const { theme: G } = useGuestTheme()
   const reduced = useReducedMotion()
   const [category, setCategory] = useState('')
   const [location, setLocation] = useState('')
@@ -224,8 +225,8 @@ export default function ReportIssueSheet({ open, onClose, guidebook, verificatio
             </div>
 
             {/* Permission To Enter (PTE) */}
-            <div style={{ marginBottom: 16, padding: 12, borderRadius: 12, background: '#4A9EFF0d', border: '1px solid #4A9EFF26' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#4A9EFF', marginBottom: 8, letterSpacing: '0.02em' }}>
+            <div style={{ marginBottom: 16, padding: 12, borderRadius: 12, background: `${G.blue}0d`, border: `1px solid ${G.blue}26` }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: G.blue, marginBottom: 8, letterSpacing: '0.02em' }}>
                 Permission to enter?
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -239,8 +240,8 @@ export default function ReportIssueSheet({ open, onClose, guidebook, verificatio
                     onClick={() => setPte(o.key)}
                     style={{
                       flex: 1, padding: '9px 6px', borderRadius: 10, fontSize: 11, fontWeight: 700,
-                      border: `1px solid ${pte === o.key ? '#4A9EFF' : '#4A9EFF26'}`,
-                      background: pte === o.key ? '#4A9EFF22' : '#4A9EFF08',
+                      border: `1px solid ${pte === o.key ? G.blue : `${G.blue}26`}`,
+                      background: pte === o.key ? `${G.blue}22` : `${G.blue}08`,
                       color: pte === o.key ? '#fff' : G.textBody,
                       cursor: 'pointer', lineHeight: 1.3,
                     }}

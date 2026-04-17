@@ -48,7 +48,7 @@ export default function GuidebookHero({ guidebook, imageUrl, accentColor, verifi
       <div style={{
         position: 'absolute', inset: 0,
         background: isDark
-          ? 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, transparent 30%, transparent 42%, rgba(26,28,32,0.70) 72%, rgba(26,28,32,1) 100%)'
+          ? 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, transparent 30%, transparent 42%, rgba(8,11,18,0.70) 72%, rgba(8,11,18,1) 100%)'
           : 'linear-gradient(180deg, rgba(0,0,0,0.06) 0%, transparent 30%, transparent 42%, rgba(250,249,246,0.65) 72%, rgba(250,249,246,1) 100%)',
       }} />
 
@@ -91,7 +91,7 @@ export default function GuidebookHero({ guidebook, imageUrl, accentColor, verifi
               transition={{ delay: 0.55 + i * 0.1, duration: 0.45 }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 7,
-                background: isDark ? 'rgba(34,37,41,0.85)' : 'rgba(255,255,255,0.88)',
+                background: isDark ? 'rgba(26,31,39,0.85)' : 'rgba(255,255,255,0.88)',
                 backdropFilter: 'blur(16px)',
                 WebkitBackdropFilter: 'blur(16px)',
                 borderRadius: 24, padding: '7px 13px',

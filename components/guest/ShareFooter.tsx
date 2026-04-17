@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { Check, Link2, Heart } from 'lucide-react'
 import type { Guidebook } from '@/lib/data/guidebooks'
-import { G } from '@/lib/guest/theme'
+import { useGuestTheme } from '@/lib/guest/theme-context'
 
 interface Props {
   guidebook: Guidebook
@@ -12,6 +12,8 @@ interface Props {
 }
 
 export default function ShareFooter({ guidebook, accentColor, brandName }: Props) {
+  const { theme: G, resolved } = useGuestTheme()
+  const isDark = resolved === 'dark'
   const [copied, setCopied] = useState(false)
   const reduced = useReducedMotion()
 
@@ -32,12 +34,12 @@ export default function ShareFooter({ guidebook, accentColor, brandName }: Props
       style={{ padding: '8px 16px 56px', textAlign: 'center' }}
     >
       <div style={{
-        background: 'rgba(255,255,255,0.82)',
+        background: isDark ? `${G.surface}e8` : 'rgba(255,255,255,0.82)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.92)',
+        border: `1px solid ${G.border}`,
         borderRadius: 20,
-        boxShadow: '0 4px 28px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)',
+        boxShadow: G.shadowMd,
         padding: '22px 20px 20px',
         marginBottom: 16,
       }}>

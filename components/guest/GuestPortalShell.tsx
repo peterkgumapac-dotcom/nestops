@@ -58,10 +58,10 @@ export default function GuestPortalShell({
 
   // Nav glass colors adapt to theme
   const navGlass = isDark
-    ? 'rgba(34,37,41,0.92)'
+    ? 'rgba(15,19,24,0.92)'
     : 'rgba(255,255,255,0.92)'
   const navBorder = isDark
-    ? 'rgba(255,255,255,0.06)'
+    ? '#1e2530'
     : 'rgba(28,25,23,0.06)'
   const navShadow = isDark
     ? '0 -4px 24px rgba(0,0,0,0.20), 0 4px 16px rgba(0,0,0,0.24)'
@@ -75,7 +75,9 @@ export default function GuestPortalShell({
         minHeight: '100dvh',
         background: G.bg,
         color: G.text,
-        fontFamily: 'var(--font-nunito), var(--font-sans)',
+        fontFamily: isDark
+          ? 'var(--font-sans), Inter, system-ui, sans-serif'
+          : 'var(--font-nunito), var(--font-sans)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',

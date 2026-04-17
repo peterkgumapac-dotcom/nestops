@@ -58,30 +58,30 @@ export const G_LIGHT: GuestTheme = {
 }
 
 export const G_DARK: GuestTheme = {
-  bg:           '#1A1C20',
-  surface:      '#222529',
-  surfaceHover: '#2A2D32',
-  border:       'rgba(255,255,255,0.07)',
-  borderStrong: 'rgba(255,255,255,0.14)',
+  bg:           '#080b12',
+  surface:      '#1a1f27',
+  surfaceHover: '#161b22',
+  border:       '#1e2530',
+  borderStrong: '#2a3040',
 
-  text:         '#FFFFFF',
-  textBody:     'rgba(255,255,255,0.8)',
-  textMuted:    'rgba(255,255,255,0.55)',
-  textFaint:    'rgba(255,255,255,0.3)',
+  text:         '#e8eaed',
+  textBody:     '#e8eaed',
+  textMuted:    '#8b95a5',
+  textFaint:    '#5a6577',
 
-  accent:       '#5B9A6F',
-  accentLight:  '#4E8760',
-  accentBg:     'rgba(91,154,111,0.10)',
+  accent:       '#1d9e75',
+  accentLight:  '#2dd4a0',
+  accentBg:     'rgba(29,158,117,0.10)',
   accentFg:     '#FFFFFF',
 
-  green:        '#6AAD7E',
-  amber:        '#F5A623',
-  red:          '#FF4D4D',
-  blue:         '#4A9EFF',
+  green:        '#1d9e75',
+  amber:        '#f59e0b',
+  red:          '#ef4444',
+  blue:         '#378add',
 
-  shadowSm:     '0 1px 3px rgba(0,0,0,0.20)',
-  shadowMd:     '0 4px 16px rgba(0,0,0,0.28), 0 1px 4px rgba(0,0,0,0.16)',
-  shadowLg:     '0 12px 40px rgba(0,0,0,0.36), 0 2px 8px rgba(0,0,0,0.20)',
+  shadowSm:     '0 1px 3px rgba(0,0,0,0.30)',
+  shadowMd:     '0 4px 16px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.20)',
+  shadowLg:     '0 12px 40px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.25)',
 }
 
 /** @deprecated Use useGuestTheme() hook instead. Kept for static contexts. */

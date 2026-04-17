@@ -9,7 +9,8 @@ import {
 import type { Guidebook } from '@/lib/data/guidebooks'
 import type { GuestVerification } from '@/lib/data/verification'
 import CopyButton from './CopyButton'
-import { G } from '@/lib/guest/theme'
+import { useGuestTheme } from '@/lib/guest/theme-context'
+import type { GuestTheme } from '@/lib/guest/theme'
 
 const AMENITY_ICONS: Record<string, React.ReactElement> = {
   WiFi:            <Wifi size={13} />,
@@ -38,14 +39,14 @@ interface Props {
   hoursUntilReveal?: number
 }
 
-function glassCard(extra?: React.CSSProperties): React.CSSProperties {
+function glassCard(isDark: boolean, G: GuestTheme, extra?: React.CSSProperties): React.CSSProperties {
   return {
-    background: 'rgba(255,255,255,0.82)',
+    background: isDark ? `${G.surface}e8` : 'rgba(255,255,255,0.82)',
     backdropFilter: 'blur(20px)',
     WebkitBackdropFilter: 'blur(20px)',
-    border: '1px solid rgba(255,255,255,0.92)',
+    border: `1px solid ${G.border}`,
     borderRadius: 20,
-    boxShadow: '0 4px 28px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.85)',
+    boxShadow: G.shadowMd,
     padding: '18px',
     flex: 1,
     ...extra,
@@ -70,6 +71,8 @@ function GradientIconBox({ color, children }: { color: string; children: React.R
 export default function EssentialsGrid({
   guidebook, accentColor, isVerified, doorCodeMode, doorCode, hoursUntilReveal,
 }: Props) {
+  const { theme: G, resolved } = useGuestTheme()
+  const isDark = resolved === 'dark'
   const [wifiVisible, setWifiVisible] = useState(false)
   const reduced = useReducedMotion()
 
@@ -98,7 +101,7 @@ export default function EssentialsGrid({
       <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
 
         {/* WiFi Card */}
-        <motion.div {...stagger(1)} style={glassCard()}>
+        <motion.div {...stagger(1)} style={glassCard(isDark, G)}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
             <GradientIconBox color={accentColor}>
               <Wifi size={16} />
@@ -144,7 +147,7 @@ export default function EssentialsGrid({
         </motion.div>
 
         {/* Door Code Card */}
-        <motion.div {...stagger(2)} style={glassCard()}>
+        <motion.div {...stagger(2)} style={glassCard(isDark, G)}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
             <GradientIconBox color={doorCodeMode === 'available' ? G.green : G.amber}>
               {doorCodeMode === 'available'
@@ -175,11 +178,11 @@ export default function EssentialsGrid({
                     style={{
                       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                       width: 32, height: 38, borderRadius: 8,
-                      background: `linear-gradient(145deg, ${G.bg}, rgba(255,255,255,0.6))`,
+                      background: isDark ? G.surfaceHover : `linear-gradient(145deg, ${G.bg}, rgba(255,255,255,0.6))`,
                       border: `1px solid ${G.border}`,
                       fontSize: 20, fontWeight: 800, fontFamily: 'monospace',
                       color: G.text, letterSpacing: 0,
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+                      boxShadow: G.shadowSm,
                     }}
                   >
                     {digit}
@@ -209,7 +212,7 @@ export default function EssentialsGrid({
       <motion.div
         {...stagger(3)}
         style={{
-          ...glassCard({ padding: '16px 20px' }),
+          ...glassCard(isDark, G, { padding: '16px 20px' }),
           display: 'flex', gap: 0, marginBottom: 12, flex: 'none',
         }}
       >
@@ -272,11 +275,11 @@ export default function EssentialsGrid({
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 padding: '7px 14px', borderRadius: 24, flexShrink: 0,
-                background: 'rgba(255,255,255,0.75)',
+                background: isDark ? `${G.surface}cc` : 'rgba(255,255,255,0.75)',
                 backdropFilter: 'blur(12px)',
                 WebkitBackdropFilter: 'blur(12px)',
-                border: `1px solid rgba(255,255,255,0.9)`,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                border: `1px solid ${G.border}`,
+                boxShadow: G.shadowSm,
                 fontSize: 12, color: G.textBody, fontWeight: 600,
               }}
             >

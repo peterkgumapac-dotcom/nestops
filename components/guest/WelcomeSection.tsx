@@ -1,13 +1,15 @@
 'use client'
 import { useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { G } from '@/lib/guest/theme'
+import { useGuestTheme } from '@/lib/guest/theme-context'
 
 interface Props {
   message: string
 }
 
 export default function WelcomeSection({ message }: Props) {
+  const { theme: G, resolved } = useGuestTheme()
+  const isDark = resolved === 'dark'
   const [expanded, setExpanded] = useState(false)
   const reduced = useReducedMotion()
   const CUTOFF = 180
@@ -20,12 +22,12 @@ export default function WelcomeSection({ message }: Props) {
       viewport={{ once: true }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       style={{
-        background: 'rgba(255,255,255,0.82)',
+        background: isDark ? `${G.surface}e8` : 'rgba(255,255,255,0.82)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.92)',
+        border: `1px solid ${G.border}`,
         borderRadius: 20,
-        boxShadow: '0 4px 28px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.85)',
+        boxShadow: G.shadowMd,
         padding: '20px 20px 18px',
         margin: '0 16px 12px',
         position: 'relative',
@@ -36,7 +38,7 @@ export default function WelcomeSection({ message }: Props) {
       <div style={{
         position: 'absolute', top: 10, left: 14,
         fontSize: 72, lineHeight: 1, fontFamily: 'Georgia, serif',
-        color: 'rgba(0,0,0,0.04)', fontWeight: 900,
+        color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)', fontWeight: 900,
         userSelect: 'none', pointerEvents: 'none',
         letterSpacing: '-0.05em',
       }}>
@@ -58,7 +60,7 @@ export default function WelcomeSection({ message }: Props) {
           onClick={() => setExpanded(e => !e)}
           style={{
             background: 'none', border: 'none', cursor: 'pointer',
-            color: 'var(--accent, #b8a088)', fontSize: 13, fontWeight: 700,
+            color: G.accent, fontSize: 13, fontWeight: 700,
             padding: '8px 0 0', textDecoration: 'none',
             display: 'flex', alignItems: 'center', gap: 4,
           }}

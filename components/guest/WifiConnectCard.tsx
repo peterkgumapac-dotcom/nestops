@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { Wifi, Check, MapPin, ChevronRight } from 'lucide-react'
-import { G } from '@/lib/guest/theme'
+import { useGuestTheme } from '@/lib/guest/theme-context'
 
 interface Props {
   ssid: string
@@ -13,6 +13,7 @@ interface Props {
  * secondary "I've Arrived" manual confirm.
  */
 export default function WifiConnectCard({ ssid, onArrivalConfirm }: Props) {
+  const { theme: G } = useGuestTheme()
   const [connected, setConnected] = useState(false)
 
   function handleConnect() {

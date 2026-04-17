@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { MessageCircle, Wrench, AlertTriangle, X } from 'lucide-react'
-import { G } from '@/lib/guest/theme'
+import { useGuestTheme } from '@/lib/guest/theme-context'
 
 interface Props {
   accentColor: string
@@ -21,6 +21,8 @@ interface SubButton {
 export default function FloatingActionButton({
   accentColor, onContactHost, onReportIssue, onEmergency,
 }: Props) {
+  const { theme: G, resolved } = useGuestTheme()
+  const isDark = resolved === 'dark'
   const [expanded, setExpanded] = useState(false)
   const reduced = useReducedMotion()
 
@@ -72,7 +74,7 @@ export default function FloatingActionButton({
             >
               {/* Label pill */}
               <div style={{
-                background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)',
+                background: isDark ? G.surface : 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)',
                 padding: '5px 12px', borderRadius: 20,
                 fontSize: 13, fontWeight: 600, color: G.text,
                 boxShadow: '0 2px 8px rgba(0,0,0,.12)',

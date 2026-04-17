@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { X } from 'lucide-react'
-import { G } from '@/lib/guest/theme'
+import { useGuestTheme } from '@/lib/guest/theme-context'
 
 interface Props {
   open: boolean
@@ -12,6 +12,7 @@ interface Props {
 }
 
 export default function BottomSheet({ open, onClose, title, children }: Props) {
+  const { theme: G } = useGuestTheme()
   const reduced = useReducedMotion()
   const dragY = useRef(0)
 

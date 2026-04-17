@@ -7,7 +7,8 @@ import {
 } from 'lucide-react'
 import type { Guidebook } from '@/lib/data/guidebooks'
 import BottomSheet from './BottomSheet'
-import { G } from '@/lib/guest/theme'
+import { useGuestTheme } from '@/lib/guest/theme-context'
+import type { GuestTheme } from '@/lib/guest/theme'
 
 interface GuideCard {
   key: string
@@ -32,13 +33,15 @@ interface Props {
 
 // 3D tilt card
 function TiltCard({
-  children, onClick, style, delay, reduced,
+  children, onClick, style, delay, reduced, isDark, G,
 }: {
   children: React.ReactNode
   onClick: () => void
   style?: React.CSSProperties
   delay: number
   reduced: boolean | null
+  isDark: boolean
+  G: GuestTheme
 }) {
   const ref = useRef<HTMLButtonElement>(null)
 
@@ -73,12 +76,12 @@ function TiltCard({
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
       style={{
-        background: 'rgba(255,255,255,0.82)',
+        background: isDark ? `${G.surface}e8` : 'rgba(255,255,255,0.82)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.92)',
+        border: `1px solid ${G.border}`,
         borderRadius: 18,
-        boxShadow: '0 4px 20px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)',
+        boxShadow: G.shadowMd,
         padding: '16px 8px 14px',
         cursor: 'pointer',
         display: 'flex', flexDirection: 'column',
@@ -95,6 +98,7 @@ function TiltCard({
 }
 
 function RulesContent({ rules }: { rules?: string }) {
+  const { theme: G } = useGuestTheme()
   if (!rules) return <p style={{ color: G.textMuted, fontSize: 14 }}>No house rules specified.</p>
   return (
     <ul style={{ margin: 0, padding: '0 0 0 16px' }}>
@@ -108,6 +112,7 @@ function RulesContent({ rules }: { rules?: string }) {
 }
 
 function AccessContent({ instructions }: { instructions?: string }) {
+  const { theme: G } = useGuestTheme()
   if (!instructions) return <p style={{ color: G.textMuted, fontSize: 14 }}>No access instructions.</p>
   return (
     <ol style={{ margin: 0, padding: '0 0 0 20px' }}>
@@ -121,6 +126,7 @@ function AccessContent({ instructions }: { instructions?: string }) {
 }
 
 function AppliancesContent() {
+  const { theme: G } = useGuestTheme()
   const items = [
     { label: 'TV', tip: 'Remote on the coffee table. Press Home to access streaming apps.' },
     { label: 'Dishwasher', tip: 'Pods under the sink. Press the power button, then select a cycle and press Start.' },
@@ -142,6 +148,7 @@ function AppliancesContent() {
 }
 
 function CheckoutContent() {
+  const { theme: G } = useGuestTheme()
   const items = [
     'Leave keys on the kitchen counter',
     'Close all windows and lock the door',
@@ -170,6 +177,7 @@ function CheckoutContent() {
 }
 
 function FAQContent({ faqs }: { faqs?: Array<{ question: string; answer: string }> }) {
+  const { theme: G } = useGuestTheme()
   const [open, setOpen] = useState<number | null>(null)
   if (!faqs?.length) return <p style={{ color: G.textMuted, fontSize: 14 }}>No FAQs available.</p>
   return (
@@ -202,6 +210,7 @@ function FAQContent({ faqs }: { faqs?: Array<{ question: string; answer: string 
 }
 
 function EmergencyContent({ operatorPhone, operatorName }: { operatorPhone?: string; operatorName?: string }) {
+  const { theme: G } = useGuestTheme()
   const contacts = [
     { label: 'Police', number: '112', color: G.blue },
     { label: 'Fire', number: '110', color: G.red },
@@ -238,6 +247,8 @@ function EmergencyContent({ operatorPhone, operatorName }: { operatorPhone?: str
 }
 
 export default function PropertyGuideGrid({ guidebook, accentColor }: Props) {
+  const { theme: G, resolved } = useGuestTheme()
+  const isDark = resolved === 'dark'
   const [activeSheet, setActiveSheet] = useState<string | null>(null)
   const reduced = useReducedMotion()
 
@@ -285,6 +296,8 @@ export default function PropertyGuideGrid({ guidebook, accentColor }: Props) {
             onClick={() => setActiveSheet(card.key)}
             delay={i * 0.07}
             reduced={reduced}
+            isDark={isDark}
+            G={G}
           >
             {/* Icon with gradient background */}
             <div style={{

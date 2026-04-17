@@ -6,7 +6,7 @@ import type { Guidebook } from '@/lib/data/guidebooks'
 import type { GuestVerification } from '@/lib/data/verification'
 import BottomSheet from './BottomSheet'
 import { issueStore } from '@/lib/guest/issueStore'
-import { G } from '@/lib/guest/theme'
+import { useGuestTheme } from '@/lib/guest/theme-context'
 
 const QUICK_TEMPLATES = [
   'I have a question about the property.',
@@ -23,6 +23,7 @@ interface Props {
 }
 
 export default function ContactHostSheet({ open, onClose, guidebook, verification }: Props) {
+  const { theme: G } = useGuestTheme()
   const reduced = useReducedMotion()
   const [message, setMessage] = useState('')
   const [sent, setSent] = useState(false)
